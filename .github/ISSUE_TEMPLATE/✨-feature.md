@@ -2,7 +2,7 @@
 name: "✨ Feature"
 about: 새로운 기능 개발 요청
 title: "[Feature] "
-labels: feature
+labels: bug, feature
 assignees: ''
 
 ---
@@ -17,10 +17,12 @@ assignees: ''
 ## 🙋 관련 역할
 > 해당 기능과 관련된 역할을 선택해 주세요
 
-- [ ] stu (학생)
-- [ ] pro (강사)
-- [ ] branchM (지점 관리자)
-- [ ] totalM (통합 관리자)
+- [ ] user(사용자)
+- [ ] contentM (컨텐츠 매니저)
+- [ ] csM(cs 매니저)
+- [ ] moneyM(정산 매니저)
+- [ ] dataM(통계매니저)
+- [ ] superAdmin(슈퍼어드민)
 - [ ] 공통
 
 ---
