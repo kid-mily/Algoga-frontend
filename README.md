@@ -35,7 +35,7 @@
 
 ## ✍️ 2. Commit Message 명명 규칙
 
-Conventional Commits 스펙을 기반으로 작성합니다.[myeongjae](https://myeongjae.kim/blog/2022/04/30/git-conventions-by-hook)
+Conventional Commits 스펙을 기반으로 작성합니다.
 
 ## 커밋 메시지 구조
 
