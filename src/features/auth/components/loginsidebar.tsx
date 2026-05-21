@@ -11,7 +11,7 @@ export default function LoginSidebar({
   description,
 }: LoginSidebarProps) {
   return (
-    <aside className="w-[320px] bg-[#315e61] text-white p-10 flex flex-col justify-center">
+    <aside className="flex h-screen w-[320px] flex-col justify-center bg-[#315e61] px-10 text-white">
       <h1 className="text-4xl font-bold leading-tight">
         {title.normal}
         <br />
