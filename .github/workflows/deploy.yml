@@ -1,4 +1,4 @@
-name: Deploy Spring Boot & Next.js to Ubuntu Server
+name: Deploy Next.js to Ubuntu Server
 
 # develop 브랜치에 코드가 push 되거나 merge 될 때 동작합니다.
 on:
@@ -19,44 +19,21 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script: |
-            # ========================================================
-            # 공통: 프로젝트 폴더 이동 및 코드 업데이트
-            # ========================================================
+            # 1. 프론트엔드 프로젝트 폴더로 이동하여 최신 코드 Pull
             cd /home/ubuntu/algoga
             git pull origin develop
             
-            # 기존에 실행 중이던 algoga tmux 세션이 있다면 강제 종료 (포트 충돌 방지)
+            # 기존 algoga 세션 강제 종료 (포트 충돌 방지)
             tmux kill-session -t algoga 2>/dev/null || true
             
-            # ========================================================
-            # 1. Spring Boot 배포 (algoga 세션)
-            # ========================================================
-            # Gradle 빌드 진행
-            chmod +x ./gradlew
-            ./gradlew clean build -x test
-            
-            # jar 파일 경로 찾기
-            JAR_PATH=$(ls build/libs/*.jar | grep -v 'plain' | tail -n 1)
-            
-            # algoga 라는 이름의 새 tmux 세션을 백그라운드로 생성
-            tmux new-session -d -s algoga
-            
-            # 스프링 애플리케이션 실행 명령어 전송
-            echo "새 스프링 애플리케이션을 algoga tmux 세션에서 실행합니다: $JAR_PATH"
-            tmux send-keys -t algoga "java -jar $JAR_PATH" C-m
-
-            # ========================================================
-            # 2. Next.js 배포 (algoga 세션 내부에서 추가 실행)
-            # ========================================================
-            # algoga 폴더로 이동
-            cd algoga
-            
-            # 의존성 설치 및 프로덕션 빌드
-            echo "Next.js 의존성 설치 및 빌드를 시작합니다..."
+            # 2. 패키지 설치 및 프로덕션 빌드
             npm install
             npm run build
             
-            # 동일한 algoga 세션에서 새 윈도우를 열거나 
-            # 기존 세션에 명령어를 이어서 전송하여 17000 포트로 Next.js 서버 실행
+            # 3. 'algoga' 라는 이름의 tmux 세션을 백그라운드로 생성
+            tmux new-session -d -s algoga
+            
+            # 4. tmux 세션 내부에서 정확한 프론트엔드 경로로 이동 후 서버 실행
+            tmux send-keys -t algoga "cd /home/ubuntu/algoga" C-m
             echo "Next.js 애플리케이션을 algoga tmux 세션의 17000 포트에서 실행합니다."
             tmux send-keys -t algoga "PORT=17000 npm start" C-m
