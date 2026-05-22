@@ -11,7 +11,7 @@ export default function FindIdComplete({
     <div className="flex w-[420px] flex-col items-center">
       {/* 아이콘 */}
       <div className="flex h-[88px] w-[88px] items-center justify-center rounded-full bg-[#439A97] text-[42px] text-white">
-        아이콘
+         <img src="/images/check.svg" alt="체크아이콘" />
       </div>
 
       {/* 타이틀 */}
