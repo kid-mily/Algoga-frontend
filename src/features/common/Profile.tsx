@@ -1,5 +1,6 @@
 'use client'
 
+import Link from "next/link";
 import { useState } from "react";
 
 export default function Profile() {
@@ -8,7 +9,7 @@ export default function Profile() {
     const [user, setUser] = useState({
         name: '홍길동',
         lastName: '홍',
-        isLogin: true
+        isLogin: false
     })
 
     // 드롭다운 메뉴 열림/닫힘 상태 관리
@@ -41,7 +42,9 @@ export default function Profile() {
                         )}
                     </div>
                 ) : (
+                    <Link href='/user/auth/login'>
                     <p className="text-[#4A5568] font-medium cursor-pointer hover:underline">로그인</p>
+                    </Link>
                 )}
             </div>
     );
