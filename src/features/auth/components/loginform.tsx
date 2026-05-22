@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function LoginForm() {
   return (
     <div className="w-[400px]">
@@ -54,22 +56,22 @@ export default function LoginForm() {
           </label>
 
           <div className="flex items-center gap-2 text-[14px] text-[#6B9D9B]">
-            <button type="button">
+            <Link href="/user/auth/login/findid">
               아이디 찾기
-            </button>
+            </Link>
 
             <span>|</span>
 
-            <button type="button">
+            <Link href="/user/auth/login/findpw">
               비밀번호 찾기
-            </button>
+            </Link>
           </div>
         </div>
 
         {/* 로그인 버튼 */}
         <button
           type="submit"
-          className="mt-6 h-[56px] w-full rounded-[16px] bg-[#6D9D9B] text-[18px] font-semibold text-white"
+          className="mt-6 h-[56px] w-full rounded-[16px] bg-[#439A97] text-[18px] font-semibold text-white"
         >
           로그인
         </button>
@@ -105,12 +107,12 @@ export default function LoginForm() {
         <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
           계정이 없으신가요?{" "}
 
-          <button
-            type="button"
+          <Link
+            href="/user/auth/register"
             className="font-semibold text-[#6D9D9B]"
-          >
+            >
             회원가입
-          </button>
+          </Link>
         </div>
 
         {/* 메인 이동 */}
