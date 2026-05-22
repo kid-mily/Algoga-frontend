@@ -43,7 +43,7 @@ export default function LoginForm() {
               type="button"
               className="absolute right-4 top-1/2 -translate-y-1/2 text-[16px]"
             >
-              눈아이콘 넣을 자리
+              <img src="/images/eye.svg" alt="눈아이콘" />
             </button>
           </div>
         </div>
@@ -116,12 +116,13 @@ export default function LoginForm() {
         </div>
 
         {/* 메인 이동 */}
-        <button
+        <Link
+          href="/"
           type="button"
           className="mt-4 block w-full text-center text-[14px] text-[#98A2B3]"
         >
           메인으로 돌아가기
-        </button>
+        </Link>
       </form>
     </div>
   );
