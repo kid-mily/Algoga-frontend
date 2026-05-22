@@ -3,7 +3,7 @@ import LoginForm from "@/features/auth/components/loginform";
 
 export default function LoginPage() {
   return (
-    <main className="flex h-screen overflow-hidden bg-white">
+    <main className="flex h-screen overflow-hidden bg-[#F8F8F8]">
       {/* 사이드바 */}
       <LoginSidebar
         title={{

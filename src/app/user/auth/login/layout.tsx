@@ -1,4 +1,3 @@
-import LoginSidebar from "@/features/auth/components/loginsidebar";
 
 export default function LoginLayout({
   children,
