@@ -1,5 +1,3 @@
-'use client'
-
 export default function Footer() {
     return (
         <footer className="bg-[#286E6B] text-gray-300">
@@ -15,17 +13,17 @@ export default function Footer() {
             {/* 서비스 */}
             <div className="flex flex-col gap-4">
                 <p className="font-bold text-lg">서비스</p>
-                <p className="cursor-pointer hover:text-white">여행 강의</p>
-                <p className="cursor-pointer hover:text-white">AI 일정 추천</p>
-                <p className="cursor-pointer hover:text-white">여행 예약</p> 
-                <p className="cursor-pointer hover:text-white">커뮤니티</p>
+                <p>여행 강의</p>
+                <p>AI 일정 추천</p>
+                <p>여행 예약</p> 
+                <p>커뮤니티</p>
             </div>
 
             {/* 고객지원 */}
             <div className="flex flex-col gap-4">
                 <p className="font-bold text-lg">고객지원</p>
-                <p className="cursor-pointer hover:text-white">공지사항</p>
-                <p className="cursor-pointer hover:text-white">1:1 문의</p>
+                <p>공지사항</p>
+                <p>1:1 문의</p>
             </div>
 
             {/* 문의 */}
