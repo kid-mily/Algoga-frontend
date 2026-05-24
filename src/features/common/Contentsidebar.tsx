@@ -9,6 +9,7 @@ export default function ContentSidebar() {
   const pathname = usePathname();
 
   return (
+
     <aside className="flex w-[240px] flex-col border-r border-[#E4E7EC] bg-white">
 
       {/* 상단 관리자 */}

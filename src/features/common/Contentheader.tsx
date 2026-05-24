@@ -8,6 +8,7 @@ export default function ContentHeader({
   hasNotification = true,
 }: ContentHeaderProps) {
   return (
+    
     <header className="flex h-[77px] items-center justify-between border-b border-[#E4E7EC] bg-white px-8">
 
       {/* 제목 */}
