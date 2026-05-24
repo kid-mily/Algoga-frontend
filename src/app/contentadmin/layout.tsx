@@ -1,5 +1,5 @@
-import ContentSidebar from "@/features/common/Contentsidebar";
-import ContentHeader from "@/features/common/Contentheader";
+import ContentSidebar from "@/features/common/ContentSidebar";
+import ContentHeader from "@/features/common/ContentHeader";
 
 export default function ContentLayout({
   children,
