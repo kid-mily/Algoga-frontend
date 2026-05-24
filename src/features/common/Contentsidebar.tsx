@@ -180,6 +180,31 @@ export default function ContentSidebar() {
 
           홈으로 나가기
         </Link>
+
+        {/* 관리자 정보 */}
+        <div className="mt-6 flex items-center gap-3 px-4">
+
+          {/* 프로필 아이콘 */}
+          <div className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#439A97] text-white">
+            <img
+              src="/images/profile.svg"
+              alt="프로필"
+              className="h-[18px] w-[18px]"
+            />
+          </div>
+
+          {/* 텍스트 */}
+          <div>
+            <p className="text-[14px] font-semibold text-[#111827]">
+              김관리자
+              {/*일단 하드 코딩 나중에 백에서 데이터 받아오기 */}
+            </p>
+
+            <p className="text-[13px] text-[#98A2B3]">
+              admin@algoga.kr
+            </p>
+          </div>
+        </div>
       </div>
     </aside>
   );
