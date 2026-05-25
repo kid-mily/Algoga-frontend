@@ -134,14 +134,6 @@ export default function StudentForm({
               수강생 관리 대시보드 · 총 5명
             </p>
           </div>
-
-          {/* 닫기 */}
-          <button
-            onClick={onClose}
-            className="text-[30px] text-white"
-          >
-            ✕
-          </button>
         </div>
 
         {/* 검색 + 액션 */}
@@ -213,19 +205,12 @@ export default function StudentForm({
               className="h-[18px] w-[18px] accent-[#439A97]"
             />
           </div>
-
           <div>수강생</div>
-
           <div>이메일</div>
-
           <div>수강 상태</div>
-
           <div>진도율</div>
-
           <div>퀴즈</div>
-
           <div>후기</div>
-
           <div>등록일</div>
         </div>
 
