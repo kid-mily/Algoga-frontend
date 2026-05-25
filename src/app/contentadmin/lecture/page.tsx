@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import ContentSubHeader from "@/features/contentmanage/SubHeader";
 import LectureCard from "@/features/contentmanage/LectureCard";
+import StudentForm from "@/features/contentmanage/StudentForm";
 
 export default function LecturePage() {
 
@@ -18,6 +19,8 @@ export default function LecturePage() {
 
   // 한 페이지당 보여줄 개수
   const itemsPerPage = 10;
+
+
 
   // 임시 데이터
   // 나중에 axios로 교체
@@ -90,6 +93,9 @@ export default function LecturePage() {
   const totalPages = Math.ceil(
     filteredLectures.length / itemsPerPage
   );
+
+  const [openStudentModal, setOpenStudentModal] =
+  useState(false);
 
   return (
     <div className="w-full">
@@ -191,7 +197,6 @@ export default function LecturePage() {
         {currentLectures.map((lecture) => (
 
           <LectureCard
-            key={lecture.id}
             thumbnail={lecture.thumbnail}
             country={lecture.country}
             title={lecture.title}
@@ -201,6 +206,10 @@ export default function LecturePage() {
             chapters={lecture.chapters}
             createdAt={lecture.createdAt}
             isPublic={lecture.isPublic}
+
+            onUsersClick={() =>
+              setOpenStudentModal(true)
+            }
           />
         ))}
 
@@ -278,6 +287,12 @@ export default function LecturePage() {
           </div>
         </div>
       </div>
+      <StudentForm
+        open={openStudentModal}
+        onClose={() =>
+          setOpenStudentModal(false)
+        }
+      />
     </div>
   );
 }
