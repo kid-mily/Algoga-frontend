@@ -1,12 +1,11 @@
 import LearnMethod from "@/features/main/components/LearningMethod";
-import MapSection from "./MapSection";
 import NoticeSection from "@/features/main/components/NoticeSection";
 import AiSchedule from "@/features/main/components/AiSchedule";
 import Banner from "@/features/main/components/Banner";
 import Calender from "@/features/main/components/ScheduleCalendar";
+import MapSection from "./main/MapSection";
 
-
-export default function MainPage() {
+export default function Home() {
   return (
     <div className="p-10 w-full min-h-screen bg-[#f5f6f8]">
         
@@ -17,7 +16,7 @@ export default function MainPage() {
 
       {/* 지도 */}
       <div className="max-w-5xl w-full h-[500px] border rounded-xl overflow-hidden shadow-lg bg-white mx-auto">
-        {/* <MapSection /> */}
+        <MapSection />
       </div>
 
       {/* 아래 영역 */}
