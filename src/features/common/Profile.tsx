@@ -42,7 +42,7 @@ export default function Profile() {
                         )}
                     </div>
                 ) : (
-                    <Link href='/user/auth/login'>
+                    <Link href='/auth/login'>
                     <p className="text-[#4A5568] font-medium cursor-pointer hover:underline">로그인</p>
                     </Link>
                 )}
