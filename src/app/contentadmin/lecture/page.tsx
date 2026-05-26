@@ -6,6 +6,8 @@ import Link from "next/link";
 import ContentSubHeader from "@/features/contentmanage/SubHeader";
 import LectureCard from "@/features/contentmanage/LectureCard";
 import StudentForm from "@/features/contentmanage/StudentForm";
+import { useRouter } from "next/navigation";
+import { lectures } from "@/features/contentmanage/MockData";
 
 export default function LecturePage() {
 
@@ -19,49 +21,8 @@ export default function LecturePage() {
 
   // 한 페이지당 보여줄 개수
   const itemsPerPage = 10;
+  const router = useRouter();
 
-
-
-  // 임시 데이터
-  // 나중에 axios로 교체
-  const lectures = [
-    {
-      id: 1,
-      thumbnail: "/images/thumb.png",
-      country: "일본",
-      title: "일본 여행 완벽 가이드",
-      description: "일본 여행의 모든 것",
-      price: "89,000원",
-      students: "1,234",
-      chapters: 4,
-      createdAt: "2024.04.15",
-      isPublic: true,
-    },
-    {
-      id: 2,
-      thumbnail: "/images/thumb.png",
-      country: "프랑스",
-      title: "파리 완전 정복 2024",
-      description: "파리의 모든 것을 담은 강의",
-      price: "85,000원",
-      students: "934",
-      chapters: 5,
-      createdAt: "2024.04.10",
-      isPublic: true,
-    },
-    {
-      id: 3,
-      thumbnail: "/images/thumb.png",
-      country: "미국",
-      title: "뉴욕 자유여행 가이드",
-      description: "뉴욕 여행 준비하기",
-      price: "89,000원",
-      students: "892",
-      chapters: 3,
-      createdAt: "2024.03.28",
-      isPublic: false,
-    },
-  ];
 
   // 상태 필터링
   const filteredLectures =
@@ -210,6 +171,12 @@ export default function LecturePage() {
             onUsersClick={() =>
               setOpenStudentModal(true)
             }
+
+        onEditClick={() =>
+        router.push(
+    `/contentadmin/lecture/${lecture.id}/edit`
+  )
+      } 
           />
         ))}
 
