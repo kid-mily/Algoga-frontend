@@ -63,70 +63,102 @@ export const lectures = [
 export const quizzes = [
   {
     id: 1,
-
     lectureId: 1,
-
     lectureTitle:
       "일본 여행 완벽 가이드",
-
     question:
       "일본 여행 시 가장 중요한 준비물은?",
-
     options: [
       "여권",
       "신용카드",
       "현금",
       "모두 중요",
     ],
-
     answer: "모두 중요",
-
     explanation:
       "일본 여행 시에는 모든 준비물이 중요합니다.",
   },
 
   {
     id: 2,
-
     lectureId: 1,
-
     lectureTitle:
       "일본 여행 완벽 가이드",
-
     question:
       "일본의 수도는?",
-
     options: [
       "오사카",
       "도쿄",
       "교토",
       "후쿠오카",
     ],
-
     answer: "도쿄",
   },
 
   {
     id: 3,
-
     lectureId: 2,
-
     lectureTitle:
       "파리 완전 정복 2024",
-
     question:
       "에펠탑이 위치한 곳은?",
-
     options: [
       "센강 근처",
       "몽마르트르",
       "루브르",
       "베르사유",
     ],
-
     answer: "센강 근처",
-
     explanation:
       "에펠탑은 센강 근처에 위치해 있습니다.",
+  },
+];
+
+export const coupons = [
+  {
+    id: 1,
+    name: "일본 여행 완료 할인 쿠폰",
+    discount: 20,
+    startDate: "2024.04.15",
+    endDate: "2024.12.31",
+    lecture: "일본 여행 완벽 가이드",
+    target: "패키지",
+    categories: [
+      "항공",
+      "숙소",
+    ],
+    isActive: true,
+    createdAt: "2024.04.15",
+  },
+
+  {
+    id: 2,
+    name: "파리 여행 수료 특별 할인",
+    discount: 15,
+    startDate: "2024.05.01",
+    endDate: "2024.06.30",
+    lecture: "파리 완전 정복 2024",
+    target: "강의",
+    categories: [
+      "숙소",
+      "액티비티",
+    ],
+    isActive: true,
+    createdAt: "2024.04.20",
+  },
+  {
+    id: 3,
+    name: "뉴욕 여행 준비 쿠폰",
+    discount: 10,
+    startDate: "2024.03.01",
+    endDate: "2024.04.30",
+    lecture: "뉴욕 자유여행 가이드",
+    target: "패키지",
+    categories: [
+      "숙소",
+      "액티비티",
+    ],
+    isActive: false,
+    createdAt: "2024.03.01",
   },
 ];

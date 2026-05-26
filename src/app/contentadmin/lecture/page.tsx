@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import ContentSubHeader from "@/features/contentmanage/SubHeader";
+import SubHeader from "@/features/contentmanage/SubHeader";
 import LectureCard from "@/features/contentmanage/LectureCard";
 import StudentForm from "@/features/contentmanage/StudentForm";
 import { useRouter } from "next/navigation";
@@ -62,7 +62,7 @@ export default function LecturePage() {
     <div className="w-full">
 
       {/* 상단 헤더 */}
-      <ContentSubHeader
+      <SubHeader
         backHref="/contentadmin"
         backText="메인페이지로 돌아가기"
         title="강의 관리"
