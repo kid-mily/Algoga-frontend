@@ -1,3 +1,5 @@
+// 나라 선택
+
 'use client';
 
 import Link from 'next/link';
@@ -37,7 +39,7 @@ export default function CountrySelectForm() {
       <div
         style={{
         display: "grid",
-        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
         gap: "20px",}}
       >
 
@@ -49,46 +51,21 @@ export default function CountrySelectForm() {
           >
 
             {/* 카드 */}
-            <div
-              className="
-                overflow-hidden
-                rounded-3xl
-                bg-white
-                shadow-sm
-                hover:shadow-md
-                transition
-                cursor-pointer
-              "
+            <div className="overflow-hidden rounded-3xl bg-white shadow-sm hover:shadow-md transition cursor-pointer"
             >
 
               {/* 이미지 */}
-              <img
-                src={country.image}
-                alt={country.name}
-                className="w-full h-[120px] object-cover"
-              />
+              <img src={country.image} alt={country.name} className="w-full h-[120px] object-cover"/>
 
               {/* 텍스트 */}
               <div className="p-5">
-
-                <p className="text-xl text-[#0A1628] font-bold">
-                  {country.name}
-                </p>
-
-                <p className="mt-2 text-sm text-[#8A94A6]">
-                  {country.lectureCount}개 강좌
-                </p>
-
+                <p className="text-xl text-[#0A1628] font-bold">{country.name}</p>
+                <p className="mt-2 text-sm text-[#8A94A6]">{country.lectureCount}개 강좌</p>
               </div>
-
             </div>
-
           </Link>
-
         ))}
-
       </div>
-
     </section>
   );
 }
