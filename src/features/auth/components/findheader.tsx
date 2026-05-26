@@ -15,7 +15,7 @@ export default function AuthPageHeader({
     <div>
       {/* 뒤로가기 */}
       <Link
-        href="/user/auth/login"
+        href="/auth/login"
         className="flex items-center gap-2 text-[15px] text-[#98A2B3]"
       >
         <span>‹</span>

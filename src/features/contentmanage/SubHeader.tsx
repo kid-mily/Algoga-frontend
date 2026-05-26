@@ -8,7 +8,7 @@ interface ContentSubHeaderProps {
   description?: string;
 }
 
-export default function ContentSubHeader({
+export default function SubHeader({
   backHref,
   backText,
   title,

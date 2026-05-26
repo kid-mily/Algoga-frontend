@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import LectureHeader from "@/features/contentmanage/LectureHeader";
 import LectureForm from "@/features/contentmanage/LectureForm";
-import ChapterForm from "@/features/contentmanage/ChaperForm";
+import LectureChapterForm from "@/features/contentmanage/LectureChapterForm";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/CompleteModal";
 
@@ -102,18 +102,16 @@ export default function CreateLecturePage() {
           
         {/* STEP 2 */}
         {step === 2 && (
-        <ChapterForm
-            onPrev={() => setStep(1)}
-            onSubmit={(chapters) => {
+  <LectureChapterForm
+    onPrev={() => setStep(1)}
+    onSubmit={(chapters) => {
 
-            console.log(chapters);
+      console.log(chapters);
 
-            setOpenModal(true);
-
-       
-            }}
-        />
-        )}
+      setOpenModal(true);
+    }}
+  />
+)}
 
         <CompleteModal
           open={openModal}

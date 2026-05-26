@@ -39,3 +39,23 @@ export const lectures = [
       isPublic: false,
     },
   ];
+
+  export const chapters = [
+  {
+    id: 1,
+    lectureId: 1,
+    duration: "15분",
+    title: "여행 준비하기",
+    description:
+      "일본 여행을 위한 기본적인 준비 사항",
+  },
+
+  {
+    id: 2,
+    lectureId: 1,
+    duration: "12분",
+    title: "비자 및 입국 절차",
+    description:
+      "비자 신청과 입국 시 주의사항",
+  },
+];
