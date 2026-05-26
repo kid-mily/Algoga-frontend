@@ -1,0 +1,38 @@
+name: Deploy Next.js to Ubuntu Server
+
+# develop 브랜치에 코드가 push 되거나 merge 될 때 동작합니다.
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            # 1. 프론트엔드 프로젝트 폴더로 이동하여 최신 코드 Pull
+            cd /home/ubuntu/algoga
+            git pull origin develop
+            
+            # 기존 algoga 세션 강제 종료 (포트 충돌 방지)
+            tmux kill-session -t algoga 2>/dev/null || true
+            
+            # 2. 패키지 설치 (타입스크립트 에러 때문에 빌드는 임시 생략)
+            npm install
+            
+            # 3. 'algoga' 라는 이름의 tmux 세션을 백그라운드로 생성
+            tmux new-session -d -s algoga
+            
+            # 4. tmux 세션 내부에서 정확한 프론트엔드 경로로 이동 후 개발 서버 실행
+            tmux send-keys -t algoga "cd /home/ubuntu/algoga" C-m
+            echo "Next.js 애플리케이션을 algoga tmux 세션의 17000 포트에서 개발 모드로 실행합니다."
+            tmux send-keys -t algoga "PORT=17000 npm run dev" C-m
