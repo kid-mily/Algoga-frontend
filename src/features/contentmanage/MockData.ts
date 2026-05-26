@@ -59,3 +59,74 @@ export const lectures = [
       "비자 신청과 입국 시 주의사항",
   },
 ];
+
+export const quizzes = [
+  {
+    id: 1,
+
+    lectureId: 1,
+
+    lectureTitle:
+      "일본 여행 완벽 가이드",
+
+    question:
+      "일본 여행 시 가장 중요한 준비물은?",
+
+    options: [
+      "여권",
+      "신용카드",
+      "현금",
+      "모두 중요",
+    ],
+
+    answer: "모두 중요",
+
+    explanation:
+      "일본 여행 시에는 모든 준비물이 중요합니다.",
+  },
+
+  {
+    id: 2,
+
+    lectureId: 1,
+
+    lectureTitle:
+      "일본 여행 완벽 가이드",
+
+    question:
+      "일본의 수도는?",
+
+    options: [
+      "오사카",
+      "도쿄",
+      "교토",
+      "후쿠오카",
+    ],
+
+    answer: "도쿄",
+  },
+
+  {
+    id: 3,
+
+    lectureId: 2,
+
+    lectureTitle:
+      "파리 완전 정복 2024",
+
+    question:
+      "에펠탑이 위치한 곳은?",
+
+    options: [
+      "센강 근처",
+      "몽마르트르",
+      "루브르",
+      "베르사유",
+    ],
+
+    answer: "센강 근처",
+
+    explanation:
+      "에펠탑은 센강 근처에 위치해 있습니다.",
+  },
+];
