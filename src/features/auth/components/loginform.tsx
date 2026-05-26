@@ -56,13 +56,13 @@ export default function LoginForm() {
           </label>
 
           <div className="flex items-center gap-2 text-[14px] text-[#6B9D9B]">
-            <Link href="/user/auth/login/findid">
+            <Link href="/auth/login/findid">
               아이디 찾기
             </Link>
 
             <span>|</span>
 
-            <Link href="/user/auth/login/findpw">
+            <Link href="/auth/login/findpw">
               비밀번호 찾기
             </Link>
           </div>
@@ -108,7 +108,7 @@ export default function LoginForm() {
           계정이 없으신가요?{" "}
 
           <Link
-            href="/user/auth/register"
+            href="/auth/register"
             className="font-semibold text-[#6D9D9B]"
             >
             회원가입

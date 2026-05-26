@@ -20,7 +20,7 @@ export default function FindIdForm() {
     }
 
     // 나중에 axios 성공 시 여기서 이동 그 !response 써서 검사...하기
-    router.push("/user/auth/login/findidcomplete");
+    router.push("/auth/login/findidcomplete");
   };
 
   return (

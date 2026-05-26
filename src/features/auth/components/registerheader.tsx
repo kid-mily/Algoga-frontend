@@ -5,7 +5,7 @@ export default function RegisterHeader() {
     <div className="flex items-center gap-4">
       {/* 뒤로가기 */}
       <Link
-        href="/user/auth/login"
+        href="/auth/login"
         className="text-[24px] text-[#98A2B3]"
       >
         ‹

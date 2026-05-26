@@ -99,7 +99,7 @@ export default function RegisterCompleteForm() {
 
       {/* 로그인 버튼 */}
       <Link
-        href="/user/auth/login"
+        href="/auth/login"
         className="mt-5 flex h-[48px] w-full items-center justify-center rounded-[14px] bg-[#439A97] text-[15px] font-semibold text-white"
       >
         로그인하기
