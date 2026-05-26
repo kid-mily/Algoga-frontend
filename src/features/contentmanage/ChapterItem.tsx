@@ -2,9 +2,13 @@
 
 interface ChapterItemProps {
   id: number;
+
   title: string;
+
   description: string;
+
   video: File | null;
+
   preview: string;
 
   onRemove: () => void;
@@ -36,7 +40,7 @@ export default function ChapterItem({
 }: ChapterItemProps) {
 
   return (
-    <div className="rounded-[14px] border border-[#E4E7EC] p-4">
+    <div className="rounded-[16px] border border-[#E4E7EC] bg-white p-4">
 
       {/* 상단 */}
       <div className="flex items-center justify-between">
@@ -47,10 +51,10 @@ export default function ChapterItem({
           <img
             src="/images/menu.svg"
             alt="이동"
-            className="h-[13px] w-[13px]"
+            className="h-[12px] w-[12px]"
           />
 
-          <h3 className="text-[16px] font-semibold text-[#111827]">
+          <h3 className="text-[15px] font-semibold text-[#111827]">
             Chapter {id}
           </h3>
         </div>
@@ -59,7 +63,7 @@ export default function ChapterItem({
         <button
           type="button"
           onClick={onRemove}
-          className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[#F9FAFB] text-[14px] text-[#98A2B3] transition hover:bg-[#FEE4E2] hover:text-[#D92D20]"
+          className="flex h-[24px] w-[24px] items-center justify-center rounded-full bg-[#F9FAFB] text-[13px] text-[#98A2B3] transition hover:bg-[#FEE4E2] hover:text-[#D92D20]"
         >
           ✕
         </button>
@@ -90,7 +94,7 @@ export default function ChapterItem({
               e.target.value
             )
           }
-          className="h-[88px] w-full resize-none rounded-[10px] border border-[#E4E7EC] p-4 text-[13px] outline-none"
+          className="h-[82px] w-full resize-none rounded-[10px] border border-[#E4E7EC] p-4 text-[13px] outline-none"
         />
 
         {/* 업로드 */}
@@ -103,7 +107,7 @@ export default function ChapterItem({
               <video
                 src={preview}
                 controls
-                className="h-[70px] rounded-[8px]"
+                className="h-[65px] rounded-[8px]"
               />
 
               <p className="mt-2 text-[12px] font-medium text-[#111827]">
@@ -116,7 +120,7 @@ export default function ChapterItem({
               <img
                 src="/images/upload.svg"
                 alt="업로드"
-                className="h-[24px] w-[24px]"
+                className="h-[22px] w-[22px]"
               />
 
               <p className="mt-2 text-[12px] font-semibold text-[#344054]">

@@ -157,27 +157,36 @@ export default function LecturePage() {
         {/* 리스트 */}
         {currentLectures.map((lecture) => (
 
-          <LectureCard
-            thumbnail={lecture.thumbnail}
-            country={lecture.country}
-            title={lecture.title}
-            description={lecture.description}
-            price={lecture.price}
-            students={lecture.students}
-            chapters={lecture.chapters}
-            createdAt={lecture.createdAt}
-            isPublic={lecture.isPublic}
+         <LectureCard
+          thumbnail={lecture.thumbnail}
+          country={lecture.country}
+          title={lecture.title}
+          description={lecture.description}
+          price={lecture.price}
+          students={lecture.students}
+          chapters={lecture.chapters}
+          createdAt={lecture.createdAt}
+          isPublic={lecture.isPublic}
 
-            onUsersClick={() =>
-              setOpenStudentModal(true)
-            }
+  // 챕터관리
+  onChapterManage={() =>
+    router.push(
+      `/contentadmin/lecture/${lecture.id}/chapter/new`
+    )
+  }
 
-        onEditClick={() =>
-        router.push(
-    `/contentadmin/lecture/${lecture.id}/edit`
-  )
-      } 
-          />
+  // 수강생
+  onUsersClick={() =>
+    setOpenStudentModal(true)
+  }
+
+  // 수정
+  onEditClick={() =>
+    router.push(
+      `/contentadmin/lecture/${lecture.id}/edit`
+    )
+  }
+/>
         ))}
 
         {/* 데이터 없을 때 */}

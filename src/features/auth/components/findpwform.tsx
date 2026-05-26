@@ -21,7 +21,7 @@ export default function FindIdForm() {
     }
 
     // 나중에 axios 성공 시 여기서 이동
-    router.push("/user/auth/login/findpwcomplete");
+    router.push("/auth/login/findpwcomplete");
   };
 
   return (
@@ -74,7 +74,7 @@ export default function FindIdForm() {
 
         {/* 아이디 찾기 */}
         <Link
-          href="/user/auth/login/findid"
+          href="/auth/login/findid"
           className="mt-4 block text-center text-[#439A97]"
         >
           아이디가 기억나지 않으시나요?

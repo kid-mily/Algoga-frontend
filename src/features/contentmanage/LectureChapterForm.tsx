@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-
 import ChapterItem from "./ChapterItem";
 
 interface Chapter {
@@ -12,17 +11,19 @@ interface Chapter {
   preview: string;
 }
 
-interface ChapterFormProps {
-  onPrev?: () => void;
-  onSubmit?: (chapters: Chapter[]) => void;
+interface LectureChapterFormProps {
+  onPrev: () => void;
+
+  onSubmit: (
+    chapters: Chapter[]
+  ) => void;
 }
 
-export default function ChapterForm({
+export default function LectureChapterForm({
   onPrev,
   onSubmit,
-}: ChapterFormProps) {
+}: LectureChapterFormProps) {
 
-  // 챕터 리스트
   const [chapters, setChapters] =
     useState<Chapter[]>([
       {
@@ -54,15 +55,6 @@ export default function ChapterForm({
     id: number
   ) => {
 
-    if (chapters.length === 1) {
-
-      alert(
-        "최소 1개의 챕터가 필요합니다"
-      );
-
-      return;
-    }
-
     setChapters((prev) =>
       prev.filter(
         (chapter) =>
@@ -71,20 +63,43 @@ export default function ChapterForm({
     );
   };
 
-  // input 변경
-  const handleChange = (
+  // 제목 변경
+  const handleTitleChange = (
     id: number,
-    field: "title" | "description",
     value: string
   ) => {
 
     setChapters((prev) =>
       prev.map((chapter) =>
+
         chapter.id === id
+
           ? {
               ...chapter,
-              [field]: value,
+              title: value,
             }
+
+          : chapter
+      )
+    );
+  };
+
+  // 설명 변경
+  const handleDescriptionChange = (
+    id: number,
+    value: string
+  ) => {
+
+    setChapters((prev) =>
+      prev.map((chapter) =>
+
+        chapter.id === id
+
+          ? {
+              ...chapter,
+              description: value,
+            }
+
           : chapter
       )
     );
@@ -98,94 +113,68 @@ export default function ChapterForm({
 
     setChapters((prev) =>
       prev.map((chapter) =>
+
         chapter.id === id
+
           ? {
               ...chapter,
               video: file,
               preview:
-                URL.createObjectURL(file),
+                URL.createObjectURL(
+                  file
+                ),
             }
+
           : chapter
       )
     );
   };
 
-  // 등록
-  const handleSubmit = () => {
-
-    for (const chapter of chapters) {
-
-      if (!chapter.title) {
-
-        alert(
-          `${chapter.id}번 챕터 제목을 입력해주세요`
-        );
-
-        return;
-      }
-
-      if (!chapter.description) {
-
-        alert(
-          `${chapter.id}번 챭터 설명을 입력해주세요`
-        );
-
-        return;
-      }
-
-      if (!chapter.video) {
-
-        alert(
-          `${chapter.id}번 챕터 영상을 업로드해주세요`
-        );
-
-        return;
-      }
-    }
-
-    onSubmit?.(chapters);
-
-    console.log(chapters);
-  };
-
   return (
-    <div className="rounded-[16px] border border-[#E4E7EC] bg-white p-4">
+    <div className="rounded-[20px] border border-[#E4E7EC] bg-white p-6">
 
       {/* 상단 */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
 
         <div>
 
-          <h2 className="text-[18px] font-bold text-[#111827]">
-            챕터 구성
+          <h2 className="text-[24px] font-bold text-[#111827]">
+            챕터 상세 정보
           </h2>
 
-          <p className="mt-1 text-[12px] text-[#98A2B3]">
-            강의 내용을 챕터로 나누어 구성합니다
+          <p className="mt-1 text-[15px] text-[#98A2B3]">
+            강의 챕터를 구성합니다
           </p>
         </div>
 
-        {/* 챕터 추가 */}
+        {/* 추가 버튼 */}
         <button
           type="button"
           onClick={handleAddChapter}
-          className="flex h-[38px] items-center rounded-[10px] bg-[#439A97] px-4 text-[13px] font-semibold text-white"
+          className="h-[44px] rounded-full bg-[#439A97] px-5 text-[14px] font-semibold text-white"
         >
           + 챕터 추가
         </button>
       </div>
 
-      {/* 챕터 리스트 */}
-      <div className="mt-5 space-y-4">
+      {/* 리스트 */}
+      <div className="mt-6 space-y-4">
 
         {chapters.map((chapter) => (
 
           <ChapterItem
             key={chapter.id}
+
             id={chapter.id}
+
             title={chapter.title}
-            description={chapter.description}
+
+            description={
+              chapter.description
+            }
+
             video={chapter.video}
+
             preview={chapter.preview}
 
             onRemove={() =>
@@ -195,17 +184,15 @@ export default function ChapterForm({
             }
 
             onTitleChange={(value) =>
-              handleChange(
+              handleTitleChange(
                 chapter.id,
-                "title",
                 value
               )
             }
 
             onDescriptionChange={(value) =>
-              handleChange(
+              handleDescriptionChange(
                 chapter.id,
-                "description",
                 value
               )
             }
@@ -220,25 +207,27 @@ export default function ChapterForm({
         ))}
       </div>
 
-      {/* 하단 버튼 */}
-      <div className="mt-6 flex items-center justify-end gap-2 border-t border-[#E4E7EC] pt-5">
+      {/* 버튼 */}
+      <div className="mt-8 flex justify-between">
 
         {/* 이전 */}
         <button
           type="button"
           onClick={onPrev}
-          className="h-[38px] rounded-[10px] border border-[#E4E7EC] px-5 text-[13px] font-semibold text-[#667085]"
+          className="h-[48px] rounded-[14px] border border-[#E4E7EC] px-6 text-[15px] font-semibold text-[#667085]"
         >
           이전
         </button>
 
-        {/* 등록 */}
+        {/* 완료 */}
         <button
           type="button"
-          onClick={handleSubmit}
-          className="h-[38px] rounded-[10px] bg-[#439A97] px-5 text-[13px] font-semibold text-white"
+          onClick={() =>
+            onSubmit(chapters)
+          }
+          className="h-[48px] rounded-[14px] bg-[#439A97] px-6 text-[15px] font-semibold text-white"
         >
-          등록 완료
+          강의 등록 완료
         </button>
       </div>
     </div>
