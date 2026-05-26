@@ -166,87 +166,47 @@ export const coupons = [
 export const qnas = [
   {
     id: 1,
-
-    lecture:
-      "일본 여행 완벽 가이드",
-
+    lecture:"일본 여행 완벽 가이드",
     writer: "김여행",
-
     createdAt: "2024.04.28",
-
-    question:
-      "비자 발급은 어떻게 하나요?",
-
+    question: "비자 발급은 어떻게 하나요?",
     isAnswered: true,
-
     answer:
       "일본은 90일 이내 무비자 입국이 가능합니다.",
-
     comments: [],
   },
-
   {
     id: 2,
-
-    lecture:
-      "파리 완전 정복 2024",
-
+    lecture:"파리 완전 정복 2024",
     writer: "박여행",
-
     createdAt: "2024.04.27",
-
-    question:
-      "뮤지엄 패스는 어디서 구매하나요?",
-
+    question:"뮤지엄 패스는 어디서 구매하나요?",
     isAnswered: false,
-
     answer: "",
-
     comments: [],
   },
 
   {
   id: 5,
-
-  lecture:
-    "도쿄 자유여행 마스터",
-
-  question:
-    "스이카 카드랑 파스모 카드 차이가 뭔가요?",
-
+  lecture:"도쿄 자유여행 마스터",
+  question:"스이카 카드랑 파스모 카드 차이가 뭔가요?",
   writer: "한여행",
-
   createdAt: "2024.04.24",
-
   isAnswered: true,
-
-  answer:
-    "두 카드 모두 교통카드 기능은 동일하며 사용 가능한 지역도 거의 같습니다. 디자인과 발급처 정도만 다릅니다.",
-
+  answer:"두 카드 모두 교통카드 기능은 동일하며 사용 가능한 지역도 거의 같습니다. 디자인과 발급처 정도만 다릅니다.",
   comments: [
     {
       id: 1,
-
       writer: "한여행",
-
-      createdAt:
-        "2024.04.24 14:20",
-
-      content:
-        "환불도 가능한가요?",
+      createdAt: "2024.04.24 14:20",
+      content:"환불도 가능한가요?",
     },
 
     {
       id: 2,
-
       writer: "이관리자",
-
-      createdAt:
-        "2024.04.24 14:40",
-
-      content:
-        "네 가능합니다. 다만 수수료가 발생할 수 있습니다.",
-
+      createdAt:"2024.04.24 14:40",
+      content:"네 가능합니다. 다만 수수료가 발생할 수 있습니다.",
       isInstructor: true,
     },
   ],
@@ -254,21 +214,71 @@ export const qnas = [
 
 {
   id: 6,
-
-  lecture:
-    "런던 여행 필수 코스",
-
-  question:
-    "오이스터 카드는 어디서 구매하나요?",
-
+  lecture:"런던 여행 필수 코스",
+  question:"오이스터 카드는 어디서 구매하나요?",
   writer: "윤여행",
-
   createdAt: "2024.04.23",
-
   isAnswered: false,
-
   answer: "",
-
   comments: [],
 },
+];
+
+
+export const students = [
+  {
+    id: 1,
+    name: "김여행",
+    email: "kim@algoga.kr",
+    point: 15000,
+    updatedAt: "2024.04.28",
+  },
+
+  {
+    id: 2,
+    name: "이수연",
+    email: "lee@algoga.kr",
+    point: 8500,
+    updatedAt: "2024.04.27",
+  },
+
+  {
+    id: 3,
+    name: "박준혁",
+    email: "park@algoga.kr",
+    point: 22300,
+    updatedAt: "2024.04.26",
+  },
+];
+
+export const pointLogs = [
+  {
+    id: 1,
+    name: "김여행",
+    type: "적립",
+    amount: 5000,
+    reason: "강의 수료 보상",
+    manager: "김관리자",
+    createdAt: "2024.04.28",
+  },
+
+  {
+    id: 2,
+    name: "이수연",
+    type: "사용",
+    amount: 3000,
+    reason: "강의 결제 사용",
+    manager: "시스템",
+    createdAt: "2024.04.27",
+  },
+
+  {
+    id: 3,
+    name: "김여행",
+    type: "적립",
+    amount: 2000,
+    reason: "이벤트 참여 보상",
+    manager: "박매니저",
+    createdAt: "2024.04.26",
+  },
 ];
