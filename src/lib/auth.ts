@@ -13,7 +13,6 @@ export const authApi = {
     console.log("🚀 [API 요청] 회원가입(Signup) 시도");
     console.log(`📡 대상 API: POST ${endpoint}`);
     console.log(`📦 전송할 데이터(Payload):`, payload);
-
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -36,7 +35,6 @@ export const authApi = {
   // 2. 일반 로그인
   login: async (credentials: { username: string; password: string }) => {
     const endpoint = `${API_BASE_URL}/login`;
-
     // 🌟 터미널(콘솔) 로그 출력
     console.log("🚀 [API 요청] 로그인(Login) 시도");
     console.log(`📡 대상 API: POST ${endpoint}`);

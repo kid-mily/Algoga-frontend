@@ -14,7 +14,6 @@ export const login = async (user: LoginRequest): Promise<LoginResponse> => {
 
   if (!response.ok) {
     let errorMessage = '로그인 실패';
-    
     try {
       // 응답이 JSON 형식일 경우 에러 메시지 추출
       const errorData = await response.json();

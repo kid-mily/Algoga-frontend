@@ -63,3 +63,4 @@ export interface SignupResponse {
   user?: User;      // 가입된 유저 정보를 바로 내려주는 경우
   // 백엔드가 회원가입 직후 자동 로그인을 시켜준다면 accessToken이 들어올 수도 있습니다.
 }
+
