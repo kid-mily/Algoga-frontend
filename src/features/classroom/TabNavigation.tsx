@@ -20,7 +20,7 @@ export default function TabNavigation() {
 
   const handleModalConfirm = () => {
     setIsModalOpen(false);
-    router.push(`/classroom/${continentid}/${countryid}/lecture/${lectureId}/evaluation`); 
+    router.push(`/classroom/${continentid}/${countryid}/evaluation`); 
   };
 
   return (
