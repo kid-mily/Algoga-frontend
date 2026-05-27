@@ -115,7 +115,7 @@ export default async function LectureListPage({ params }: PageProps) {
         }}>
           {lectures.map((lecture) => (
             <Link key={lecture.id} 
-            href={`/classroom/${continentid}/${countryid}/lecture/${lecture.id}`}
+            href={`/classroom/${continentid}/${countryid}/lecture`}
             className="flex flex-col bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md cursor-pointer">
               
               {/* 이미지 영역 */}
