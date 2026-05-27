@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
+import { useRouter } from "next/navigation";
 import LectureCard from "@/features/contentmanage/LectureCard";
 import StudentForm from "@/features/contentmanage/StudentForm";
-import { useRouter } from "next/navigation";
-import { lectures } from "@/features/contentmanage/MockData";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import Modal from "@/features/common/Modal";
+import CompleteModal from "@/features/common/CompleteModal";
 
+import {
+  lectures,
+} from "@/features/contentmanage/MockData";
+
+import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 export default function LecturePage() {
 
   // 현재 페이지
@@ -19,28 +23,58 @@ export default function LecturePage() {
   const [statusFilter, setStatusFilter] =
     useState("all");
 
+  // 수강생 모달
+  const [
+    openStudentModal,
+    setOpenStudentModal,
+  ] = useState(false);
+
+  // 삭제 확인 모달
+  const [
+    openDeleteModal,
+    setOpenDeleteModal,
+  ] = useState(false);
+
+  // 삭제 완료 모달
+  const [
+    openCompleteModal,
+    setOpenCompleteModal,
+  ] = useState(false);
+
+  // 선택된 강의
+  const [
+    selectedLectureId,
+    setSelectedLectureId,
+  ] = useState<number | null>(
+    null
+  );
+
   // 한 페이지당 보여줄 개수
   const itemsPerPage = 10;
-  const router = useRouter();
 
+  const router = useRouter();
 
   // 상태 필터링
   const filteredLectures =
     lectures.filter((lecture) => {
-
-      if (statusFilter === "public") {
+      if (
+        statusFilter === "public"
+      ) {
         return lecture.isPublic;
       }
-
-      if (statusFilter === "private") {
+      if (
+        statusFilter === "private"
+      ) {
         return !lecture.isPublic;
       }
+
       return true;
     });
 
   // 시작 index
   const startIndex =
-    (currentPage - 1) * itemsPerPage;
+    (currentPage - 1) *
+    itemsPerPage;
 
   // 현재 페이지 데이터
   const currentLectures =
@@ -51,14 +85,13 @@ export default function LecturePage() {
 
   // 총 페이지 수
   const totalPages = Math.ceil(
-    filteredLectures.length / itemsPerPage
+    filteredLectures.length /
+      itemsPerPage
   );
-
-  const [openStudentModal, setOpenStudentModal] =
-  useState(false);
 
   return (
     <div className="w-full">
+
       {/* 상단 헤더 */}
       <SimpleSubHeader
         title="강의 관리"
@@ -72,13 +105,11 @@ export default function LecturePage() {
 
           {/* 검색 */}
           <div className="flex h-[42px] min-w-0 flex-1 items-center rounded-[12px] border border-[#E4E7EC] px-3">
-
             <img
               src="/images/search.svg"
               alt="검색"
               className="h-[15px] w-[15px]"
             />
-
             <input
               type="text"
               placeholder="강의 제목 검색..."
@@ -98,9 +129,9 @@ export default function LecturePage() {
               setStatusFilter(
                 e.target.value
               );
-
               setCurrentPage(1);
             }}
+
             className="h-[42px] w-[100px] rounded-[12px] border border-[#E4E7EC] px-2 text-[13px] outline-none"
           >
             <option value="all">전체</option>
@@ -111,6 +142,7 @@ export default function LecturePage() {
           {/* 등록 버튼 */}
           <Link
             href="/contentadmin/lecture/new"
+
             className="flex h-[42px] whitespace-nowrap rounded-[12px] bg-[#439A97] px-4 text-[13px] font-semibold text-white"
           >
 
@@ -126,58 +158,71 @@ export default function LecturePage() {
 
         {/* 헤더 */}
         <div className="grid grid-cols-11 border-b border-[#E4E7EC] bg-[#FCFCFD] px-5 py-4 text-[13px] font-semibold text-[#667085]">
+
           <div>썸네일</div>
           <div>국가</div>
-          <div className="col-span-2" >강의 제목</div>
-          <div >가격</div>
+          <div className="col-span-2">강의 제목</div>
+          <div>가격</div>
           <div>수강생</div>
-          <div >챕터</div>
+          <div>챕터</div>
           <div>챕터관리</div>
-          <div >등록일</div>
+          <div>등록일</div>
           <div className="text-center">상태</div>
           <div className="text-center">액션</div>
         </div>
 
         {/* 리스트 */}
-        {currentLectures.map((lecture) => (
-         <LectureCard
-         key={lecture.id}
-          thumbnail={lecture.thumbnail}
-          country={lecture.country}
-          title={lecture.title}
-          description={lecture.description}
-          price={lecture.price}
-          students={lecture.students}
-          chapters={lecture.chapters}
-          createdAt={lecture.createdAt}
-          isPublic={lecture.isPublic}
+        {currentLectures.map(
+          (lecture) => (
+            <LectureCard
+              key={lecture.id}
+              thumbnail={lecture.thumbnail}
+              country={lecture.country}
+              title={lecture.title}
+              description={lecture.description}
+              price={lecture.price}
+              students={lecture.students}
+              chapters={lecture.chapters}
+              createdAt={lecture.createdAt}
+              isPublic={lecture.isPublic}
 
-          // 챕터관리
-          onChapterManage={() =>
-            router.push(
-              `/contentadmin/lecture/${lecture.id}/chapter/new`
-            )
-          }
+              // 챕터관리
+              onChapterManage={() =>
+                router.push(
+                  `/contentadmin/lecture/${lecture.id}/chapter/new`
+                )
+              }
+              // 수강생
+              onUsersClick={() =>
+                setOpenStudentModal(
+                  true
+                )
+              }
+              // 수정
+              onEditClick={() =>
+                router.push(
+                  `/contentadmin/lecture/${lecture.id}/edit`
+                )
+              }
+              // 삭제
+              onDeleteClick={() => {
 
-          // 수강생
-          onUsersClick={() =>
-            setOpenStudentModal(true)
-          }
+                setSelectedLectureId(
+                  lecture.id
+                );
 
-          // 수정
-          onEditClick={() =>
-            router.push(
-              `/contentadmin/lecture/${lecture.id}/edit`
-            )
-          }
-        />
-        ))}
+                setOpenDeleteModal(
+                  true
+                );
+              }}
+            />
+          )
+        )}
 
         {/* 데이터 없을 때 */}
-        {currentLectures.length === 0 && (
-
+        {currentLectures.length ===
+          0 && (
           <div className="flex h-[200px] items-center justify-center text-[14px] text-[#98A2B3]">
-
             검색 결과가 없습니다.
           </div>
         )}
@@ -187,7 +232,11 @@ export default function LecturePage() {
 
           {/* 총 개수 */}
           <p className="text-[13px] font-medium text-[#667085]">
-            총 {filteredLectures.length}개의 강의
+
+            총 {
+              filteredLectures.length
+            }
+            개의 강의
           </p>
 
           {/* 페이지네이션 */}
@@ -196,30 +245,40 @@ export default function LecturePage() {
             {/* 이전 */}
             <button
               onClick={() =>
-                setCurrentPage((prev) =>
-                  Math.max(prev - 1, 1)
+                setCurrentPage(
+                  (prev) =>
+                    Math.max(
+                      prev - 1,
+                      1
+                    )
                 )
               }
               className="h-[38px] rounded-[12px] border border-[#E4E7EC] px-4 text-[13px] font-semibold text-[#667085]"
             >
               이전
             </button>
-
             {/* 페이지 번호 */}
             {Array.from(
-              { length: totalPages },
+              {
+                length: totalPages,
+              },
               (_, index) => {
 
-                const page = index + 1;
+                const page =
+                  index + 1;
 
                 return (
                   <button
                     key={page}
                     onClick={() =>
-                      setCurrentPage(page)
+                      setCurrentPage(
+                        page
+                      )
                     }
+
                     className={`flex h-[38px] w-[38px] items-center justify-center rounded-[12px] text-[13px] font-semibold ${
-                      currentPage === page
+                      currentPage ===
+                      page
                         ? "bg-[#439A97] text-white"
                         : "border border-[#E4E7EC] text-[#667085]"
                     }`}
@@ -232,12 +291,9 @@ export default function LecturePage() {
 
             {/* 다음 */}
             <button
-              onClick={() =>
-                setCurrentPage((prev) =>
-                  Math.min(
-                    prev + 1,
-                    totalPages
-                  )
+              onClick={() =>setCurrentPage((prev) =>
+                    Math.min(prev + 1,totalPages
+                    )
                 )
               }
               className="h-[38px] rounded-[12px] border border-[#E4E7EC] px-4 text-[13px] font-semibold text-[#667085]"
@@ -247,10 +303,54 @@ export default function LecturePage() {
           </div>
         </div>
       </div>
+
+      {/* 수강생 모달 */}
       <StudentForm
         open={openStudentModal}
         onClose={() =>
-          setOpenStudentModal(false)
+          setOpenStudentModal(
+            false
+          )
+        }
+      />
+
+      {/* 삭제 확인 모달 */}
+      <Modal
+        open={openDeleteModal}
+        title="강의 삭제"
+        description="강의를 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={() => {
+          console.log(
+            "삭제 강의 id:",
+            selectedLectureId
+          );
+          // TODO:
+          // 나중에 API 연결
+          setOpenDeleteModal(
+            false
+          );
+          setOpenCompleteModal(
+            true
+          );
+        }}
+        onCancel={() =>
+          setOpenDeleteModal(
+            false
+          )
+        }
+      />
+      {/* 삭제 완료 모달 */}
+      <CompleteModal
+        open={openCompleteModal}
+        title="삭제 완료"
+        description="강의가 삭제되었습니다."
+        buttonText="확인"
+        onConfirm={() =>
+          setOpenCompleteModal(
+            false
+          )
         }
       />
     </div>

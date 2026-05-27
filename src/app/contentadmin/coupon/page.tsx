@@ -10,32 +10,23 @@ import {
   coupons,
 } from "@/features/contentmanage/MockData";
 import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import CompleteModal from "@/features/common/CompleteModal";
+import Modal from "@/features/common/Modal";
 
 export default function CouponPage() {
 
   const router = useRouter();
-
   // 현재 페이지
-  const [currentPage, setCurrentPage] =
-    useState(1);
-
+  const [currentPage, setCurrentPage] =useState(1);
   // 페이지당 개수
   const ITEMS_PER_PAGE = 10;
-
   // 전체 페이지 수
-  const totalPages = Math.ceil(
-    coupons.length / ITEMS_PER_PAGE
-  );
-
+  const totalPages = Math.ceil(coupons.length / ITEMS_PER_PAGE);
   // 현재 페이지 데이터
-  const currentCoupons =
-    coupons.slice(
-      (currentPage - 1) *
-        ITEMS_PER_PAGE,
-
-      currentPage *
-        ITEMS_PER_PAGE
-    );
+  const currentCoupons =coupons.slice((currentPage - 1) * ITEMS_PER_PAGE,currentPage *ITEMS_PER_PAGE);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openDeleteCompleteModal, setOpenDeleteCompleteModal] = useState(false);
+  const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null);
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
@@ -117,8 +108,10 @@ export default function CouponPage() {
               )
             }
             onDelete={() => {
-
-              console.log("삭제");
+              setSelectedCouponId(
+                coupon.id
+              );
+              setOpenDeleteModal(true);
             }}
           />
         ))}
@@ -142,9 +135,7 @@ export default function CouponPage() {
                 )
               }
 
-              disabled={
-                currentPage === 1
-              }
+              disabled={currentPage === 1}
               className="h-[36px] rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] font-medium text-[#667085] disabled:opacity-40"
             >
               이전
@@ -161,7 +152,6 @@ export default function CouponPage() {
               return (
                 <button
                   key={page}
-
                   onClick={() =>
                     setCurrentPage(
                       page
@@ -201,6 +191,37 @@ export default function CouponPage() {
           </div>
         </div>
       </div>
+      {/* 삭제 확인 */}
+      <Modal
+        open={openDeleteModal}
+        title="쿠폰 삭제"
+        description="정말 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={() => {
+          console.log(
+            "삭제 쿠폰:",
+            selectedCouponId
+          );
+          // TODO:
+          // 나중에 API 연결
+          setOpenDeleteModal(false);
+          setOpenDeleteCompleteModal(true);
+        }}
+        onCancel={() =>
+          setOpenDeleteModal(false)
+        }
+      />
+      {/* 삭제 완료 */}
+        <CompleteModal
+        open={openDeleteCompleteModal}
+        title="삭제 완료"
+        description="쿠폰이 삭제되었습니다."
+        buttonText="확인"
+        onConfirm={() =>
+          setOpenDeleteCompleteModal(false)
+        }
+      />
     </div>
   );
 }

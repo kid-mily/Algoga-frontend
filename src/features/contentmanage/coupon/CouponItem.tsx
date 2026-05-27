@@ -13,6 +13,7 @@ interface CouponItemProps {
   onDelete?: () => void;
 }
 
+
 export default function CouponItem({
   name,
   discount,
@@ -37,7 +38,6 @@ export default function CouponItem({
 
       {/* 할인율 */}
       <div>
-
         <div className="inline-flex rounded-full bg-[#EAF7EE] px-3 py-1 text-[13px] font-bold text-[#43A047]">
           {discount}%
         </div>
@@ -45,14 +45,8 @@ export default function CouponItem({
 
       {/* 기간 */}
       <div className="text-[14px] text-[#667085]">
-
-        <p>
-          {startDate}
-        </p>
-
-        <p>
-          ~ {endDate}
-        </p>
+        <p>{startDate}</p>
+        <p>~ {endDate}</p>
       </div>
 
       {/* 강의 */}
@@ -62,7 +56,6 @@ export default function CouponItem({
 
       {/* 적용 대상 */}
       <div>
-
         <div className="inline-flex rounded-[10px] bg-[#F2F4F7] px-3 py-1 text-[12px] font-semibold text-[#667085]">
           {target}
         </div>
@@ -70,7 +63,6 @@ export default function CouponItem({
 
       {/* 상태 */}
       <div>
-
         <div
           className={`inline-flex rounded-full px-3 py-1 text-[12px] font-semibold ${
             isActive
@@ -118,6 +110,7 @@ export default function CouponItem({
           />
         </button>
       </div>
+      
     </div>
   );
 }

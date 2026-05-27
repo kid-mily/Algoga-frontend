@@ -34,7 +34,7 @@ export default function CompleteModal({
        {/* Content */}
         <div className="flex flex-col items-center justify-center px-6 py-10">
 
-          <p className="text-[22px] text-[#6B7280]">
+          <p className="text-[25px] text-[#6B7280]">
             {description}
           </p>
 
