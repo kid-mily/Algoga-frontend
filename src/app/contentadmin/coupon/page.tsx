@@ -5,11 +5,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import CouponItem from "@/features/contentmanage/coupon/CouponItem";
-import SubHeader from "@/features/contentmanage/SubHeader";
 
 import {
   coupons,
 } from "@/features/contentmanage/MockData";
+import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 
 export default function CouponPage() {
 
@@ -41,12 +41,10 @@ export default function CouponPage() {
     <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
 
       {/* 헤더 */}
-      <SubHeader
-        backHref="/contentadmin"
-        backText="메인페이지로 돌아가기"
-        title="쿠폰 관리"
-        description="수료 시 발급되는 쿠폰을 등록하고 관리합니다"
-      />
+       <SimpleSubHeader
+            title="쿠폰 관리"
+            description="수료 시 발급되는 쿠폰을 등록하고 관리합니다"
+        />
 
       {/* 검색 영역 */}
       <div className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4">

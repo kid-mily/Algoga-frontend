@@ -12,6 +12,8 @@ import PointItem from "@/features/contentmanage/point/PointItem";
 import GiveForm from "@/features/contentmanage/point/GiveForm";
 import RecallForm from "@/features/contentmanage/point/RecallForm";
 
+import CompleteModal from "@/features/common/CompleteModal";
+
 import {
   students,
   pointLogs,
@@ -28,6 +30,18 @@ export default function PointPage() {
   // 회수 모달
   const [openRecall, setOpenRecall] =
     useState(false);
+
+  // 완료 모달
+  const [
+    completeOpen,
+    setCompleteOpen,
+  ] = useState(false);
+
+  // 완료 메시지
+  const [
+    completeText,
+    setCompleteText,
+  ] = useState("");
 
   // 선택된 학생
   const [
@@ -51,15 +65,12 @@ export default function PointPage() {
 
       {/* 검색 */}
       <div className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4">
-
         <div className="flex h-[42px] items-center rounded-[12px] border border-[#E4E7EC] px-3">
-
           <img
             src="/images/search.svg"
             alt="검색"
             className="h-[16px] w-[16px]"
           />
-
           <input
             type="text"
             placeholder="uuid, 사용자 이름, 이메일 검색..."
@@ -70,20 +81,16 @@ export default function PointPage() {
 
       {/* 사용자 마일리지 */}
       <div className="mt-5 overflow-hidden rounded-[20px] border border-[#E4E7EC] bg-white">
-
         {/* 헤더 */}
         <div className="grid grid-cols-[2fr_2fr_1fr_1fr] border-b border-[#E4E7EC] bg-[#FCFCFD] px-6 py-4 text-[14px] font-semibold text-[#667085]">
           <div>사용자</div>
           <div>보유 마일리지</div>
           <div>최근 업데이트</div>
-          <div className="text-center">
-            액션
-          </div>
+          <div className="text-center">액션</div>
         </div>
 
         {/* 리스트 */}
         {students.map((student) => (
-
           <StudentItem
             key={student.id}
             name={student.name}
@@ -96,17 +103,16 @@ export default function PointPage() {
                 name: student.name,
                 point: student.point,
               });
-
               setOpenGive(true);
             }}
 
             // 회수
             onTake={() => {
-
               setSelectedStudent({
                 name: student.name,
                 point: student.point,
               });
+
               setOpenRecall(true);
             }}
           />
@@ -130,14 +136,11 @@ export default function PointPage() {
           <div>사유</div>
           <div>처리자</div>
           <div>일시</div>
-          <div className="text-center">
-            상세
-          </div>
+          <div className="text-center">상세</div>
         </div>
 
         {/* 리스트 */}
         {pointLogs.map((log) => (
-
           <PointItem
             key={log.id}
             name={log.name}
@@ -171,18 +174,12 @@ export default function PointPage() {
         onClose={() =>
           setOpenGive(false)
         }
-        onSubmit={(
-          amount,
-          reason
-        ) => {
-
-          console.log(
-            "지급",
-            amount,
-            reason
-          );
-
+        onSubmit={() => {
           setOpenGive(false);
+          setCompleteText(
+            "마일리지가 지급되었습니다."
+          );
+          setCompleteOpen(true);
         }}
       />
 
@@ -198,18 +195,23 @@ export default function PointPage() {
         onClose={() =>
           setOpenRecall(false)
         }
-        onSubmit={(
-          amount,
-          reason
-        ) => {
-
-          console.log(
-            "회수",
-            amount,
-            reason
-          );
+        onSubmit={() => {
           setOpenRecall(false);
+          setCompleteText(
+            "마일리지가 회수되었습니다."
+          );
+          setCompleteOpen(true);
         }}
+      />
+      {/* 완료 모달 */}
+      <CompleteModal
+        open={completeOpen}
+        title="처리 완료"
+        description={completeText}
+        buttonText="확인"
+        onConfirm={() =>
+          setCompleteOpen(false)
+        }
       />
     </div>
   );

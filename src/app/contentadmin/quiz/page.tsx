@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 
 import QuizList from "@/features/contentmanage/quiz/QuizList";
-import SubHeader from "@/features/contentmanage/SubHeader";
 
 import {lectures,} from "@/features/contentmanage/MockData";
+import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 
 export default function QuizPage() {
 
@@ -17,12 +17,10 @@ export default function QuizPage() {
     <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
 
       {/* 헤더 */}
-      <SubHeader
-        backHref="/contentadmin"
-        backText="메인페이지로 돌아가기"
-        title="퀴즈 관리"
-        description="강의별 퀴즈를 등록하고 관리합니다"
-      />
+      <SimpleSubHeader
+      title="퀴즈 관리"
+      description="강의별 퀴즈를 등록하고 관리합니다"
+    />
 
       {/* 검색 영역 */}
       <div className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4">

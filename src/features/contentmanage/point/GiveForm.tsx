@@ -129,7 +129,7 @@ export default function GiveForm({
             </label>
 
             <textarea
-              placeholder="지급 사유를 입력하세요 (예: 이벤트 참여 보상, 강의 수료 축하)"
+              placeholder="지급 사유를 입력하세요"
 
               value={reason}
 
@@ -164,7 +164,6 @@ export default function GiveForm({
         {/* footer */}
         <div className="flex items-center justify-end gap-3 border-t border-[#E4E7EC] px-7 py-5">
 
-          {/* 취소 */}
           <button
             type="button"
             onClick={onClose}
@@ -173,7 +172,6 @@ export default function GiveForm({
             취소
           </button>
 
-          {/* 지급 */}
           <button
             type="button"
 
