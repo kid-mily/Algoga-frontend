@@ -56,7 +56,7 @@ const CLASS_INFO = {
 export default function LectureDescription() {
     const { continentid, countryid, lectureid, reviewid } = useParams();
     const router = useRouter();
-    const [ isPaid, setIsPaid ] = useState(true);  // 결제하기 강의듣기 버튼 설정
+    const [ isPaid, setIsPaid ] = useState(false);  // 결제하기 강의듣기 버튼 설정
 
     return (
     <div className="w-full min-h-screen bg-[#f5f6f8] py-12 px-4">
