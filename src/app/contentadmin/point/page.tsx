@@ -50,20 +50,20 @@ export default function PointPage() {
       />
 
       {/* 검색 */}
-      <div className="mt-5 rounded-[20px] border border-[#E4E7EC] bg-white p-5">
+      <div className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4">
 
-        <div className="flex h-[52px] items-center rounded-[16px] border border-[#E4E7EC] px-4">
+        <div className="flex h-[42px] items-center rounded-[12px] border border-[#E4E7EC] px-3">
 
           <img
             src="/images/search.svg"
             alt="검색"
-            className="h-[18px] w-[18px]"
+            className="h-[16px] w-[16px]"
           />
 
           <input
             type="text"
             placeholder="uuid, 사용자 이름, 이메일 검색..."
-            className="ml-3 flex-1 bg-transparent text-[15px] outline-none placeholder:text-[#98A2B3]"
+            className="ml-2 flex-1 bg-transparent text-[14px] outline-none placeholder:text-[#98A2B3]"
           />
         </div>
       </div>
@@ -73,13 +73,9 @@ export default function PointPage() {
 
         {/* 헤더 */}
         <div className="grid grid-cols-[2fr_2fr_1fr_1fr] border-b border-[#E4E7EC] bg-[#FCFCFD] px-6 py-4 text-[14px] font-semibold text-[#667085]">
-
           <div>사용자</div>
-
           <div>보유 마일리지</div>
-
           <div>최근 업데이트</div>
-
           <div className="text-center">
             액션
           </div>
@@ -90,18 +86,12 @@ export default function PointPage() {
 
           <StudentItem
             key={student.id}
-
             name={student.name}
-
             email={student.email}
-
             point={student.point}
-
             updatedAt={student.updatedAt}
-
             // 지급
             onGive={() => {
-
               setSelectedStudent({
                 name: student.name,
                 point: student.point,
@@ -117,7 +107,6 @@ export default function PointPage() {
                 name: student.name,
                 point: student.point,
               });
-
               setOpenRecall(true);
             }}
           />
@@ -126,31 +115,21 @@ export default function PointPage() {
 
       {/* 지급/사용 내역 */}
       <div className="mt-7 overflow-hidden rounded-[20px] border border-[#E4E7EC] bg-white">
-
         {/* 제목 */}
         <div className="border-b border-[#E4E7EC] px-6 py-5">
-
           <h2 className="text-[18px] font-bold text-[#111827]">
-
             최근 지급/사용 내역
           </h2>
         </div>
 
         {/* 헤더 */}
         <div className="grid grid-cols-[1fr_1fr_1fr_2fr_1fr_1fr_1fr] border-b border-[#E4E7EC] bg-[#FCFCFD] px-6 py-4 text-[14px] font-semibold text-[#667085]">
-
           <div>사용자</div>
-
           <div>유형</div>
-
           <div>금액</div>
-
           <div>사유</div>
-
           <div>처리자</div>
-
           <div>일시</div>
-
           <div className="text-center">
             상세
           </div>
@@ -161,23 +140,16 @@ export default function PointPage() {
 
           <PointItem
             key={log.id}
-
             name={log.name}
-
             type={
               log.type as
                 | "적립"
                 | "사용"
             }
-
             amount={log.amount}
-
             reason={log.reason}
-
             manager={log.manager}
-
             createdAt={log.createdAt}
-
             onDetail={() =>
               router.push(
                 `/contentadmin/point/${log.id}`
@@ -190,19 +162,15 @@ export default function PointPage() {
       {/* 지급 모달 */}
       <GiveForm
         open={openGive}
-
         studentName={
           selectedStudent?.name || ""
         }
-
         currentPoint={
           selectedStudent?.point || 0
         }
-
         onClose={() =>
           setOpenGive(false)
         }
-
         onSubmit={(
           amount,
           reason
@@ -221,19 +189,15 @@ export default function PointPage() {
       {/* 회수 모달 */}
       <RecallForm
         open={openRecall}
-
         studentName={
           selectedStudent?.name || ""
         }
-
         currentPoint={
           selectedStudent?.point || 0
         }
-
         onClose={() =>
           setOpenRecall(false)
         }
-
         onSubmit={(
           amount,
           reason
@@ -244,7 +208,6 @@ export default function PointPage() {
             amount,
             reason
           );
-
           setOpenRecall(false);
         }}
       />

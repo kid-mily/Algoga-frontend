@@ -11,8 +11,8 @@ export default function ContentPage() {
   return (
     <div>
       콘텐츠 매니저 메인 페이지
-{/* 
-      <Modal
+
+      {/* <Modal
         open={open}
         onConfirm={() => console.log("확인")}
         onCancel={() => setOpen(false)}
