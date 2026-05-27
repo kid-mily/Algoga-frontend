@@ -106,7 +106,7 @@ export default function RecallForm({
 
             <input
               type="number"
-              placeholder="지급할 마일리지를 입력하세요"
+              placeholder="회수할 마일리지를 입력하세요"
 
               value={amount}
 
@@ -164,7 +164,6 @@ export default function RecallForm({
         {/* footer */}
         <div className="flex items-center justify-end gap-3 border-t border-[#E4E7EC] px-7 py-5">
 
-          {/* 취소 */}
           <button
             type="button"
             onClick={onClose}
@@ -173,7 +172,6 @@ export default function RecallForm({
             취소
           </button>
 
-          {/* 회수 */}
           <button
             type="button"
 

@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 
-import SubHeader from "@/features/contentmanage/SubHeader";
 import QnaItem from "@/features/contentmanage/qna/QnaItem";
 import { useRouter } from "next/navigation";
-
 import {qnas,} from "@/features/contentmanage/MockData";
+import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 
 export default function QnaPage() {
 
@@ -67,11 +66,9 @@ export default function QnaPage() {
     <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
 
       {/* 헤더 */}
-      <SubHeader
-        backHref="/contentadmin"
-        backText="메인페이지로 돌아가기"
-        title="Q&A 관리"
-        description="학생들의 질문을 관리하고 답변합니다"
+      <SimpleSubHeader
+      title="Q&A 관리"
+      description="학생들의 질문을 관리하고 답변합니다"
       />
 
       {/* 검색 */}

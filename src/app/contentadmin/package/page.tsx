@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import SubHeader from "@/features/contentmanage/SubHeader";
+
 import PackageCard from "@/features/contentmanage/package/PackageCard";
 import {
   packages,
 } from "@/features/contentmanage/MockData";
 import { useRouter } from "next/navigation";
+import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 
 export default function PackagePage() {
   const router = useRouter();
@@ -15,29 +16,22 @@ export default function PackagePage() {
     <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
 
       {/* 헤더 */}
-      <SubHeader
-        backHref="/contentadmin"
-        backText="메인페이지로 돌아가기"
-        title="패키지 관리"
-        description="항공권과 숙소가 포함된 여행 패키지를 등록하고 관리합니다"
+      <SimpleSubHeader
+          title="패키지 관리"
+          description="항공권과 숙소가 포함된 여행 패키지를 등록하고 관리합니다"
       />
 
       <div className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4">
-
         <div className="flex items-center justify-between gap-3">
-
             {/* 왼쪽 */}
             <div className="flex flex-1 gap-3">
-
             {/* 검색 */}
             <div className="flex h-[42px] flex-1 items-center rounded-[12px] border border-[#E4E7EC] px-3">
-
                 <img
                 src="/images/search.svg"
                 alt="검색"
                 className="h-[16px] w-[16px]"
                 />
-
                 <input
                 type="text"
                 placeholder="패키지명 또는 목적지 검색..."
