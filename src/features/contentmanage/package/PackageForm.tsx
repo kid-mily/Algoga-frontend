@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import CompleteModal from "@/features/common/CompleteModal";
+import Modal from "@/features/common/Modal";
 
 interface PackageFormProps {
   mode: "create" | "edit";
@@ -84,6 +86,10 @@ export default function PackageForm({
     initialData?.hotelPrice || 180000
   );
 
+  const [openEditModal, setOpenEditModal] = useState(false);
+
+  const [openCompleteModal, setOpenCompleteModal] = useState(false);
+
   // 총 금액
   const totalPrice =
     airlinePrice +
@@ -101,258 +107,335 @@ export default function PackageForm({
     totalPrice -
     discountPrice;
 
+  // 제출
+  const handleSubmit = () => {
+
+    // 등록
+    if (mode === "create") {
+
+      console.log("패키지 등록");
+
+      setOpenCompleteModal(true);
+
+    } else {
+
+      // 수정
+      setOpenEditModal(true);
+    }
+  };
+
   return (
-    <div className="rounded-[24px] border border-[#E4E7EC] bg-white">
-      <div className="p-7">
-        {/* 상단 */}
-        <div className="grid grid-cols-2 gap-5">
-          {/* 패키지명 */}
-          <div>
-            <label className="text-[15px] font-semibold text-[#111827]">
-              패키지명 *
-            </label>
+    <>
+      <div className="rounded-[24px] border border-[#E4E7EC] bg-white">
 
-            <input
-              type="text"
-              value={title}
-              onChange={(e) =>
-                setTitle(
-                  e.target.value
-                )
-              }
-              placeholder="도쿄 프리미엄 5일 패키지"
-              className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
-            />
-          </div>
+        <div className="p-7">
 
-          {/* 목적지 */}
-          <div>
-            <label className="text-[15px] font-semibold text-[#111827]">
-              목적지 *
-            </label>
+          {/* 상단 */}
+          <div className="grid grid-cols-2 gap-5">
 
-            <input
-              type="text"
-              value={destination}
-              onChange={(e) =>
-                setDestination(
-                  e.target.value
-                )
-              }
-              placeholder="일본 도쿄"
-              className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
-            />
-          </div>
-        </div>
+            {/* 패키지명 */}
+            <div>
 
-        {/* 숙박 / 할인 */}
-        <div className="mt-6 grid grid-cols-2 gap-5">
-          {/* 숙박 */}
-          <div>
-            <label className="text-[15px] font-semibold text-[#111827]">
-              숙박 기간 *
-            </label>
-            <div className="mt-3 flex items-center gap-3">
+              <label className="text-[15px] font-semibold text-[#111827]">
+                패키지명 *
+              </label>
+
               <input
-                type="number"
-                value={nights}
+                type="text"
+                value={title}
                 onChange={(e) =>
-                  setNights(
-                    Number(
-                      e.target.value
-                    )
+                  setTitle(
+                    e.target.value
                   )
                 }
-                className="h-[52px] w-[120px] rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
+                placeholder="도쿄 프리미엄 5일 패키지"
+                className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
               />
-              <span className="text-[15px] text-[#667085]">
-                박 {nights + 1}일
-              </span>
             </div>
-          </div>
 
-          {/* 할인 */}
-          <div>
-            <label className="text-[15px] font-semibold text-[#111827]">
-              할인율 (%)
-            </label>
-            <div className="relative mt-3">
+            {/* 목적지 */}
+            <div>
+
+              <label className="text-[15px] font-semibold text-[#111827]">
+                목적지 *
+              </label>
+
               <input
-                type="number"
-                value={discountPercent}
+                type="text"
+                value={destination}
                 onChange={(e) =>
-                  setDiscountPercent(
-                    Number(
-                      e.target.value
-                    )
+                  setDestination(
+                    e.target.value
                   )
                 }
-                className="h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 pr-10 text-[15px] outline-none"
+                placeholder="일본 도쿄"
+                className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[15px] text-[#98A2B3]">
-                %
-              </span>
             </div>
           </div>
-        </div>
 
-        {/* 설명 */}
-        <div className="mt-6">
-          <label className="text-[15px] font-semibold text-[#111827]">
-            설명
-          </label>
+          {/* 숙박 / 할인 */}
+          <div className="mt-6 grid grid-cols-2 gap-5">
 
-          <textarea
-            value={description}
-            onChange={(e) =>
-              setDescription(
-                e.target.value
-              )
-            }
-            placeholder="패키지에 대한 간단한 설명을 입력하세요"
-            className="mt-3 h-[110px] w-full resize-none rounded-[16px] border border-[#E4E7EC] px-4 py-4 text-[15px] outline-none"
-          />
-        </div>
+            {/* 숙박 */}
+            <div>
 
-        {/* 연결 강의 */}
-        <div className="mt-6">
-          <label className="text-[15px] font-semibold text-[#111827]">
-            연결 강의
-          </label>
+              <label className="text-[15px] font-semibold text-[#111827]">
+                숙박 기간 *
+              </label>
 
-          <input
-            type="text"
-            value={lecture}
-            onChange={(e) =>
-              setLecture(
-                e.target.value
-              )
-            }
-            className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
-          />
-        </div>
+              <div className="mt-3 flex items-center gap-3">
 
-        {/* 항공권 */}
-        <div className="mt-6">
-          <label className="text-[15px] font-semibold text-[#111827]">
-            항공권 선택 *
-          </label>
+                <input
+                  type="number"
+                  value={nights}
+                  onChange={(e) =>
+                    setNights(
+                      Number(
+                        e.target.value
+                      )
+                    )
+                  }
+                  className="h-[52px] w-[120px] rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
+                />
 
-          <input
-            type="text"
-            value={airline}
-            onChange={(e) =>
-              setAirline(
-                e.target.value
-              )
-            }
-            placeholder="대한항공 ICN → NRT"
-            className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
-          />
-        </div>
-
-        {/* 숙소 */}
-        <div className="mt-6">
-          <label className="text-[15px] font-semibold text-[#111827]">
-            숙소 선택 *
-          </label>
-          <input
-            type="text"
-            value={hotel}
-            onChange={(e) =>
-              setHotel(
-                e.target.value
-              )
-            }
-            placeholder="도쿄 신주쿠 그랜드 호텔"
-            className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
-          />
-        </div>
-
-        {/* 가격 계산 */}
-        <div className="mt-7 rounded-[18px] bg-[#F8FAFC] p-6">
-          <h3 className="text-[17px] font-bold text-[#111827]">
-            가격 계산
-          </h3>
-
-          <div className="mt-5 space-y-4">
-            {/* 항공권 */}
-            <div className="flex items-center justify-between text-[15px]">
-              <span className="text-[#667085]">
-                항공권
-              </span>
-              <span className="font-semibold text-[#111827]">
-                ₩{airlinePrice.toLocaleString()}
-              </span>
-            </div>
-
-            {/* 숙소 */}
-            <div className="flex items-center justify-between text-[15px]">
-              <span className="text-[#667085]">
-                숙소 ({nights}박)
-              </span>
-              <span className="font-semibold text-[#111827]">
-                ₩{(
-                  hotelPrice * nights
-                ).toLocaleString()}
-              </span>
-            </div>
-
-            {/* 총금액 */}
-            <div className="flex items-center justify-between text-[15px]">
-              <span className="font-semibold text-[#111827]">
-                총 금액
-              </span>
-              <span className="font-bold text-[#111827]">
-                ₩{totalPrice.toLocaleString()}
-              </span>
+                <span className="text-[15px] text-[#667085]">
+                  박 {nights + 1}일
+                </span>
+              </div>
             </div>
 
             {/* 할인 */}
-            <div className="flex items-center justify-between text-[15px]">
-              <span className="font-semibold text-[#DC2626]">
-                할인 ({discountPercent}%)
-              </span>
+            <div>
 
-              <span className="font-bold text-[#DC2626]">
-                -₩{discountPrice.toLocaleString()}
-              </span>
+              <label className="text-[15px] font-semibold text-[#111827]">
+                할인율 (%)
+              </label>
+
+              <div className="relative mt-3">
+
+                <input
+                  type="number"
+                  value={discountPercent}
+                  onChange={(e) =>
+                    setDiscountPercent(
+                      Number(
+                        e.target.value
+                      )
+                    )
+                  }
+                  className="h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 pr-10 text-[15px] outline-none"
+                />
+
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[15px] text-[#98A2B3]">
+                  %
+                </span>
+              </div>
             </div>
+          </div>
 
-            {/* 최종가격 */}
-            <div className="flex items-center justify-between border-t border-[#E4E7EC] pt-4">
-              <span className="text-[18px] font-bold text-[#439A97]">
-                최종 가격
-              </span>
+          {/* 설명 */}
+          <div className="mt-6">
 
-              <span className="text-[30px] font-bold text-[#439A97]">
+            <label className="text-[15px] font-semibold text-[#111827]">
+              설명
+            </label>
 
-                ₩{finalPrice.toLocaleString()}
-              </span>
+            <textarea
+              value={description}
+              onChange={(e) =>
+                setDescription(
+                  e.target.value
+                )
+              }
+              placeholder="패키지에 대한 간단한 설명을 입력하세요"
+              className="mt-3 h-[110px] w-full resize-none rounded-[16px] border border-[#E4E7EC] px-4 py-4 text-[15px] outline-none"
+            />
+          </div>
+
+          {/* 연결 강의 */}
+          <div className="mt-6">
+
+            <label className="text-[15px] font-semibold text-[#111827]">
+              연결 강의
+            </label>
+
+            <input
+              type="text"
+              value={lecture}
+              onChange={(e) =>
+                setLecture(
+                  e.target.value
+                )
+              }
+              className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
+            />
+          </div>
+
+          {/* 항공권 */}
+          <div className="mt-6">
+
+            <label className="text-[15px] font-semibold text-[#111827]">
+              항공권 선택 *
+            </label>
+
+            <input
+              type="text"
+              value={airline}
+              onChange={(e) =>
+                setAirline(
+                  e.target.value
+                )
+              }
+              placeholder="대한항공 ICN → NRT"
+              className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
+            />
+          </div>
+
+          {/* 숙소 */}
+          <div className="mt-6">
+
+            <label className="text-[15px] font-semibold text-[#111827]">
+              숙소 선택 *
+            </label>
+
+            <input
+              type="text"
+              value={hotel}
+              onChange={(e) =>
+                setHotel(
+                  e.target.value
+                )
+              }
+              placeholder="도쿄 신주쿠 그랜드 호텔"
+              className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
+            />
+          </div>
+
+          {/* 가격 계산 */}
+          <div className="mt-7 rounded-[18px] bg-[#F8FAFC] p-6">
+
+            <h3 className="text-[17px] font-bold text-[#111827]">
+              가격 계산
+            </h3>
+
+            <div className="mt-5 space-y-4">
+
+              {/* 항공권 */}
+              <div className="flex items-center justify-between text-[15px]">
+
+                <span className="text-[#667085]">
+                  항공권
+                </span>
+
+                <span className="font-semibold text-[#111827]">
+                  ₩{airlinePrice.toLocaleString()}
+                </span>
+              </div>
+
+              {/* 숙소 */}
+              <div className="flex items-center justify-between text-[15px]">
+
+                <span className="text-[#667085]">
+                  숙소 ({nights}박)
+                </span>
+
+                <span className="font-semibold text-[#111827]">
+                  ₩{(
+                    hotelPrice * nights
+                  ).toLocaleString()}
+                </span>
+              </div>
+
+              {/* 총금액 */}
+              <div className="flex items-center justify-between text-[15px]">
+
+                <span className="font-semibold text-[#111827]">
+                  총 금액
+                </span>
+
+                <span className="font-bold text-[#111827]">
+                  ₩{totalPrice.toLocaleString()}
+                </span>
+              </div>
+
+              {/* 할인 */}
+              <div className="flex items-center justify-between text-[15px]">
+
+                <span className="font-semibold text-[#DC2626]">
+                  할인 ({discountPercent}%)
+                </span>
+
+                <span className="font-bold text-[#DC2626]">
+                  -₩{discountPrice.toLocaleString()}
+                </span>
+              </div>
+
+              {/* 최종가격 */}
+              <div className="flex items-center justify-between border-t border-[#E4E7EC] pt-4">
+
+                <span className="text-[18px] font-bold text-[#439A97]">
+                  최종 가격
+                </span>
+
+                <span className="text-[30px] font-bold text-[#439A97]">
+                  ₩{finalPrice.toLocaleString()}
+                </span>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* footer */}
+        <div className="flex items-center justify-end gap-3 border-t border-[#E4E7EC] px-7 py-5">
+
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="h-[48px] rounded-[14px] bg-[#439A97] px-7 text-[15px] font-semibold text-white transition hover:opacity-90"
+          >
+            {mode === "create"
+              ? "등록하기"
+              : "수정하기"}
+          </button>
+        </div>
       </div>
 
-      {/* footer */}
-      <div className="flex items-center justify-end gap-3 border-t border-[#E4E7EC] px-7 py-5">
+      {/* 수정 확인 */}
+      <Modal
+        open={openEditModal}
+        title="패키지 수정"
+        description="변경사항을 수정하시겠습니까?"
+        confirmText="수정"
+        cancelText="취소"
+        onConfirm={() => {
+          console.log("패키지 수정");
+          setOpenEditModal(false);
+          setOpenCompleteModal(true);
+        }}
+        onCancel={() =>
+          setOpenEditModal(false)
+        }
+      />
 
-        <button
-          type="button"
-          className="h-[48px] rounded-[14px] border border-[#E4E7EC] px-7 text-[15px] font-semibold text-[#344054]"
-        >
-          취소
-        </button>
-
-        <button
-          type="button"
-          className="h-[48px] rounded-[14px] bg-[#439A97] px-7 text-[15px] font-semibold text-white transition hover:opacity-90"
-        >
-          {mode === "create"
-            ? "등록하기"
-            : "수정하기"}
-        </button>
-      </div>
-    </div>
+      {/* 완료 모달 */}
+      <CompleteModal
+        open={openCompleteModal}
+        title={
+          mode === "create"
+            ? "등록 완료"
+            : "수정 완료"
+        }
+        description={
+          mode === "create"
+            ? "패키지 등록이 완료되었습니다."
+            : "패키지 수정이 완료되었습니다."
+        }
+        buttonText="확인"
+        onConfirm={() =>
+          setOpenCompleteModal(false)
+        }
+      />
+    </>
   );
 }

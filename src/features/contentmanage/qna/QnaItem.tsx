@@ -103,14 +103,6 @@ export default function QnaItem({
             >
               보기
             </button>
-
-            <button
-              type="button"
-              onClick={onDelete}
-              className="text-[13px] font-semibold text-[#D92D20] transition hover:opacity-70"
-            >
-              삭제
-            </button>
           </>
 
         ) : (

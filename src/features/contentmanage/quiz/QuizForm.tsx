@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import CompleteModal from "@/features/common/CompleteModal";
+import Modal from "@/features/common/Modal";
 
 type QuizFormMode =
   | "create"
@@ -8,16 +10,11 @@ type QuizFormMode =
 
 interface QuizFormProps {
   mode?: QuizFormMode;
-
   initialQuiz?: {
     lectureId: number;
-
     question: string;
-
     options: string[];
-
     answer: string;
-
     explanation: string;
   };
 }
@@ -27,41 +24,22 @@ export default function QuizForm({
 
   initialQuiz = {
     lectureId: 1,
-
     question: "",
-
     options: [
       "",
       "",
       "",
       "",
     ],
-
     answer: "",
-
     explanation: "",
   },
 }: QuizFormProps) {
 
-  const [question, setQuestion] =
-    useState(
-      initialQuiz.question
-    );
-
-  const [options, setOptions] =
-    useState(
-      initialQuiz.options
-    );
-
-  const [answer, setAnswer] =
-    useState(
-      initialQuiz.answer
-    );
-
-  const [explanation, setExplanation] =
-    useState(
-      initialQuiz.explanation
-    );
+  const [question, setQuestion] =useState(initialQuiz.question);
+  const [options, setOptions] =useState(initialQuiz.options);
+  const [answer, setAnswer] =useState(initialQuiz.answer);
+  const [explanation, setExplanation] =useState(initialQuiz.explanation);
 
   const labels = [
     "A",
@@ -75,20 +53,29 @@ export default function QuizForm({
     index: number,
     value: string
   ) => {
-
     const updated = [...options];
-
     updated[index] = value;
-
     setOptions(updated);
   };
 
+  // 제출
+  const handleSubmit = () => {
+    // 등록
+    if (mode === "create") {
+      console.log("퀴즈 등록");
+      setOpenCompleteModal(true);
+    } else {
+      // 수정
+      setOpenEditModal(true);
+    }
+  };
+  const [openEditModal, setOpenEditModal] =useState(false);
+  const [openCompleteModal,setOpenCompleteModal,] = useState(false);
+
   return (
     <div className="mt-6 rounded-[24px] border border-[#E4E7EC] bg-white p-6">
-
       {/* 강의 선택 */}
       <div>
-
         <label className="text-[15px] font-semibold text-[#111827]">
           강의 선택
           <span className="text-[#D92D20]">
@@ -98,17 +85,9 @@ export default function QuizForm({
 
         <select className="mt-3 h-[48px] w-full rounded-[14px] border border-[#E4E7EC] px-4 text-[15px] outline-none">
 
-          <option>
-            강의를 선택해주세요
-          </option>
-
-          <option>
-            일본 여행 완벽 가이드
-          </option>
-
-          <option>
-            파리 완전 정복 2024
-          </option>
+          <option>강의를 선택해주세요</option>
+          <option>일본 여행 완벽 가이드</option>
+          <option>파리 완전 정복 2024</option>
         </select>
       </div>
 
@@ -149,12 +128,9 @@ export default function QuizForm({
         </div>
 
         <div className="mt-4 space-y-3">
-
           {options.map(
             (option, index) => {
-
-              const isSelected =
-                answer === option;
+              const isSelected =answer === option;
 
               return (
                 <div
@@ -230,12 +206,47 @@ export default function QuizForm({
         <button
             type="button"
             className="h-[44px] rounded-[14px] bg-[#439A97] px-5 text-[14px] font-semibold text-white"
+            onClick={handleSubmit}
         >
             {mode === "create"
             ? "등록하기"
             : "수정하기"}
         </button>
        </div>
+       {/* 수정 확인 */}
+      <Modal
+        open={openEditModal}
+        title="퀴즈 수정"
+        description="퀴즈를 수정하시겠습니까?"
+        confirmText="수정"
+        cancelText="취소"
+        onConfirm={() => {
+          console.log("퀴즈 수정");
+          setOpenEditModal(false);
+          setOpenCompleteModal(true);
+        }}
+        onCancel={() =>
+          setOpenEditModal(false)
+        }
+      />
+      {/* 완료 모달 */}
+      <CompleteModal
+        open={openCompleteModal}
+        title={
+          mode === "create"
+            ? "등록 완료"
+            : "수정 완료"
+        }
+        description={
+          mode === "create"
+            ? "퀴즈가 등록되었습니다."
+            : "퀴즈가 수정되었습니다."
+        }
+        buttonText="확인"
+        onConfirm={() =>
+          setOpenCompleteModal(false)
+        }
+      />
     </div>
   );
 }

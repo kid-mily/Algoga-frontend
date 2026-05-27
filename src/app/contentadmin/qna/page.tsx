@@ -70,10 +70,8 @@ export default function QnaPage() {
       title="Q&A 관리"
       description="학생들의 질문을 관리하고 답변합니다"
       />
-
       {/* 검색 */}
       <div className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4">
-
         <div className="flex items-center gap-3">
           {/* 검색 */}
           <div className="flex h-[44px] flex-1 items-center rounded-[14px] border border-[#E4E7EC] px-4">
