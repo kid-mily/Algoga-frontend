@@ -1,115 +1,101 @@
 "use client";
 
 import Link from "next/link";
-
 import { useRouter } from "next/navigation";
-
 import { useState } from "react";
+import { authApi } from "@/lib/auth";
 
 export default function LoginForm() {
-
   const router = useRouter();
 
-  const [email, setEmail] =
-    useState("");
+  // 상태 관리 (이메일이 아닌 아이디)
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  const [password, setPassword] =
-    useState("");
+  const [usernameError, setUsernameError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [emailError, setEmailError] =
-    useState("");
-
-  const [passwordError, setPasswordError] =
-    useState("");
-
-  // 이메일 검증
-  const validateEmail = (
-    value: string
-  ) => {
-
-    const emailRegex =
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+  // 아이디 검증
+  const validateUsername = (value: string) => {
     if (!value.trim()) {
-
-      setEmailError(
-        "이메일을 입력해주세요."
-      );
-
-      return;
-    }
-
-    if (!emailRegex.test(value)) {
-
-      setEmailError(
-        "올바른 이메일 형식을 입력해주세요."
-      );
-
+      setUsernameError("아이디를 입력해주세요.");
     } else {
-
-      setEmailError("");
+      setUsernameError("");
     }
   };
 
   // 비밀번호 검증
-  const validatePassword = (
-    value: string
-  ) => {
-
-    const passwordRegex =
-      /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+  const validatePassword = (value: string) => {
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
     if (!value.trim()) {
-
-      setPasswordError(
-        "비밀번호를 입력해주세요."
-      );
-
-      return;
-    }
-
-    if (!passwordRegex.test(value)) {
-
-      setPasswordError(
-        "영문 + 숫자 포함 8자 이상 입력해주세요."
-      );
-
+      setPasswordError("비밀번호를 입력해주세요.");
+    } else if (!passwordRegex.test(value)) {
+      setPasswordError("영문 + 숫자 포함 8자 이상 입력해주세요.");
     } else {
-
       setPasswordError("");
     }
   };
 
   // 버튼 활성화
   const isValid =
-    email.trim() !== "" &&
+    username.trim() !== "" &&
     password.trim() !== "" &&
-    !emailError &&
+    !usernameError &&
     !passwordError;
 
-  // 로그인
-  const handleLogin = (
-    e: React.FormEvent
-  ) => {
-
+  // 로그인 로직 및 터미널 콘솔 로그
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    validateEmail(email);
-
+    validateUsername(username);
     validatePassword(password);
 
     if (!isValid) {
       return;
     }
 
-    console.log("로그인");
+    try {
+      setIsLoading(true);
 
-    router.push("/");
+      console.log("📝 [Frontend] 로그인 버튼 클릭됨!");
+      console.log("📡 전송 대상 API: POST http://localhost:15000/api/v1/auth/login");
+      console.log("📦 전송 데이터 페이로드(Payload):", {
+        username: username,
+        password: password,
+      });
+
+      const response = await authApi.login({
+        username,
+        password,
+      });
+
+      console.log("✅ [Frontend] 로그인 성공! 서버 응답 데이터:", response);
+
+      const { accessToken, refreshToken, requiresPasswordChange } = response.data;
+
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+
+      if (requiresPasswordChange) {
+        console.warn("⚠️ [Frontend] 임시 비밀번호 사용자입니다. 강제 변경 페이지로 이동합니다.");
+        router.push("/auth/login/reset-password");
+      } else {
+        console.log("🚀 [Frontend] 메인 페이지로 이동합니다.");
+        router.push("/");
+      }
+    } catch (error: any) {
+      console.error("❌ [Frontend] 로그인 실패:", error.message);
+      alert(error.message || "아이디 또는 비밀번호가 틀렸습니다.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="w-[400px]">
-
       {/* 타이틀 */}
       <h1 className="text-[32px] font-bold text-[#111827]">
         로그인
@@ -119,118 +105,87 @@ export default function LoginForm() {
         계정에 로그인하세요
       </p>
 
-      <form
-        className="mt-5"
-        onSubmit={handleLogin}
-      >
+      <form className="mt-5" onSubmit={handleLogin}>
+       {/* 아이디 */}
+<div className="relative">
+  <label className="text-[16px] font-semibold text-[#111827]">
+    아이디
+  </label>
 
-        {/* 아이디 */}
-        <div>
+  <input
+    type="text"
+    value={username}
+    onChange={(e) => {
+      const value = e.target.value;
+      setUsername(value);
+      validateUsername(value);
+    }}
+    disabled={isLoading}
+    placeholder="아이디를 입력해주세요"
+    className={`mt-3 h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 text-[15px] outline-none placeholder:text-[#98A2B3] ${
+      usernameError
+        ? "border border-[#DC2626]"
+        : "border border-[#D0D5DD]"
+    }`}
+  />
 
-          <label className="text-[16px] font-semibold text-[#111827]">
-            아이디
-          </label>
+  {/* 에러 메시지 */}
+  {usernameError && (
+    <p className="absolute mt-1 text-[13px] text-[#DC2626]">
+      {usernameError}
+    </p>
+  )}
+</div>
 
-          <input
-            type="email"
+{/* 비밀번호 */}
+<div className="relative mt-8">
+  <label className="text-[16px] font-semibold text-[#111827]">
+    비밀번호
+  </label>
 
-            value={email}
+  <div className="relative mt-3">
+    <input
+      type="password"
+      value={password}
+      onChange={(e) => {
+        const value = e.target.value;
+        setPassword(value);
+        validatePassword(value);
+      }}
+      disabled={isLoading}
+      placeholder="비밀번호를 입력해주세요"
+      className={`h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 pr-14 text-[15px] outline-none placeholder:text-[#98A2B3] ${
+        passwordError
+          ? "border border-[#DC2626]"
+          : "border border-[#D0D5DD]"
+      }`}
+    />
 
-            onChange={(e) => {
+    <button
+      type="button"
+      className="absolute right-4 top-1/2 -translate-y-1/2 text-[16px]"
+    >
+      <img src="/images/eye.svg" alt="눈아이콘" />
+    </button>
+  </div>
 
-              const value =
-                e.target.value;
+  {/* 에러 메시지 */}
+  {passwordError && (
+    <p className="absolute mt-1 text-[13px] text-[#DC2626]">
+      {passwordError}
+    </p>
+  )}
 
-              setEmail(value);
-
-              validateEmail(value);
-            }}
-
-            placeholder="아이디를 입력해주세요"
-
-            className={`mt-3 h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 text-[15px] outline-none placeholder:text-[#98A2B3] ${
-              emailError
-                ? "border border-[#DC2626]"
-                : "border border-[#D0D5DD]"
-            }`}
-          />
-
-          {/* 에러 */}
-          {emailError && (
-
-            <p className="mt-2 text-[13px] text-[#DC2626]">
-
-              {emailError}
-            </p>
-          )}
-        </div>
-
-        {/* 비밀번호 */}
-        <div className="mt-6">
-
-          <label className="text-[16px] font-semibold text-[#111827]">
-            비밀번호
-          </label>
-
-          <div className="relative mt-3">
-
-            <input
-              type="password"
-
-              value={password}
-
-              onChange={(e) => {
-
-                const value =
-                  e.target.value;
-
-                setPassword(value);
-
-                validatePassword(value);
-              }}
-
-              placeholder="비밀번호를 입력해주세요"
-
-              className={`h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 pr-14 text-[15px] outline-none placeholder:text-[#98A2B3] ${
-                passwordError
-                  ? "border border-[#DC2626]"
-                  : "border border-[#D0D5DD]"
-              }`}
-            />
-
-            <button
-              type="button"
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[16px]"
-            >
-              <img
-                src="/images/eye.svg"
-                alt="눈아이콘"
-              />
-            </button>
-          </div>
-
-          {/* 에러 */}
-          {passwordError && (
-
-            <p className="mt-2 text-[13px] text-[#DC2626]">
-
-              {passwordError}
-            </p>
-          )}
         </div>
 
         {/* 옵션 */}
-        <div className="mt-5 flex items-center justify-between">
-
+        <div className="mt-8 flex items-center justify-between">
           <label className="flex items-center gap-2 text-[14px] text-[#344054]">
-
             <input type="checkbox" />
-
             로그인 상태 유지
           </label>
 
           <div className="flex items-center gap-2 text-[14px] text-[#6B9D9B]">
-
             <Link href="/auth/login/findid">
               아이디 찾기
             </Link>
@@ -243,14 +198,12 @@ export default function LoginForm() {
           </div>
         </div>
 
-        {/* 로그인 버튼 */}
+        {/* 로그인 버튼 (원본 조건부 스타일링 복구) */}
         <button
           type="submit"
-
-          disabled={!isValid}
-
+          disabled={!isValid || isLoading}
           className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition ${
-            isValid
+            isValid && !isLoading
               ? "bg-[#439A97] hover:bg-[#367c79]"
               : "bg-[#D0D5DD]"
           }`}
@@ -260,7 +213,6 @@ export default function LoginForm() {
 
         {/* 구분선 */}
         <div className="mt-5 flex items-center gap-3">
-
           <div className="h-px flex-1 bg-[#E4E7EC]" />
 
           <span className="text-[12px] text-[#98A2B3]">
@@ -288,7 +240,6 @@ export default function LoginForm() {
 
         {/* 회원가입 */}
         <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
-
           계정이 없으신가요?{" "}
 
           <Link
