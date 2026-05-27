@@ -1,3 +1,5 @@
+import CanclelationPolicy from "@/app/(user)/classroom/[continentid]/[countryid]/lecture/[lectureid]/payment/canclelationpolicy/page";
+
 export default function PaymentSummary() {
     return (
         <div className="bg-white rounded-3xl border border-[#E9EEF5] p-6 shadow-sm mt-5">
@@ -27,10 +29,11 @@ export default function PaymentSummary() {
                 <hr className="border-[#EEF1F5] mt-3 mb-3" />
 
                 {/* 결제 금액 */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                     <p className="text-2xl font-bold text-[#0A1628]">최종 결제 금액</p>
                     <p className="text-2xl font-bold text-[#5E908D]">74,000원</p>
                 </div>
+                <CanclelationPolicy/>
             </div>
         </div>
     );

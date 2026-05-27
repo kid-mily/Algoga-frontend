@@ -6,6 +6,7 @@ import MileageForm from "@/features/payment/MileageForm";
 import PaymentButton from "@/features/payment/PaymentButton";
 import PaymentMethod from "@/features/payment/PaymentMethod";
 import PaymentSummary from "@/features/payment/PaymentSummary";
+import CanclelationPolicy from "../canclelationpolicy/page";
 
 export default function Page() {
     return (
