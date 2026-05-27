@@ -282,3 +282,94 @@ export const pointLogs = [
     createdAt: "2024.04.26",
   },
 ];
+
+export const packages = [
+  {
+    id: 1,
+    title: "도쿄 프리미엄 5일 패키지",
+    description:
+      "도쿄 신주쿠 그랜드 호텔 5성급 + 대한항공 직항",
+    location: "일본 도쿄",
+    duration: "4박 5일",
+    lecture: "일본 여행 완벽 가이드",
+    active: true,
+    originalPrice: 1070000,
+    discountPercent: 10,
+    finalPrice: 963000,
+
+    flight: {
+      airline: "대한항공",
+      time: "09:00 ICN → 11:30 NRT",
+      duration: "2h 30m",
+      code: "KE",
+      price: 350000,
+    },
+
+    hotel: {
+      hotel: "도쿄 신주쿠 그랜드 호텔",
+      location: "신주쿠",
+      rating: "평점 4.9 (2,341)",
+      stars: 5,
+      price: 180000,
+    },
+  },
+
+  {
+    id: 2,
+    title: "도쿄 이코노미 5일 패키지",
+    description:"도쿄 스테이션 호텔 4성급 + 제주항공",
+    location: "일본 도쿄",
+    duration: "4박 5일",
+    lecture: "일본 여행 완벽 가이드",
+    active: true,
+    originalPrice: 760000,
+    discountPercent: 15,
+    finalPrice: 646000,
+
+    flight: {
+      airline: "제주항공",
+      time: "18:00 ICN → 20:30 NRT",
+      duration: "2h 30m",
+      code: "7C",
+      price: 280000,
+    },
+
+    hotel: {
+      hotel: "도쿄 스테이션 호텔",
+      location: "마루노우치",
+      rating: "평점 4.6 (1,256)",
+      stars: 4,
+      price: 120000,
+    },
+  },
+
+  {
+    id: 3,
+
+    title: "파리 럭셔리 7일 패키지",
+    description:"파리 샹젤리제 호텔 5성급 + 에어프랑스 직항",
+    location: "프랑스 파리",
+    duration: "6박 7일",
+    lecture: "파리 완전 정복 2024",
+    active: true,
+    originalPrice: 2700000,
+    discountPercent: 12,
+    finalPrice: 2376000,
+
+    flight: {
+      airline: "에어프랑스",
+      time: "11:00 ICN → 16:30 CDG",
+      duration: "13h 30m",
+      code: "AF",
+      price: 1200000,
+    },
+
+    hotel: {
+      hotel: "파리 샹젤리제 호텔",
+      location: "샹젤리제",
+      rating: "평점 4.9 (3,124)",
+      stars: 5,
+      price: 250000,
+    },
+  },
+];

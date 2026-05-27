@@ -114,11 +114,9 @@ export default function LecturePage() {
             <option value="all">
               전체
             </option>
-
             <option value="public">
               공개
             </option>
-
             <option value="private">
               비공개
             </option>
@@ -156,8 +154,8 @@ export default function LecturePage() {
 
         {/* 리스트 */}
         {currentLectures.map((lecture) => (
-
          <LectureCard
+         key={lecture.id}
           thumbnail={lecture.thumbnail}
           country={lecture.country}
           title={lecture.title}
@@ -168,25 +166,25 @@ export default function LecturePage() {
           createdAt={lecture.createdAt}
           isPublic={lecture.isPublic}
 
-  // 챕터관리
-  onChapterManage={() =>
-    router.push(
-      `/contentadmin/lecture/${lecture.id}/chapter/new`
-    )
-  }
+          // 챕터관리
+          onChapterManage={() =>
+            router.push(
+              `/contentadmin/lecture/${lecture.id}/chapter/new`
+            )
+          }
 
-  // 수강생
-  onUsersClick={() =>
-    setOpenStudentModal(true)
-  }
+          // 수강생
+          onUsersClick={() =>
+            setOpenStudentModal(true)
+          }
 
-  // 수정
-  onEditClick={() =>
-    router.push(
-      `/contentadmin/lecture/${lecture.id}/edit`
-    )
-  }
-/>
+          // 수정
+          onEditClick={() =>
+            router.push(
+              `/contentadmin/lecture/${lecture.id}/edit`
+            )
+          }
+        />
         ))}
 
         {/* 데이터 없을 때 */}
