@@ -3,6 +3,7 @@
 'use client'
 import SubHeader from "@/features/contentmanage/SubHeader";
 import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 
 // 임시 데이터`
 const CLASS_INFO = {
@@ -55,6 +56,7 @@ const CLASS_INFO = {
 export default function LectureDescription() {
     const { continentid, countryid, lectureid, reviewid } = useParams();
     const router = useRouter();
+    const [ isPaid, setIsPaid ] = useState(true);  // 결제하기 강의듣기 버튼 설정
 
     return (
     <div className="w-full min-h-screen bg-[#f5f6f8] py-12 px-4">
@@ -79,11 +81,22 @@ export default function LectureDescription() {
                         <img src="/images/BookGray.svg" alt="책" />
                         {CLASS_INFO.chapterCount}개 챕터</p>
                 </div>
-                <button className="bg-[#439A97] text-white px-6 py-3 rounded-2xl font-semibold hover:bg-[#357A78]"
-                    onClick={() =>
-                    router.push(`/classroom/${continentid}/${countryid}/lecture/${lectureid}/payment/single`)}
-                >
-                결제하기
+                
+                <button
+                    className={`px-6 py-3 rounded-2xl font-semibold text-white ${
+                        isPaid
+                        ? 'bg-[#439A97] hover:bg-[#357A78]'
+                        : 'bg-[#439A97] hover:bg-[#357A78]'
+                    }`}
+                    onClick={() => {
+                        if (isPaid) {
+                        router.push(`/classroom/${continentid}/${countryid}/lecture/${lectureid}`);
+                        } else {
+                        router.push(`/classroom/${continentid}/${countryid}/lecture/${lectureid}/payment/single`);
+                        }
+                    }}
+                    >
+                    {isPaid ? '강의 듣기' : '결제하기'}
                 </button>
             </div>
             
@@ -94,7 +107,7 @@ export default function LectureDescription() {
                         <img src="/images/download.svg" alt="다운" />
                         첨부 자료
                     </h2>
-                    <button className="text-sm text-gray-400 hover:underline">다운받기</button>
+                    <button className="text-sm text-gray-400 hover:underline">다운 받기</button>
                 </div>
                 
                 <div> 
