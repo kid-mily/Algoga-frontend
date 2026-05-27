@@ -1,8 +1,10 @@
+// 클래스룸 (대륙 선택)
+
 import ContinentHeader from "@/features/classroom/ContinentHeader";
 import ContinentSelectForm from "@/features/classroom/ContinentSelectForm";
 import LearnMethod from "@/features/main/components/LearningMethod";
 
-export default function ClassRoomPage() {
+export default function ClassRoomMainPage() {
   return (
     <div className="w-full min-h-screen bg-[#F5F7FA] p-10">
       <ContinentHeader/>

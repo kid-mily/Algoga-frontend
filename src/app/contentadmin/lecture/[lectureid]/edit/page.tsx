@@ -39,8 +39,6 @@ export default function LectureEditPage() {
       data
     );
   };
-  
-
   return (
     <div className="p-6">
      <LectureHeader
@@ -48,16 +46,14 @@ export default function LectureEditPage() {
             description="여행 강의를 수정하고 관리합니다"
         />
         <div className="mt-6">
-      <LectureUpdateForm
-        initialData={{
-          country: lecture.country,
-          title: lecture.title,
-          description:
-            lecture.description,
-          price: lecture.price,
-          mileage:
-            lecture.mileage,
-        }}
+        <LectureUpdateForm
+          initialData={{
+            country: lecture.country,
+            title: lecture.title,
+            description:lecture.description,
+            price: lecture.price,
+            mileage:lecture.mileage,
+          }}
         onSubmit={handleEdit}
       />          
         </div>

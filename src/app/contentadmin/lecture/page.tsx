@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import ContentSubHeader from "@/features/contentmanage/SubHeader";
 import LectureCard from "@/features/contentmanage/LectureCard";
 import StudentForm from "@/features/contentmanage/StudentForm";
 import { useRouter } from "next/navigation";
 import { lectures } from "@/features/contentmanage/MockData";
+import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 
 export default function LecturePage() {
 
@@ -35,7 +35,6 @@ export default function LecturePage() {
       if (statusFilter === "private") {
         return !lecture.isPublic;
       }
-
       return true;
     });
 
@@ -60,11 +59,8 @@ export default function LecturePage() {
 
   return (
     <div className="w-full">
-
       {/* 상단 헤더 */}
-      <ContentSubHeader
-        backHref="/contentadmin"
-        backText="메인페이지로 돌아가기"
+      <SimpleSubHeader
         title="강의 관리"
         description="나라별 강의 콘텐츠를 등록하고 관리합니다"
       />
@@ -92,10 +88,7 @@ export default function LecturePage() {
 
           {/* 국가 */}
           <select className="h-[42px] w-[100px] rounded-[12px] border border-[#E4E7EC] px-2 text-[13px] outline-none">
-
-            <option>
-              전체 국가
-            </option>
+            <option>전체 국가</option>
           </select>
 
           {/* 상태 */}
@@ -110,18 +103,9 @@ export default function LecturePage() {
             }}
             className="h-[42px] w-[100px] rounded-[12px] border border-[#E4E7EC] px-2 text-[13px] outline-none"
           >
-
-            <option value="all">
-              전체
-            </option>
-
-            <option value="public">
-              공개
-            </option>
-
-            <option value="private">
-              비공개
-            </option>
+            <option value="all">전체</option>
+            <option value="public">공개</option>
+            <option value="private">비공개</option>
           </select>
 
           {/* 등록 버튼 */}
@@ -156,8 +140,8 @@ export default function LecturePage() {
 
         {/* 리스트 */}
         {currentLectures.map((lecture) => (
-
          <LectureCard
+         key={lecture.id}
           thumbnail={lecture.thumbnail}
           country={lecture.country}
           title={lecture.title}
@@ -168,25 +152,25 @@ export default function LecturePage() {
           createdAt={lecture.createdAt}
           isPublic={lecture.isPublic}
 
-  // 챕터관리
-  onChapterManage={() =>
-    router.push(
-      `/contentadmin/lecture/${lecture.id}/chapter/new`
-    )
-  }
+          // 챕터관리
+          onChapterManage={() =>
+            router.push(
+              `/contentadmin/lecture/${lecture.id}/chapter/new`
+            )
+          }
 
-  // 수강생
-  onUsersClick={() =>
-    setOpenStudentModal(true)
-  }
+          // 수강생
+          onUsersClick={() =>
+            setOpenStudentModal(true)
+          }
 
-  // 수정
-  onEditClick={() =>
-    router.push(
-      `/contentadmin/lecture/${lecture.id}/edit`
-    )
-  }
-/>
+          // 수정
+          onEditClick={() =>
+            router.push(
+              `/contentadmin/lecture/${lecture.id}/edit`
+            )
+          }
+        />
         ))}
 
         {/* 데이터 없을 때 */}

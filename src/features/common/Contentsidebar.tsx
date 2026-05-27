@@ -168,23 +168,21 @@ export default function ContentSidebar() {
       {/* 하단 */}
       <div className="border-t border-[#E4E7EC] p-4">
 
-        {/* 홈 이동 */}
-        <Link
-          href="/contentadmin"
-          className="flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] text-[#344054] transition hover:bg-[#F5F7FA]"
-        >
-          <img
-            src="/images/home.svg"
-            alt="홈"
-            className="h-[20px] w-[20px]"
-          />
-
-          홈으로 나가기
-        </Link>
+      {/* 로그아웃 */}
+      <Link
+        href="/auth/admin-login"
+        className="flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] text-[#344054] transition hover:bg-[#F5F7FA]"
+      >
+        <img
+          src="/images/home.svg"
+          alt="로그아웃"
+          className="h-[20px] w-[20px]"
+        />
+        로그아웃
+      </Link>
 
         {/* 관리자 정보 */}
         <div className="mt-6 flex items-center gap-3 px-4">
-
           {/* 프로필 아이콘 */}
           <div className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#439A97] text-white">
             <img
