@@ -112,28 +112,19 @@ export default function AdminLoginForm() {
           handleLogin();
         }}
       >
-
         {/* 아이디 */}
         <div>
-
           <label className="text-[16px] font-semibold text-[#111827]">
-
             아이디
           </label>
-
           <input
             type="email"
-
             value={email}
-
             onChange={(e) => {
-
               setEmail(
                 e.target.value
               );
-
               if (emailError) {
-
                 setEmailError("");
               }
             }}
@@ -200,17 +191,14 @@ export default function AdminLoginForm() {
                   : "border-[#D0D5DD]"
               }`}
             />
-
             {/* 보기 */}
             <button
               type="button"
-
               onClick={() =>
                 setShowPassword(
                   !showPassword
                 )
               }
-
               className="absolute right-4 top-1/2 -translate-y-1/2"
             >
               <img
