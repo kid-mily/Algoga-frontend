@@ -1,16 +1,13 @@
+'use client'
+
 import TabNavigation from "@/features/classroom/TabNavigation";
 import SubHeader from "@/features/contentmanage/SubHeader";
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 
-interface PageProps {
-  params: Promise<{
-    continentid: string;
-    countryid: string;
-  }>;
-}
-
-export default async function LectureListPage({ params }: PageProps) {
-  const { continentid, countryid } = await params;
+export default function LectureListPage() {
+  const { continentid, countryid } = useParams();
+  const router = useRouter(); 
 
   // 임시 더미 데이터
   const lectures = [
@@ -88,7 +85,8 @@ export default async function LectureListPage({ params }: PageProps) {
 
           {/* 버튼 */}
           <button
-            className=" bg-[#439A97] text-white text-xs font-semibold px-5 py-4 rounded-2xl hover:bg-[#597777]">진단 평가 시작</button>
+            className=" bg-[#439A97] text-white text-xs font-semibold px-5 py-4 rounded-2xl hover:bg-[#597777]"
+            onClick={() => router.push(`/classroom/${continentid}/${countryid}/evaluation`)}>진단 평가 시작</button>
         </div>
 
         {/* 정렬 필터 */}
