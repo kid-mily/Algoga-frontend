@@ -64,3 +64,25 @@ export interface SignupResponse {
   // 백엔드가 회원가입 직후 자동 로그인을 시켜준다면 accessToken이 들어올 수도 있습니다.
 }
 
+// 마이페이지 프로필 조회 응답
+export interface UserProfileResponse {
+  username: string;
+  name: string;
+  nickname: string;
+  email: string;
+  profileImageUrl?: string;
+  phone: string;
+  gender: string;
+  birthDate: string;
+  personalCode: string;
+}
+
+// 비밀번호 강제 변경 / 일반 변경 요청
+export interface ResetPasswordRequest {
+  newPassword: string;
+}
+
+export interface UpdatePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
