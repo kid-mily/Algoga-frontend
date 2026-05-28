@@ -105,7 +105,6 @@ export default function NewPwForm() {
     if (!isValid) {
       return;
     }
-
     router.push("/auth/login");
   };
 

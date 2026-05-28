@@ -14,7 +14,6 @@ export const signup = async (data: SignupRequest) => {
 
   if (!response.ok) {
     let errorMessage='회원가입 실패';
-    
     try {
       const errorData = await response.json();
       errorMessage = errorData?.message || errorMessage;
