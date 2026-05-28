@@ -1,16 +1,10 @@
+import { Schedule } from "./Types"
+
 interface ScheduleSidebarProps {
-  schedules: {
-    id: number
-    title: string
-    date: string
-    type: string
-    dday: string
-  }[]
+  schedules: Schedule[]
 }
 
-export default function ScheduleSidebar({
-  schedules,
-}: ScheduleSidebarProps) {
+export default function ScheduleSidebar({schedules}: ScheduleSidebarProps) {
   return (
     <aside className="bg-[#F8FAFC] p-8">
       <h3 className="mb-8 text-xl font-bold text-[#0A1628]">
@@ -20,7 +14,7 @@ export default function ScheduleSidebar({
       <div className="flex flex-col gap-5">
         {schedules.map((schedule) => (
           <article
-            key={schedule.id}
+            key={schedule.scheduleId}
             className="flex items-center justify-between rounded-3xl border border-[#EEF2F6] bg-white p-5"
           >
             <div className="flex items-start gap-3">
@@ -38,13 +32,13 @@ export default function ScheduleSidebar({
                 </p>
 
                 <span className="mt-1 text-sm text-[#94A3B8]">
-                  {schedule.date}
+                  {schedule.eventDate}
                 </span>
               </div>
             </div>
 
             <span className="font-bold text-[#F59E0B]">
-              {schedule.dday}
+              {schedule.dDayText}
             </span>
           </article>
         ))}
