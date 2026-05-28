@@ -4,24 +4,35 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import FindHeader from "@/features/auth/components/findheader";
 import Link from "next/link";
+import { findPassword } from "@/features/services/auth.service";
 
-export default function FindIdForm() {
+export default function FindPwForm() {
   const router = useRouter();
 
-  // 입력값 state
   const [userId, setUserId] = useState("");
   const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 임시 비밀번호 전송
-  const handleFindPw = () => {
-    // 입력 검사
-    if (!userId || !email) {
+  const handleFindPw = async () => {
+    if (!userId.trim() || !email.trim()) {
       alert("아이디와 이메일을 입력해주세요.");
       return;
     }
 
-    // 나중에 axios 성공 시 여기서 이동
-    router.push("/auth/login/findpwcomplete");
+    try {
+      setIsLoading(true);
+
+      await findPassword({
+        username: userId.trim(),
+        email: email.trim(),
+      });
+
+      router.push("/auth/login/findpwcomplete");
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -33,7 +44,6 @@ export default function FindIdForm() {
       />
 
       <form className="mt-8">
-        {/* 아이디 */}
         <div className="mt-5">
           <label className="text-[18px] font-semibold text-[#111827]">
             아이디
@@ -43,12 +53,12 @@ export default function FindIdForm() {
             type="text"
             placeholder="아이디를 입력해주세요"
             value={userId}
+            disabled={isLoading}
             onChange={(e) => setUserId(e.target.value)}
-            className="mt-2 h-[45px] w-full rounded-[20px] border border-[#D0D5DD] bg-[#F9FAFB] px-6 text-[18px] outline-none placeholder:text-[#98A2B3]"
+            className="mt-2 h-[45px] w-full rounded-[20px] border border-[#D0D5DD] bg-[#F9FAFB] px-6 text-[18px] outline-none placeholder:text-[#98A2B3] disabled:cursor-not-allowed disabled:bg-[#EEF2F6]"
           />
         </div>
 
-        {/* 이메일 */}
         <div className="mt-5">
           <label className="text-[18px] font-semibold text-[#111827]">
             이메일
@@ -58,21 +68,21 @@ export default function FindIdForm() {
             type="email"
             placeholder="이메일을 입력해주세요"
             value={email}
+            disabled={isLoading}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-2 h-[45px] w-full rounded-[20px] border border-[#D0D5DD] bg-[#F9FAFB] px-6 text-[18px] outline-none placeholder:text-[#98A2B3]"
+            className="mt-2 h-[45px] w-full rounded-[20px] border border-[#D0D5DD] bg-[#F9FAFB] px-6 text-[18px] outline-none placeholder:text-[#98A2B3] disabled:cursor-not-allowed disabled:bg-[#EEF2F6]"
           />
         </div>
 
-        {/* 버튼 */}
         <button
           type="button"
           onClick={handleFindPw}
-          className="mt-8 h-[45px] w-full rounded-[20px] bg-[#439A97] text-[20px] font-semibold text-white"
+          disabled={isLoading}
+          className="mt-8 h-[45px] w-full rounded-[20px] bg-[#439A97] text-[20px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#CFE5E4]"
         >
-          임시비밀번호전송
+          {isLoading ? "전송 중..." : "임시비밀번호전송"}
         </button>
 
-        {/* 아이디 찾기 */}
         <Link
           href="/auth/login/findid"
           className="mt-4 block text-center text-[#439A97]"

@@ -159,17 +159,48 @@ export default function RegisterInfoForm({ formData, onChange, onNext }: Registe
         </div>
 
         {/* 전화번호 */}
-        <div className="col-span-2">
-          <label className="text-[16px] font-semibold text-[#111827]">전화번호 *</label>
-          <input
-            type="text"
-            value={formData.phone}
-            onChange={(e) => onChange("phone", e.target.value)}
-            placeholder="010-0000-0000"
-            className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
-          />
-          {errors.phone && <p className="mt-1 text-[13px] text-red-500">{errors.phone}</p>}
-        </div>
+      <div className="col-span-2">
+
+      <label className="text-[16px] font-semibold text-[#111827]">
+        전화번호 *
+      </label>
+
+      <input
+        type="text"
+        value={formData.phone}
+
+        onChange={(e) => {
+
+          // 숫자만 추출
+          const onlyNumber = e.target.value.replace(/[^0-9]/g, '');
+
+          let formatted = onlyNumber;
+
+          // 010-1234-5678 형식
+          if (onlyNumber.length < 4) {
+            formatted = onlyNumber;
+          } else if (onlyNumber.length < 8) {
+            formatted = `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3)}`;
+          } else {
+            formatted =
+              `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3, 7)}-${onlyNumber.slice(7, 11)}`;
+          }
+
+          onChange("phone", formatted);
+        }}
+
+        placeholder="010-0000-0000"
+
+        className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+      />
+
+      {errors.phone && (
+        <p className="mt-1 text-[13px] text-red-500">
+          {errors.phone}
+        </p>
+      )}
+
+    </div>
 
         {/* 생년월일 */}
         <div>

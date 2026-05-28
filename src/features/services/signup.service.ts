@@ -1,29 +1,26 @@
-import axios from "axios";
-import { SignupRequest, SignupResponse } from "@/features/auth/types";
+// src/features/services/signup.service.ts
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+import { SignupRequest } from "@/features/auth/types";
+import { api } from "@/lib/api";
+import { AxiosError } from "axios";
 
-export const signup = async (data: SignupRequest) => {
-  const response = await fetch(`https://kidmily.kro.kr/api/v1/signup`, {
-    method: 'POST',
-    body: JSON.stringify(data),
-    headers: {
-      'Content-Type': 'application/json'
-    },
-  });
-
-  if (!response.ok) {
-    let errorMessage='회원가입 실패';
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData?.message || errorMessage;
-    } catch (e) {
-      errorMessage = response.statusText || errorMessage;
-    }
-    throw new Error(errorMessage);
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof AxiosError) {
+    return error.response?.data?.message || "회원가입에 실패했습니다.";
   }
 
-  // 성공 시 응답 본문이 없을 수도 있으므로 안전하게 파싱
-  const text = await response.text();
-  return text ? JSON.parse(text) : { success: true };
-}
+  if (error instanceof Error) {
+    return error.message || "회원가입에 실패했습니다.";
+  }
+
+  return "회원가입에 실패했습니다.";
+};
+
+export const signup = async (data: SignupRequest) => {
+  try {
+    const response = await api.post("/api/v1/auth/signup", data);
+    return response.data;
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error));
+  }
+};
