@@ -91,10 +91,10 @@ export default function EvaluationResult() {
                     </button>
                     
                     <button 
-                        onClick={() => router.push('/classroom/packagelounge')}
+                        onClick={() => router.push(`/classroom/packagelounge`)}
                         className="flex-1 bg-[#D35400] text-white h-16 rounded-2xl font-bold hover:bg-[#BA4A00] cursor-pointer flex items-center justify-center gap-2"
                     >
-                        <img src="/images/AirplaneWhite.svg" alt="비행기"/> 페이지 메인으로 이동
+                        <img src="/images/AirplaneWhite.svg" alt="비행기"/>패키지 라운지로 이동
                     </button>
                     </div>
                 </div>
