@@ -14,10 +14,16 @@ export const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const accessToken = localStorage.getItem("accessToken");
+      const url = config.url || "";
 
-      if (accessToken) {
-        config.headers.Authorization = `Bearer ${accessToken}`;
+      const accessToken = localStorage.getItem("accessToken");
+      const adminAccessToken = localStorage.getItem("adminAccessToken");
+
+      const isAdminApi = url.startsWith("/api/v1/admin");
+      const token = isAdminApi ? adminAccessToken : accessToken;
+
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
     }
 
@@ -29,7 +35,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error("API 요청 실패:", {
+    console.log("API 요청 실패:", {
       url: error.config?.url,
       baseURL: error.config?.baseURL,
       status: error.response?.status,
