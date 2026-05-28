@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 interface PackageItemProps {
     airlineCode: string;
     airlineName: string;
@@ -31,8 +33,12 @@ export default function PackageItem({
     hotelName,
     hotelDistance,
     price,
-    onBook,
     }: PackageItemProps) {
+        const router = useRouter();
+
+        const onBook = () => {
+            router.push('/classroom/packagelounge/reservation')
+        }
     return (
         <div className="flex items-center justify-between rounded-[20px] border border-[#E4E7EC] bg-white p-6 transition hover:shadow-sm">
             {/* 왼쪽 영역 */}

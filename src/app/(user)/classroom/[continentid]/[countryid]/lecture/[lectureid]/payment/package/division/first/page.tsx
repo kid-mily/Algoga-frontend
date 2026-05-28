@@ -15,7 +15,7 @@ export default function FirstPayment() {
             <div className="max-w-4xl mx-auto space-y-6">
                 <SubHeader
                 backHref={'주소가 예약 페이지로 돌아가야함'}
-                backText="예약 확인으로 돌아가기"
+                backText="돌아가기"
                 title="1차(예약금) 결제하기"
                 description="결제 수단을 선택하고 결제를 진행해주세요"
                 />

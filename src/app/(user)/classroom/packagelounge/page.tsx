@@ -2,11 +2,8 @@
 
 import { useState } from "react";
 import SubHeader from "@/features/contentmanage/SubHeader"; 
-import PackageItem from "@/features/classroom/PackageItem";
 import { useParams } from "next/navigation";
-import FirstPayment from "../[continentid]/[countryid]/lecture/[lectureid]/payment/package/division/first/page";
-import SecondPayment from "../[continentid]/[countryid]/lecture/[lectureid]/payment/package/division/second/page";
-import FullPayment from "../[continentid]/[countryid]/lecture/[lectureid]/payment/package/full/page";
+import PackageItem from "@/features/classroom/PackageItem";
 
 // Mock Data
 const mockPackages = [
