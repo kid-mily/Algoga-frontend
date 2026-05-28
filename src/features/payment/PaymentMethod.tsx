@@ -15,7 +15,7 @@ const paymentMethods = [
     },
     {
         id: 3,
-        title: "카카오페이",
+        title: "토스페이",
         description: "간편 결제",
     },
 ];
