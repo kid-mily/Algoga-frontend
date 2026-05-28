@@ -1,15 +1,14 @@
 interface LectureCardProps {
-  thumbnail: string;
-  country: string;
-  title: string;
-  description: string;
-  price: string;
-  students: string;
-  chapters: number;
-  createdAt: string;
-  isPublic: boolean;
+  thumbnail?: string | null;
+  country?: string | null;
+  title?: string | null;
+  description?: string | null;
+  price?: string | number | null;
+  students?: string | number | null;
+  chapters?: number | null;
+  createdAt?: string | null;
+  isPublic?: boolean;
 
-  // 버튼 이벤트
   onChapterManage?: () => void;
   onUsersClick?: () => void;
   onEditClick?: () => void;
@@ -25,59 +24,74 @@ export default function LectureCard({
   students,
   chapters,
   createdAt,
-  isPublic,
+  isPublic = false,
 
   onChapterManage,
   onUsersClick,
   onEditClick,
   onDeleteClick,
 }: LectureCardProps) {
+  const displayTitle = title || "제목 없음";
+  const displayCountry = country || "-";
+  const displayDescription = description || "-";
+
+  const displayPrice =
+    typeof price === "number" ? `${price.toLocaleString()}원` : price || "-";
+
+  const displayStudents =
+    typeof students === "number" ? students.toLocaleString() : students || "0";
+
+  const displayChapters = chapters ?? 0;
+  const displayCreatedAt = createdAt || "-";
 
   return (
     <div className="grid grid-cols-[0.9fr_0.9fr_2fr_1fr_1fr_0.8fr_1.2fr_1fr_1fr_1fr] items-center border-b border-[#E4E7EC] bg-white px-5 py-5">
-
       {/* 썸네일 */}
       <div className="pr-6">
-        <img
-          src={thumbnail}
-          alt={title}
-          className="h-[60px] w-[96px] rounded-[14px] object-cover"
-        />
+        {thumbnail ? (
+          <img
+            src={thumbnail}
+            alt={displayTitle}
+            className="h-[60px] w-[96px] rounded-[14px] object-cover"
+          />
+        ) : (
+          <div className="flex h-[60px] w-[96px] items-center justify-center rounded-[14px] bg-[#F2F4F7] text-[12px] text-[#98A2B3]">
+            이미지 없음
+          </div>
+        )}
       </div>
 
       {/* 국가 */}
       <div className="flex items-center gap-2">
-
         <span className="text-[16px] font-semibold text-[#111827]">
-          {country}
+          {displayCountry}
         </span>
       </div>
 
       {/* 제목 */}
       <div className="min-w-0">
-
-        <h3 className="text-[16px] font-semibold text-[#111827]">
-          {title}
+        <h3 className="truncate text-[16px] font-semibold text-[#111827]">
+          {displayTitle}
         </h3>
 
-        <p className="mt-1 text-[14px] text-[#98A2B3]">
-          {description}
+        <p className="mt-1 line-clamp-2 text-[14px] text-[#98A2B3]">
+          {displayDescription}
         </p>
       </div>
 
       {/* 가격 */}
       <div className="text-[16px] font-semibold text-[#111827]">
-        {price}
+        {displayPrice}
       </div>
 
       {/* 수강생 */}
       <div className="text-[16px] font-semibold text-[#111827]">
-        {students}명
+        {displayStudents}명
       </div>
 
       {/* 챕터 */}
       <div className="text-[16px] font-semibold text-[#439A97]">
-        {chapters}개
+        {displayChapters}개
       </div>
 
       {/* 챕터 관리 */}
@@ -93,12 +107,11 @@ export default function LectureCard({
 
       {/* 등록일 */}
       <div className="text-[14px] font-medium text-[#667085]">
-        {createdAt}
+        {displayCreatedAt}
       </div>
 
       {/* 상태 */}
       <div className="flex justify-center">
-
         <div
           className={`inline-flex rounded-full px-3 py-2 text-[13px] font-semibold ${
             isPublic
@@ -112,8 +125,6 @@ export default function LectureCard({
 
       {/* 액션 */}
       <div className="flex items-center justify-center gap-4">
-
-        {/* 유저 */}
         <button
           type="button"
           onClick={onUsersClick}
@@ -126,7 +137,6 @@ export default function LectureCard({
           />
         </button>
 
-        {/* 수정 */}
         <button
           type="button"
           onClick={onEditClick}
@@ -139,7 +149,6 @@ export default function LectureCard({
           />
         </button>
 
-        {/* 삭제 */}
         <button
           type="button"
           onClick={onDeleteClick}

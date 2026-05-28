@@ -1,48 +1,26 @@
-// src/lib/api.ts
-
 import axios from "axios";
+import { createAuthInterceptor, errorInterceptor } from "./interceptors";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
 
+// ==========================================
+// 1. 일반 유저용 API (일반 로그인, 마이페이지 등)
+// ==========================================
 export const api = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
-api.interceptors.request.use(
-  (config) => {
-    if (typeof window !== "undefined") {
-      const url = config.url || "";
+// 일반 유저는 'accessToken'을 사용하도록 인터셉터 연결
+api.interceptors.request.use(createAuthInterceptor("accessToken"));
+api.interceptors.response.use((response) => response, errorInterceptor);
 
-      const accessToken = localStorage.getItem("accessToken");
-      const adminAccessToken = localStorage.getItem("adminAccessToken");
+// ==========================================
+// 2. 관리자(Admin)용 API (강의 관리 등)
+// ==========================================
+export const adminApi = axios.create({
+  baseURL: BASE_URL,
+});
 
-      const isAdminApi = url.startsWith("/api/v1/admin");
-      const token = isAdminApi ? adminAccessToken : accessToken;
-
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.log("API 요청 실패:", {
-      url: error.config?.url,
-      baseURL: error.config?.baseURL,
-      status: error.response?.status,
-      message: error.response?.data?.message,
-      data: error.response?.data,
-    });
-
-    return Promise.reject(error);
-  }
-);
+// 관리자는 'adminAccessToken'을 사용하도록 인터셉터 연결
+adminApi.interceptors.request.use(createAuthInterceptor("adminAccessToken"));
+adminApi.interceptors.response.use((response) => response, errorInterceptor);

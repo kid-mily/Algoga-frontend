@@ -1,6 +1,4 @@
-// src/lib/auth.ts
-
-import { api } from "@/lib/api";
+import { api } from "@/lib/api"; // 🌟 일반 유저용 api 인스턴스 사용
 
 export const authApi = {
   signup: async (formData: any) => {
