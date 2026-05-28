@@ -1,41 +1,28 @@
-// ==========================================
-// 1. 공통 도메인 타입
-// ==========================================
+// src/features/auth/types.ts
 
 export interface User {
   id: number;
-  username: string; 
+  username: string;
   email: string;
   name: string;
-  nickname: string; 
-  role: 'USER' | 'ADMIN'; 
-  
-  // (선택) 서비스에서 마이페이지 등에 필요하다면 아래 항목들도 추가 가능합니다.
+  nickname: string;
+  role: "USER" | "ADMIN";
+
   phone?: string;
   birthDate?: string;
-  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  gender?: "MALE" | "FEMALE" | "OTHER";
 }
 
-
-// ==========================================
-// 2. Auth (로그인) 관련 타입
-// ==========================================
-
 export interface LoginRequest {
-  username: string; 
+  username: string;
   password: string;
 }
 
 export interface LoginResponse {
   accessToken: string;
-  refreshToken?: string; 
-  user: User;
+  refreshToken?: string;
+  requiresPasswordChange: boolean;
 }
-
-
-// ==========================================
-// 3. Auth (회원가입) 관련 타입
-// ==========================================
 
 export interface SignupRequest {
   username: string;
@@ -43,28 +30,35 @@ export interface SignupRequest {
   password: string;
   name: string;
   phone: string;
-  birthDate: string; // 백엔드 LocalDate 매칭용 ('YYYY-MM-DD' 형식)
-  gender: string; 
+  birthDate: string;
+  gender: string;
   nickname: string;
-  
-  // 선택 사항 (선택 사항은 ? 처리)
-  referralCode?: string; 
-  signupPath?: string; 
-  
-  // 약관 동의 (백엔드 필수값 @NotNull)
+  referralCode?: string;
+  signupPath?: string;
   termsServiceAgreed: boolean;
   termsPrivacyAgreed: boolean;
   termsMarketingAgreed: boolean;
 }
 
-// 회원가입 응답 타입 (백엔드 설계에 따라 변경될 수 있음)
 export interface SignupResponse {
-  message?: string; // 예: "회원가입이 완료되었습니다."
-  user?: User;      // 가입된 유저 정보를 바로 내려주는 경우
-  // 백엔드가 회원가입 직후 자동 로그인을 시켜준다면 accessToken이 들어올 수도 있습니다.
+  message?: string;
+  user?: User;
 }
 
-// 마이페이지 프로필 조회 응답
+export interface FindPasswordRequest {
+  username: string;
+  email: string;
+}
+
+export interface FindIdRequest {
+  name: string;
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  newPassword: string;
+}
+
 export interface UserProfileResponse {
   username: string;
   name: string;
@@ -75,11 +69,6 @@ export interface UserProfileResponse {
   gender: string;
   birthDate: string;
   personalCode: string;
-}
-
-// 비밀번호 강제 변경 / 일반 변경 요청
-export interface ResetPasswordRequest {
-  newPassword: string;
 }
 
 export interface UpdatePasswordRequest {

@@ -30,7 +30,7 @@ export default function FindIdForm() {
 
       // 🌟 프론트엔드 터미널(콘솔) 로그 출력
       console.log("📝 [Frontend] 아이디 찾기 요청 시도");
-      console.log("📡 전송 대상 API: POST http://localhost:15000/api/v1/auth/find-id");
+      console.log("📡 전송 대상 API: POST https://kidmily.kro.kr/api/v1/auth/find-id");
       console.log("📦 전송 데이터 페이로드(Payload):", { name, email });
 
       // 백엔드 API 호출 (fetch 사용)

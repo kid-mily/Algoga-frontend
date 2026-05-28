@@ -1,103 +1,106 @@
+// src/features/auth/components/loginform.tsx
+
 "use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { login } from "../../services/auth.service"; // 프로젝트 구조에 맞춰 상대 경로 확인 필요
+import { login } from "@/features/services/auth.service";
 
 export default function LoginForm() {
   const router = useRouter();
 
-  // 상태 관리
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  
+
   const [isLoading, setIsLoading] = useState(false);
 
-  // 아이디 검증
   const validateUsername = (value: string) => {
     if (!value.trim()) {
       setUsernameError("아이디를 입력해주세요.");
-    } else {
-      setUsernameError("");
+      return "아이디를 입력해주세요.";
     }
+
+    setUsernameError("");
+    return "";
   };
 
-  // 비밀번호 검증
   const validatePassword = (value: string) => {
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+  if (!value.trim()) {
+    setPasswordError("비밀번호를 입력해주세요.");
+  } else {
+    setPasswordError("");
+  }
+};
 
-    if (!value.trim()) {
-      setPasswordError("비밀번호를 입력해주세요.");
-    } else if (!passwordRegex.test(value)) {
-      setPasswordError("영문 + 숫자 포함 8자 이상 입력해주세요.");
-    } else {
-      setPasswordError("");
-    }
-  };
-
-  // 버튼 활성화 조건
   const isValid =
     username.trim() !== "" &&
     password.trim() !== "" &&
     !usernameError &&
     !passwordError;
 
-  // 로그인 핸들러
-const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    validateUsername(username);
-    validatePassword(password);
+  const usernameMessage = !username.trim() ? "아이디를 입력해주세요." : "";
+  const passwordMessage = !password.trim() ? "비밀번호를 입력해주세요." : "";
 
-    if (!isValid) return;
+  setUsernameError(usernameMessage);
+  setPasswordError(passwordMessage);
 
-    try {
-      setIsLoading(true);
-      console.log("📝 [Frontend] 로그인 API 호출!");
+  if (usernameMessage || passwordMessage) {
+    return;
+  }
 
-      // 1. 로그인 요청
-      const data = await login({ username, password });
+  try {
+    setIsLoading(true);
 
-      // 만약 data 자체가 넘어오지 않았다면 에러 처리 (requiresPasswordChange 에러 방지용)
-      if (!data) {
-          throw new Error("서버로부터 데이터를 받지 못했습니다.");
-      }
+    const data = await login({
+      username: username.trim(),
+      password,
+    });
 
-      // 2. 로컬 스토리지에 토큰 저장 🌟
-      localStorage.setItem("accessToken", data.accessToken);
-      if (data.refreshToken) {
-        localStorage.setItem("refreshToken", data.refreshToken);
-      }
-      
-      console.log("✅ 로그인 성공! Access Token 저장됨.");
-      
-      // 테스트용: 토큰 저장만 확인하기 위해 바로 메인 페이지로 이동시킵니다.
-      router.push("/");
-
-    } catch (error: any) {
-      // 💡 주석 처리되었던 catch문 복구
-      console.error("❌ 로그인 에러:", error.message);
-      alert(error.message);
-    } finally {
-      // 💡 주석 처리되었던 finally문 복구
-      setIsLoading(false);
+    if (!data?.accessToken) {
+      throw new Error("서버로부터 로그인 토큰을 받지 못했습니다.");
     }
-  };
+
+    localStorage.setItem("accessToken", data.accessToken);
+
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+    }
+
+    if (data.requiresPasswordChange) {
+      router.push("/auth/login/newpw");
+      return;
+    }
+
+    router.push("/");
+  } catch (error: any) {
+    console.error("로그인 에러:", error);
+    alert(error.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="w-[400px]">
-      {/* 타이틀 */}
       <h1 className="text-[32px] font-bold text-[#111827]">로그인</h1>
-      <p className="mt-2 text-[15px] text-[#98A2B3]">계정에 로그인하세요</p>
+
+      <p className="mt-2 text-[15px] text-[#98A2B3]">
+        계정에 로그인하세요
+      </p>
 
       <form className="mt-5" onSubmit={handleLogin}>
-        {/* 아이디 입력창 */}
         <div className="relative">
-          <label className="text-[16px] font-semibold text-[#111827]">아이디</label>
+          <label className="text-[16px] font-semibold text-[#111827]">
+            아이디
+          </label>
+
           <input
             type="text"
             value={username}
@@ -108,18 +111,25 @@ const handleLogin = async (e: React.FormEvent) => {
             }}
             disabled={isLoading}
             placeholder="아이디를 입력해주세요"
-            className={`mt-3 h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 text-[15px] outline-none placeholder:text-[#98A2B3] ${
-              usernameError ? "border border-[#DC2626]" : "border border-[#D0D5DD]"
+            className={`mt-3 h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 text-[15px] outline-none placeholder:text-[#98A2B3] disabled:cursor-not-allowed disabled:bg-[#EEF2F6] ${
+              usernameError
+                ? "border border-[#DC2626]"
+                : "border border-[#D0D5DD]"
             }`}
           />
+
           {usernameError && (
-            <p className="absolute mt-1 text-[13px] text-[#DC2626]">{usernameError}</p>
+            <p className="absolute mt-1 text-[13px] text-[#DC2626]">
+              {usernameError}
+            </p>
           )}
         </div>
 
-        {/* 비밀번호 입력창 */}
         <div className="relative mt-8">
-          <label className="text-[16px] font-semibold text-[#111827]">비밀번호</label>
+          <label className="text-[16px] font-semibold text-[#111827]">
+            비밀번호
+          </label>
+
           <div className="relative mt-3">
             <input
               type="password"
@@ -131,10 +141,13 @@ const handleLogin = async (e: React.FormEvent) => {
               }}
               disabled={isLoading}
               placeholder="비밀번호를 입력해주세요"
-              className={`h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 pr-14 text-[15px] outline-none placeholder:text-[#98A2B3] ${
-                passwordError ? "border border-[#DC2626]" : "border border-[#D0D5DD]"
+              className={`h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 pr-14 text-[15px] outline-none placeholder:text-[#98A2B3] disabled:cursor-not-allowed disabled:bg-[#EEF2F6] ${
+                passwordError
+                  ? "border border-[#DC2626]"
+                  : "border border-[#D0D5DD]"
               }`}
             />
+
             <button
               type="button"
               className="absolute right-4 top-1/2 -translate-y-1/2 text-[16px]"
@@ -142,12 +155,14 @@ const handleLogin = async (e: React.FormEvent) => {
               <img src="/images/eye.svg" alt="눈아이콘" />
             </button>
           </div>
+
           {passwordError && (
-            <p className="absolute mt-1 text-[13px] text-[#DC2626]">{passwordError}</p>
+            <p className="absolute mt-1 text-[13px] text-[#DC2626]">
+              {passwordError}
+            </p>
           )}
         </div>
 
-        {/* 옵션 및 아이디/비밀번호 찾기 */}
         <div className="mt-8 flex items-center justify-between">
           <label className="flex items-center gap-2 text-[14px] text-[#344054]">
             <input type="checkbox" />
@@ -161,7 +176,6 @@ const handleLogin = async (e: React.FormEvent) => {
           </div>
         </div>
 
-        {/* 로그인 버튼 */}
         <button
           type="submit"
           disabled={!isValid || isLoading}
@@ -174,14 +188,12 @@ const handleLogin = async (e: React.FormEvent) => {
           {isLoading ? "로그인 중..." : "로그인"}
         </button>
 
-        {/* 소셜 로그인 구분선 */}
         <div className="mt-5 flex items-center gap-3">
           <div className="h-px flex-1 bg-[#E4E7EC]" />
           <span className="text-[12px] text-[#98A2B3]">또는 소셜 로그인</span>
           <div className="h-px flex-1 bg-[#E4E7EC]" />
         </div>
 
-        {/* 카카오 로그인 버튼 */}
         <button
           type="button"
           className="mt-5 flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#FEE500] text-[17px] font-semibold text-black"
@@ -189,7 +201,6 @@ const handleLogin = async (e: React.FormEvent) => {
           카카오로 계속하기
         </button>
 
-        {/* 구글 로그인 버튼 */}
         <button
           type="button"
           className="mt-4 flex h-[56px] w-full items-center justify-center rounded-[16px] border border-[#D0D5DD] bg-[#F2F4F7] text-[17px] font-semibold text-[#344054]"
@@ -197,7 +208,6 @@ const handleLogin = async (e: React.FormEvent) => {
           구글로 계속하기
         </button>
 
-        {/* 회원가입 링크 */}
         <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
           계정이 없으신가요?{" "}
           <Link href="/auth/register" className="font-semibold text-[#6D9D9B]">
@@ -205,7 +215,6 @@ const handleLogin = async (e: React.FormEvent) => {
           </Link>
         </div>
 
-        {/* 메인 화면 이동 링크 */}
         <Link
           href="/"
           className="mt-4 block w-full text-center text-[14px] text-[#98A2B3]"

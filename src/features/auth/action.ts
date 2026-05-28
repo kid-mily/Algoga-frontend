@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { login } from "../services/auth.service";
+// import { login } from "@/services/auth.service"; // 실제 API 호출 함수
 
 type ActionState = {
     success: boolean,
@@ -11,7 +12,8 @@ type ActionState = {
 }
 
 export const loginAction = async (prevState: ActionState, formData: FormData): Promise<ActionState> => {
-    console.log('🖥️ [Server Action] 로그인 요청 시작');
+    // 1. 백엔드 DTO(AuthLoginRequest)에 맞게 email -> username으로 수정
+    console.log('쿠키시작');
     const username = formData.get("username") as string; 
     const password = formData.get("password") as string;
 
@@ -19,45 +21,38 @@ export const loginAction = async (prevState: ActionState, formData: FormData): P
 
     let data;
     try {
+        // data는 AuthTokenResponse 형태이어야 함
+        // { accessToken, refreshToken, requiresPasswordChange }
         data = await login(payload); 
-        console.log('🖥️ [Server Action] API 응답 성공:', data); // 🌟 백엔드 터미널에서 데이터 구조를 꼭 확인하세요!
     } catch(error) {
-        console.error('🖥️ [Server Action] API 요청 에러:', error);
         return {
             success: false,
             message: error instanceof Error ? error.message : 'Unknown Error'
         }
     }
 
-    // 🌟 API 응답이 { data: { accessToken: "..." } } 형태일 수 있으므로 안전하게 꺼냅니다.
-    const accessToken = data.accessToken || data.data?.accessToken;
-    const refreshToken = data.refreshToken || data.data?.refreshToken;
-
-    if (!accessToken) {
-        console.error('🖥️ [Server Action] 에러: 응답에서 accessToken을 찾을 수 없습니다.');
-        return {
-            success: false,
-            message: '토큰 발급에 실패했습니다. (응답 구조 오류)'
-        };
-    }
-
     const cookieStore = await cookies();
 
-    cookieStore.set('accessToken', accessToken, {
+    cookieStore.set('accessToken', data.accessToken, {
         httpOnly: true,
         maxAge: 60 * 60, // 1시간
         path: '/'
     });
 
-    if (refreshToken) {
-        cookieStore.set('refreshToken', refreshToken, {
+    if (data.refreshToken) {
+        cookieStore.set('refreshToken', data.refreshToken, {
             httpOnly: true,
             maxAge: 60 * 60 * 24 * 7, // 7일
             path: '/'
         });
     }
-    console.log('🖥️ [Server Action] 쿠키 저장 완료, 리다이렉트 실행');
+    console.log('저장');
 
-    // redirect는 try-catch 밖에서 호출되어야 정상 동작합니다.
     redirect('/'); 
+    // // 2. 임시 비밀번호 사용자 강제 변경 페이지로 리다이렉트 처리
+    // if (data.requiresPasswordChange) {
+    //     redirect('/auth/login/reset-password'); // 또는 /auth/login/newpw
+    // } else {
+        // redirect('/'); // 어드민 체크 로직이 필요하다면 추가
+    // }
 }
