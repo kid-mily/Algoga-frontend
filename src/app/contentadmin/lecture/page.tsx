@@ -1,38 +1,63 @@
 // src/app/contentadmin/lecture/page.tsx
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import LectureCard from "@/features/contentmanage/LectureCard";
+import LectureCard from "@/features/contentmanage/lecture/LectureCard";
 import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 
-import type { AdminCourse } from "@/features/services/adminCourse.service";
-import { getAdminCourses } from "@/features/services/adminCourse.service";
+// 🌟 추가된 모달 컴포넌트 임포트
+import Modal from "@/features/common/Modal";
+import CompleteModal from "@/features/common/CompleteModal";
+
+import type {
+  AdminCourse,
+  CourseCountry,
+} from "@/features/services/adminCourse.service";
+import {
+  getAdminCourses,
+  getCourseCountries,
+  deleteAdminCourse, // 🌟 삭제 API 임포트
+} from "@/features/services/adminCourse.service";
 
 export default function LecturePage() {
   const router = useRouter();
 
   const [lectures, setLectures] = useState<AdminCourse[]>([]);
+  const [countries, setCountries] = useState<CourseCountry[]>([]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [countryFilter, setCountryFilter] = useState("all");
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
   const itemsPerPage = 10;
 
+  // 🌟 삭제 모달 관리를 위한 state 추가
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openDeleteCompleteModal, setOpenDeleteCompleteModal] = useState(false);
+  const [selectedDeleteCourseId, setSelectedDeleteCourseId] = useState<number | null>(null);
+
   useEffect(() => {
-    const fetchLectures = async () => {
+    const fetchLectureData = async () => {
       try {
         setIsLoading(true);
         setErrorMessage("");
 
-        const data = await getAdminCourses();
-        setLectures(data);
+        const [courseData, countryData] = await Promise.all([
+          getAdminCourses(),
+          getCourseCountries(),
+        ]);
+
+        console.log("강의 목록 응답 확인:", courseData);
+
+        setLectures(courseData);
+        setCountries(countryData);
       } catch (error: any) {
         setErrorMessage(error.message || "강의 목록을 불러오지 못했습니다.");
       } finally {
@@ -40,13 +65,71 @@ export default function LecturePage() {
       }
     };
 
-    fetchLectures();
+    fetchLectureData();
   }, []);
 
+  // 🌟 타입 에러를 해결한 삭제 실행 함수
+  const handleDeleteConfirm = async () => {
+    // 값이 null이면 아무것도 하지 않고 종료 (타입스크립트 에러 방지)
+    if (selectedDeleteCourseId === null) {
+      return; 
+    }
+
+    try {
+      // 서버에 삭제 요청
+      await deleteAdminCourse(selectedDeleteCourseId); 
+      
+      // null이 아닌 숫자값임을 확실히 알려주기 위해 변수에 할당
+      const targetId = selectedDeleteCourseId;
+      
+      // 화면 목록에서 지워진 강의만 제거
+      setLectures((prev) => prev.filter(lecture => lecture.courseId !== targetId));
+      
+      setOpenDeleteModal(false);
+      setOpenDeleteCompleteModal(true);
+      setSelectedDeleteCourseId(null);
+    } catch (error: any) {
+      alert(error.message || "강의 삭제에 실패했습니다.");
+    }
+  };
+
+  const countryNameMap = useMemo(() => {
+    const map = new Map<number, string>();
+
+    countries.forEach((country) => {
+      map.set(country.countryId, country.countryName);
+    });
+
+    return map;
+  }, [countries]);
+
+  const lecturesWithCountryName = useMemo(() => {
+    return lectures.map((lecture) => {
+      const mappedCountryName = countryNameMap.get(lecture.countryId);
+
+      return {
+        ...lecture,
+        countryName:
+          lecture.countryName ||
+          mappedCountryName ||
+          `국가 ID ${lecture.countryId}`,
+      };
+    });
+  }, [lectures, countryNameMap]);
+
+  const countryOptions = useMemo(() => {
+    const names = lecturesWithCountryName
+      .map((lecture) => lecture.countryName)
+      .filter((country): country is string => Boolean(country));
+
+    return Array.from(new Set(names));
+  }, [lecturesWithCountryName]);
+
   const filteredLectures = useMemo(() => {
-    return lectures.filter((lecture) => {
+    return lecturesWithCountryName.filter((lecture) => {
       const title = lecture.title || "";
       const description = lecture.description || "";
+      const countryName = lecture.countryName || "";
 
       const isPublic =
         lecture.isPublic === true ||
@@ -61,14 +144,17 @@ export default function LecturePage() {
         title.toLowerCase().includes(keyword) ||
         description.toLowerCase().includes(keyword);
 
+      const matchesCountry =
+        countryFilter === "all" || countryName === countryFilter;
+
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "public" && isPublic) ||
         (statusFilter === "private" && !isPublic);
 
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesCountry && matchesStatus;
     });
-  }, [lectures, searchKeyword, statusFilter]);
+  }, [lecturesWithCountryName, searchKeyword, countryFilter, statusFilter]);
 
   const totalPages = Math.max(
     1,
@@ -90,12 +176,16 @@ export default function LecturePage() {
     return `${price.toLocaleString()}원`;
   };
 
-  const formatDate = (createdAt?: string) => {
-    if (!createdAt) {
+  const formatDate = (dateValue?: string) => {
+    if (!dateValue) {
       return "-";
     }
 
-    return createdAt.slice(0, 10).replaceAll("-", ".");
+    const datePart = dateValue.includes("T")
+      ? dateValue.split("T")[0]
+      : dateValue.split(" ")[0];
+
+    return datePart.replaceAll("-", ".");
   };
 
   const getIsPublic = (lecture: AdminCourse) => {
@@ -166,6 +256,23 @@ export default function LecturePage() {
           </div>
 
           <select
+            value={countryFilter}
+            onChange={(e) => {
+              setCountryFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="h-[42px] w-[120px] rounded-[12px] border border-[#E4E7EC] px-2 text-[13px] outline-none"
+          >
+            <option value="all">전체 국가</option>
+
+            {countryOptions.map((country) => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
+          </select>
+
+          <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
@@ -205,7 +312,7 @@ export default function LecturePage() {
           <LectureCard
             key={lecture.courseId}
             thumbnail={lecture.thumbnailUrl || ""}
-            country={lecture.countryName || `국가 ID ${lecture.countryId}`}
+            country={lecture.countryName || "-"}
             title={lecture.title || "-"}
             description={lecture.description || "-"}
             price={formatPrice(lecture.price)}
@@ -214,7 +321,9 @@ export default function LecturePage() {
             createdAt={formatDate(lecture.createdAt)}
             isPublic={getIsPublic(lecture)}
             onChapterManage={() =>
-              router.push(`/contentadmin/lecture/${lecture.courseId}/chapters`)
+              router.push(
+                `/contentadmin/lecture/${lecture.courseId}/chapter/new`
+              )
             }
             onUsersClick={() =>
               router.push(`/contentadmin/lecture/${lecture.courseId}`)
@@ -222,9 +331,11 @@ export default function LecturePage() {
             onEditClick={() =>
               router.push(`/contentadmin/lecture/${lecture.courseId}/edit`)
             }
-            onDeleteClick={() =>
-              router.push(`/contentadmin/lecture/${lecture.courseId}/delete`)
-            }
+            onDeleteClick={() => {
+              // 🌟 router.push 대신 모달 열기로 변경
+              setSelectedDeleteCourseId(lecture.courseId);
+              setOpenDeleteModal(true);
+            }}
           />
         ))}
 
@@ -281,6 +392,28 @@ export default function LecturePage() {
           </div>
         </div>
       </div>
+
+      {/* 🌟 추가된 삭제 관련 모달들 */}
+      <Modal
+        open={openDeleteModal}
+        title="강의 삭제"
+        description="정말 강의를 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setOpenDeleteModal(false);
+          setSelectedDeleteCourseId(null);
+        }}
+      />
+
+      <CompleteModal
+        open={openDeleteCompleteModal}
+        title="삭제 완료"
+        description="강의가 삭제되었습니다."
+        buttonText="확인"
+        onConfirm={() => setOpenDeleteCompleteModal(false)}
+      />
     </div>
   );
 }

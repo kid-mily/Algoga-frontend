@@ -1,7 +1,6 @@
 import ContentHeader from "@/features/common/Contentheader";
 import ContentSidebar from "@/features/common/Contentsidebar";
 
-
 export default function ContentLayout({
   children,
 }: {
