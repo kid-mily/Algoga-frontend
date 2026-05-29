@@ -21,3 +21,7 @@ export interface Schedule {
     eventDate: string;
     dDayText: string; 
 }
+
+export interface ScheduleSidebarProps {
+    schedules: Schedule[]
+}

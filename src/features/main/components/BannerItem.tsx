@@ -1,5 +1,5 @@
   import Link from "next/link";
-import { Banner } from "./Types";
+import { Banner } from "./types";
 
   interface BannerProps {
     banner: Banner;

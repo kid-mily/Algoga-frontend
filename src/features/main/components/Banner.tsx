@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import BannerItem from './BannerItem';
-import { Banner } from './Types';
+import { Banner } from './types';
 import { getMainBanners } from '@/features/services/banner.service';
 
 
