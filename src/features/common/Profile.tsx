@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { logout } from "@/features/services/auth.service";
 
 type Props = {
     user: {
@@ -12,18 +13,25 @@ type Props = {
 export default function Profile({ user }: Props) {
     const [isOpen, setIsOpen] = useState(false);
 
-    // 🌟 로그아웃 처리 함수
-    const handleLogout = () => {
-        // 1. 로컬 스토리지에서 토큰 삭제
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+    // 🌟 로그아웃 처리 함수 (async 추가)
+    const handleLogout = async () => {
+        try {
+            // 1. 백엔드에 로그아웃 알림 (Redis의 토큰 삭제 요청)
+            await logout();
+        } catch (error) {
+            console.error("로그아웃 API 호출 실패:", error);
+        } finally {
+            // 2. 로컬 스토리지에서 토큰 삭제
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
 
-        // 2. 알림 메시지 (선택 사항)
-        alert("로그아웃 되었습니다.");
+            alert("로그아웃 되었습니다.");
 
-        // 3. 로그인 페이지로 이동 (window.location을 사용하면 Header의 유저 상태까지 완벽히 새로고침 되어 비워집니다)
-        window.location.href = "/auth/login";
+            // 3. 로그인 페이지로 이동
+            window.location.href = "/auth/login";
+        }
     };
+    
 
     return (
         <div className="flex gap-6 items-center pr-5">
