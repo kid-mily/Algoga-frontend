@@ -22,18 +22,10 @@ const formatDuration = (durationSeconds: number) => {
   if (!durationSeconds || durationSeconds <= 0) {
     return "-";
   }
-
   const minutes = Math.floor(durationSeconds / 60);
   const seconds = durationSeconds % 60;
-
-  if (minutes <= 0) {
-    return `${seconds}초`;
-  }
-
-  if (seconds === 0) {
-    return `${minutes}분`;
-  }
-
+  if (minutes <= 0) return `${seconds}초`;
+  if (seconds === 0) return `${minutes}분`;
   return `${minutes}분 ${seconds}초`;
 };
 
@@ -48,11 +40,8 @@ export default function ChapterList({
   const [errorMessage, setErrorMessage] = useState("");
 
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openDeleteCompleteModal, setOpenDeleteCompleteModal] =
-    useState(false);
-  const [selectedChapterId, setSelectedChapterId] = useState<number | null>(
-    null
-  );
+  const [openDeleteCompleteModal, setOpenDeleteCompleteModal] = useState(false);
+  const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
 
   const fetchChapters = async () => {
     if (!lectureId) {
@@ -60,11 +49,9 @@ export default function ChapterList({
       setIsLoading(false);
       return;
     }
-
     try {
       setIsLoading(true);
       setErrorMessage("");
-
       const data = await getAdminChapters(lectureId);
       setChapters(data);
     } catch (error: any) {
@@ -79,17 +66,12 @@ export default function ChapterList({
   }, [lectureId]);
 
   const handleDeleteConfirm = async () => {
-    if (!selectedChapterId) {
-      return;
-    }
-
+    if (!selectedChapterId) return;
     try {
       await deleteAdminChapter(lectureId, selectedChapterId);
-
       setChapters((prev) =>
         prev.filter((chapter) => chapter.chapterId !== selectedChapterId)
       );
-
       setOpenDeleteModal(false);
       setOpenDeleteCompleteModal(true);
       setSelectedChapterId(null);
@@ -121,27 +103,32 @@ export default function ChapterList({
           등록된 챕터가 없습니다.
         </div>
       ) : (
-        chapters.map((chapter) => (
-          <ChapterCard
-            key={chapter.chapterId}
-            id={chapter.chapterOrder || chapter.chapterId}
-            duration={formatDuration(chapter.durationSeconds)}
-            title={chapter.title || "-"}
-            description={chapter.videoUrl || ""}
-            onEdit={
-              hideEdit
-                ? undefined
-                : () =>
-                    router.push(
-                      `/contentadmin/lecture/${lectureId}/chapter/${chapter.chapterId}/edit`
-                    )
-            }
-            onDelete={() => {
-              setSelectedChapterId(chapter.chapterId);
-              setOpenDeleteModal(true);
-            }}
-          />
-        ))
+        chapters.map((chapter) => {
+          const currentChapterId = chapter.chapterId || (chapter as any).id;
+
+          return (
+            <ChapterCard
+              key={currentChapterId}
+              id={chapter.chapterOrder || currentChapterId}
+              duration={formatDuration(chapter.durationSeconds)}
+              title={chapter.title || "-"}
+              description={chapter.videoUrl || ""}
+              onEdit={
+                hideEdit
+                  ? undefined
+                  : () =>
+                      // 🌟 수정됨: 주소 맨 끝에 /edit 을 다시 붙였습니다!
+                      router.push(
+                        `/contentadmin/lecture/${lectureId}/chapter/${currentChapterId}/edit`
+                      )
+              }
+              onDelete={() => {
+                setSelectedChapterId(currentChapterId);
+                setOpenDeleteModal(true);
+              }}
+            />
+          );
+        })
       )}
 
       <Modal

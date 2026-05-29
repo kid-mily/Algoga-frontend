@@ -1,154 +1,99 @@
 "use client";
 
-interface ChapterItemProps {
-  id: number;
+import { useState } from "react";
+import { useParams } from "next/navigation";
 
-  title: string;
+import SubHeader from "@/features/contentmanage/SubHeader";
+import ChapterList from "@/features/contentmanage/lecture/ChapterList";
+import ChapterForm from "@/features/contentmanage/lecture/ChapterForm";
+import CompleteModal from "@/features/common/CompleteModal";
 
-  description: string;
+import { createAdminChapter, getAdminChapters } from "@/features/services/adminChapter.service";
 
-  video: File | null;
+export default function NewChapterPage() {
+  const params = useParams();
+  const lectureid = Number(params.lectureid);
 
-  preview: string;
+  const [alertModal, setAlertModal] = useState({
+    open: false,
+    title: "",
+    description: "",
+  });
 
-  onRemove: () => void;
+  const handleCreate = async (data: any) => {
+    const durationNum = Number(data.duration);
 
-  onTitleChange: (
-    value: string
-  ) => void;
+    // 🌟 1. 강의 시간 안내 문구를 '초 단위'로 명확하게 수정했습니다!
+    if (isNaN(durationNum) || durationNum < 1) {
+      setAlertModal({
+        open: true,
+        title: "입력 오류",
+        description: "강의 시간은 '초(Second)' 단위로 1 이상의 숫자를 입력해주세요! (예: 30초 영상 ➔ 30 입력, 1분 영상 ➔ 60 입력)",
+      });
+      return false; 
+    }
 
-  onDescriptionChange: (
-    value: string
-  ) => void;
+    try {
+      const currentChapters = await getAdminChapters(lectureid);
+      
+      if (currentChapters && currentChapters.length >= 5) {
+        setAlertModal({
+          open: true,
+          title: "등록 제한",
+          description: "챕터는 최대 5개까지만 등록할 수 있습니다.",
+        });
+        return false;
+      }
+      
+      let nextOrder = 1;
+      if (currentChapters && currentChapters.length > 0) {
+        const maxOrder = Math.max(...currentChapters.map(c => c.chapterOrder || 0));
+        nextOrder = maxOrder + 1;
+      }
 
-  onVideoUpload: (
-    file: File
-  ) => void;
-}
-
-export default function ChapterItem({
-  id,
-  title,
-  description,
-  video,
-  preview,
-
-  onRemove,
-  onTitleChange,
-  onDescriptionChange,
-  onVideoUpload,
-}: ChapterItemProps) {
+      await createAdminChapter({
+        courseId: lectureid,
+        title: data.title,
+        description: data.description,
+        durationSeconds: durationNum, 
+        chapterOrder: nextOrder,
+        video: data.video, 
+      });
+      
+      return true; 
+    } catch (error: any) {
+      setAlertModal({
+        open: true,
+        title: "등록 실패",
+        description: error.message || "챕터 등록에 실패했습니다.",
+      });
+      return false;
+    }
+  };
 
   return (
-    <div className="rounded-[16px] border border-[#E4E7EC] bg-white p-4">
+    <div className="min-h-screen bg-[#F8F8F8] px-10 py-10">
+      <SubHeader
+        backHref="/contentadmin/lecture"
+        backText="강의 목록으로 돌아가기"
+        title="챕터 관리"
+        description="해당 강의의 챕터 목록을 확인하고 새 챕터를 추가합니다"
+      />
 
-      {/* 상단 */}
-      <div className="flex items-center justify-between">
+      <ChapterList lectureId={lectureid} />
 
-        {/* 왼쪽 */}
-        <div className="flex items-center gap-2">
+      <ChapterForm 
+        mode="create" 
+        onSubmit={handleCreate}
+      />
 
-          <img
-            src="/images/menu.svg"
-            alt="이동"
-            className="h-[12px] w-[12px]"
-          />
-
-          <h3 className="text-[15px] font-semibold text-[#111827]">
-            Chapter {id}
-          </h3>
-        </div>
-
-        {/* 삭제 */}
-        <button
-          type="button"
-          onClick={onRemove}
-          className="flex h-[24px] w-[24px] items-center justify-center rounded-full bg-[#F9FAFB] text-[13px] text-[#98A2B3] transition hover:bg-[#FEE4E2] hover:text-[#D92D20]"
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* 입력 */}
-      <div className="mt-4 space-y-3">
-
-        {/* 제목 */}
-        <input
-          type="text"
-          placeholder="챕터 제목"
-          value={title}
-          onChange={(e) =>
-            onTitleChange(
-              e.target.value
-            )
-          }
-          className="h-[42px] w-full rounded-[10px] border border-[#E4E7EC] px-4 text-[13px] outline-none"
-        />
-
-        {/* 설명 */}
-        <textarea
-          placeholder="챕터 설명"
-          value={description}
-          onChange={(e) =>
-            onDescriptionChange(
-              e.target.value
-            )
-          }
-          className="h-[82px] w-full resize-none rounded-[10px] border border-[#E4E7EC] p-4 text-[13px] outline-none"
-        />
-
-        {/* 업로드 */}
-        <label className="flex h-[120px] cursor-pointer flex-col items-center justify-center rounded-[14px] border border-dashed border-[#D0D5DD] bg-[#FCFCFD]">
-
-          {video ? (
-
-            <div className="flex flex-col items-center">
-
-              <video
-                src={preview}
-                controls
-                className="h-[65px] rounded-[8px]"
-              />
-
-              <p className="mt-2 text-[12px] font-medium text-[#111827]">
-                {video.name}
-              </p>
-            </div>
-
-          ) : (
-            <>
-              <img
-                src="/images/upload.svg"
-                alt="업로드"
-                className="h-[22px] w-[22px]"
-              />
-
-              <p className="mt-2 text-[12px] font-semibold text-[#344054]">
-                영상 파일 업로드
-              </p>
-
-              <p className="mt-1 text-[11px] text-[#98A2B3]">
-                MP4, MOV (최대 500MB)
-              </p>
-            </>
-          )}
-
-          <input
-            type="file"
-            accept="video/*"
-            className="hidden"
-            onChange={(e) => {
-
-              const file =
-                e.target.files?.[0];
-
-              if (!file) return;
-
-              onVideoUpload(file);
-            }}
-          />
-        </label>
-      </div>
+      <CompleteModal
+        open={alertModal.open}
+        title={alertModal.title}
+        description={alertModal.description}
+        buttonText="확인"
+        onConfirm={() => setAlertModal((prev) => ({ ...prev, open: false }))}
+      />
     </div>
   );
 }

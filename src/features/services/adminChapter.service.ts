@@ -1,130 +1,97 @@
-// src/features/services/adminCourse.service.ts
+// src/features/services/adminChapter.service.ts
 
 import { adminApi } from "@/lib/api";
 
-export interface AdminCourse {
+export interface AdminChapter {
+  chapterId: number;
+  courseId?: number;
+  title: string;
+  durationSeconds: number;
+  chapterOrder: number;
+  videoUrl?: string;
+}
+
+export interface CreateAdminChapterPayload {
   courseId: number;
-  countryId: number;
-  countryName?: string;
   title: string;
   description: string;
-  price: number;
-  level: string;
-  thumbnailUrl?: string;
-  studentCount?: number;
-  chapterCount?: number;
-  status?: string;
-  isPublic?: boolean;
-  createdAt?: string;
-  mileage?: number;
+  durationSeconds: number;
+  chapterOrder: number;
+  video: File;
 }
 
-export interface CourseCountry {
-  countryId: number;
-  countryName: string;
-  continentName?: string;
-}
-
-// ------------------------------------------
-// 1. 강의 목록 조회
-// ------------------------------------------
-export const getAdminCourses = async (): Promise<AdminCourse[]> => {
+// 1. 챕터 목록 조회
+export const getAdminChapters = async (courseId: number): Promise<AdminChapter[]> => {
   try {
-    const response = await adminApi.get("/api/v1/admin/courses");
+    const response = await adminApi.get(`/api/v1/admin/courses/${courseId}/chapters`);
     return response.data.data || response.data;
   } catch (error: any) {
-    console.error(`🔥 강의 목록 조회 에러 [상태코드: ${error.response?.status || '네트워크 에러'}]:`, error.response?.data || error);
-    throw new Error(error.response?.data?.message || "강의 목록을 불러오지 못했습니다.");
+    console.error("챕터 목록 조회 API 에러 상세:", error.response?.data || error);
+    throw new Error(error.response?.data?.message || "챕터 목록 조회에 실패했습니다.");
   }
 };
 
-// ------------------------------------------
-// 2. 국가 목록 조회
-// ------------------------------------------
-export const getCourseCountries = async (): Promise<CourseCountry[]> => {
-  try {
-    const response = await adminApi.get("/api/v1/admin/countries");
-    return response.data.data || response.data;
-  } catch (error: any) {
-    console.error(`🔥 국가 목록 조회 에러 [상태코드: ${error.response?.status || '네트워크 에러'}]:`, error.response?.data || error);
-    throw new Error(error.response?.data?.message || "국가 목록을 불러오지 못했습니다.");
-  }
-};
-
-// ------------------------------------------
-// 3. 강의 생성 (createAdminCourse)
-// ------------------------------------------
-export const createAdminCourse = async (payload: any) => {
+// 2. 챕터 등록
+export const createAdminChapter = async (payload: CreateAdminChapterPayload) => {
   try {
     const formData = new FormData();
     const requestData = {
-      countryId: payload.countryId,
       title: payload.title,
-      description: payload.description,
-      price: payload.price,
-      level: payload.level,
+      durationSeconds: payload.durationSeconds,
+      chapterOrder: payload.chapterOrder,
     };
 
-    formData.append(
-      "request",
-      new Blob([JSON.stringify(requestData)], { type: "application/json" })
-    );
+    formData.append("request", new Blob([JSON.stringify(requestData)], { type: "application/json" }));
+    formData.append("video", payload.video);
 
-    formData.append("thumbnail", payload.thumbnail);
+    const response = await adminApi.post(`/api/v1/admin/courses/${payload.courseId}/chapters`, formData);
+    return response.data;
+  } catch (error: any) {
+    console.error("챕터 등록 API 에러 상세:", error.response?.data || error);
+    throw new Error(error.response?.data?.message || "챕터 등록에 실패했습니다.");
+  }
+};
 
-    if (payload.files && payload.files.length > 0) {
-      payload.files.forEach((file: File) => {
-        formData.append("files", file);
-      });
+// 3. 챕터 수정 (updateAdminChapter)
+export const updateAdminChapter = async (
+  courseId: number,
+  chapterId: number,
+  payload: {
+    title: string;
+    durationSeconds: number;
+    chapterOrder: number;
+    video?: File | null;
+  }
+) => {
+  try {
+    const formData = new FormData();
+    const requestData = {
+      title: payload.title,
+      durationSeconds: payload.durationSeconds,
+      chapterOrder: payload.chapterOrder,
+    };
+
+    formData.append("request", new Blob([JSON.stringify(requestData)], { type: "application/json" }));
+    
+    if (payload.video) {
+      formData.append("video", payload.video);
     }
 
-    const response = await adminApi.post("/api/v1/admin/courses", formData);
-    return response.data.data || response.data;
+    const response = await adminApi.put(`/api/v1/admin/courses/${courseId}/chapters/${chapterId}`, formData);
+    return response.data;
   } catch (error: any) {
-    console.error(`🔥 강의 생성 에러 [상태코드: ${error.response?.status || '네트워크 에러'}]:`, error.response?.data || error);
-    throw new Error(error.response?.data?.message || "강의 등록에 실패했습니다.");
+    console.error("🔥 챕터 수정 백엔드 에러 상세:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "챕터 수정에 실패했습니다.");
   }
 };
 
-// ------------------------------------------
-// 4. 강의 단일 조회 (getAdminCourse)
-// ------------------------------------------
-export const getAdminCourse = async (courseId: number): Promise<AdminCourse> => {
+// 4. 챕터 삭제
+export const deleteAdminChapter = async (courseId: number, chapterId: number) => {
   try {
-    const response = await adminApi.get(`/api/v1/admin/courses/${courseId}`);
-    return response.data.data || response.data;
+    const response = await adminApi.delete(`/api/v1/admin/courses/${courseId}/chapters/${chapterId}`);
+    return response.data;
   } catch (error: any) {
-    console.error(`🔥 강의 상세 조회 에러 [상태코드: ${error.response?.status || '네트워크 에러'}]:`, error.response?.data || error);
-    throw new Error(error.response?.data?.message || "강의 정보를 불러오지 못했습니다.");
-  }
-};
-
-// ------------------------------------------
-// 5. 강의 수정 (updateAdminCourse)
-// ------------------------------------------
-export const updateAdminCourse = async (courseId: number, payload: any) => {
-  try {
-    const response = await adminApi.put(`/api/v1/admin/courses/${courseId}`, payload);
-    return response.data.data || response.data;
-  } catch (error: any) {
-    // 🌟 여기에 상태 코드(status)가 출력되도록 수정했습니다!
-    console.error(
-      `🔥 강의 수정 에러 [상태코드: ${error.response?.status || '네트워크/CORS 에러'}]:`, 
-      error.response?.data || error.message
-    );
-    throw new Error(error.response?.data?.message || "강의 수정에 실패했습니다.");
-  }
-};
-
-// ------------------------------------------
-// 6. 강의 삭제 (deleteAdminCourse)
-// ------------------------------------------
-export const deleteAdminCourse = async (courseId: number) => {
-  try {
-    const response = await adminApi.delete(`/api/v1/admin/courses/${courseId}`);
-    return response.data.data || response.data;
-  } catch (error: any) {
-    console.error(`🔥 강의 삭제 에러 [상태코드: ${error.response?.status || '네트워크 에러'}]:`, error.response?.data || error);
-    throw new Error(error.response?.data?.message || "강의 삭제에 실패했습니다.");
+    console.error("챕터 삭제 API 에러 상세:", error.response?.data || error);
+    throw new Error(error.response?.data?.message || "챕터 삭제에 실패했습니다.");
   }
 };

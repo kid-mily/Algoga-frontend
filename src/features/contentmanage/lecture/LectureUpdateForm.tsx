@@ -13,6 +13,7 @@ interface LectureUpdateFormProps {
     description: string;
     price: string;
     mileage: string;
+    isPublic?: string; // 🌟 공개 여부 추가 (기존 데이터 호환을 위해 optional 처리)
   };
   onSubmit?: (data: any, thumbnailFile?: File, attachmentFiles?: File[]) => void | Promise<boolean> | boolean; 
 }
@@ -23,9 +24,13 @@ export default function LectureUpdateForm({
 }: LectureUpdateFormProps) {
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
-  const [formData, setFormData] = useState(initialData);
   
-  // 🌟 실제 파일 객체를 담을 state 추가
+  // 만약 기존 데이터에 isPublic이 없었다면 "true"로 기본값 세팅
+  const [formData, setFormData] = useState({
+    ...initialData,
+    isPublic: initialData.isPublic ?? "true", 
+  });
+  
   const [thumbnailFile, setThumbnailFile] = useState<File | undefined>(); 
   const [preview, setPreview] = useState("/images/thumb.png");
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -39,17 +44,17 @@ export default function LectureUpdateForm({
     const file = e.target.files?.[0];
     if (!file) return;
     setPreview(URL.createObjectURL(file));
-    setThumbnailFile(file); // 🌟 실제 파일 저장
+    setThumbnailFile(file); 
   };
 
   const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    setAttachments(Array.from(e.target.files)); // 🌟 첨부파일 저장
+    setAttachments(Array.from(e.target.files)); 
   };
 
   const handleSubmit = async () => {
     if (onSubmit) {
-      // 🌟 데이터와 함께 파일들도 같이 상위 페이지로 넘겨줍니다.
+      // formData.isPublic 도 같이 넘어감 ("true" 또는 "false" 문자열)
       const isSuccess = await onSubmit(formData, thumbnailFile, attachments);
       if (isSuccess === false) return; 
     }
@@ -62,15 +67,26 @@ export default function LectureUpdateForm({
         <h2 className="text-[22px] font-bold text-[#111827]">강의 수정</h2>
 
         <div className="mt-6 space-y-5">
-          {/* 국가 */}
-          <div>
-            <label className="text-[14px] font-semibold text-[#111827]">국가 선택 *</label>
-            <select name="country" value={formData.country} onChange={handleChange} className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none">
-              <option value="">국가 선택</option>
-              <option value="일본">일본</option>
-              <option value="프랑스">프랑스</option>
-              <option value="미국">미국</option>
-            </select>
+          {/* 국가 및 공개 여부 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[14px] font-semibold text-[#111827]">국가 선택 *</label>
+              <select name="country" value={formData.country} onChange={handleChange} className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none">
+                <option value="">국가 선택</option>
+                <option value="일본">일본</option>
+                <option value="프랑스">프랑스</option>
+                <option value="미국">미국</option>
+              </select>
+            </div>
+            
+            {/* 🌟 공개 여부 추가된 부분 */}
+            <div>
+              <label className="text-[14px] font-semibold text-[#111827]">공개 여부 *</label>
+              <select name="isPublic" value={formData.isPublic} onChange={handleChange} className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none">
+                <option value="true">공개</option>
+                <option value="false">비공개</option>
+              </select>
+            </div>
           </div>
 
           {/* 제목 */}
@@ -95,7 +111,6 @@ export default function LectureUpdateForm({
               이미지 변경
               <input type="file" accept="image/*" onChange={handleThumbnailChange} className="hidden" />
             </label>
-            {/* 선택된 파일명 표시 */}
             {thumbnailFile && <p className="mt-2 text-[12px] text-[#667085]">{thumbnailFile.name}</p>}
           </div>
 

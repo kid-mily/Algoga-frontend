@@ -55,27 +55,28 @@ const getErrorMessage = (error: unknown, fallbackMessage: string) => {
 };
 
 // ------------------------------------------
-// 3. 강의 목록 조회 (getAdminCourses)
+// 3. 강의 목록 조회 (getAdminCourses) - 🌟 파라미터 복구됨!
 // ------------------------------------------
 export const getAdminCourses = async (): Promise<AdminCourse[]> => {
   try {
     const response = await adminApi.get("/api/v1/admin/courses", {
-      params: { page: 0, size: 100 },
+      params: { page: 0, size: 100 }, // 🌟 기존에 있던 파라미터 복구
     });
     
+    // 🌟 기존에 있던 안전한 파싱 로직 복구
     const data = response.data.data;
     if (Array.isArray(data)) return data;
     if (Array.isArray(data?.content)) return data.content;
     
     return [];
   } catch (error: any) {
-    console.error(`🔥 강의 목록 조회 에러 [상태코드: ${error.response?.status || '네트워크/CORS 에러'}]:`, error.response?.data || error.message);
+    console.error(`🔥 강의 목록 조회 에러 [상태코드: ${error.response?.status || '네트워크/CORS'}]:`, error.response?.data || error.message);
     throw new Error(getErrorMessage(error, "관리자 강의 목록 조회에 실패했습니다."));
   }
 };
 
 // ------------------------------------------
-// 4. 국가 목록 조회 (getCourseCountries)
+// 4. 국가 목록 조회 (getCourseCountries) - 🌟 기존 로직 완벽 복구!
 // ------------------------------------------
 export const getCourseCountries = async (): Promise<CourseCountry[]> => {
   try {
@@ -102,7 +103,7 @@ export const getCourseCountries = async (): Promise<CourseCountry[]> => {
     
     return countryGroups.flat().filter((country) => country.countryId && country.countryName);
   } catch (error: any) {
-    console.error(`🔥 국가 목록 조회 에러 [상태코드: ${error.response?.status || '네트워크/CORS 에러'}]:`, error.response?.data || error.message);
+    console.error(`🔥 국가 목록 조회 에러 [상태코드: ${error.response?.status || '네트워크/CORS'}]:`, error.response?.data || error.message);
     throw new Error(getErrorMessage(error, "국가 목록 조회에 실패했습니다."));
   }
 };
@@ -135,11 +136,9 @@ export const createAdminCourse = async (
       formData.append("files", file);
     });
 
-    // API 호출
     const response = await adminApi.post("/api/v1/admin/courses", formData);
     console.log("📝 [강의 등록] 백엔드 원본 응답:", response.data);
 
-    // ID 안전하게 추출
     const rawData = response.data.data || response.data;
     let newCourseId = 0;
 
@@ -153,7 +152,6 @@ export const createAdminCourse = async (
       throw new Error("강의는 등록되었지만, 서버 응답에서 생성된 강의의 ID(courseId)를 찾을 수 없습니다.");
     }
 
-    // 다음 단계(챕터 등록)로 넘어가기 위한 객체 리턴
     return {
       courseId: newCourseId,
       countryId: payload.countryId,
@@ -167,9 +165,8 @@ export const createAdminCourse = async (
       levelName: "",
       status: "DRAFT",
     };
-
   } catch (error: any) {
-    console.error(`🔥 강의 등록 에러 [상태코드: ${error.response?.status || '네트워크/CORS 에러'}]:`, error.response?.data || error.message);
+    console.error(`🔥 강의 등록 에러 [상태코드: ${error.response?.status || '네트워크/CORS'}]:`, error.response?.data || error.message);
     throw new Error(getErrorMessage(error, "관리자 강의 등록에 실패했습니다."));
   }
 };
@@ -182,17 +179,16 @@ export const getAdminCourse = async (courseId: number): Promise<AdminCourse> => 
     const response = await adminApi.get(`/api/v1/admin/courses/${courseId}`);
     return response.data.data || response.data;
   } catch (error: any) {
-    console.error(`🔥 강의 상세 조회 에러 [상태코드: ${error.response?.status || '네트워크/CORS 에러'}]:`, error.response?.data || error.message);
+    console.error(`🔥 강의 상세 조회 에러 [상태코드: ${error.response?.status || '네트워크/CORS'}]:`, error.response?.data || error.message);
     throw new Error(getErrorMessage(error, "강의 상세 조회에 실패했습니다."));
   }
 };
 
 // ------------------------------------------
-// 7. 강의 수정 (updateAdminCourse)
+// 7. 강의 수정 (updateAdminCourse) - 🌟 FormData 통신 적용됨!
 // ------------------------------------------
 export const updateAdminCourse = async (courseId: number, payload: any) => {
   try {
-    // 🌟 createAdminCourse와 똑같이 FormData를 사용하도록 수정!
     const formData = new FormData();
 
     const requestData = {
@@ -203,32 +199,29 @@ export const updateAdminCourse = async (courseId: number, payload: any) => {
       level: payload.level,
     };
 
-    // JSON 데이터를 Blob으로 변환해서 'request'에 추가
     formData.append(
       "request",
       new Blob([JSON.stringify(requestData)], { type: "application/json" })
     );
 
-    // 썸네일 이미지를 변경한 경우에만 추가
     if (payload.thumbnail) {
       formData.append("thumbnail", payload.thumbnail);
     }
 
-    // 첨부파일을 변경한 경우에만 추가
     if (payload.files && payload.files.length > 0) {
       payload.files.forEach((file: File) => {
         formData.append("files", file);
       });
     }
 
-    // JSON 통신이 아닌 FormData 통신으로 PUT 요청
     const response = await adminApi.put(`/api/v1/admin/courses/${courseId}`, formData);
     return response.data;
   } catch (error: any) {
-    console.error(`🔥 강의 수정 에러 [상태코드: ${error.response?.status || '네트워크/CORS 에러'}]:`, error.response?.data || error.message);
+    console.error(`🔥 강의 수정 에러 [상태코드: ${error.response?.status || '네트워크/CORS'}]:`, error.response?.data || error.message);
     throw new Error(getErrorMessage(error, "강의 수정에 실패했습니다."));
   }
 };
+
 // ------------------------------------------
 // 8. 강의 삭제 (deleteAdminCourse)
 // ------------------------------------------
@@ -237,7 +230,7 @@ export const deleteAdminCourse = async (courseId: number) => {
     const response = await adminApi.delete(`/api/v1/admin/courses/${courseId}`);
     return response.data;
   } catch (error: any) {
-    console.error(`🔥 강의 삭제 에러 [상태코드: ${error.response?.status || '네트워크/CORS 에러'}]:`, error.response?.data || error.message);
+    console.error(`🔥 강의 삭제 에러 [상태코드: ${error.response?.status || '네트워크/CORS'}]:`, error.response?.data || error.message);
     throw new Error(getErrorMessage(error, "강의 삭제에 실패했습니다."));
   }
 };

@@ -1,5 +1,3 @@
-// src/app/contentadmin/lecture/new/page.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -38,6 +36,7 @@ export default function CreateLecturePage() {
 
       <div className="border-b border-[#E4E7EC] bg-white py-7">
         <div className="mx-auto flex max-w-[900px] items-center justify-center">
+          {/* 스텝 1 */}
           <div className="flex items-center">
             <div
               className={`flex h-[40px] w-[40px] items-center justify-center rounded-full text-[18px] font-semibold ${
@@ -48,12 +47,10 @@ export default function CreateLecturePage() {
             >
               1
             </div>
-
             <div className="ml-4">
               <p className="text-[16px] font-semibold text-[#111827]">
                 강의 기본 정보
               </p>
-
               <p className="mt-1 text-[14px] text-[#98A2B3]">
                 기본적인 강의 정보를 입력합니다
               </p>
@@ -62,6 +59,7 @@ export default function CreateLecturePage() {
 
           <div className="mx-12 h-px w-[120px] bg-[#E4E7EC]" />
 
+          {/* 스텝 2 */}
           <div className="flex items-center">
             <div
               className={`flex h-[40px] w-[40px] items-center justify-center rounded-full text-[18px] font-semibold ${
@@ -72,12 +70,10 @@ export default function CreateLecturePage() {
             >
               2
             </div>
-
             <div className="ml-4">
               <p className="text-[16px] font-semibold text-[#111827]">
                 챕터 상세 정보
               </p>
-
               <p className="mt-1 text-[14px] text-[#98A2B3]">
                 강의 챕터를 구성합니다
               </p>
@@ -90,10 +86,10 @@ export default function CreateLecturePage() {
         <div className="mx-auto max-w-[1500px]">
           {step === 1 && <LectureForm onNext={handleCourseCreated} />}
 
-          {/* 🌟 수정된 부분: Number(createdCourseId) 로 감싸서 타입 에러 원천 차단 */}
+          {/* 🌟 수정된 부분: (createdCourseId as number)를 사용하여 TS 에러 완벽 해결! */}
           {step === 2 && createdCourseId !== null && (
             <LectureChapterForm
-              courseId={Number(createdCourseId)} 
+              courseId={createdCourseId as number} 
               onPrev={() => setStep(1)}
               onSubmit={() => {
                 setOpenModal(true);

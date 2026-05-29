@@ -1,5 +1,3 @@
-// src/features/contentmanage/LectureChapterForm.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -15,6 +13,7 @@ interface Chapter {
   durationSeconds: number;
 }
 
+// 🌟 에러의 원인이었던 바로 그 Props 타입!
 interface LectureChapterFormProps {
   courseId: number;
   onPrev: () => void;
@@ -49,7 +48,6 @@ const getVideoDurationSeconds = (file: File): Promise<number> => {
 
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(objectUrl);
-
       const duration = Math.floor(video.duration);
 
       if (!duration || Number.isNaN(duration) || !Number.isFinite(duration)) {
@@ -120,12 +118,7 @@ export default function LectureChapterForm({
   const handleTitleChange = (id: number, value: string) => {
     setChapters((prev) =>
       prev.map((chapter) =>
-        chapter.id === id
-          ? {
-              ...chapter,
-              title: value,
-            }
-          : chapter
+        chapter.id === id ? { ...chapter, title: value } : chapter
       )
     );
   };
@@ -133,12 +126,7 @@ export default function LectureChapterForm({
   const handleDescriptionChange = (id: number, value: string) => {
     setChapters((prev) =>
       prev.map((chapter) =>
-        chapter.id === id
-          ? {
-              ...chapter,
-              description: value,
-            }
-          : chapter
+        chapter.id === id ? { ...chapter, description: value } : chapter
       )
     );
   };
@@ -157,12 +145,7 @@ export default function LectureChapterForm({
       setChapters((prev) =>
         prev.map((chapter) =>
           chapter.id === id
-            ? {
-                ...chapter,
-                video: file,
-                preview,
-                durationSeconds,
-              }
+            ? { ...chapter, video: file, preview, durationSeconds }
             : chapter
         )
       );
@@ -194,9 +177,10 @@ export default function LectureChapterForm({
         return false;
       }
 
-      if (chapter.durationSeconds < 60) {
+      // 🌟 핵심 방어 로직: 60초가 아닌 1초 이상으로 막아두었습니다!
+      if (chapter.durationSeconds < 1) {
         alert(
-          `Chapter ${chapter.id} 영상은 1분 이상이어야 합니다. 현재 영상 길이: ${
+          `Chapter ${chapter.id} 영상은 1초 이상이어야 합니다. 현재 영상 길이: ${
             formatDuration(chapter.durationSeconds) || "확인 불가"
           }`
         );
@@ -221,9 +205,9 @@ export default function LectureChapterForm({
         }
 
         await createAdminChapter({
-          courseId: courseId, // 👈 추가된 부분
+          courseId: courseId,
           title: chapter.title,
-          description: chapter.description, // 👈 추가된 부분
+          description: chapter.description,
           durationSeconds: chapter.durationSeconds,
           chapterOrder: index + 1,
           video: chapter.video,
