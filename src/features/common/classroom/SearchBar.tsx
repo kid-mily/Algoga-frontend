@@ -12,7 +12,7 @@ export default function SearchBar() {
         </div>
         
         {/* 버튼 */}
-        <button className="w-[120px] h-12 bg-[#439A97] rounded-2xl text-white font-semibold hover:bg-[#1f4644] cursor-pointer">
+        <button className="w-32 h-12 bg-[#439A97] rounded-2xl text-white font-semibold hover:bg-[#1f4644] cursor-pointer">
           검색
         </button>
       </div>
