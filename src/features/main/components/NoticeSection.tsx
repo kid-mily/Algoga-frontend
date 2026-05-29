@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import NoticeItem from './NoticeItem'
-import { Notice } from './Types' 
+import { Notice } from './types' 
 import { api } from '@/lib/api' 
 
 const colorMap: Record<string, string> = {

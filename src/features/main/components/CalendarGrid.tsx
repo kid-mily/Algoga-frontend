@@ -1,4 +1,4 @@
-import { Schedule } from "./Types"
+import { Schedule } from "./types"
 
 interface CalendarGridProps {
   year: number

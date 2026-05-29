@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { Banner } from '../main/components/Types';
+import { Banner } from '../main/components/types';
 
 // 메인 페이지에서 배너 조회
 export const getMainBanners = async (): Promise<Banner[]> => {

@@ -27,14 +27,10 @@ export default function QuizPage() {
     courseList: AdminCourse[],
     selectedValue: string
   ) => {
-    if (!Array.isArray(courseList) || courseList.length === 0) {
-      console.log("퀴즈 조회할 강의가 없습니다.");
+    if (courseList.length === 0) {
       setQuizzes([]);
       return;
     }
-
-    console.log("퀴즈 조회할 강의 목록:", courseList);
-    console.log("선택된 강의:", selectedValue);
 
     if (selectedValue === "all") {
       const quizGroups = await Promise.all(
@@ -42,27 +38,17 @@ export default function QuizPage() {
           try {
             const quizList = await getAdminQuizzes(course.courseId);
 
-            console.log(`${course.courseId}번 강의 퀴즈 목록:`, quizList);
-
             return quizList.map((quiz) => ({
               ...quiz,
               lectureTitle: course.title,
             }));
-          } catch (error) {
-            console.error(
-              `강의 ID ${course.courseId} 퀴즈 목록 조회 실패:`,
-              error
-            );
+          } catch {
             return [];
           }
         })
       );
 
-      const allQuizzes = quizGroups.flat();
-
-      console.log("전체 퀴즈 목록:", allQuizzes);
-
-      setQuizzes(allQuizzes);
+      setQuizzes(quizGroups.flat());
       return;
     }
 
@@ -79,14 +65,12 @@ export default function QuizPage() {
 
     const quizList = await getAdminQuizzes(courseId);
 
-    const mappedQuizzes = quizList.map((quiz) => ({
-      ...quiz,
-      lectureTitle: selectedCourse?.title,
-    }));
-
-    console.log(`${courseId}번 선택 강의 퀴즈 목록:`, mappedQuizzes);
-
-    setQuizzes(mappedQuizzes);
+    setQuizzes(
+      quizList.map((quiz) => ({
+        ...quiz,
+        lectureTitle: selectedCourse?.title,
+      }))
+    );
   };
 
   const fetchPageData = async () => {
@@ -95,15 +79,11 @@ export default function QuizPage() {
       setErrorMessage("");
 
       const courseList = await getAdminCourses();
-      const safeCourseList = Array.isArray(courseList) ? courseList : [];
 
-      console.log("퀴즈 페이지 강의 목록:", safeCourseList);
+      setCourses(courseList);
 
-      setCourses(safeCourseList);
-
-      await fetchQuizzesByCourses(safeCourseList, selectedLecture);
+      await fetchQuizzesByCourses(courseList, selectedLecture);
     } catch (error: any) {
-      console.error("퀴즈 페이지 데이터 조회 실패:", error);
       setErrorMessage(error?.message || "퀴즈 목록을 불러오지 못했습니다.");
       setCourses([]);
       setQuizzes([]);
@@ -118,10 +98,7 @@ export default function QuizPage() {
   }, []);
 
   useEffect(() => {
-    if (!Array.isArray(courses) || courses.length === 0) {
-      setQuizzes([]);
-      return;
-    }
+    if (courses.length === 0) return;
 
     const reloadQuizzes = async () => {
       try {
@@ -130,7 +107,6 @@ export default function QuizPage() {
 
         await fetchQuizzesByCourses(courses, selectedLecture);
       } catch (error: any) {
-        console.error("퀴즈 재조회 실패:", error);
         setErrorMessage(error?.message || "퀴즈 목록을 불러오지 못했습니다.");
         setQuizzes([]);
       } finally {
@@ -143,13 +119,12 @@ export default function QuizPage() {
   }, [selectedLecture]);
 
   const filteredQuizzes = useMemo(() => {
-    const safeQuizzes = Array.isArray(quizzes) ? quizzes : [];
     const keyword = searchKeyword.trim().toLowerCase();
 
-    if (!keyword) return safeQuizzes;
+    if (!keyword) return quizzes;
 
-    return safeQuizzes.filter((quiz) =>
-      quiz.question?.toLowerCase().includes(keyword)
+    return quizzes.filter((quiz) =>
+      quiz.question.toLowerCase().includes(keyword)
     );
   }, [quizzes, searchKeyword]);
 
@@ -173,7 +148,7 @@ export default function QuizPage() {
               <input
                 type="text"
                 value={searchKeyword}
-                onChange={(event) => setSearchKeyword(event.target.value)}
+                onChange={(e) => setSearchKeyword(e.target.value)}
                 placeholder="문제 내용 검색..."
                 className="ml-2 flex-1 bg-transparent text-[14px] outline-none placeholder:text-[#98A2B3]"
               />
@@ -181,7 +156,7 @@ export default function QuizPage() {
 
             <select
               value={selectedLecture}
-              onChange={(event) => setSelectedLecture(event.target.value)}
+              onChange={(e) => setSelectedLecture(e.target.value)}
               className="h-[42px] w-[220px] rounded-[12px] border border-[#E4E7EC] px-3 text-[14px] outline-none"
             >
               <option value="all">전체 강의</option>

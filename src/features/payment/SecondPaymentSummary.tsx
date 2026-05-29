@@ -1,4 +1,4 @@
-import CanclelationPolicy from "@/app/(user)/classroom/[continentCode]/[countryCode]/lecture/[lectureid]/payment/canclelationpolicy/page";
+import CanclelationPolicy from "@/app/(user)/classroom/[continentCode]/[countryid]/lecture/[courseId]/payment/canclelationpolicy/page";
 
 export default function SecondPaymentSummary() {
     return (

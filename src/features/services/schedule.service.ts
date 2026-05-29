@@ -1,5 +1,5 @@
 import { api } from "@/lib/api"
-import { Schedule } from "../main/components/Types";
+import { Schedule } from "../main/components/types";
 
 export const getMethodSchedules = async (year: number, month: number): Promise<Schedule[]> => {
     try {

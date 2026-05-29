@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import CalendarHeader from './CalendarHeader'
 import CalendarGrid from './CalendarGrid'
 import ScheduleSidebar from './ScheduleSidebar'
-import { Schedule } from './Types'
+import { Schedule } from './types'
 import { getMethodSchedules } from '@/features/services/schedule.service'
 
 
