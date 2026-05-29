@@ -59,3 +59,13 @@ export const resetPassword = async (payload: ResetPasswordRequest) => {
     throw new Error(getErrorMessage(error, "비밀번호 변경에 실패했습니다."));
   }
 };
+
+// src/features/services/auth.service.ts 에 추가
+export const logout = async () => {
+  try {
+    // 백엔드의 컨트롤러 주소가 /api/v1/auth/logout 이니까 이걸 호출합니다.
+    await api.post("/api/v1/auth/logout");
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, "로그아웃 처리에 실패했습니다."));
+  }
+};
