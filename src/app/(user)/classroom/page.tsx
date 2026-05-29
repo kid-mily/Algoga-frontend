@@ -9,7 +9,7 @@ export default function ClassRoomMainPage() {
     <div className="w-full min-h-screen bg-[#F5F7FA] p-10">
       <ContinentHeader/>
       <ContinentSelectForm />
-      <div className="w-full max-w-5xl mx-auto pt-32 pb-20 px-4 mt-12">
+      <div className="w-full max-w-4xl mx-auto px-4 mt-10">
           <LearnMethod />
         </div>
     </div>
