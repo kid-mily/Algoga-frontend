@@ -2,8 +2,8 @@
 
 import { useParams } from "next/navigation";
 
-import ChapterForm from "@/features/contentmanage/ChapterForm";
-import ChapterList from "@/features/contentmanage/ChapterList";
+import ChapterForm from "@/features/contentmanage/lecture/ChapterForm";
+import ChapterList from "@/features/contentmanage/lecture/ChapterList";
 import SubHeader from "@/features/contentmanage/SubHeader";
 
 import { chapters }

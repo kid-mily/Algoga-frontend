@@ -1,5 +1,3 @@
-"use client";
-
 interface ContentHeaderProps {
   hasNotification?: boolean;
 }
