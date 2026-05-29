@@ -37,7 +37,7 @@ export default function FindIdComplete({
 
       {/* 로그인 버튼 */}
       <Link
-        href="/user/auth/login"
+        href="/auth/login"
         className="mt-10 flex h-[60px] w-full items-center justify-center rounded-[18px] bg-[#439A97] text-[18px] font-semibold text-white"
       >
         로그인하기

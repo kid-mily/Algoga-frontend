@@ -1,82 +1,242 @@
+// src/app/contentadmin/lecture/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-
-import ContentSubHeader from "@/features/contentmanage/SubHeader";
-import LectureCard from "@/features/contentmanage/LectureCard";
-import StudentForm from "@/features/contentmanage/StudentForm";
 import { useRouter } from "next/navigation";
-import { lectures } from "@/features/contentmanage/MockData";
+
+import LectureCard from "@/features/contentmanage/lecture/LectureCard";
+import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+
+// 🌟 추가된 모달 컴포넌트 임포트
+import Modal from "@/features/common/Modal";
+import CompleteModal from "@/features/common/CompleteModal";
+
+import type {
+  AdminCourse,
+  CourseCountry,
+} from "@/features/services/adminCourse.service";
+import {
+  getAdminCourses,
+  getCourseCountries,
+  deleteAdminCourse, // 🌟 삭제 API 임포트
+} from "@/features/services/adminCourse.service";
 
 export default function LecturePage() {
-
-  // 현재 페이지
-  const [currentPage, setCurrentPage] =
-    useState(1);
-
-  // 상태 필터
-  const [statusFilter, setStatusFilter] =
-    useState("all");
-
-  // 한 페이지당 보여줄 개수
-  const itemsPerPage = 10;
   const router = useRouter();
 
+  const [lectures, setLectures] = useState<AdminCourse[]>([]);
+  const [countries, setCountries] = useState<CourseCountry[]>([]);
 
-  // 상태 필터링
-  const filteredLectures =
-    lectures.filter((lecture) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [countryFilter, setCountryFilter] = useState("all");
 
-      if (statusFilter === "public") {
-        return lecture.isPublic;
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const itemsPerPage = 10;
+
+  // 🌟 삭제 모달 관리를 위한 state 추가
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openDeleteCompleteModal, setOpenDeleteCompleteModal] = useState(false);
+  const [selectedDeleteCourseId, setSelectedDeleteCourseId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchLectureData = async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage("");
+
+        const [courseData, countryData] = await Promise.all([
+          getAdminCourses(),
+          getCourseCountries(),
+        ]);
+
+        console.log("강의 목록 응답 확인:", courseData);
+
+        setLectures(courseData);
+        setCountries(countryData);
+      } catch (error: any) {
+        setErrorMessage(error.message || "강의 목록을 불러오지 못했습니다.");
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      if (statusFilter === "private") {
-        return !lecture.isPublic;
-      }
+    fetchLectureData();
+  }, []);
 
-      return true;
+  // 🌟 타입 에러를 해결한 삭제 실행 함수
+  const handleDeleteConfirm = async () => {
+    // 값이 null이면 아무것도 하지 않고 종료 (타입스크립트 에러 방지)
+    if (selectedDeleteCourseId === null) {
+      return; 
+    }
+
+    try {
+      // 서버에 삭제 요청
+      await deleteAdminCourse(selectedDeleteCourseId); 
+      
+      // null이 아닌 숫자값임을 확실히 알려주기 위해 변수에 할당
+      const targetId = selectedDeleteCourseId;
+      
+      // 화면 목록에서 지워진 강의만 제거
+      setLectures((prev) => prev.filter(lecture => lecture.courseId !== targetId));
+      
+      setOpenDeleteModal(false);
+      setOpenDeleteCompleteModal(true);
+      setSelectedDeleteCourseId(null);
+    } catch (error: any) {
+      alert(error.message || "강의 삭제에 실패했습니다.");
+    }
+  };
+
+  const countryNameMap = useMemo(() => {
+    const map = new Map<number, string>();
+
+    countries.forEach((country) => {
+      map.set(country.countryId, country.countryName);
     });
 
-  // 시작 index
-  const startIndex =
-    (currentPage - 1) * itemsPerPage;
+    return map;
+  }, [countries]);
 
-  // 현재 페이지 데이터
-  const currentLectures =
-    filteredLectures.slice(
-      startIndex,
-      startIndex + itemsPerPage
-    );
+  const lecturesWithCountryName = useMemo(() => {
+    return lectures.map((lecture) => {
+      const mappedCountryName = countryNameMap.get(lecture.countryId);
 
-  // 총 페이지 수
-  const totalPages = Math.ceil(
-    filteredLectures.length / itemsPerPage
+      return {
+        ...lecture,
+        countryName:
+          lecture.countryName ||
+          mappedCountryName ||
+          `국가 ID ${lecture.countryId}`,
+      };
+    });
+  }, [lectures, countryNameMap]);
+
+  const countryOptions = useMemo(() => {
+    const names = lecturesWithCountryName
+      .map((lecture) => lecture.countryName)
+      .filter((country): country is string => Boolean(country));
+
+    return Array.from(new Set(names));
+  }, [lecturesWithCountryName]);
+
+  const filteredLectures = useMemo(() => {
+    return lecturesWithCountryName.filter((lecture) => {
+      const title = lecture.title || "";
+      const description = lecture.description || "";
+      const countryName = lecture.countryName || "";
+
+      const isPublic =
+        lecture.isPublic === true ||
+        lecture.status === "PUBLIC" ||
+        lecture.status === "OPEN" ||
+        lecture.status === "PUBLISHED";
+
+      const keyword = searchKeyword.trim().toLowerCase();
+
+      const matchesSearch =
+        keyword === "" ||
+        title.toLowerCase().includes(keyword) ||
+        description.toLowerCase().includes(keyword);
+
+      const matchesCountry =
+        countryFilter === "all" || countryName === countryFilter;
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "public" && isPublic) ||
+        (statusFilter === "private" && !isPublic);
+
+      return matchesSearch && matchesCountry && matchesStatus;
+    });
+  }, [lecturesWithCountryName, searchKeyword, countryFilter, statusFilter]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredLectures.length / itemsPerPage)
   );
 
-  const [openStudentModal, setOpenStudentModal] =
-  useState(false);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+
+  const currentLectures = filteredLectures.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  const formatPrice = (price?: number) => {
+    if (typeof price !== "number") {
+      return "-";
+    }
+
+    return `${price.toLocaleString()}원`;
+  };
+
+  const formatDate = (dateValue?: string) => {
+    if (!dateValue) {
+      return "-";
+    }
+
+    const datePart = dateValue.includes("T")
+      ? dateValue.split("T")[0]
+      : dateValue.split(" ")[0];
+
+    return datePart.replaceAll("-", ".");
+  };
+
+  const getIsPublic = (lecture: AdminCourse) => {
+    return (
+      lecture.isPublic === true ||
+      lecture.status === "PUBLIC" ||
+      lecture.status === "OPEN" ||
+      lecture.status === "PUBLISHED"
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-full">
+        <SimpleSubHeader
+          title="강의 관리"
+          description="나라별 강의 콘텐츠를 등록하고 관리합니다"
+        />
+
+        <div className="mt-5 rounded-[20px] border border-[#E4E7EC] bg-white p-10 text-center text-[14px] text-[#667085]">
+          강의 목록을 불러오는 중입니다...
+        </div>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="w-full">
+        <SimpleSubHeader
+          title="강의 관리"
+          description="나라별 강의 콘텐츠를 등록하고 관리합니다"
+        />
+
+        <div className="mt-5 rounded-[20px] border border-[#FCA5A5] bg-white p-10 text-center text-[14px] text-[#DC2626]">
+          {errorMessage}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
-
-      {/* 상단 헤더 */}
-      <ContentSubHeader
-        backHref="/contentadmin"
-        backText="메인페이지로 돌아가기"
+      <SimpleSubHeader
         title="강의 관리"
         description="나라별 강의 콘텐츠를 등록하고 관리합니다"
       />
 
-      {/* 검색 + 버튼 */}
       <div className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4">
-
         <div className="flex flex-wrap gap-3">
-
-          {/* 검색 */}
           <div className="flex h-[42px] min-w-0 flex-1 items-center rounded-[12px] border border-[#E4E7EC] px-3">
-
             <img
               src="/images/search.svg"
               alt="검색"
@@ -85,180 +245,174 @@ export default function LecturePage() {
 
             <input
               type="text"
+              value={searchKeyword}
+              onChange={(e) => {
+                setSearchKeyword(e.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="강의 제목 검색..."
               className="ml-2 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-[#98A2B3]"
             />
           </div>
 
-          {/* 국가 */}
-          <select className="h-[42px] w-[100px] rounded-[12px] border border-[#E4E7EC] px-2 text-[13px] outline-none">
+          <select
+            value={countryFilter}
+            onChange={(e) => {
+              setCountryFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="h-[42px] w-[120px] rounded-[12px] border border-[#E4E7EC] px-2 text-[13px] outline-none"
+          >
+            <option value="all">전체 국가</option>
 
-            <option>
-              전체 국가
-            </option>
+            {countryOptions.map((country) => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
           </select>
 
-          {/* 상태 */}
           <select
             value={statusFilter}
             onChange={(e) => {
-              setStatusFilter(
-                e.target.value
-              );
-
+              setStatusFilter(e.target.value);
               setCurrentPage(1);
             }}
             className="h-[42px] w-[100px] rounded-[12px] border border-[#E4E7EC] px-2 text-[13px] outline-none"
           >
-
-            <option value="all">
-              전체
-            </option>
-
-            <option value="public">
-              공개
-            </option>
-
-            <option value="private">
-              비공개
-            </option>
+            <option value="all">전체</option>
+            <option value="public">공개</option>
+            <option value="private">비공개</option>
           </select>
 
-          {/* 등록 버튼 */}
           <Link
             href="/contentadmin/lecture/new"
             className="flex h-[42px] whitespace-nowrap rounded-[12px] bg-[#439A97] px-4 text-[13px] font-semibold text-white"
           >
-
-            <div className="flex items-center">
-              + 강의 등록
-            </div>
+            <div className="flex items-center">+ 강의 등록</div>
           </Link>
         </div>
       </div>
 
-      {/* 테이블 */}
       <div className="mt-5 rounded-[20px] border border-[#E4E7EC] bg-white">
-
-        {/* 헤더 */}
-        <div className="grid grid-cols-11 border-b border-[#E4E7EC] bg-[#FCFCFD] px-5 py-4 text-[13px] font-semibold text-[#667085]">
+        <div className="grid grid-cols-[0.9fr_0.9fr_2fr_1fr_1fr_0.8fr_1.2fr_1fr_1fr_1fr] border-b border-[#E4E7EC] bg-[#FCFCFD] px-5 py-4 text-[13px] font-semibold text-[#667085]">
           <div>썸네일</div>
           <div>국가</div>
-          <div className="col-span-2" >강의 제목</div>
-          <div >가격</div>
+          <div>강의 제목</div>
+          <div>가격</div>
           <div>수강생</div>
-          <div >챕터</div>
+          <div>챕터</div>
           <div>챕터관리</div>
-          <div >등록일</div>
+          <div>등록일</div>
           <div className="text-center">상태</div>
           <div className="text-center">액션</div>
         </div>
 
-        {/* 리스트 */}
         {currentLectures.map((lecture) => (
-
           <LectureCard
-            thumbnail={lecture.thumbnail}
-            country={lecture.country}
-            title={lecture.title}
-            description={lecture.description}
-            price={lecture.price}
-            students={lecture.students}
-            chapters={lecture.chapters}
-            createdAt={lecture.createdAt}
-            isPublic={lecture.isPublic}
-
-            onUsersClick={() =>
-              setOpenStudentModal(true)
+            key={lecture.courseId}
+            thumbnail={lecture.thumbnailUrl || ""}
+            country={lecture.countryName || "-"}
+            title={lecture.title || "-"}
+            description={lecture.description || "-"}
+            price={formatPrice(lecture.price)}
+            students={`${lecture.studentCount ?? 0}`}
+            chapters={lecture.chapterCount ?? 0}
+            createdAt={formatDate(lecture.createdAt)}
+            isPublic={getIsPublic(lecture)}
+            onChapterManage={() =>
+              router.push(
+                `/contentadmin/lecture/${lecture.courseId}/chapter/new`
+              )
             }
-
-        onEditClick={() =>
-        router.push(
-    `/contentadmin/lecture/${lecture.id}/edit`
-  )
-      } 
+            onUsersClick={() =>
+              router.push(`/contentadmin/lecture/${lecture.courseId}`)
+            }
+            onEditClick={() =>
+              router.push(`/contentadmin/lecture/${lecture.courseId}/edit`)
+            }
+            onDeleteClick={() => {
+              // 🌟 router.push 대신 모달 열기로 변경
+              setSelectedDeleteCourseId(lecture.courseId);
+              setOpenDeleteModal(true);
+            }}
           />
         ))}
 
-        {/* 데이터 없을 때 */}
         {currentLectures.length === 0 && (
-
           <div className="flex h-[200px] items-center justify-center text-[14px] text-[#98A2B3]">
-
-            검색 결과가 없습니다.
+            등록된 강의가 없습니다.
           </div>
         )}
 
-        {/* 하단 */}
         <div className="flex items-center justify-between px-4 py-4">
-
-          {/* 총 개수 */}
           <p className="text-[13px] font-medium text-[#667085]">
             총 {filteredLectures.length}개의 강의
           </p>
 
-          {/* 페이지네이션 */}
           <div className="flex items-center gap-2">
-
-            {/* 이전 */}
             <button
-              onClick={() =>
-                setCurrentPage((prev) =>
-                  Math.max(prev - 1, 1)
-                )
-              }
-              className="h-[38px] rounded-[12px] border border-[#E4E7EC] px-4 text-[13px] font-semibold text-[#667085]"
+              type="button"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              className="h-[38px] rounded-[12px] border border-[#E4E7EC] px-4 text-[13px] font-semibold text-[#667085] disabled:cursor-not-allowed disabled:opacity-40"
             >
               이전
             </button>
 
-            {/* 페이지 번호 */}
-            {Array.from(
-              { length: totalPages },
-              (_, index) => {
+            {Array.from({ length: totalPages }, (_, index) => {
+              const page = index + 1;
 
-                const page = index + 1;
+              return (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  className={`flex h-[38px] w-[38px] items-center justify-center rounded-[12px] text-[13px] font-semibold ${
+                    currentPage === page
+                      ? "bg-[#439A97] text-white"
+                      : "border border-[#E4E7EC] text-[#667085]"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
 
-                return (
-                  <button
-                    key={page}
-                    onClick={() =>
-                      setCurrentPage(page)
-                    }
-                    className={`flex h-[38px] w-[38px] items-center justify-center rounded-[12px] text-[13px] font-semibold ${
-                      currentPage === page
-                        ? "bg-[#439A97] text-white"
-                        : "border border-[#E4E7EC] text-[#667085]"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              }
-            )}
-
-            {/* 다음 */}
             <button
+              type="button"
+              disabled={currentPage === totalPages}
               onClick={() =>
-                setCurrentPage((prev) =>
-                  Math.min(
-                    prev + 1,
-                    totalPages
-                  )
-                )
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
-              className="h-[38px] rounded-[12px] border border-[#E4E7EC] px-4 text-[13px] font-semibold text-[#667085]"
+              className="h-[38px] rounded-[12px] border border-[#E4E7EC] px-4 text-[13px] font-semibold text-[#667085] disabled:cursor-not-allowed disabled:opacity-40"
             >
               다음
             </button>
           </div>
         </div>
       </div>
-      <StudentForm
-        open={openStudentModal}
-        onClose={() =>
-          setOpenStudentModal(false)
-        }
+
+      {/* 🌟 추가된 삭제 관련 모달들 */}
+      <Modal
+        open={openDeleteModal}
+        title="강의 삭제"
+        description="정말 강의를 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setOpenDeleteModal(false);
+          setSelectedDeleteCourseId(null);
+        }}
+      />
+
+      <CompleteModal
+        open={openDeleteCompleteModal}
+        title="삭제 완료"
+        description="강의가 삭제되었습니다."
+        buttonText="확인"
+        onConfirm={() => setOpenDeleteCompleteModal(false)}
       />
     </div>
   );

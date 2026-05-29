@@ -23,34 +23,34 @@ export default function Modal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-[500px] overflow-hidden rounded-[20px] bg-white shadow-xl">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+      <div className="w-[450px] overflow-hidden rounded-[20px] bg-white shadow-xl">
        
         {/* Header */}
         <div className="border-b border-[#D9DEE5] px-6 py-4">
-          <h2 className="text-[32px] font-bold text-[#2F3640]"
+          <h2 className="text-[30px] font-bold text-[#2F3640]"
           >{title}
           </h2>
         </div>
 
         {/* Content */}
-        <div className="flex flex-col items-center justify-center px-6 py-14">
-          <p className="text-[32px] text-[#6B7280]">
+        <div className="flex flex-col items-center justify-center px-6 py-8">
+          <p className="text-[25px] text-[#6B7280]">
             {description}
-            </p>
+          </p>
 
           {/* Buttons */}
           <div className="mt-12 flex gap-4">
             <button
               onClick={onCancel}
-              className="h-[48px] w-[200px] rounded-[16px] border border-[#D1D5DB] bg-white text-[18px] font-semibold text-[#4B5563] transition hover:bg-gray-50"
+              className="h-[48px] w-[180px] rounded-[16px] border border-[#D1D5DB] bg-white text-[18px] font-semibold text-[#4B5563] transition hover:bg-gray-50"
             >
               {cancelText}
             </button>
 
           <button
             onClick={onConfirm}
-            className="h-[48px] w-[208px] rounded-[16px] bg-[#439A97] text-[18px] font-semibold text-white transition-colors duration-200 hover:bg-[#367c79]"
+            className="h-[48px] w-[180px] rounded-[16px] bg-[#439A97] text-[18px] font-semibold text-white transition-colors duration-200 hover:bg-[#367c79]"
           >
             {confirmText}
           </button>

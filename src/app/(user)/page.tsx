@@ -10,7 +10,7 @@ export default function Home() {
     <div className="p-10 w-full min-h-screen bg-[#f5f6f8]">
         
         {/* 베너 */}
-        <div className="max-w-5xl mx-auto mb-5">
+        <div className="max-w-4xl mx-auto mb-5">
             <Banner/>
         </div>
 
