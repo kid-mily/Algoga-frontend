@@ -63,3 +63,20 @@ export const LEVEL_COLORS: Record<LevelType | string, string> = {
   INTERMEDIATE: "bg-[#D9A752]",
   ADVANCED: "bg-[#C95B5B]",
 };
+
+// 수강 후기 요약
+export interface CourseReviewSummary {
+  courseId: number;
+  averageRating: number;
+  totalReviewCount: number;
+  fiveStarCount: number;
+  fourStarCount: number;
+  threeStarCount: number;
+  twoStarCount: number;
+  oneStarCount: number;
+  fiveStarRate: number;
+  fourStarRate: number;
+  threeStarRate: number;
+  twoStarRate: number;
+  oneStarRate: number;
+}

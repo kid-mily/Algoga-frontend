@@ -1,12 +1,13 @@
+// 그 나라에 해당하는 강의 목록 페이지 (단과/패키지)
 'use client';
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import TabNavigation from "@/features/classroom/components/TabNavigation";
-import SubHeader from "@/features/contentmanage/SubHeader";
-import { CourseItem, LEVEL_COLORS } from "@/features/classroom/components/types";
+import { CourseItem } from "@/features/classroom/components/types";
 import { getCourses } from "@/features/services/lectureSelect.service";
+import LectureGrid from "@/features/classroom/components/LectureGrid";
+import LecturePageHeader from "@/features/classroom/components/LecturePageHeader";
+import EvaluationBanner from "@/features/classroom/components/EvaluationBanner";
 
 const getParamValue = (value: string | string[] | undefined) => {
   if (!value) return "";
@@ -17,8 +18,8 @@ export default function LectureListPage() {
   const params = useParams();
   const router = useRouter();
 
+  // url 경로에서 대륙 코드와 국가 id 추출
   const continentCode = getParamValue(params.continentCode);
-
   const countryId = getParamValue(params.countryid);
 
   const [lectures, setLectures] = useState<CourseItem[]>([]);
@@ -34,20 +35,20 @@ export default function LectureListPage() {
 
     const fetchLectures = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
+        setIsLoading(true);   // 요청 시작 전 로딩 켬
+        setError(null);   // 이전 요청의 에러 기록 초기화
 
         const courses = await getCourses(countryId);
-
-        setLectures(courses);
+        setLectures(courses);   // 서버에서 받은 데이터 상테에 업로드
       } catch (err: any) {
+        // 백에서 보내준 에러 메시지를 우선적으로 보여주고, 없을 경우 기본 에러 메시지 출력
         const errorMessage =
           err?.response?.data?.message ||
           err?.message ||
           "강의 목록을 불러오지 못했습니다.";
 
         setError(errorMessage);
-        setLectures([]);
+        setLectures([]);    // 에러 발생 시 데이터가 화면에 렌더링 되지 않도록 배열 초기화
       } finally {
         setIsLoading(false);
       }
@@ -65,56 +66,23 @@ export default function LectureListPage() {
   }
 
   return (
-    <div>
-      <SubHeader
-        backHref={`/classroom/${continentCode}`}
-        backText="나라 선택으로 돌아가기"
-        title="강의 목록"
-        description="원하는 학습 방식을 선택하세요"
-      />
+    <div className="p-10 w-full min-h-screen bg-[#f5f6f8]">
+      <div className="w-full max-w-4xl mx-auto pt-4 px-4">
+        {/* 상단 */}
+        <LecturePageHeader continentCode={continentCode}/>
 
-      <TabNavigation />
+        {/* 진단 평가 */}
+        <EvaluationBanner
+          continentCode={continentCode}
+          countryId={countryId}
+        />
 
-      <div className="grid grid-cols-3 gap-5">
-        {lectures.map((lecture) => {
-          const levelText = lecture.levelName || lecture.level;
-          const levelClass =
-            LEVEL_COLORS[levelText] || "bg-gray-500";
-
-          return (
-            <Link
-              key={lecture.courseId}
-              href={`/classroom/${continentCode}/${countryId}/lecture/${lecture.courseId}`}
-              className="bg-white rounded-3xl overflow-hidden border"
-            >
-              <img
-                src={lecture.thumbnailUrl}
-                alt={lecture.title}
-                className="w-full h-40 object-cover"
-              />
-
-              <div className="p-5">
-                <span
-                  className={`text-white text-xs px-2 py-1 rounded ${levelClass}`}
-                >
-                  {levelText}
-                </span>
-
-                <h3 className="mt-3 font-bold">
-                  {lecture.title}
-                </h3>
-
-                <p className="text-sm text-gray-500 mt-2">
-                  {lecture.description}
-                </p>
-
-                <p className="mt-4 font-bold text-[#439A97]">
-                  {lecture.price.toLocaleString()}원
-                </p>
-              </div>
-            </Link>
-          );
-        })}
+        {/* 강의 목록 */}
+        <LectureGrid 
+          lectures={lectures}
+          continentCode={continentCode}
+          countryId={countryId}
+        />
       </div>
     </div>
   );

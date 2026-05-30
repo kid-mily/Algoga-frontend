@@ -11,9 +11,6 @@ export default function TabNavigation() {
   const params = useParams();
   const { continentid, countryid } = params;
 
-  // 임시 고정값 지정
-  const lectureId = '1';
-
   const handlePackageClick = () => {
     setIsModalOpen(true);
   };
