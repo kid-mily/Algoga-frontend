@@ -1,4 +1,5 @@
 //adminAuth.service.ts
+
 export interface AdminCourse {
   courseId: number;
   countryId: number;
@@ -66,4 +67,62 @@ export interface CreateAdminChapterPayload {
   durationSeconds: number;
   chapterOrder: number;
   video: File;
+}
+
+export interface AdminQuiz {
+  quizId: number;
+  courseId: number;
+  lectureTitle?: string;
+  question: string;
+  option1: string;
+  option2: string;
+  option3: string;
+  option4: string;
+  correctOption: number;
+  explanation?: string;
+}
+
+export interface CreateAdminQuizPayload {
+  courseId: number;
+  question: string;
+  option1: string;
+  option2: string;
+  option3: string;
+  option4: string;
+  correctOption: number;
+  explanation?: string;
+}
+
+export interface UpdateAdminQuizPayload {
+  question: string;
+  option1: string;
+  option2: string;
+  option3: string;
+  option4: string;
+  correctOption: number;
+  explanation?: string;
+}
+
+// adminCoupon.service.ts
+export interface AdminCoupon {
+  couponPolicyId: number;
+  courseId: number;
+  managerId?: number;
+  couponName: string;
+  discountType: "RATE" | "AMOUNT" | string; // RATE(비율/퍼센트) 또는 AMOUNT(정액/원)
+  discountValue: number;
+  validDays: number;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 쿠폰 등록 및 수정 시 백엔드로 보낼 데이터 타입
+export interface AdminCouponPayload {
+  courseId: number;
+  couponName: string;
+  discountType: string;
+  discountValue: number;
+  validDays: number;
+  active: boolean;
 }

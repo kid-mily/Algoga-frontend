@@ -1,227 +1,182 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-import CouponItem from "@/features/contentmanage/coupon/CouponItem";
-
-import {
-  coupons,
-} from "@/features/contentmanage/MockData";
 import SimpleSubHeader from "@/features/common/SimpleSubHeader";
-import CompleteModal from "@/features/common/CompleteModal";
 import Modal from "@/features/common/Modal";
+import CompleteModal from "@/features/common/CompleteModal";
+
+import { getAdminCoupons, deleteAdminCoupon } from "@/features/services/adminCoupon.service";
+import { AdminCoupon } from "@/features/contentmanage/types"
+
+// 🌟 강의 목록을 불러오기 위해 기존 서비스 함수 추가
+import { getAdminCourses } from "@/features/services/adminCourse.service"; 
 
 export default function CouponPage() {
-
   const router = useRouter();
-  // 현재 페이지
-  const [currentPage, setCurrentPage] =useState(1);
-  // 페이지당 개수
-  const ITEMS_PER_PAGE = 10;
-  // 전체 페이지 수
-  const totalPages = Math.ceil(coupons.length / ITEMS_PER_PAGE);
-  // 현재 페이지 데이터
-  const currentCoupons =coupons.slice((currentPage - 1) * ITEMS_PER_PAGE,currentPage *ITEMS_PER_PAGE);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openDeleteCompleteModal, setOpenDeleteCompleteModal] = useState(false);
-  const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null);
+  
+  const [searchCourseId, setSearchCourseId] = useState("");
+  const [coupons, setCoupons] = useState<AdminCoupon[]>([]);
+  const [courses, setCourses] = useState<any[]>([]); // 🌟 강의 목록 데이터 상태 추가
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [completeModalOpen, setCompleteModalOpen] = useState(false);
+  const [targetCoupon, setTargetCoupon] = useState<{ courseId: number; policyId: number } | null>(null);
+
+  // 🌟 컴포넌트 마운트 시 강의 목록을 불러와서 드롭다운을 채웁니다
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const data = await getAdminCourses();
+        setCourses(data);
+      } catch (error) {
+        console.error("강의 목록을 불러오지 못했습니다.", error);
+      }
+    };
+    fetchCourses();
+  }, []);
+
+  // 🌟 테이블에 강의 이름 띄워주는 헬퍼 함수
+  const getCourseTitle = (courseId: number) => {
+    const course = courses.find((c) => (c.courseId || c.course_id || c.id) === courseId);
+    return course ? course.title : `알 수 없는 강의 (ID: ${courseId})`;
+  };
+
+  const handleSearch = async () => {
+    if (!searchCourseId) {
+      alert("조회할 강의를 선택해주세요.");
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      const data = await getAdminCoupons(Number(searchCourseId));
+      setCoupons(data);
+    } catch (error: any) {
+      alert(error.message || "쿠폰 목록 로드 실패");
+      setCoupons([]); 
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!targetCoupon) return;
+    try {
+      await deleteAdminCoupon(targetCoupon.courseId, targetCoupon.policyId);
+      setCoupons((prev) => prev.filter((c) => c.couponPolicyId !== targetCoupon.policyId));
+      setDeleteModalOpen(false);
+      setCompleteModalOpen(true);
+      setTargetCoupon(null);
+    } catch (error: any) {
+      alert(error.message || "삭제에 실패했습니다.");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
+    <div className="w-full">
+      <SimpleSubHeader title="쿠폰 관리" description="강의별 수료/할인 쿠폰 정책을 관리합니다" />
 
-      {/* 헤더 */}
-       <SimpleSubHeader
-            title="쿠폰 관리"
-            description="수료 시 발급되는 쿠폰을 등록하고 관리합니다"
-        />
-
-      {/* 검색 영역 */}
-      <div className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4">
-        <div className="flex items-center justify-between gap-3">
-          {/* 왼쪽 */}
-          <div className="flex flex-1 gap-3">
-            {/* 검색 */}
-            <div className="flex h-[42px] flex-1 items-center rounded-[12px] border border-[#E4E7EC] px-3">
-              <img
-                src="/images/search.svg"
-                alt="검색"
-                className="h-[16px] w-[16px]"
-              />
-              <input
-                type="text"
-                placeholder="쿠폰명 검색..."
-                className="ml-2 flex-1 bg-transparent text-[14px] outline-none placeholder:text-[#98A2B3]"
-              />
-            </div>
-            {/* 상태 선택 */}
-            <select className="h-[42px] w-[140px] rounded-[12px] border border-[#E4E7EC] px-3 text-[14px] outline-none">
-              <option>전체</option>
-              <option>사용가능</option>
-              <option>사용불가</option>
-            </select>
-          </div>
-
-          {/* 버튼 */}
-          <Link
-            href="/contentadmin/coupon/new"
-            className="flex h-[42px] items-center rounded-[12px] bg-[#439A97] px-5 text-[14px] font-semibold text-white transition hover:opacity-90"
+      <div className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          {/* 🌟 기존 숫자 입력창 대신 강의명 드롭다운(Select) 적용! */}
+          <select
+            value={searchCourseId}
+            onChange={(e) => setSearchCourseId(e.target.value)}
+            className="h-[42px] w-[280px] rounded-[12px] border border-[#E4E7EC] px-3 text-[13px] outline-none"
           >
-            + 쿠폰 등록
-          </Link>
-        </div>
-      </div>
-
-      {/* 테이블 */}
-      <div className="mt-5 overflow-hidden rounded-[20px] border border-[#E4E7EC] bg-white">
-
-        {/* 헤더 */}
-        <div className="grid grid-cols-[2fr_0.7fr_1fr_1.5fr_0.8fr_0.8fr_0.8fr_0.7fr] border-b border-[#E4E7EC] bg-[#FCFCFD] px-5 py-4 text-[13px] font-semibold text-[#667085]">
-          <div>쿠폰명</div>
-          <div>할인율</div>
-          <div>유효기간</div>
-          <div>연결 강의</div>
-          <div>적용 대상</div>
-          <div>상태</div>
-          <div>등록일</div>
-          <div className="text-center">
-            액션
-          </div>
-        </div>
-
-        {/* 리스트 */}
-        {currentCoupons.map((coupon) => (
-          <CouponItem
-            key={coupon.id}
-            name={coupon.name}
-            discount={coupon.discount}
-            startDate={coupon.startDate}
-            endDate={coupon.endDate}
-            lecture={coupon.lecture}
-            target={coupon.target}
-            isActive={coupon.isActive}
-            createdAt={coupon.createdAt}
-            onEdit={() =>
-              router.push(
-                `/contentadmin/coupon/${coupon.id}/edit`
-              )
-            }
-            onDelete={() => {
-              setSelectedCouponId(
-                coupon.id
-              );
-              setOpenDeleteModal(true);
-            }}
-          />
-        ))}
-
-        {/* 하단 */}
-        <div className="flex items-center justify-between px-5 py-4">
-          <p className="text-[14px] text-[#667085]">
-            총 {coupons.length}개의 쿠폰
-          </p>
-          {/* 페이지네이션 */}
-          <div className="flex items-center gap-2">
-            {/* 이전 */}
-            <button
-              onClick={() =>
-                setCurrentPage(
-                  (prev) =>
-                    Math.max(
-                      prev - 1,
-                      1
-                    )
-                )
-              }
-
-              disabled={currentPage === 1}
-              className="h-[36px] rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] font-medium text-[#667085] disabled:opacity-40"
-            >
-              이전
-            </button>
-
-            {/* 페이지 번호 */}
-            {Array.from({
-              length: totalPages,
-            }).map((_, index) => {
-
-              const page =
-                index + 1;
-
+            <option value="">조회할 강의를 선택하세요</option>
+            {courses.map((course) => {
+              const id = course.courseId || course.course_id || course.id;
               return (
-                <button
-                  key={page}
-                  onClick={() =>
-                    setCurrentPage(
-                      page
-                    )
-                  }
-
-                  className={`flex h-[36px] w-[36px] items-center justify-center rounded-[10px] text-[14px] font-semibold ${
-                    currentPage === page
-                      ? "bg-[#439A97] text-white"
-                      : "border border-[#E4E7EC] bg-white text-[#667085]"
-                  }`}
-                >
-                  {page}
-                </button>
+                <option key={id} value={id}>
+                  {course.title}
+                </option>
               );
             })}
+          </select>
 
-            {/* 다음 */}
-            <button
-              onClick={() =>
-                setCurrentPage(
-                  (prev) =>
-                    Math.min(
-                      prev + 1,
-                      totalPages
-                    )
-                )
-              }
-              disabled={
-                currentPage ===
-                totalPages
-              }
-              className="h-[36px] rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] font-medium text-[#667085] disabled:opacity-40"
-            >
-              다음
-            </button>
-          </div>
+          <button 
+            onClick={handleSearch}
+            className="h-[42px] rounded-[12px] bg-[#111827] px-4 text-[13px] font-semibold text-white hover:opacity-90"
+          >
+            목록 조회
+          </button>
         </div>
+
+        <Link
+          href="/contentadmin/coupon/new"
+          className="flex h-[42px] items-center rounded-[12px] bg-[#439A97] px-4 text-[13px] font-semibold text-white hover:opacity-90"
+        >
+          + 새 쿠폰 등록
+        </Link>
       </div>
-      {/* 삭제 확인 */}
-      <Modal
-        open={openDeleteModal}
-        title="쿠폰 삭제"
-        description="정말 삭제하시겠습니까?"
-        confirmText="삭제"
-        cancelText="취소"
-        onConfirm={() => {
-          console.log(
-            "삭제 쿠폰:",
-            selectedCouponId
-          );
-          // TODO:
-          // 나중에 API 연결
-          setOpenDeleteModal(false);
-          setOpenDeleteCompleteModal(true);
-        }}
-        onCancel={() =>
-          setOpenDeleteModal(false)
-        }
-      />
-      {/* 삭제 완료 */}
-        <CompleteModal
-        open={openDeleteCompleteModal}
-        title="삭제 완료"
-        description="쿠폰이 삭제되었습니다."
-        buttonText="확인"
-        onConfirm={() =>
-          setOpenDeleteCompleteModal(false)
-        }
-      />
+
+      <div className="mt-5 overflow-hidden rounded-[20px] border border-[#E4E7EC] bg-white">
+        <div className="grid grid-cols-[0.5fr_1.5fr_2fr_1fr_1fr_1fr_1fr] border-b border-[#E4E7EC] bg-[#FCFCFD] px-5 py-4 text-center text-[13px] font-semibold text-[#667085]">
+          <div>쿠폰 ID</div>
+          <div className="text-left pl-2">연결된 강의명</div>
+          <div className="text-left">쿠폰 이름</div>
+          <div>할인 혜택</div>
+          <div>유효 기간</div>
+          <div>상태</div>
+          <div>관리</div>
+        </div>
+
+        {isLoading ? (
+          <div className="p-10 text-center text-[14px] text-[#667085]">조회 중입니다...</div>
+        ) : coupons.length === 0 ? (
+          <div className="p-10 text-center text-[14px] text-[#667085]">
+            강의를 선택하고 '목록 조회'를 눌러주세요.
+          </div>
+        ) : (
+          coupons.map((coupon) => (
+            <div key={coupon.couponPolicyId} className="grid grid-cols-[0.5fr_1.5fr_2fr_1fr_1fr_1fr_1fr] items-center border-b border-[#E4E7EC] px-5 py-4 text-center text-[14px] text-[#111827]">
+              <div>{coupon.couponPolicyId}</div>
+              {/* 🌟 매핑된 실제 강의 이름을 출력합니다 */}
+              <div className="text-left pl-2 truncate pr-4 text-[#667085] text-[13px]">
+                {getCourseTitle(coupon.courseId)}
+              </div>
+              <div className="text-left font-medium truncate">{coupon.couponName}</div>
+              <div className="font-semibold text-[#439A97]">
+                {coupon.discountValue}{coupon.discountType === "RATE" ? "%" : "원"}
+              </div>
+              <div>{coupon.validDays}일</div>
+              
+              <div className="flex justify-center">
+                <span className={`inline-flex rounded-full px-3 py-1 text-[12px] font-semibold ${
+                  coupon.active ? "bg-[#EAF7EE] text-[#43A047]" : "bg-[#F2F4F7] text-[#667085]"
+                }`}>
+                  {coupon.active ? "활성" : "비활성"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-center gap-3">
+                <button 
+                  onClick={() => router.push(`/contentadmin/coupon/${coupon.couponPolicyId}/edit?courseId=${coupon.courseId}`)} 
+                  className="text-[13px] font-semibold text-[#439A97] hover:underline"
+                >
+                  수정
+                </button>
+                <button 
+                  onClick={() => { 
+                    setTargetCoupon({ courseId: coupon.courseId, policyId: coupon.couponPolicyId }); 
+                    setDeleteModalOpen(true); 
+                  }} 
+                  className="text-[13px] font-semibold text-[#DC2626] hover:underline"
+                >
+                  삭제
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <Modal open={deleteModalOpen} title="쿠폰 삭제" description="정말 이 쿠폰 정책을 삭제하시겠습니까?" confirmText="삭제" cancelText="취소" onConfirm={handleDeleteConfirm} onCancel={() => { setDeleteModalOpen(false); setTargetCoupon(null); }} />
+      <CompleteModal open={completeModalOpen} title="삭제 완료" description="쿠폰이 성공적으로 삭제되었습니다." buttonText="확인" onConfirm={() => setCompleteModalOpen(false)} />
     </div>
   );
 }
