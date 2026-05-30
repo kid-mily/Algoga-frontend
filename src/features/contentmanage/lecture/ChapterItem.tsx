@@ -2,25 +2,17 @@
 
 interface ChapterItemProps {
   id: number;
-
   title: string;
-
   description: string;
-
   video: File | null;
-
   preview: string;
-
   onRemove: () => void;
-
   onTitleChange: (
     value: string
   ) => void;
-
   onDescriptionChange: (
     value: string
   ) => void;
-
   onVideoUpload: (
     file: File
   ) => void;

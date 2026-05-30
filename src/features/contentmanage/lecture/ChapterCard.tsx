@@ -2,15 +2,10 @@
 
 interface ChapterCardProps {
   id: number;
-
   duration: string;
-
   title: string;
-
   description: string;
-
   onEdit?: () => void;
-
   onDelete?: () => void;
 }
 

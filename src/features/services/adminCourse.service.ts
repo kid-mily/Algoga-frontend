@@ -2,47 +2,7 @@
 
 import axios from "axios";
 import { api, adminApi } from "@/lib/api";
-
-// ------------------------------------------
-// 1. 타입 (Interfaces)
-// ------------------------------------------
-export interface AdminCourse {
-  courseId: number;
-  countryId: number;
-  managerId?: number;
-  title: string;
-  description?: string;
-  price?: number;
-  thumbnailUrl?: string | null;
-  fileUrls?: string[];
-  level?: string;
-  levelName?: string;
-  status?: string;
-  countryName?: string;
-  isPublic?: boolean;
-  studentCount?: number;
-  chapterCount?: number;
-  createdAt?: string;
-}
-
-export interface CourseCountry {
-  countryId: number;
-  countryName: string;
-  countryCode?: string;
-  continentCode?: string;
-  continentName?: string;
-}
-
-export interface CreateAdminCoursePayload {
-  countryId: number;
-  title: string;
-  description: string;
-  price: number;
-  level: string;
-  status?: string; // 🌟 상태(공개/비공개) 타입 추가
-  thumbnail: File;
-  files?: File[];
-}
+import { AdminCourse, CourseCountry, CreateAdminCoursePayload } from "../contentmanage/types";
 
 // ------------------------------------------
 // 2. 공통 에러 핸들러

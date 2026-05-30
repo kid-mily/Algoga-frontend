@@ -8,11 +8,12 @@ import CompleteModal from "@/features/common/CompleteModal";
 import Modal from "@/features/common/Modal";
 
 import {
-  AdminChapter,
+  
   deleteAdminChapter,
   getAdminChapters,
 } from "@/features/services/adminChapter.service";
 
+import {AdminChapter} from '../types'
 interface ChapterListProps {
   lectureId: number;
   hideEdit?: boolean;

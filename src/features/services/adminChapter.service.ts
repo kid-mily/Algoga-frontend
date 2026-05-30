@@ -1,24 +1,7 @@
 // src/features/services/adminChapter.service.ts
 
 import { adminApi } from "@/lib/api";
-
-export interface AdminChapter {
-  chapterId: number;
-  courseId?: number;
-  title: string;
-  durationSeconds: number;
-  chapterOrder: number;
-  videoUrl?: string;
-}
-
-export interface CreateAdminChapterPayload {
-  courseId: number;
-  title: string;
-  description: string;
-  durationSeconds: number;
-  chapterOrder: number;
-  video: File;
-}
+import { AdminChapter , CreateAdminChapterPayload} from "../contentmanage/types";
 
 // 1. 챕터 목록 조회
 export const getAdminChapters = async (courseId: number): Promise<AdminChapter[]> => {
