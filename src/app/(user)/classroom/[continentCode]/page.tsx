@@ -1,7 +1,7 @@
 // 나라 선택
 
-import CountrySelectHeader from "@/features/classroom/CountrySelectHeader";
-import CountrySelectForm from "@/features/classroom/CountrySelectSection";
+import CountrySelectHeader from "@/features/classroom/components/CountrySelectHeader";
+import CountrySelectForm from "@/features/classroom/components/CountrySelectSection";
 
 export default function CountrySelectPage() {
     return (

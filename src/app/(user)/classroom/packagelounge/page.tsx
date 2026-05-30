@@ -3,7 +3,7 @@
 import { useState } from "react";
 import SubHeader from "@/features/contentmanage/SubHeader"; 
 import { useParams } from "next/navigation";
-import PackageItem from "@/features/classroom/PackageItem";
+import PackageItem from "@/features/classroom/components/PackageItem";
 
 // Mock Data
 const mockPackages = [

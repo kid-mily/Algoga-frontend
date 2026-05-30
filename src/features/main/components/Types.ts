@@ -1,3 +1,4 @@
+// 공지
 export interface Notice {
     noticeId: number
     tag: string
@@ -6,6 +7,7 @@ export interface Notice {
     time: string
 }
 
+// 배너
 export interface Banner {
     bannerId: string,
     imageUrl: string,
@@ -14,6 +16,7 @@ export interface Banner {
     text: string
 }
 
+// 캘린더
 export interface Schedule {
     scheduleId: number;
     title: string;
@@ -23,5 +26,11 @@ export interface Schedule {
 }
 
 export interface ScheduleSidebarProps {
+    schedules: Schedule[]
+}
+
+export interface CalendarGridProps {
+    year: number
+    month: number
     schedules: Schedule[]
 }

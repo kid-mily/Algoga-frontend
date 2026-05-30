@@ -1,9 +1,11 @@
+// 진단평가 페이지
+
 'use client';
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
-import TimerPage from '@/features/classroom/Timer';
+import TimerPage from '@/features/classroom/components/Timer';
 import SubHeader from '@/features/contentmanage/SubHeader';
 import CheckModal from '@/features/common/CheckModal';
 

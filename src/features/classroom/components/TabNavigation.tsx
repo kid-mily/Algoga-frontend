@@ -1,7 +1,7 @@
 'use client'; 
 
 import { useState } from 'react';
-import Modal from '../common/Modal';
+import Modal from '../../common/Modal';
 import { useParams, useRouter } from 'next/navigation';
 
 export default function TabNavigation() {

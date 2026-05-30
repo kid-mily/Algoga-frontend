@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from "next/navigation";
-import SubHeader from "../contentmanage/SubHeader";
+import SubHeader from "../../contentmanage/SubHeader";
 import { useState } from "react";
 
 // 챕터 더미 데이터

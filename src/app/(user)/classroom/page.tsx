@@ -1,7 +1,7 @@
 // 클래스룸 (대륙 선택)
 
-import ContinentHeader from "@/features/classroom/ContinentHeader";
-import ContinentSelectForm from "@/features/classroom/ContinentSelectForm";
+import ContinentHeader from "@/features/classroom/components/ContinentHeader";
+import ContinentSelectForm from "@/features/classroom/components/ContinentSelectForm";
 import LearnMethod from "@/features/main/components/LearningMethod";
 
 export default function ClassRoomMainPage() {

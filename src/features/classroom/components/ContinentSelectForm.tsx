@@ -1,8 +1,10 @@
+// 대륙 선택
+
 'use client';
 
 import { useEffect, useState } from "react";
 import { Continent } from "./types";
-import { getContinents } from "../services/ContinentSelection.service";
+import { getContinents } from "../../services/ContinentSelection.service";
 import { useRouter } from "next/navigation";
 
 
