@@ -7,22 +7,16 @@ import ChapterCard from "./ChapterCard";
 import CompleteModal from "@/features/common/CompleteModal";
 import Modal from "@/features/common/Modal";
 
-import {
-  
-  deleteAdminChapter,
-  getAdminChapters,
-} from "@/features/services/adminChapter.service";
+import { deleteAdminChapter, getAdminChapters } from "@/features/services/adminChapter.service";
+import { AdminChapter } from "../types";
 
-import {AdminChapter} from '../types'
 interface ChapterListProps {
   lectureId: number;
   hideEdit?: boolean;
 }
 
 const formatDuration = (durationSeconds: number) => {
-  if (!durationSeconds || durationSeconds <= 0) {
-    return "-";
-  }
+  if (!durationSeconds || durationSeconds <= 0) return "-";
   const minutes = Math.floor(durationSeconds / 60);
   const seconds = durationSeconds % 60;
   if (minutes <= 0) return `${seconds}초`;
@@ -30,10 +24,7 @@ const formatDuration = (durationSeconds: number) => {
   return `${minutes}분 ${seconds}초`;
 };
 
-export default function ChapterList({
-  lectureId,
-  hideEdit = false,
-}: ChapterListProps) {
+export default function ChapterList({ lectureId, hideEdit = false }: ChapterListProps) {
   const router = useRouter();
 
   const [chapters, setChapters] = useState<AdminChapter[]>([]);
@@ -56,7 +47,7 @@ export default function ChapterList({
       const data = await getAdminChapters(lectureId);
       setChapters(data);
     } catch (error: any) {
-      setErrorMessage(error.message || "챕터 목록을 불러오지 못했습니다.");
+      setErrorMessage("챕터 목록을 불러오지 못했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -69,15 +60,16 @@ export default function ChapterList({
   const handleDeleteConfirm = async () => {
     if (!selectedChapterId) return;
     try {
+      setErrorMessage("");
       await deleteAdminChapter(lectureId, selectedChapterId);
-      setChapters((prev) =>
-        prev.filter((chapter) => chapter.chapterId !== selectedChapterId)
-      );
+      setChapters((prev) => prev.filter((chapter) => chapter.chapterId !== selectedChapterId));
       setOpenDeleteModal(false);
       setOpenDeleteCompleteModal(true);
       setSelectedChapterId(null);
     } catch (error: any) {
-      alert(error.message || "챕터 삭제에 실패했습니다.");
+      setOpenDeleteModal(false);
+      // 🌟 alert 대신 인라인 에러로 띄워줍니다!
+      setErrorMessage(error.message || "챕터 삭제에 실패했습니다.");
     }
   };
 
@@ -89,16 +81,15 @@ export default function ChapterList({
     );
   }
 
-  if (errorMessage) {
-    return (
-      <div className="mt-8 rounded-[18px] border border-[#FCA5A5] bg-white p-8 text-center text-[14px] text-[#DC2626]">
-        {errorMessage}
-      </div>
-    );
-  }
-
+  // 🌟 페이지 렌더링을 완전히 망치지 않고, 에러 박스만 띄운 뒤 목록을 그립니다.
   return (
     <div className="mt-8 space-y-4">
+      {errorMessage && (
+        <div className="rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-center text-[14px] font-medium text-[#DC2626]">
+          🚨 {errorMessage}
+        </div>
+      )}
+
       {chapters.length === 0 ? (
         <div className="rounded-[18px] border border-[#E4E7EC] bg-white p-8 text-center text-[14px] text-[#98A2B3]">
           등록된 챕터가 없습니다.
@@ -106,7 +97,6 @@ export default function ChapterList({
       ) : (
         chapters.map((chapter) => {
           const currentChapterId = chapter.chapterId || (chapter as any).id;
-
           return (
             <ChapterCard
               key={currentChapterId}
@@ -117,11 +107,7 @@ export default function ChapterList({
               onEdit={
                 hideEdit
                   ? undefined
-                  : () =>
-                      // 🌟 수정됨: 주소 맨 끝에 /edit 을 다시 붙였습니다!
-                      router.push(
-                        `/contentadmin/lecture/${lectureId}/chapter/${currentChapterId}/edit`
-                      )
+                  : () => router.push(`/contentadmin/lecture/${lectureId}/chapter/${currentChapterId}/edit`)
               }
               onDelete={() => {
                 setSelectedChapterId(currentChapterId);
@@ -132,26 +118,8 @@ export default function ChapterList({
         })
       )}
 
-      <Modal
-        open={openDeleteModal}
-        title="챕터 삭제"
-        description="정말 삭제하시겠습니까?"
-        confirmText="삭제"
-        cancelText="취소"
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => {
-          setOpenDeleteModal(false);
-          setSelectedChapterId(null);
-        }}
-      />
-
-      <CompleteModal
-        open={openDeleteCompleteModal}
-        title="삭제 완료"
-        description="챕터가 삭제되었습니다."
-        buttonText="확인"
-        onConfirm={() => setOpenDeleteCompleteModal(false)}
-      />
+      <Modal open={openDeleteModal} title="챕터 삭제" description="정말 삭제하시겠습니까?" confirmText="삭제" cancelText="취소" onConfirm={handleDeleteConfirm} onCancel={() => { setOpenDeleteModal(false); setSelectedChapterId(null); }} />
+      <CompleteModal open={openDeleteCompleteModal} title="삭제 완료" description="챕터가 삭제되었습니다." buttonText="확인" onConfirm={() => setOpenDeleteCompleteModal(false)} />
     </div>
   );
 }

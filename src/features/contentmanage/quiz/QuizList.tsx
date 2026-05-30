@@ -7,9 +7,9 @@ import QuizCard from "./QuizCard";
 import CompleteModal from "@/features/common/CompleteModal";
 import Modal from "@/features/common/Modal";
 import {
-  type AdminQuiz,
   deleteAdminQuiz,
 } from "@/features/services/adminQuiz.service";
+import {AdminQuiz} from "../types";
 
 interface QuizListProps {
   quizzes?: AdminQuiz[];

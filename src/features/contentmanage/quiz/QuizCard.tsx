@@ -2,19 +2,12 @@
 
 interface QuizCardProps {
   lectureTitle: string;
-
   question: string;
-
   options: string[];
-
   answer: string;
-
   explanation?: string;
-
   onView?: () => void;
-
   onEdit?: () => void;
-
   onDelete?: () => void;
 }
 
@@ -39,7 +32,6 @@ export default function QuizCard({
 
   return (
     <div className="rounded-[18px] border border-[#E4E7EC] bg-white p-4">
-
       {/* 상단 */}
       <div className="flex items-start justify-between">
         {/* 왼쪽 */}
