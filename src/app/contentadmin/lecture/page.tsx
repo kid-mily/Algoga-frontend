@@ -46,6 +46,9 @@ export default function LecturePage() {
           getCourseCountries(),
         ]);
 
+        // 🚀 프론트가 진짜로 받는 데이터를 확인하기 위한 콘솔 로그 추가
+        console.log("🚀 [강의 목록 조회] 프론트가 받은 데이터:", courseData);
+
         setLectures(courseData);
         setCountries(countryData);
       } catch (error: any) {
@@ -66,15 +69,16 @@ export default function LecturePage() {
     return map;
   }, [countries]);
 
-  // 🌟 공개 여부 로직 강화 (백엔드의 다양한 변수명 호환)
+  // 🌟 백엔드 응답에 isPublic이 없으므로, status 문자열을 최우선으로 검사하는 최종 함수
   const getIsPublic = (lecture: any) => {
-    if (lecture.isPublic !== undefined) return lecture.isPublic;
-    if (lecture.is_public !== undefined) return lecture.is_public;
-    if (lecture.public !== undefined) return lecture.public; // 자바에서 boolean 필드명 이슈 방어
     if (lecture.status) {
       const s = String(lecture.status).toUpperCase();
-      return s === "PUBLIC" || s === "OPEN" || s === "PUBLISHED";
+      if (s === "PUBLIC" || s === "OPEN" || s === "PUBLISHED") return true;
+      if (s === "DRAFT" || s === "PRIVATE" || s === "CLOSED") return false;
     }
+    if (lecture.isPublic !== undefined) return String(lecture.isPublic) === "true";
+    if (lecture.is_public !== undefined) return String(lecture.is_public) === "true";
+    if (lecture.public !== undefined) return String(lecture.public) === "true"; 
     return false;
   };
 
@@ -129,14 +133,6 @@ export default function LecturePage() {
   const formatPrice = (price?: number) => {
     if (typeof price !== "number") return "-";
     return `${price.toLocaleString()}원`;
-  };
-
-  const formatDate = (dateValue?: string) => {
-    if (!dateValue) return "-";
-    const datePart = dateValue.includes("T")
-      ? dateValue.split("T")[0]
-      : dateValue.split(" ")[0];
-    return datePart.replaceAll("-", ".");
   };
 
   const handleDeleteConfirm = async () => {
@@ -234,24 +230,18 @@ export default function LecturePage() {
       </div>
 
       <div className="mt-5 rounded-[20px] border border-[#E4E7EC] bg-white">
-        <div className="grid grid-cols-[0.9fr_0.9fr_2fr_1fr_1fr_0.8fr_1.2fr_1fr_1fr_1fr] border-b border-[#E4E7EC] bg-[#FCFCFD] px-5 py-4 text-[13px] font-semibold text-[#667085]">
+        <div className="grid grid-cols-[0.9fr_1.2fr_2.5fr_1.2fr_1.2fr_1fr_1fr] border-b border-[#E4E7EC] bg-[#FCFCFD] px-5 py-4 text-[13px] font-semibold text-[#667085]">
           <div>썸네일</div>
           <div>국가</div>
-          <div>강의 제목</div>
+          <div className="pl-8">강의 제목</div>
           <div>가격</div>
-          <div>수강생</div>
-          <div>챕터</div>
           <div>챕터관리</div>
-          <div>등록일</div>
           <div className="text-center">상태</div>
           <div className="text-center">액션</div>
         </div>
 
        {currentLectures.map((lecture) => {
           const currentCourseId = lecture.courseId || lecture.course_id || lecture.id;
-          
-          // 🚨 백엔드가 도대체 무슨 이름으로 주는지 콘솔로 훔쳐보기!
-          console.log(`강의[${currentCourseId}] 백엔드 원본 데이터:`, lecture);
 
           return (
             <LectureCard
@@ -261,18 +251,6 @@ export default function LecturePage() {
               title={lecture.title || "-"}
               description={lecture.description || "-"}
               price={formatPrice(lecture.price)}
-              students={`${lecture.studentCount ?? lecture.student_count ?? 0}`}
-              
-              // 🌟 투망 던지기: 백엔드가 쓸만한 모든 이름 다 검사하기!!!
-              chapters={
-                lecture.chapterCount ?? 
-                lecture.chapter_count ?? 
-                lecture.chapters?.length ?? 
-                lecture.chapterList?.length ?? 
-                0
-              } 
-              
-              createdAt={formatDate(lecture.createdAt || lecture.created_at)}
               isPublic={getIsPublic(lecture)}
               onChapterManage={() =>
                 router.push(`/contentadmin/lecture/${currentCourseId}/chapter/new`)

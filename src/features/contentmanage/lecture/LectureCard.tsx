@@ -4,9 +4,6 @@ interface LectureCardProps {
   title?: string | null;
   description?: string | null;
   price?: string | number | null;
-  students?: string | number | null;
-  chapters?: number | null;
-  createdAt?: string | null;
   isPublic?: boolean;
 
   onChapterManage?: () => void;
@@ -21,9 +18,6 @@ export default function LectureCard({
   title,
   description,
   price,
-  students,
-  chapters,
-  createdAt,
   isPublic = false,
 
   onChapterManage,
@@ -38,14 +32,9 @@ export default function LectureCard({
   const displayPrice =
     typeof price === "number" ? `${price.toLocaleString()}원` : price || "-";
 
-  const displayStudents =
-    typeof students === "number" ? students.toLocaleString() : students || "0";
-
-  const displayChapters = chapters ?? 0;
-  const displayCreatedAt = createdAt || "-";
-
   return (
-    <div className="grid grid-cols-[0.9fr_0.9fr_2fr_1fr_1fr_0.8fr_1.2fr_1fr_1fr_1fr] items-center border-b border-[#E4E7EC] bg-white px-5 py-5">
+    // 🌟 수강생, 등록일 제거 및 남은 공간 비율 조정
+    <div className="grid grid-cols-[0.9fr_1.2fr_2.5fr_1.2fr_1.2fr_1fr_1fr] items-center border-b border-[#E4E7EC] bg-white px-5 py-5">
       {/* 썸네일 */}
       <div className="pr-6">
         {thumbnail ? (
@@ -69,7 +58,7 @@ export default function LectureCard({
       </div>
 
       {/* 제목 */}
-      <div className="min-w-0">
+      <div className="min-w-0 pl-8">
         <h3 className="truncate text-[16px] font-semibold text-[#111827]">
           {displayTitle}
         </h3>
@@ -84,16 +73,6 @@ export default function LectureCard({
         {displayPrice}
       </div>
 
-      {/* 수강생 */}
-      <div className="text-[16px] font-semibold text-[#111827]">
-        {displayStudents}명
-      </div>
-
-      {/* 챕터 */}
-      <div className="text-[16px] font-semibold text-[#439A97]">
-        {displayChapters}개
-      </div>
-
       {/* 챕터 관리 */}
       <div>
         <button
@@ -103,11 +82,6 @@ export default function LectureCard({
         >
           챕터관리
         </button>
-      </div>
-
-      {/* 등록일 */}
-      <div className="text-[14px] font-medium text-[#667085]">
-        {displayCreatedAt}
       </div>
 
       {/* 상태 */}

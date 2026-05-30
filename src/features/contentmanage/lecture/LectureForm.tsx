@@ -19,7 +19,7 @@ interface CourseFormData {
   description: string;
   price: string;
   level: string;
-  isPublic: string; // 🌟 공개 여부 상태 추가 ("true" or "false")
+  isPublic: string; // UI 상에서 선택하는 공개 여부 상태 ("true" or "false")
 }
 
 export default function LectureForm({ onNext }: LectureFormProps) {
@@ -29,7 +29,7 @@ export default function LectureForm({ onNext }: LectureFormProps) {
     description: "",
     price: "",
     level: "BEGINNER",
-    isPublic: "true", // 🌟 기본값: 공개
+    isPublic: "true", // 기본값: 공개
   });
 
   const [countries, setCountries] = useState<CourseCountry[]>([]);
@@ -146,16 +146,20 @@ export default function LectureForm({ onNext }: LectureFormProps) {
     try {
       setIsSubmitting(true);
 
+      // 🌟 핵심 로직: 폼의 "true"/"false" 값을 백엔드가 원하는 status 문자열로 변환
+      const targetStatus = formData.isPublic === "true" ? "PUBLISHED" : "DRAFT";
+
       const createdCourse = await createAdminCourse({
         countryId: Number(formData.countryId),
         title: formData.title,
         description: formData.description,
         price: Number(formData.price),
         level: formData.level,
-        isPublic: formData.isPublic === "true", // 🌟 백엔드에는 boolean으로 변환해서 전달
+        // 🌟 백엔드에 isPublic 대신 status로 전송!
+        status: targetStatus, 
         thumbnail: thumbnail,
         files: attachments,
-      } as any); // 서비스 타입 에러 방지용 any 처리
+      } as any);
 
       const courseId = Number(createdCourse.courseId);
 
@@ -226,7 +230,7 @@ export default function LectureForm({ onNext }: LectureFormProps) {
           />
         </div>
 
-        {/* 난이도 & 공개 여부 (반반 나누기) */}
+        {/* 난이도 & 공개 여부 */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-[14px] font-semibold text-[#111827]">난이도 *</label>
@@ -243,7 +247,6 @@ export default function LectureForm({ onNext }: LectureFormProps) {
             </select>
           </div>
 
-          {/* 🌟 공개 여부 추가된 부분 */}
           <div>
             <label className="text-[14px] font-semibold text-[#111827]">공개 여부 *</label>
             <select

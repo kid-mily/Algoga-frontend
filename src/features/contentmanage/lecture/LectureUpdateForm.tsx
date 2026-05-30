@@ -1,5 +1,3 @@
-// src/features/contentmanage/LectureUpdateForm.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -13,7 +11,7 @@ interface LectureUpdateFormProps {
     description: string;
     price: string;
     mileage: string;
-    isPublic?: string; // 🌟 공개 여부 추가 (기존 데이터 호환을 위해 optional 처리)
+    isPublic?: string; 
   };
   onSubmit?: (data: any, thumbnailFile?: File, attachmentFiles?: File[]) => void | Promise<boolean> | boolean; 
 }
@@ -25,10 +23,10 @@ export default function LectureUpdateForm({
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
   
-  // 만약 기존 데이터에 isPublic이 없었다면 "true"로 기본값 세팅
+  // 🌟 문자열로 "true" 또는 "false"를 명확하게 강제 캐스팅하여 초기화
   const [formData, setFormData] = useState({
     ...initialData,
-    isPublic: initialData.isPublic ?? "true", 
+    isPublic: String(initialData.isPublic) === "true" ? "true" : "false", 
   });
   
   const [thumbnailFile, setThumbnailFile] = useState<File | undefined>(); 
@@ -54,8 +52,15 @@ export default function LectureUpdateForm({
 
   const handleSubmit = async () => {
     if (onSubmit) {
-      // formData.isPublic 도 같이 넘어감 ("true" 또는 "false" 문자열)
-      const isSuccess = await onSubmit(formData, thumbnailFile, attachments);
+      // 🌟 제출할 때 확실하게 불리언과 문자열 status를 둘 다 만들어서 쏴줍니다.
+      const isPublicBool = String(formData.isPublic) === "true";
+      const payload = {
+        ...formData,
+        isPublic: isPublicBool,
+        status: isPublicBool ? "PUBLISHED" : "DRAFT", // 상위 페이지로 명확히 전달
+      };
+
+      const isSuccess = await onSubmit(payload, thumbnailFile, attachments);
       if (isSuccess === false) return; 
     }
     setOpenModal(true);
@@ -79,7 +84,6 @@ export default function LectureUpdateForm({
               </select>
             </div>
             
-            {/* 🌟 공개 여부 추가된 부분 */}
             <div>
               <label className="text-[14px] font-semibold text-[#111827]">공개 여부 *</label>
               <select name="isPublic" value={formData.isPublic} onChange={handleChange} className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none">
@@ -164,6 +168,7 @@ export default function LectureUpdateForm({
         buttonText="확인"
         onConfirm={() => {
           setOpenModal(false);
+          router.refresh(); // 🔥 Next.js 캐시를 뚫기 위해 새로고침 강제 호출!
           router.push("/contentadmin/lecture");
         }}
       />
