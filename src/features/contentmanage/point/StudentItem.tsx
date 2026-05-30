@@ -70,11 +70,13 @@ export default function StudentItem({
 
       {/* 액션 */}
       <div className="flex items-center justify-center gap-3">
-
         {/* 지급 */}
         <button
           type="button"
-          onClick={onGive}
+          onClick={(e) => {
+            e.stopPropagation(); // 🌟 클릭 이벤트가 부모(전체 클릭)로 퍼지는 걸 막습니다!
+            onGive?.();
+          }}
           className="h-[36px] rounded-full bg-[#ECFDF3] px-4 text-[13px] font-semibold text-[#16A34A]"
         >
           지급
@@ -83,7 +85,10 @@ export default function StudentItem({
         {/* 회수 */}
         <button
           type="button"
-          onClick={onTake}
+          onClick={(e) => {
+            e.stopPropagation(); // 🌟 클릭 이벤트가 부모(전체 클릭)로 퍼지는 걸 막습니다!
+            onTake?.();
+          }}
           className="h-[36px] rounded-full bg-[#FEF2F2] px-4 text-[13px] font-semibold text-[#DC2626]"
         >
           회수

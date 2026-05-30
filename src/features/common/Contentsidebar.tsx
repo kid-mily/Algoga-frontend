@@ -157,6 +157,25 @@ export default function ContentSidebar() {
             />
             쿠폰 관리
           </Link>
+          <Link
+            href="/contentadmin/point"
+            className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
+              pathname === "/contentadmin/point"
+                ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
+                : "text-[#344054] hover:bg-[#F5F7FA]"
+            }`}
+          >
+            <img
+              src={
+                pathname === "/contentadmin/point"
+                  ? "/images/point-active.svg"
+                  : "/images/point.svg"
+              }
+              alt="마일리지"
+              className="h-[20px] w-[20px]"
+            />
+            마일리지 관리
+          </Link>
 
           <Link
             href="/contentadmin/package"
@@ -198,25 +217,7 @@ export default function ContentSidebar() {
             Q&A 관리
           </Link>
 
-          <Link
-            href="/contentadmin/point"
-            className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
-              pathname === "/contentadmin/point"
-                ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
-                : "text-[#344054] hover:bg-[#F5F7FA]"
-            }`}
-          >
-            <img
-              src={
-                pathname === "/contentadmin/point"
-                  ? "/images/point-active.svg"
-                  : "/images/point.svg"
-              }
-              alt="마일리지"
-              className="h-[20px] w-[20px]"
-            />
-            마일리지 관리
-          </Link>
+          
         </div>
       </nav>
 
