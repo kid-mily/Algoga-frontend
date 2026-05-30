@@ -2,16 +2,7 @@
 
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
-
-export interface AdminLoginRequest {
-  loginId: string;
-  password: string;
-}
-
-export interface AdminLoginResponse {
-  accessToken: string;
-  refreshToken?: string;
-}
+import { AdminLoginRequest , AdminLoginResponse, CreateAdminCoursePayload } from "../contentmanage/types";
 
 const getErrorMessage = (error: unknown, fallbackMessage: string) => {
   if (error instanceof AxiosError) {

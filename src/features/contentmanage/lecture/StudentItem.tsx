@@ -2,16 +2,11 @@ interface StudentItemProps {
   name: string;
   lecture: string;
   email: string;
-
   status: "complete" | "progress";
-
   progress: number;
-
   quizComplete: boolean;
   reviewWritten: boolean;
-
   createdAt: string;
-
   checked: boolean;
   onCheck: () => void;
 }

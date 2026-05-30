@@ -9,11 +9,7 @@ import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 import Modal from "@/features/common/Modal";
 import CompleteModal from "@/features/common/CompleteModal";
 
-import {
-  getAdminCourses,
-  getCourseCountries,
-  deleteAdminCourse,
-} from "@/features/services/adminCourse.service";
+import {getAdminCourses, getCourseCountries, deleteAdminCourse,} from "@/features/services/adminCourse.service";
 
 export default function LecturePage() {
   const router = useRouter();

@@ -8,7 +8,8 @@ import ChapterForm from "@/features/contentmanage/lecture/ChapterForm";
 import ChapterList from "@/features/contentmanage/lecture/ChapterList";
 import SubHeader from "@/features/contentmanage/SubHeader";
 
-import { AdminChapter, getAdminChapters, updateAdminChapter } from "@/features/services/adminChapter.service";
+import { getAdminChapters, updateAdminChapter } from "@/features/services/adminChapter.service";
+import {AdminChapter} from "../../../../../../../features/contentmanage/types"
 
 export default function EditChapterPage() {
   const params = useParams();

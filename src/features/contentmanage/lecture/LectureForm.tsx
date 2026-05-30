@@ -3,7 +3,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { CourseCountry } from "@/features/services/adminCourse.service";
+import { CourseCountry } from "../types";
 import {
   createAdminCourse,
   getCourseCountries,
