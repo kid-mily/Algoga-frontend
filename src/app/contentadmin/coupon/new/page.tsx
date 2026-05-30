@@ -1,25 +1,26 @@
 "use client";
 
 import CouponForm from "@/features/contentmanage/coupon/CouponForm";
-import SubHeader from "@/features/contentmanage/SubHeader";
+import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import { createAdminCoupon } from "@/features/services/adminCoupon.service";
 
-export default function CreateCouponPage() {
+export default function CouponCreatePage() {
+  const handleCreate = async (payload: any) => {
+    try {
+      await createAdminCoupon(payload);
+      return true; 
+    } catch (error: any) {
+      alert(error.message || "쿠폰 등록에 실패했습니다.");
+      return false;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
-
-      {/* 헤더 */}
-      <SubHeader
-        backHref="/contentadmin/coupon"
-        backText="쿠폰 목록으로 돌아가기"
-        title="쿠폰 등록"
-        description="새로운 쿠폰을 등록합니다"
-      />
-
-      {/* 폼 */}
-      <CouponForm
-        mode="create"
-      />
+    <div className="p-6">
+      <SimpleSubHeader title="쿠폰 등록" description="특정 강의에 발급될 쿠폰 정책을 생성합니다." />
+      <div className="mt-6">
+        <CouponForm onSubmit={handleCreate} isEdit={false} />
+      </div>
     </div>
   );
 }
