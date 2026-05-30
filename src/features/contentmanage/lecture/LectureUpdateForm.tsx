@@ -22,8 +22,8 @@ export default function LectureUpdateForm({
 }: LectureUpdateFormProps) {
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
-  
-  // 🌟 문자열로 "true" 또는 "false"를 명확하게 강제 캐스팅하여 초기화
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     ...initialData,
     isPublic: String(initialData.isPublic) === "true" ? "true" : "false", 
@@ -33,14 +33,31 @@ export default function LectureUpdateForm({
   const [preview, setPreview] = useState("/images/thumb.png");
   const [attachments, setAttachments] = useState<File[]>([]);
 
+  // 🌟 인라인 에러 상태
+  const [errors, setErrors] = useState({
+    country: "",
+    title: "",
+    description: "",
+    price: "",
+  });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    if (errors[name as keyof typeof errors]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    if (!file.type.startsWith("image/")) {
+      return;
+    }
+
     setPreview(URL.createObjectURL(file));
     setThumbnailFile(file); 
   };
@@ -51,17 +68,38 @@ export default function LectureUpdateForm({
   };
 
   const handleSubmit = async () => {
+    // 🌟 유효성 검사
+    let newErrors = { country: "", title: "", description: "", price: "" };
+    let hasError = false;
+
+    if (!formData.country) { newErrors.country = "국가를 선택해주세요."; hasError = true; }
+    if (!formData.title.trim()) { newErrors.title = "강의 제목을 입력해주세요."; hasError = true; }
+    if (!formData.description.trim()) { newErrors.description = "강의 설명을 입력해주세요."; hasError = true; }
+    if (!formData.price || Number(formData.price) < 0) { newErrors.price = "올바른 가격을 입력해주세요."; hasError = true; }
+
+    if (hasError) {
+      setErrors(newErrors);
+      return;
+    }
+
     if (onSubmit) {
-      // 🌟 제출할 때 확실하게 불리언과 문자열 status를 둘 다 만들어서 쏴줍니다.
+      setIsSubmitting(true);
       const isPublicBool = String(formData.isPublic) === "true";
       const payload = {
         ...formData,
         isPublic: isPublicBool,
-        status: isPublicBool ? "PUBLISHED" : "DRAFT", // 상위 페이지로 명확히 전달
+        status: isPublicBool ? "PUBLISHED" : "DRAFT",
       };
 
-      const isSuccess = await onSubmit(payload, thumbnailFile, attachments);
-      if (isSuccess === false) return; 
+      try {
+        const isSuccess = await onSubmit(payload, thumbnailFile, attachments);
+        if (isSuccess === false) {
+          setIsSubmitting(false);
+          return;
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
     }
     setOpenModal(true);
   };
@@ -71,77 +109,108 @@ export default function LectureUpdateForm({
       <div className="rounded-[22px] border border-[#E4E7EC] bg-white p-6">
         <h2 className="text-[22px] font-bold text-[#111827]">강의 수정</h2>
 
-        <div className="mt-6 space-y-5">
-          {/* 국가 및 공개 여부 */}
+        <div className="mt-6 space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-[14px] font-semibold text-[#111827]">국가 선택 *</label>
-              <select name="country" value={formData.country} onChange={handleChange} className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none">
+              <select 
+                name="country" 
+                value={formData.country} 
+                onChange={handleChange} 
+                className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
+                  errors.country ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
+                }`}
+              >
                 <option value="">국가 선택</option>
                 <option value="일본">일본</option>
                 <option value="프랑스">프랑스</option>
                 <option value="미국">미국</option>
               </select>
+              {errors.country && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.country}</p>}
             </div>
             
             <div>
-              <label className="text-[14px] font-semibold text-[#111827]">공개 여부 *</label>
-              <select name="isPublic" value={formData.isPublic} onChange={handleChange} className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none">
-                <option value="true">공개</option>
-                <option value="false">비공개</option>
+              <label className="text-[14px] font-semibold text-[#111827]">상태 (공개 여부) *</label>
+              <select name="isPublic" value={formData.isPublic} onChange={handleChange} className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none focus:border-[#439A97]">
+                <option value="true">공개 (PUBLISHED)</option>
+                <option value="false">비공개 (DRAFT)</option>
               </select>
             </div>
           </div>
 
-          {/* 제목 */}
           <div>
             <label className="text-[14px] font-semibold text-[#111827]">강의 제목 *</label>
-            <input type="text" name="title" value={formData.title} onChange={handleChange} placeholder="강의 제목 입력" className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none" />
+            <input 
+              type="text" 
+              name="title" 
+              value={formData.title} 
+              onChange={handleChange} 
+              placeholder="강의 제목 입력" 
+              className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
+                errors.title ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
+              }`} 
+            />
+            {errors.title && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.title}</p>}
           </div>
 
-          {/* 설명 */}
           <div>
             <label className="text-[14px] font-semibold text-[#111827]">강의 설명 *</label>
-            <textarea name="description" value={formData.description} onChange={handleChange} placeholder="강의 설명 입력" className="mt-2 h-[120px] w-full resize-none rounded-[12px] border border-[#E4E7EC] p-4 text-[14px] outline-none" />
+            <textarea 
+              name="description" 
+              value={formData.description} 
+              onChange={handleChange} 
+              placeholder="강의 설명 입력" 
+              className={`mt-2 h-[120px] w-full resize-none rounded-[12px] border p-4 text-[14px] outline-none transition-colors ${
+                errors.description ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
+              }`} 
+            />
+            {errors.description && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.description}</p>}
           </div>
 
-          {/* 썸네일 */}
           <div>
             <label className="text-[14px] font-semibold text-[#111827]">썸네일 이미지</label>
             <div className="mt-2 h-[180px] overflow-hidden rounded-[16px] border border-dashed border-[#D0D5DD] bg-[#FCFCFD]">
               <img src={preview} alt="썸네일" className="h-full w-full object-cover" />
             </div>
-            <label className="mt-3 flex h-[42px] cursor-pointer items-center justify-center rounded-[10px] bg-[#439A97] text-[13px] font-semibold text-white">
+            <label className="mt-3 flex h-[42px] cursor-pointer items-center justify-center rounded-[10px] bg-[#439A97] text-[13px] font-semibold text-white hover:opacity-90">
               이미지 변경
               <input type="file" accept="image/*" onChange={handleThumbnailChange} className="hidden" />
             </label>
             {thumbnailFile && <p className="mt-2 text-[12px] text-[#667085]">{thumbnailFile.name}</p>}
           </div>
 
-          {/* 가격 */}
-          <div>
-            <label className="text-[14px] font-semibold text-[#111827]">가격 *</label>
-            <div className="relative mt-2">
-              <input type="number" name="price" value={formData.price} onChange={handleChange} className="h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 pr-10 text-[14px] outline-none" />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] text-[#667085]">원</span>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[14px] font-semibold text-[#111827]">가격 *</label>
+              <div className="relative mt-2">
+                <input 
+                  type="number" 
+                  name="price" 
+                  value={formData.price} 
+                  onChange={handleChange} 
+                  className={`h-[48px] w-full rounded-[12px] border px-4 pr-10 text-[14px] outline-none transition-colors ${
+                    errors.price ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
+                  }`} 
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] text-[#667085]">원</span>
+              </div>
+              {errors.price && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.price}</p>}
+            </div>
+
+            <div>
+              <label className="text-[14px] font-semibold text-[#111827]">마일리지</label>
+              <div className="relative mt-2">
+                <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} className="h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 pr-10 text-[14px] outline-none focus:border-[#439A97]" />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] text-[#667085]">원</span>
+              </div>
             </div>
           </div>
 
-          {/* 마일리지 */}
-          <div>
-            <label className="text-[14px] font-semibold text-[#111827]">마일리지</label>
-            <div className="relative mt-2">
-              <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} className="h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 pr-10 text-[14px] outline-none" />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] text-[#667085]">원</span>
-            </div>
-          </div>
-
-          {/* 첨부파일 */}
           <div>
             <label className="text-[14px] font-semibold text-[#111827]">첨부 자료</label>
-            <label className="mt-2 flex h-[180px] cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-[#D0D5DD] bg-[#FCFCFD]">
-              <img src="/images/upload.svg" alt="업로드" className="h-[32px] w-[32px]" />
-              <p className="mt-4 text-[14px] font-medium text-[#344054]">PDF, PPT, DOC 업로드</p>
+            <label className="mt-2 flex h-[120px] cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-[#D0D5DD] bg-[#FCFCFD] transition hover:bg-gray-50">
+              <img src="/images/upload.svg" alt="업로드" className="h-[24px] w-[24px]" />
+              <p className="mt-2 text-[13px] font-medium text-[#344054]">PDF, PPT, DOC 업로드</p>
               <input type="file" multiple onChange={handleAttachmentChange} className="hidden" />
             </label>
             {attachments.length > 0 && (
@@ -154,10 +223,11 @@ export default function LectureUpdateForm({
           </div>
         </div>
 
-        {/* 버튼 */}
         <div className="mt-8 flex items-center justify-end gap-3">
-          <button type="button" onClick={() => router.back()} className="h-[44px] rounded-[12px] border border-[#E4E7EC] px-6 text-[14px] font-semibold text-[#667085]">취소</button>
-          <button type="button" onClick={handleSubmit} className="flex h-[44px] items-center rounded-[12px] bg-[#439A97] px-6 text-[14px] font-semibold text-white">수정하기</button>
+          <button type="button" onClick={() => router.back()} disabled={isSubmitting} className="h-[44px] rounded-[12px] border border-[#E4E7EC] px-6 text-[14px] font-semibold text-[#667085] hover:bg-gray-50 disabled:opacity-50">취소</button>
+          <button type="button" onClick={handleSubmit} disabled={isSubmitting} className="flex h-[44px] items-center rounded-[12px] bg-[#439A97] px-6 text-[14px] font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#CFE5E4]">
+            {isSubmitting ? "수정 중..." : "수정하기"}
+          </button>
         </div>
       </div>
 
@@ -168,7 +238,7 @@ export default function LectureUpdateForm({
         buttonText="확인"
         onConfirm={() => {
           setOpenModal(false);
-          router.refresh(); // 🔥 Next.js 캐시를 뚫기 위해 새로고침 강제 호출!
+          router.refresh(); 
           router.push("/contentadmin/lecture");
         }}
       />

@@ -7,25 +7,22 @@ import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 import Modal from "@/features/common/Modal";
 import CompleteModal from "@/features/common/CompleteModal";
 
-import { getAdminCoupons, deleteAdminCoupon } from "@/features/services/adminCoupon.service";
-import { AdminCoupon } from "@/features/contentmanage/types"
-
-// 🌟 강의 목록을 불러오기 위해 기존 서비스 함수 추가
+import { getAdminCoupons, deleteAdminCoupon} from "@/features/services/adminCoupon.service";
 import { getAdminCourses } from "@/features/services/adminCourse.service"; 
+import { AdminCoupon } from "../../../features/contentmanage/types";
 
 export default function CouponPage() {
   const router = useRouter();
   
   const [searchCourseId, setSearchCourseId] = useState("");
   const [coupons, setCoupons] = useState<AdminCoupon[]>([]);
-  const [courses, setCourses] = useState<any[]>([]); // 🌟 강의 목록 데이터 상태 추가
+  const [courses, setCourses] = useState<any[]>([]); 
   const [isLoading, setIsLoading] = useState(false);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [targetCoupon, setTargetCoupon] = useState<{ courseId: number; policyId: number } | null>(null);
 
-  // 🌟 컴포넌트 마운트 시 강의 목록을 불러와서 드롭다운을 채웁니다
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -38,24 +35,20 @@ export default function CouponPage() {
     fetchCourses();
   }, []);
 
-  // 🌟 테이블에 강의 이름 띄워주는 헬퍼 함수
   const getCourseTitle = (courseId: number) => {
     const course = courses.find((c) => (c.courseId || c.course_id || c.id) === courseId);
     return course ? course.title : `알 수 없는 강의 (ID: ${courseId})`;
   };
 
   const handleSearch = async () => {
-    if (!searchCourseId) {
-      alert("조회할 강의를 선택해주세요.");
-      return;
-    }
+    if (!searchCourseId) return;
     
     try {
       setIsLoading(true);
       const data = await getAdminCoupons(Number(searchCourseId));
       setCoupons(data);
-    } catch (error: any) {
-      alert(error.message || "쿠폰 목록 로드 실패");
+    } catch (error) {
+      console.error("목록 조회 실패:", error);
       setCoupons([]); 
     } finally {
       setIsLoading(false);
@@ -70,8 +63,9 @@ export default function CouponPage() {
       setDeleteModalOpen(false);
       setCompleteModalOpen(true);
       setTargetCoupon(null);
-    } catch (error: any) {
-      alert(error.message || "삭제에 실패했습니다.");
+    } catch (error) {
+      console.error("삭제 실패:", error);
+      setDeleteModalOpen(false);
     }
   };
 
@@ -81,11 +75,10 @@ export default function CouponPage() {
 
       <div className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          {/* 🌟 기존 숫자 입력창 대신 강의명 드롭다운(Select) 적용! */}
           <select
             value={searchCourseId}
             onChange={(e) => setSearchCourseId(e.target.value)}
-            className="h-[42px] w-[280px] rounded-[12px] border border-[#E4E7EC] px-3 text-[13px] outline-none"
+            className="h-[42px] w-[280px] rounded-[12px] border border-[#E4E7EC] px-3 text-[13px] outline-none focus:border-[#439A97]"
           >
             <option value="">조회할 강의를 선택하세요</option>
             {courses.map((course) => {
@@ -135,7 +128,6 @@ export default function CouponPage() {
           coupons.map((coupon) => (
             <div key={coupon.couponPolicyId} className="grid grid-cols-[0.5fr_1.5fr_2fr_1fr_1fr_1fr_1fr] items-center border-b border-[#E4E7EC] px-5 py-4 text-center text-[14px] text-[#111827]">
               <div>{coupon.couponPolicyId}</div>
-              {/* 🌟 매핑된 실제 강의 이름을 출력합니다 */}
               <div className="text-left pl-2 truncate pr-4 text-[#667085] text-[13px]">
                 {getCourseTitle(coupon.courseId)}
               </div>

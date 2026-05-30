@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/CompleteModal";
-
-// 🌟 등록 폼에서도 강의 목록을 불러오기 위해 추가
 import { getAdminCourses } from "@/features/services/adminCourse.service"; 
 
 interface CouponFormProps {
@@ -24,7 +22,7 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
   
-  const [courses, setCourses] = useState<any[]>([]); // 🌟 드롭다운용 강의 목록
+  const [courses, setCourses] = useState<any[]>([]); 
 
   const [formData, setFormData] = useState({
     courseId: initialData?.courseId || "",
@@ -35,7 +33,14 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
     active: initialData?.active === "false" ? "false" : "true", 
   });
 
-  // 🌟 컴포넌트 렌더링 시 강의 목록 가져오기
+  // 🌟 [추가됨] 빈칸일 때 띄워줄 에러 메시지 상태 관리
+  const [errors, setErrors] = useState({
+    courseId: "",
+    couponName: "",
+    discountValue: "",
+    validDays: "",
+  });
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -51,20 +56,44 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // 🌟 [추가됨] 사용자가 입력을 시작하면 해당 입력창의 에러 메시지를 바로 지워줍니다
+    if (errors[name as keyof typeof errors]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleSubmit = async () => {
+    // 🌟 [변경됨] 기존 alert 창을 모두 없애고, 에러 객체에 텍스트를 담습니다!
+    let newErrors = { courseId: "", couponName: "", discountValue: "", validDays: "" };
+    let hasError = false;
+
     if (!formData.courseId) {
-      alert("연결할 강의를 선택해주세요.");
-      return;
+      newErrors.courseId = "연결할 강의를 선택해주세요.";
+      hasError = true;
     }
-    if (!formData.couponName.trim() || !formData.discountValue || !formData.validDays) {
-      alert("모든 필수 항목을 입력해주세요.");
-      return;
+    if (!formData.couponName.trim()) {
+      newErrors.couponName = "쿠폰 이름은 필수 입력입니다.";
+      hasError = true;
+    }
+    if (!formData.discountValue || Number(formData.discountValue) <= 0) {
+      newErrors.discountValue = "올바른 할인 폭을 입력해주세요.";
+      hasError = true;
+    }
+    if (!formData.validDays || Number(formData.validDays) <= 0) {
+      newErrors.validDays = "올바른 유효 기간을 입력해주세요.";
+      hasError = true;
     }
 
+    // 에러가 하나라도 발생했다면, 에러 상태를 업데이트하고 서버 전송 중지!
+    if (hasError) {
+      setErrors(newErrors);
+      return; 
+    }
+
+    // 통과했을 때만 백엔드로 전송
     const payload = {
-      courseId: Number(formData.courseId), // 백엔드로는 정상적으로 Number 타입 ID가 넘어갑니다!
+      courseId: Number(formData.courseId), 
       couponName: formData.couponName.trim(),
       discountType: formData.discountType,
       discountValue: Number(formData.discountValue),
@@ -85,17 +114,19 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
           {isEdit ? "쿠폰 수정" : "새 쿠폰 등록"}
         </h2>
 
-        <div className="mt-6 space-y-5">
+        <div className="mt-6 space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-[14px] font-semibold text-[#111827]">연결할 강의 선택 *</label>
-              {/* 🌟 숫자 입력창 대신 드롭다운으로 변경 */}
               <select
                 name="courseId"
                 value={formData.courseId}
                 onChange={handleChange}
-                disabled={isEdit} // 수정 시에는 강의 변경 불가
-                className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none ${isEdit ? "bg-[#F2F4F7] border-transparent text-[#98A2B3] cursor-not-allowed" : "border-[#E4E7EC]"}`}
+                disabled={isEdit} 
+                // 🌟 에러가 있으면 테두리와 배경색이 빨갛게 변함
+                className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
+                  errors.courseId ? "border-[#DC2626] bg-[#FEF2F2]" : isEdit ? "bg-[#F2F4F7] border-transparent text-[#98A2B3] cursor-not-allowed" : "border-[#E4E7EC] focus:border-[#439A97]"
+                }`}
               >
                 <option value="">강의를 선택해주세요</option>
                 {courses.map((course) => {
@@ -107,10 +138,12 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
                   );
                 })}
               </select>
+              {/* 🌟 에러 메시지 출력 부분 */}
+              {errors.courseId && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.courseId}</p>}
             </div>
             <div>
               <label className="text-[14px] font-semibold text-[#111827]">상태 *</label>
-              <select name="active" value={formData.active} onChange={handleChange} className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none">
+              <select name="active" value={formData.active} onChange={handleChange} className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none focus:border-[#439A97]">
                 <option value="true">활성 (발급 가능)</option>
                 <option value="false">비활성 (발급 중지)</option>
               </select>
@@ -119,26 +152,59 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
 
           <div>
             <label className="text-[14px] font-semibold text-[#111827]">쿠폰 이름 *</label>
-            <input type="text" name="couponName" value={formData.couponName} onChange={handleChange} placeholder="예: 오사카 강의 수료 할인 쿠폰" className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none" />
+            <input 
+              type="text" 
+              name="couponName" 
+              value={formData.couponName} 
+              onChange={handleChange} 
+              placeholder="예: 오사카 강의 수료 할인 쿠폰" 
+              className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
+                errors.couponName ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
+              }`} 
+            />
+            {/* 🌟 에러 메시지 출력 부분 */}
+            {errors.couponName && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.couponName}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-[14px] font-semibold text-[#111827]">할인 타입 *</label>
-              <select name="discountType" value={formData.discountType} onChange={handleChange} className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none">
+              <select name="discountType" value={formData.discountType} onChange={handleChange} className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none focus:border-[#439A97]">
                 <option value="RATE">비율 할인 (%)</option>
                 <option value="AMOUNT">정액 할인 (원)</option>
               </select>
             </div>
             <div>
               <label className="text-[14px] font-semibold text-[#111827]">할인 폭 *</label>
-              <input type="number" name="discountValue" value={formData.discountValue} onChange={handleChange} placeholder="예: 10" className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none" />
+              <input 
+                type="number" 
+                name="discountValue" 
+                value={formData.discountValue} 
+                onChange={handleChange} 
+                placeholder="예: 10" 
+                className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
+                  errors.discountValue ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
+                }`} 
+              />
+              {/* 🌟 에러 메시지 출력 부분 */}
+              {errors.discountValue && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.discountValue}</p>}
             </div>
           </div>
 
           <div>
             <label className="text-[14px] font-semibold text-[#111827]">유효 기간 (일) *</label>
-            <input type="number" name="validDays" value={formData.validDays} onChange={handleChange} placeholder="예: 30" className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none" />
+            <input 
+              type="number" 
+              name="validDays" 
+              value={formData.validDays} 
+              onChange={handleChange} 
+              placeholder="예: 30" 
+              className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
+                errors.validDays ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
+              }`} 
+            />
+            {/* 🌟 에러 메시지 출력 부분 */}
+            {errors.validDays && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.validDays}</p>}
           </div>
         </div>
 
