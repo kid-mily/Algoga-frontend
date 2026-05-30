@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { Continent } from "../classroom/types";
+import { Continent } from "../classroom/components/types";
 
 interface ContinentResponse {
     timestamp: string;

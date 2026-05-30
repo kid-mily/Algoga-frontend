@@ -1,3 +1,5 @@
+// 캘린더
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -36,7 +38,7 @@ export default function ScheduleCalendar() {
   }, [year, month]);
 
   return (
-    <section className="overflow-hidden rounded-[32px] border border-[#E9EEF5] bg-white">
+    <section className="overflow-hidden rounded-2xl border border-[#E9EEF5] bg-white">
       <CalendarHeader
         year={year}
         month={month}

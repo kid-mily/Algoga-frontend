@@ -17,7 +17,7 @@ export interface Country {
   courseCount: number;
 }
 
-// 강의 아이템
+// 단일 강의
 export interface CourseItem {
   courseId: number;
   countryId: number;
@@ -31,7 +31,7 @@ export interface CourseItem {
   status: string;
 }
 
-// API 응답 구조
+// API 공통 응답 구조
 export interface BaseApiResponse<T> {
   timestamp: string;
   status: number;
@@ -47,11 +47,19 @@ export interface CourseDetailItem extends CourseItem {
   curriculum?: string[];
 }
 
-// 난이도 타입 정의 및 색상 매핑
+export interface CountryCourseResponse {
+  country: Country | null;
+  courses: CourseItem[];
+}
+
+// 난이도 타입 정의 및 색상
 export type LevelType = '초급' | '중급' | '고급';
 
 export const LEVEL_COLORS: Record<LevelType | string, string> = {
   초급: 'bg-[#4A6B6B]',
   중급: 'bg-[#D9A752]',
   고급: 'bg-[#C95B5B]',
+  BEGINNER: "bg-[#4A6B6B]",
+  INTERMEDIATE: "bg-[#D9A752]",
+  ADVANCED: "bg-[#C95B5B]",
 };

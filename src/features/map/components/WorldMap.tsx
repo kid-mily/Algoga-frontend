@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import L from "leaflet";
 import { getCountries } from "@/features/services/countrySelect.service";
-import { Country } from "@/features/classroom/types";
+import { Country } from "@/features/classroom/components/types";
 interface GeoJsonFeature {
   properties: {
     continent?: string;

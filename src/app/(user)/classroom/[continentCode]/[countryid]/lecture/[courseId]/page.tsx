@@ -1,4 +1,4 @@
-import LectureSideBar from "@/features/classroom/LectureSideBar";
+import LectureSideBar from "@/features/classroom/components/LectureSideBar";
 
 // 강의 상세 페이지
 export default function LectureDetaile() {
