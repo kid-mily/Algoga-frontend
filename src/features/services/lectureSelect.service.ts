@@ -1,12 +1,17 @@
 import { api } from "@/lib/api";
-import { CourseItem } from "../classroom/components/types";
+import { CourseItem, BaseApiResponse } from "../classroom/components/types";
 
-export const getCoursesByCountry = async (
-    countryId: number
+export const getCourses = async (
+    countryId: string
     ): Promise<CourseItem[]> => {
-    const response = await api.get(
+    try {
+        const response = await api.get<BaseApiResponse<CourseItem[]>>(
         `/api/v1/courses/countries/${countryId}`
-    );
+        );
 
-    return response.data;
+        return response.data.data;
+    } catch (error) {
+        console.error("강의 데이터를 불러오는데 실패했습니다:", error);
+        return [];
+    }
 };

@@ -55,7 +55,7 @@ export default function ContinentPage() {
       <div className="grid grid-cols-4 gap-10 w-full">
         {countries.map((country) => {
           // 다음 페이지 이동을 위해 상세 URL을 소문자로 포맷팅
-          const targetUrl = `/classroom/${country.continentCode}/${country.countryCode}`.toLowerCase();
+          const targetUrl =`/classroom/${country.continentCode}/${country.countryId}`.toLowerCase();
 
           return (
             <div 
