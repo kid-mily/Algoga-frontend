@@ -1,3 +1,5 @@
+// 강의
+
 "use client";
 
 import { useRouter } from "next/navigation";
