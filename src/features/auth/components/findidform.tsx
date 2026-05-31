@@ -12,8 +12,6 @@ export default function FindIdForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
-  // 🌟 에러 메시지 관리 상태 추가
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleFindId = async () => {

@@ -15,8 +15,6 @@ export default function LoginForm() {
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  // 🌟 alert 대신 모달 사용을 위한 상태 관리
   const [modal, setModal] = useState({ open: false, title: "", description: "" });
 
   const validateUsername = (value: string) => {
