@@ -76,7 +76,7 @@ export default function ContentSidebar() {
     localStorage.removeItem("adminAccessToken");
     localStorage.removeItem("adminRefreshToken");
 
-    router.push("/auth/admin-login");
+    router.push("/auth/adminlogin");
     router.refresh();
   };
 
