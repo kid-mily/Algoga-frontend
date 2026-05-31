@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/CompleteModal";
 import { getAdminCourses } from "@/features/services/adminCourse.service"; 
+import LoadingSpinner from "@/features/common/LoadingSpinner"; // 🌟 스피너 추가
 
 interface CouponFormProps {
   initialData?: {
@@ -23,6 +24,7 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
   const [openModal, setOpenModal] = useState(false);
   
   const [courses, setCourses] = useState<any[]>([]); 
+  const [isLoading, setIsLoading] = useState(true); // 🌟 로딩 상태 추가
 
   const [formData, setFormData] = useState({
     courseId: initialData?.courseId || "",
@@ -33,7 +35,6 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
     active: initialData?.active === "false" ? "false" : "true", 
   });
 
-  // 🌟 [추가됨] 빈칸일 때 띄워줄 에러 메시지 상태 관리
   const [errors, setErrors] = useState({
     courseId: "",
     couponName: "",
@@ -44,10 +45,13 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
   useEffect(() => {
     const fetchCourses = async () => {
       try {
+        setIsLoading(true);
         const data = await getAdminCourses();
         setCourses(data);
       } catch (error) {
         console.error("강의 목록 로드 실패", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchCourses();
@@ -57,14 +61,12 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // 🌟 [추가됨] 사용자가 입력을 시작하면 해당 입력창의 에러 메시지를 바로 지워줍니다
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleSubmit = async () => {
-    // 🌟 [변경됨] 기존 alert 창을 모두 없애고, 에러 객체에 텍스트를 담습니다!
     let newErrors = { courseId: "", couponName: "", discountValue: "", validDays: "" };
     let hasError = false;
 
@@ -85,13 +87,11 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
       hasError = true;
     }
 
-    // 에러가 하나라도 발생했다면, 에러 상태를 업데이트하고 서버 전송 중지!
     if (hasError) {
       setErrors(newErrors);
       return; 
     }
 
-    // 통과했을 때만 백엔드로 전송
     const payload = {
       courseId: Number(formData.courseId), 
       couponName: formData.couponName.trim(),
@@ -106,6 +106,15 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
       setOpenModal(true);
     }
   };
+
+  // 🌟 강의 목록을 불러오는 동안 보여줄 화면
+  if (isLoading) {
+    return (
+      <div className="flex h-[400px] w-full flex-col items-center justify-center rounded-[22px] border border-[#E4E7EC] bg-white">
+        <LoadingSpinner text="연결 가능한 강의 목록을 불러오는 중입니다..." />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -123,7 +132,6 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
                 value={formData.courseId}
                 onChange={handleChange}
                 disabled={isEdit} 
-                // 🌟 에러가 있으면 테두리와 배경색이 빨갛게 변함
                 className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
                   errors.courseId ? "border-[#DC2626] bg-[#FEF2F2]" : isEdit ? "bg-[#F2F4F7] border-transparent text-[#98A2B3] cursor-not-allowed" : "border-[#E4E7EC] focus:border-[#439A97]"
                 }`}
@@ -138,7 +146,6 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
                   );
                 })}
               </select>
-              {/* 🌟 에러 메시지 출력 부분 */}
               {errors.courseId && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.courseId}</p>}
             </div>
             <div>
@@ -162,7 +169,6 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
                 errors.couponName ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
               }`} 
             />
-            {/* 🌟 에러 메시지 출력 부분 */}
             {errors.couponName && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.couponName}</p>}
           </div>
 
@@ -186,7 +192,6 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
                   errors.discountValue ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
                 }`} 
               />
-              {/* 🌟 에러 메시지 출력 부분 */}
               {errors.discountValue && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.discountValue}</p>}
             </div>
           </div>
@@ -203,7 +208,6 @@ export default function CouponForm({ initialData, onSubmit, isEdit = false }: Co
                 errors.validDays ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
               }`} 
             />
-            {/* 🌟 에러 메시지 출력 부분 */}
             {errors.validDays && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.validDays}</p>}
           </div>
         </div>

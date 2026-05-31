@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import StudentItem from "./StudentItem";
 import { getCourseStudents } from "@/features/services/adminStudent.service";
+// 🌟 스피너 추가
+import LoadingSpinner from "@/features/common/LoadingSpinner";
 
 interface StudentFormProps {
   open: boolean;
   onClose: () => void;
-  courseId: number | null; // 🌟 어떤 강의의 학생을 불러올지 알아야 하므로 추가!
-  courseTitle?: string;    // 모달 상단에 띄워줄 강의 제목
+  courseId: number | null; 
+  courseTitle?: string;    
 }
 
 export default function StudentForm({
@@ -22,7 +24,6 @@ export default function StudentForm({
   const [apiError, setApiError] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  // 🌟 모달이 열릴 때 API를 호출하여 데이터 가져오기
   useEffect(() => {
     const fetchStudents = async () => {
       if (!courseId) return;
@@ -31,13 +32,12 @@ export default function StudentForm({
         setApiError("");
         const data = await getCourseStudents(courseId);
         
-        // 백엔드 데이터를 StudentItem 규격에 맞게 변환
         const mappedData = data.map((s) => ({
           id: s.userId,
           name: s.userName,
           lecture: courseTitle,
           email: s.email,
-          status: "progress", // 아직 백엔드에 진도율 데이터가 없다면 기본값 처리
+          status: "progress", 
           progress: 0,
           quizComplete: false,
           reviewWritten: false,
@@ -55,7 +55,6 @@ export default function StudentForm({
     if (open && courseId) {
       fetchStudents();
     } else {
-      // 닫힐 때 초기화
       setStudents([]);
       setSelectedIds([]);
       setApiError("");
@@ -64,7 +63,6 @@ export default function StudentForm({
 
   if (!open) return null;
 
-  // 전체 선택
   const handleSelectAll = () => {
     if (selectedIds.length === students.length && students.length > 0) {
       setSelectedIds([]);
@@ -73,7 +71,6 @@ export default function StudentForm({
     }
   };
 
-  // 개별 선택
   const handleSelect = (id: number) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -95,7 +92,6 @@ export default function StudentForm({
           </div>
         </div>
 
-        {/* 🌟 에러 발생 시 출력 영역 */}
         {apiError && (
           <div className="bg-[#FEF2F2] px-7 py-3 text-[14px] font-medium text-[#DC2626]">
             🚨 {apiError}
@@ -144,10 +140,12 @@ export default function StudentForm({
           <div>등록일</div>
         </div>
 
-        {/* 학생 리스트 */}
+        {/* 학생 리스트 ( 스피너 영역) */}
         <div className="max-h-[500px] overflow-y-auto">
           {isLoading ? (
-            <div className="p-10 text-center text-[#667085]">수강생 정보를 불러오는 중입니다...</div>
+            <div className="flex h-[200px] w-full items-center justify-center">
+              <LoadingSpinner text="수강생 정보를 불러오는 중입니다..." />
+            </div>
           ) : students.length === 0 && !apiError ? (
             <div className="p-10 text-center text-[#667085]">현재 이 강의를 수강 중인 학생이 없습니다.</div>
           ) : (

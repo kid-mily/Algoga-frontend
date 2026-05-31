@@ -1,10 +1,8 @@
-// src/features/services/adminCoupon.service.ts
-
 import axios from "axios";
 import { adminApi } from "@/lib/api";
 
 // 🌟 분리해두신 타입 파일 경로에 맞게 임포트 해주세요! (아래는 예시 경로입니다)
-import { AdminCoupon, AdminCouponPayload } from "@/features/contentmanage/types";
+// import { AdminCoupon, AdminCouponPayload } from "@/features/contentmanage/types";
 
 // ------------------------------------------
 // 공통 에러 핸들러
@@ -22,7 +20,7 @@ const getErrorMessage = (error: unknown, fallbackMessage: string) => {
 // ------------------------------------------
 // 1. 특정 강의의 쿠폰 목록 조회 (GET)
 // ------------------------------------------
-export const getAdminCoupons = async (courseId: number): Promise<AdminCoupon[]> => {
+export const getAdminCoupons = async (courseId: number): Promise<any[]> => {
   try {
     const response = await adminApi.get(`/api/v1/admin/courses/${courseId}/coupon-policies`, {
       params: { t: new Date().getTime() }, // 캐시 방지
@@ -42,7 +40,7 @@ export const getAdminCoupons = async (courseId: number): Promise<AdminCoupon[]> 
 // ------------------------------------------
 // 2. 쿠폰 상세 조회 (GET)
 // ------------------------------------------
-export const getAdminCoupon = async (courseId: number, couponPolicyId: number): Promise<AdminCoupon> => {
+export const getAdminCoupon = async (courseId: number, couponPolicyId: number): Promise<any> => {
   try {
     const response = await adminApi.get(`/api/v1/admin/courses/${courseId}/coupon-policies/${couponPolicyId}`, {
       params: { t: new Date().getTime() }
@@ -57,7 +55,7 @@ export const getAdminCoupon = async (courseId: number, couponPolicyId: number): 
 // ------------------------------------------
 // 3. 쿠폰 등록 (POST)
 // ------------------------------------------
-export const createAdminCoupon = async (payload: AdminCouponPayload): Promise<AdminCoupon> => {
+export const createAdminCoupon = async (payload: any): Promise<any> => {
   try {
     const response = await adminApi.post(`/api/v1/admin/courses/${payload.courseId}/coupon-policies`, payload);
     return response.data.data || response.data;
@@ -68,22 +66,19 @@ export const createAdminCoupon = async (payload: AdminCouponPayload): Promise<Ad
 };
 
 // ------------------------------------------
-// 4. 쿠폰 수정 (PUT) - 🌟 풀패키지 방어 적용
+// 4. 쿠폰 수정 (PUT)
 // ------------------------------------------
-export const updateAdminCoupon = async (courseId: number, couponPolicyId: number, payload: AdminCouponPayload) => {
+export const updateAdminCoupon = async (courseId: number, couponPolicyId: number, payload: any) => {
   try {
     const requestData = {
-      couponPolicyId: couponPolicyId, // 바디에도 ID 추가 (백엔드 에러 방지)
-      courseId: courseId,             // 바디에도 ID 추가
+      couponPolicyId: couponPolicyId, 
+      courseId: courseId,             
       couponName: payload.couponName,
       discountType: payload.discountType,
       discountValue: payload.discountValue,
       validDays: payload.validDays,
       active: payload.active
     };
-
-    console.log(`🚀 [쿠폰 수정] 쏘는 URL: /api/v1/admin/courses/${courseId}/coupon-policies/${couponPolicyId}`);
-    console.log("🚀 [쿠폰 수정] 쏘는 데이터:", requestData);
 
     const response = await adminApi.put(
       `/api/v1/admin/courses/${courseId}/coupon-policies/${couponPolicyId}`, 
@@ -101,8 +96,6 @@ export const updateAdminCoupon = async (courseId: number, couponPolicyId: number
 // ------------------------------------------
 export const deleteAdminCoupon = async (courseId: number, couponPolicyId: number) => {
   try {
-    console.log(`🚀 [쿠폰 삭제] 쏘는 URL: /api/v1/admin/courses/${courseId}/coupon-policies/${couponPolicyId}`);
-    
     const response = await adminApi.delete(
       `/api/v1/admin/courses/${courseId}/coupon-policies/${couponPolicyId}`
     );
