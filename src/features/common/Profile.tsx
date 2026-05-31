@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { logout } from "@/features/services/auth.service";
+import CompleteModal from "./CompleteModal";
 
 type Props = {
     user: {
@@ -12,33 +13,29 @@ type Props = {
 
 export default function Profile({ user }: Props) {
     const [isOpen, setIsOpen] = useState(false);
+    
+    // 🌟 상태 변수명을 logoutModal로 명확하게 사용
+    const [logoutModal, setLogoutModal] = useState({ open: false });
 
-    // 🌟 로그아웃 처리 함수 (async 추가)
     const handleLogout = async () => {
         try {
-            // 1. 백엔드에 로그아웃 알림 (Redis의 토큰 삭제 요청)
             await logout();
         } catch (error) {
             console.error("로그아웃 API 호출 실패:", error);
         } finally {
-            // 2. 로컬 스토리지에서 토큰 삭제
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
-
-            alert("로그아웃 되었습니다.");
-
-            // 3. 로그인 페이지로 이동
-            window.location.href = "/auth/login";
+            // 🌟 모달 오픈
+            setLogoutModal({ open: true });
         }
     };
-    
 
     return (
         <div className="flex gap-6 items-center pr-5">
-
             <img src="/images/FriendIcon.svg" alt="친구" className="w-6 h-6 cursor-pointer" />
             <img src="/images/ChatIcon.svg" alt="채팅" className="w-6 h-6 cursor-pointer" />
             <img src="/images/NoticeIcon.svg" alt="알림" className="w-6 h-6 cursor-pointer" />
+            
             {user ? (
                 <div className="relative">
                     <div
@@ -60,7 +57,6 @@ export default function Profile({ user }: Props) {
                                 마이페이지
                             </p>
                             <hr />
-                            {/* 🌟 onClick 이벤트에 handleLogout 연결 */}
                             <p 
                                 className="cursor-pointer hover:text-red-500"
                                 onClick={handleLogout}
@@ -77,6 +73,18 @@ export default function Profile({ user }: Props) {
                     </p>
                 </Link>
             )}
+
+            {/* 🌟 수정된 모달 호출 부분 */}
+            <CompleteModal
+                open={logoutModal.open}
+                title="로그아웃"
+                description="로그아웃이 완료되었습니다."
+                buttonText="확인"
+                onConfirm={() => {
+                    setLogoutModal({ open: false });
+                    window.location.href = "/auth/login"; // 확인 클릭 시 이동
+                }}
+            />
         </div>
     );
 }

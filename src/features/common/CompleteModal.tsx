@@ -22,7 +22,7 @@ export default function CompleteModal({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 " >
       <div className="w-[450px] overflow-hidden rounded-[20px] bg-white shadow-xl">
         {/* Header */}
         <div className="border-b border-[#D9DEE5] px-6 py-4">
