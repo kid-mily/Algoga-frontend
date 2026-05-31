@@ -69,9 +69,7 @@ export default function PackagePage() {
 
       {/* 리스트 */}
       <div className="mt-6 space-y-6">
-
         {packages.map((item) => (
-
           <PackageCard
             key={item.id}
             title={item.title}
@@ -85,7 +83,6 @@ export default function PackagePage() {
             finalPrice={item.finalPrice}
             flight={item.flight}
             hotel={item.hotel}
-
             onEdit={() =>
               router.push(
                 `/contentadmin/package/${item.id}/edit`

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import SubHeader from "@/features/contentmanage/SubHeader";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 import StudentItem from "@/features/contentmanage/point/StudentItem";
 import GiveForm from "@/features/contentmanage/point/GiveForm";
 import RecallForm from "@/features/contentmanage/point/RecallForm";

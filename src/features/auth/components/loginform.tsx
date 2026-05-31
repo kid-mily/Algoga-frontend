@@ -13,6 +13,8 @@ export default function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
@@ -29,12 +31,12 @@ export default function LoginForm() {
   };
 
   const validatePassword = (value: string) => {
-  if (!value.trim()) {
-    setPasswordError("비밀번호를 입력해주세요.");
-  } else {
-    setPasswordError("");
-  }
-};
+    if (!value.trim()) {
+      setPasswordError("비밀번호를 입력해주세요.");
+    } else {
+      setPasswordError("");
+    }
+  };
 
   const isValid =
     username.trim() !== "" &&
@@ -43,53 +45,68 @@ export default function LoginForm() {
     !passwordError;
 
   const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const usernameMessage = !username.trim() ? "아이디를 입력해주세요." : "";
-  const passwordMessage = !password.trim() ? "비밀번호를 입력해주세요." : "";
+    const usernameMessage = !username.trim()
+      ? "아이디를 입력해주세요."
+      : "";
 
-  setUsernameError(usernameMessage);
-  setPasswordError(passwordMessage);
+    const passwordMessage = !password.trim()
+      ? "비밀번호를 입력해주세요."
+      : "";
 
-  if (usernameMessage || passwordMessage) {
-    return;
-  }
+    setUsernameError(usernameMessage);
+    setPasswordError(passwordMessage);
 
-  try {
-    setIsLoading(true);
-
-    const data = await login({
-      username: username.trim(),
-      password,
-    });
-
-    if (!data?.accessToken) {
-      throw new Error("서버로부터 로그인 토큰을 받지 못했습니다.");
-    }
-
-    localStorage.setItem("accessToken", data.accessToken);
-
-    if (data.refreshToken) {
-      localStorage.setItem("refreshToken", data.refreshToken);
-    }
-
-    if (data.requiresPasswordChange) {
-      router.push("/auth/login/newpw");
+    if (usernameMessage || passwordMessage) {
       return;
     }
 
-    router.push("/");
-  } catch (error: any) {
-    console.error("로그인 에러:", error);
-    alert(error.message);
-  } finally {
-    setIsLoading(false);
-  }
-};
+    try {
+      setIsLoading(true);
+
+      const data = await login({
+        username: username.trim(),
+        password,
+      });
+
+      if (!data?.accessToken) {
+        throw new Error(
+          "서버로부터 로그인 토큰을 받지 못했습니다."
+        );
+      }
+
+      localStorage.setItem(
+        "accessToken",
+        data.accessToken
+      );
+
+      if (data.refreshToken) {
+        localStorage.setItem(
+          "refreshToken",
+          data.refreshToken
+        );
+      }
+
+      if (data.requiresPasswordChange) {
+        router.push("/auth/login/newpw");
+        return;
+      }
+
+      router.push("/");
+    } catch (error: any) {
+      console.error("로그인 에러:", error);
+      alert(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="w-[400px]">
-      <h1 className="text-[32px] font-bold text-[#111827]">로그인</h1>
+      <h1 className="text-[32px] font-bold text-[#111827]">
+        로그인
+      </h1>
 
       <p className="mt-2 text-[15px] text-[#98A2B3]">
         계정에 로그인하세요
@@ -132,7 +149,7 @@ export default function LoginForm() {
 
           <div className="relative mt-3">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => {
                 const value = e.target.value;
@@ -150,9 +167,20 @@ export default function LoginForm() {
 
             <button
               type="button"
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[16px]"
+              onClick={() =>
+                setShowPassword((prev) => !prev)
+              }
+              className="absolute right-4 top-1/2 -translate-y-1/2"
             >
-              <img src="/images/eye.svg" alt="눈아이콘" />
+              <img
+                src="/images/eye.svg"
+                alt={
+                  showPassword
+                    ? "비밀번호 숨기기"
+                    : "비밀번호 보기"
+                }
+                className="h-5 w-5"
+              />
             </button>
           </div>
 
@@ -170,9 +198,13 @@ export default function LoginForm() {
           </label>
 
           <div className="flex items-center gap-2 text-[14px] text-[#6B9D9B]">
-            <Link href="/auth/login/findid">아이디 찾기</Link>
+            <Link href="/auth/login/findid">
+              아이디 찾기
+            </Link>
             <span>|</span>
-            <Link href="/auth/login/findpw">비밀번호 찾기</Link>
+            <Link href="/auth/login/findpw">
+              비밀번호 찾기
+            </Link>
           </div>
         </div>
 
@@ -182,7 +214,7 @@ export default function LoginForm() {
           className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition ${
             isValid && !isLoading
               ? "bg-[#439A97] hover:bg-[#367c79]"
-              : "bg-[#D0D5DD] cursor-not-allowed"
+              : "cursor-not-allowed bg-[#D0D5DD]"
           }`}
         >
           {isLoading ? "로그인 중..." : "로그인"}
@@ -190,7 +222,9 @@ export default function LoginForm() {
 
         <div className="mt-5 flex items-center gap-3">
           <div className="h-px flex-1 bg-[#E4E7EC]" />
-          <span className="text-[12px] text-[#98A2B3]">또는 소셜 로그인</span>
+          <span className="text-[12px] text-[#98A2B3]">
+            또는 소셜 로그인
+          </span>
           <div className="h-px flex-1 bg-[#E4E7EC]" />
         </div>
 
@@ -210,7 +244,10 @@ export default function LoginForm() {
 
         <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
           계정이 없으신가요?{" "}
-          <Link href="/auth/register" className="font-semibold text-[#6D9D9B]">
+          <Link
+            href="/auth/register"
+            className="font-semibold text-[#6D9D9B]"
+          >
             회원가입
           </Link>
         </div>

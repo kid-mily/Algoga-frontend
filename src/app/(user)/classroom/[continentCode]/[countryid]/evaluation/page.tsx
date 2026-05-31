@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
 import TimerPage from '@/features/classroom/components/Timer';
-import SubHeader from '@/features/contentmanage/SubHeader';
+import SubHeader from '@/features/contentmanage/common/SubHeader';
 import CheckModal from '@/features/common/CheckModal';
 
 const questions = [

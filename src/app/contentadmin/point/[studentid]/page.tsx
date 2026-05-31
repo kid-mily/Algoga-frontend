@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import SubHeader from "@/features/contentmanage/SubHeader";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 
 // 🌟 실제 API 함수 호출
 import { getPointHistory, PointHistory } from "@/features/services/adminPoint.service";

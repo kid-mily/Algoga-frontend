@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import LectureHeader from "@/features/contentmanage/LectureHeader";
+import LectureHeader from "@/features/contentmanage/common/LectureHeader";
 import LectureForm from "@/features/contentmanage/lecture/LectureForm";
 import LectureChapterForm from "@/features/contentmanage/lecture/LectureChapterForm";
 import CompleteModal from "@/features/common/CompleteModal";
@@ -15,7 +15,7 @@ export default function CreateLecturePage() {
   const [createdCourseId, setCreatedCourseId] = useState<number | null>(null);
   const [openModal, setOpenModal] = useState(false);
   
-  // 🌟 에러 상태 추가
+  //  에러 상태 추가
   const [apiError, setApiError] = useState("");
 
   const handleCourseCreated = (courseId: number) => {
@@ -59,7 +59,7 @@ export default function CreateLecturePage() {
           {/* 🌟 에러 발생 시 최상단에 노출 */}
           {apiError && (
             <div className="mb-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]">
-              🚨 {apiError}
+               {apiError}
             </div>
           )}
 

@@ -55,16 +55,11 @@ export default function RecallForm({
 
         {/* 헤더 */}
         <div className="flex items-start justify-between px-7 pt-7">
-
           <div>
-
             <h2 className="text-[28px] font-bold text-[#111827]">
-
               마일리지 회수
             </h2>
-
             <p className="mt-2 text-[15px] text-[#98A2B3]">
-
               {studentName}님에게 회수
             </p>
           </div>
@@ -78,83 +73,57 @@ export default function RecallForm({
             ×
           </button>
         </div>
-
         {/* body */}
         <div className="px-7 py-6">
-
           {/* 현재 포인트 */}
           <div className="rounded-[18px] border border-[#FECACA] bg-[#FEF2F2] p-5">
-
             <p className="text-[14px] font-medium text-[#EF4444]">
-
               현재 보유 마일리지
             </p>
-
             <p className="mt-2 text-[42px] font-bold text-[#DC2626]">
-
               {currentPoint.toLocaleString()}원
             </p>
           </div>
-
           {/* 회수 금액 */}
           <div className="mt-7">
-
             <label className="text-[15px] font-semibold text-[#111827]">
-
               회수 금액 (원)
             </label>
-
             <input
               type="number"
               placeholder="회수할 마일리지를 입력하세요"
-
               value={amount}
-
-              onChange={(e) =>
-                setAmount(
+              onChange={(e) => setAmount(
                   e.target.value
                 )
               }
-
               className="mt-3 h-[56px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
             />
           </div>
 
           {/* 회수 사유 */}
           <div className="mt-6">
-
             <label className="text-[15px] font-semibold text-[#111827]">
-
               회수 사유
             </label>
-
             <textarea
               placeholder="회수 사유를 입력하세요"
-
               value={reason}
-
-              onChange={(e) =>
-                setReason(
+              onChange={(e) => setReason(
                   e.target.value
                 )
               }
-
               className="mt-3 h-[120px] w-full resize-none rounded-[16px] border border-[#E4E7EC] px-4 py-4 text-[15px] outline-none"
             />
           </div>
 
           {/* 예상 포인트 */}
           {isActive && (
-
             <div className="mt-6 rounded-[18px] border border-[#FECACA] bg-[#FEF2F2] p-5">
-
               <p className="text-[14px] font-medium text-[#EF4444]">
-
                 회수 후 예상마일리지
               </p>
-
               <p className="mt-2 text-[36px] font-bold text-[#DC2626]">
-
                 {nextPoint.toLocaleString()}원
               </p>
             </div>
@@ -163,7 +132,6 @@ export default function RecallForm({
 
         {/* footer */}
         <div className="flex items-center justify-end gap-3 border-t border-[#E4E7EC] px-7 py-5">
-
           <button
             type="button"
             onClick={onClose}
@@ -171,14 +139,9 @@ export default function RecallForm({
           >
             취소
           </button>
-
-          <button
-            type="button"
-
+          <button type="button"
             disabled={!isActive}
-
-            onClick={() =>
-              onSubmit?.(
+            onClick={() => onSubmit?.(
                 Number(amount),
                 reason
               )

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import FindHeader from "@/features/auth/components/findheader";
+import FindHeader from "@/features/auth/components/FindHeader";
 
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   

@@ -1,6 +1,6 @@
 // 단과 강의 결제 페이지
 
-import SubHeader from "@/features/contentmanage/SubHeader";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 import CouponForm from "@/features/payment/CouponForm";
 import MileageForm from "@/features/payment/MileageForm";
 import PaymentButton from "@/features/payment/PaymentButton";

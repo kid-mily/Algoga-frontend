@@ -1,4 +1,3 @@
-// src/app/contentadmin/lecture/[lectureid]/chapter/[chapterid]/edit/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import ChapterForm from "@/features/contentmanage/lecture/ChapterForm";
 import ChapterList from "@/features/contentmanage/lecture/ChapterList";
-import SubHeader from "@/features/contentmanage/SubHeader";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 
 import { getAdminChapters, updateAdminChapter } from "@/features/services/adminChapter.service";
 import {AdminChapter} from "../../../../../../../features/contentmanage/types"

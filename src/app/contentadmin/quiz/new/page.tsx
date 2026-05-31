@@ -1,7 +1,7 @@
 "use client";
 
 import QuizForm from "@/features/contentmanage/quiz/QuizForm";
-import SubHeader from "@/features/contentmanage/SubHeader";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 
 export default function CreateQuizPage() {
 
@@ -17,8 +17,7 @@ export default function CreateQuizPage() {
       />
 
       {/* 폼 */}
-      <QuizForm
-        mode="create"
+      <QuizForm mode="create"
       />
     </div>
   );

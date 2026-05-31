@@ -8,20 +8,15 @@ import { adminLogin } from "@/features/services/adminAuth.service";
 
 export default function AdminLoginForm() {
   const router = useRouter();
-
   const [showPassword, setShowPassword] = useState(false);
-
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
-
   const [loginIdError, setLoginIdError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     const trimmedLoginId = loginId.trim();
-
     let hasError = false;
 
     if (!trimmedLoginId) {
@@ -52,7 +47,6 @@ export default function AdminLoginForm() {
         throw new Error("관리자 로그인 토큰을 받지 못했습니다.");
       }
 
-      // 일반 유저 토큰이 남아있으면 관리자 화면에서 꼬일 수 있어서 제거
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
 
@@ -75,11 +69,9 @@ export default function AdminLoginForm() {
       <h1 className="text-[32px] font-bold text-[#111827]">
         관리자 로그인
       </h1>
-
       <p className="mt-2 text-[15px] text-[#98A2B3]">
-        콘텐츠 매니저 계정으로 로그인하세요
+        콘텐츠 매니저 계정에 로그인하세요
       </p>
-
       <form
         className="mt-5"
         onSubmit={(e) => {

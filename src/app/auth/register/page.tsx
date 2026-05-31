@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { authApi } from "@/lib/auth"; // 위에서 만든 API 모듈 임포트
 
-import RegisterHeader from "@/features/auth/components/registerheader";
-import RegisterStepHeader from "@/features/auth/components/registerstepheader";
-import RegisterInfoForm from "@/features/auth/components/registeinforform";
-import RegisterAgreeForm from "@/features/auth/components/registeragreeform";
-import RegisterCompleteForm from "@/features/auth/components/registercompleteform";
+import RegisterHeader from "@/features/auth/components/RegisterHeader";
+import RegisterStepHeader from "@/features/auth/components/RegisterStepHeader";
+import RegisterInfoForm from "@/features/auth/components/RegisteInforForm";
+import RegisterAgreeForm from "@/features/auth/components/RegisterAgreeForm";
+import RegisterCompleteForm from "@/features/auth/components/RegisterCompleteForm";
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1);

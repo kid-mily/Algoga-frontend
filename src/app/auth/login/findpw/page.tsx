@@ -1,5 +1,5 @@
-import LoginSidebar from "@/features/auth/components/loginsidebar";
-import FindPwForm from "@/features/auth/components/findpwform";
+import LoginSidebar from "@/features/auth/components/LoginSideBar";
+import FindPwForm from "@/features/auth/components/FindPwForm";
 
 export default function FindIdPage() {
   return (

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import LectureHeader from "@/features/contentmanage/LectureHeader";
+import LectureHeader from "@/features/contentmanage/common/LectureHeader";
 import LectureForm from "@/features/contentmanage/lecture/LectureForm";
 import LectureChapterForm from "@/features/contentmanage/lecture/LectureChapterForm";
 import CompleteModal from "@/features/common/CompleteModal";

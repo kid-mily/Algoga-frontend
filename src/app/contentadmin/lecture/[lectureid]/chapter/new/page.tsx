@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 
-import SubHeader from "@/features/contentmanage/SubHeader";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 import ChapterList from "@/features/contentmanage/lecture/ChapterList";
 import ChapterForm from "@/features/contentmanage/lecture/ChapterForm";
 import CompleteModal from "@/features/common/CompleteModal";

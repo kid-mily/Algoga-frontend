@@ -1,4 +1,4 @@
-import SubHeader from "@/features/contentmanage/SubHeader";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 import TabNavigation from "./TabNavigation";
 
 interface Props {

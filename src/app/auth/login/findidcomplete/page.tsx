@@ -1,9 +1,7 @@
 'use client'
 
-import FindIdComplete from "@/features/auth/components/findidcomplete";
-import LoginSidebar from "@/features/auth/components/loginsidebar";
-
-// findidcomplete/page.tsx (또는 컴포넌트) 내부에서
+import FindIdComplete from "@/features/auth/components/FindIdComplete";
+import LoginSidebar from "@/features/auth/components/LoginSideBar";
 import { useEffect, useState } from "react";
 
 export default function FindIdCompletePage() {
@@ -23,7 +21,7 @@ export default function FindIdCompletePage() {
         description="가입 시 입력한 이름과 이메일로 아이디를 찾을 수 있습니다."
         />
      <section className="flex flex-1 items-center justify-center px-20">
-    <FindIdComplete userId={userId} />
+        <FindIdComplete userId={userId} />
      </section>
     </main>
   );
