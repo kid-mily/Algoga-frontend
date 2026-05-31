@@ -1,5 +1,5 @@
 import LoginSidebar from "@/features/auth/components/LoginSideBar";
-import LoginForm from "@/features/auth/components/LoginForm";
+import LoginForm from "@/features/auth/components/loginform";
 
 export default function LoginPage() {
   return (

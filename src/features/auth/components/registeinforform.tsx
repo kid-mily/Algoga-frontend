@@ -6,14 +6,22 @@ interface RegisterInfoFormProps {
   formData: any;
   onChange: (field: string, value: string) => void;
   onNext: () => void;
+  isLoading?: boolean;
+  serverEmailError?: string; 
+  setServerEmailError?: (msg: string) => void; 
 }
 
-export default function RegisterInfoForm({ formData, onChange, onNext }: RegisterInfoFormProps) {
-  // 에러 메시지 상태 관리
+export default function RegisterInfoForm({ 
+  formData, 
+  onChange, 
+  onNext, 
+  isLoading, 
+  serverEmailError, 
+  setServerEmailError 
+}: RegisterInfoFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEtcRoute, setIsEtcRoute] = useState(formData.signupPath !== "" && !["search", "social", "friend", "ad"].includes(formData.signupPath));
 
-  // 유효성 검사 함수
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -85,6 +93,7 @@ export default function RegisterInfoForm({ formData, onChange, onNext }: Registe
             onChange={(e) => onChange("name", e.target.value)}
             placeholder="홍길동"
             className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            disabled={isLoading}
           />
           {errors.name && <p className="mt-1 text-[13px] text-red-500">{errors.name}</p>}
         </div>
@@ -98,6 +107,7 @@ export default function RegisterInfoForm({ formData, onChange, onNext }: Registe
             onChange={(e) => onChange("username", e.target.value)}
             placeholder="4자 이상 20자 이하"
             className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            disabled={isLoading}
           />
           {errors.username && <p className="mt-1 text-[13px] text-red-500">{errors.username}</p>}
         </div>
@@ -111,6 +121,7 @@ export default function RegisterInfoForm({ formData, onChange, onNext }: Registe
             onChange={(e) => onChange("password", e.target.value)}
             placeholder="8자 이상 영문, 숫자 조합"
             className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            disabled={isLoading}
           />
           {errors.password ? (
              <p className="mt-1 text-[13px] text-red-500">{errors.password}</p>
@@ -128,11 +139,12 @@ export default function RegisterInfoForm({ formData, onChange, onNext }: Registe
             onChange={(e) => onChange("passwordConfirm", e.target.value)}
             placeholder="재입력"
             className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            disabled={isLoading}
           />
           {errors.passwordConfirm && <p className="mt-1 text-[13px] text-red-500">{errors.passwordConfirm}</p>}
         </div>
 
-        {/* 닉네임 (DTO에 필수이므로 추가됨) */}
+        {/* 닉네임 */}
         <div className="col-span-2">
           <label className="text-[16px] font-semibold text-[#111827]">닉네임 *</label>
           <input
@@ -141,66 +153,61 @@ export default function RegisterInfoForm({ formData, onChange, onNext }: Registe
             onChange={(e) => onChange("nickname", e.target.value)}
             placeholder="사용하실 닉네임을 입력해주세요"
             className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            disabled={isLoading}
           />
           {errors.nickname && <p className="mt-1 text-[13px] text-red-500">{errors.nickname}</p>}
         </div>
 
-        {/* 이메일 */}
+        {/* 🌟 이메일: 프론트엔드 검사 에러와 서버 중복 에러를 모두 처리 */}
         <div className="col-span-2">
           <label className="text-[16px] font-semibold text-[#111827]">이메일 *</label>
           <input
             type="email"
             value={formData.email}
-            onChange={(e) => onChange("email", e.target.value)}
+            onChange={(e) => {
+              onChange("email", e.target.value);
+              // 사용자가 이메일을 수정하면 서버 에러 메시지 초기화
+              if (setServerEmailError) setServerEmailError(""); 
+            }}
             placeholder="example@algoga.com"
-            className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            className={`mt-3 h-[35px] w-full rounded-[16px] border bg-[#F9FAFB] px-5 text-[15px] outline-none ${
+              errors.email || serverEmailError ? "border-red-500" : "border-[#D0D5DD]"
+            }`}
+            disabled={isLoading}
           />
+          {/* 1순위: 형식 틀림 에러 */}
           {errors.email && <p className="mt-1 text-[13px] text-red-500">{errors.email}</p>}
+          
+          {/* 2순위: 서버 중복 에러 (형식이 맞을 때만 띄움) */}
+          {serverEmailError && !errors.email && (
+            <p className="mt-1 text-[13px] text-red-500">{serverEmailError}</p>
+          )}
         </div>
 
         {/* 전화번호 */}
-      <div className="col-span-2">
-
-      <label className="text-[16px] font-semibold text-[#111827]">
-        전화번호 *
-      </label>
-
-      <input
-        type="text"
-        value={formData.phone}
-
-        onChange={(e) => {
-
-          // 숫자만 추출
-          const onlyNumber = e.target.value.replace(/[^0-9]/g, '');
-
-          let formatted = onlyNumber;
-
-          // 010-1234-5678 형식
-          if (onlyNumber.length < 4) {
-            formatted = onlyNumber;
-          } else if (onlyNumber.length < 8) {
-            formatted = `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3)}`;
-          } else {
-            formatted =
-              `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3, 7)}-${onlyNumber.slice(7, 11)}`;
-          }
-
-          onChange("phone", formatted);
-        }}
-
-        placeholder="010-0000-0000"
-
-        className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
-      />
-
-      {errors.phone && (
-        <p className="mt-1 text-[13px] text-red-500">
-          {errors.phone}
-        </p>
-      )}
-
-    </div>
+        <div className="col-span-2">
+          <label className="text-[16px] font-semibold text-[#111827]">전화번호 *</label>
+          <input
+            type="text"
+            value={formData.phone}
+            onChange={(e) => {
+              const onlyNumber = e.target.value.replace(/[^0-9]/g, '');
+              let formatted = onlyNumber;
+              if (onlyNumber.length < 4) {
+                formatted = onlyNumber;
+              } else if (onlyNumber.length < 8) {
+                formatted = `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3)}`;
+              } else {
+                formatted = `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3, 7)}-${onlyNumber.slice(7, 11)}`;
+              }
+              onChange("phone", formatted);
+            }}
+            placeholder="010-0000-0000"
+            className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            disabled={isLoading}
+          />
+          {errors.phone && <p className="mt-1 text-[13px] text-red-500">{errors.phone}</p>}
+        </div>
 
         {/* 생년월일 */}
         <div>
@@ -210,17 +217,19 @@ export default function RegisterInfoForm({ formData, onChange, onNext }: Registe
             value={formData.birthDate}
             onChange={(e) => onChange("birthDate", e.target.value)}
             className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            disabled={isLoading}
           />
           {errors.birthDate && <p className="mt-1 text-[13px] text-red-500">{errors.birthDate}</p>}
         </div>
 
-        {/* 성별 (백엔드 enum 값에 맞게 대문자로 변경) */}
+        {/* 성별 */}
         <div>
           <label className="text-[16px] font-semibold text-[#111827]">성별 *</label>
           <select
             value={formData.gender}
             onChange={(e) => onChange("gender", e.target.value)}
             className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            disabled={isLoading}
           >
             <option value="">선택해주세요</option>
             <option value="MALE">남자</option>
@@ -239,6 +248,7 @@ export default function RegisterInfoForm({ formData, onChange, onNext }: Registe
             onChange={(e) => onChange("referralCode", e.target.value)}
             placeholder="추천인 코드 입력"
             className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            disabled={isLoading}
           />
         </div>
 
@@ -251,6 +261,7 @@ export default function RegisterInfoForm({ formData, onChange, onNext }: Registe
             value={isEtcRoute ? "etc" : formData.signupPath}
             onChange={handleRouteChange}
             className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            disabled={isLoading}
           >
             <option value="">선택해주세요</option>
             <option value="search">검색 엔진</option>
@@ -267,6 +278,7 @@ export default function RegisterInfoForm({ formData, onChange, onNext }: Registe
               onChange={(e) => onChange("signupPath", e.target.value)}
               placeholder="유입 경로를 직접 입력해주세요"
               className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+              disabled={isLoading}
             />
           )}
         </div>
@@ -275,9 +287,12 @@ export default function RegisterInfoForm({ formData, onChange, onNext }: Registe
       <button
         type="button"
         onClick={handleNextClick}
-        className="mt-8 h-[43px] w-full rounded-[18px] bg-[#439A97] text-[18px] font-semibold text-white transition hover:bg-[#357c7a]"
+        disabled={isLoading} 
+        className={`mt-8 h-[43px] w-full rounded-[18px] text-[18px] font-semibold text-white transition ${
+          isLoading ? "bg-[#D0D5DD] cursor-not-allowed" : "bg-[#439A97] hover:bg-[#357c7a]"
+        }`}
       >
-        다음
+        {isLoading ? "확인 중..." : "다음"}
       </button>
     </div>
   );
