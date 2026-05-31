@@ -165,6 +165,13 @@ export default function LoginForm() {
           {isLoading ? "로그인 중..." : "로그인"}
         </button>
 
+        <Link
+          href="/"
+          className="mt-4 block w-full text-center text-[14px] text-[#98A2B3]"
+        >
+          메인으로 돌아가기
+        </Link>
+        
         {/* 소셜 로그인 */}
         <div className="mt-5 flex items-center gap-3">
           <div className="h-px flex-1 bg-[#E4E7EC]" />
