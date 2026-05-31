@@ -80,3 +80,72 @@ export interface CourseReviewSummary {
   twoStarRate: number;
   oneStarRate: number;
 }
+
+// 진도율 업데이트 요청 Body 구조
+export interface UpdateProgressRequest {
+  watchedSeconds: number; // 시청 시간 (초)
+}
+
+// 진도율 업데이트 완료 시 백엔드가 주는 응답 데이터 구조
+export interface ProgressData {
+  progressId: number;
+  userId: number;
+  courseId: number;
+  chapterId: number;
+  watchedSeconds: number;
+  progressRate: number;   // 진도율 (예: 80)
+  completed: boolean;     // 완료 여부 (true/false)
+}
+
+// 커리큘럼 조회용 비디오 타입에 chapterId를 추적할 수 있도록 연동
+export interface VideoItem {
+  videoId: number;
+  chapterId: number; // 챕터 ID 추적
+  title: string;
+  videoUrl: string;
+  description: string;
+  uploadDate?: string;
+}
+
+export interface ChapterItem {
+  chapterId: number;
+  chapterTitle: string;
+  videos: VideoItem[];
+}
+
+// 챕터별 영상 단건 구조
+export interface VideoItem {
+  videoId: number;
+  chapterId: number;       // 진도율 전송 시 매핑할 부모 챕터 ID
+  title: string;
+  videoUrl: string;
+  description: string;
+  duration?: string;       // UI 표기용 재생 시간 (예: "15:20")
+  uploadDate?: string;
+}
+
+// 챕터 목록 구조
+export interface ChapterItem {
+  chapterId: number;
+  chapterTitle: string;    
+  chapterNumber?: string;
+  progressRate?: number;   // 이 챕터의 진도율
+  completed?: boolean;     // 이 챕터 완료 여부
+  videos: VideoItem[];
+}
+
+// 진도율 업데이트 요청 Body 구조
+export interface UpdateProgressRequest {
+  watchedSeconds: number;
+}
+
+// 진도율 업데이트 완료 시 백엔드가 주는 응답 데이터 구조
+export interface ProgressData {
+  progressId: number;
+  userId: number;
+  courseId: number;
+  chapterId: number;
+  watchedSeconds: number;
+  progressRate: number;     // 0 ~ 100
+  completed: boolean;
+}
