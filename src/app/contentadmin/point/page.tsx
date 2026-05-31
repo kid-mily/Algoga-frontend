@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
 import StudentItem from "@/features/contentmanage/point/StudentItem";
 import GiveForm from "@/features/contentmanage/point/GiveForm";
 import RecallForm from "@/features/contentmanage/point/RecallForm";
 import CompleteModal from "@/features/common/CompleteModal";
 import { getStudentsPoints, givePoints, recallPoints, StudentPointInfo } from "@/features/services/adminPoint.service";
+import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import LoadingSpinner from "@/features/common/LoadingSpinner";
 
 export default function PointPage() {
   const router = useRouter();
@@ -38,7 +39,6 @@ export default function PointPage() {
     }
   };
 
-  // 🌟 지급 처리: 폼에서 전달받은 amount, reason을 서비스로 전달
   const handleGivePoints = async (amount: number, reason: string) => {
     if (!selectedStudent) return false;
     try {
@@ -46,7 +46,7 @@ export default function PointPage() {
       setOpenGive(false);
       setCompleteText("마일리지가 성공적으로 지급되었습니다.");
       setCompleteOpen(true);
-      fetchStudents(); // 목록 갱신
+      fetchStudents(); 
       return true;
     } catch (error: any) {
       setPageError(error.message);
@@ -55,7 +55,6 @@ export default function PointPage() {
     }
   };
 
-  // 🌟 회수 처리: 폼에서 전달받은 amount, reason을 서비스로 전달
   const handleRecallPoints = async (amount: number, reason: string) => {
     if (!selectedStudent) return false;
     try {
@@ -63,7 +62,7 @@ export default function PointPage() {
       setOpenRecall(false);
       setCompleteText("마일리지가 성공적으로 회수되었습니다.");
       setCompleteOpen(true);
-      fetchStudents(); // 목록 갱신
+      fetchStudents(); 
       return true;
     } catch (error: any) {
       setPageError(error.message);
@@ -74,7 +73,7 @@ export default function PointPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
-      <SubHeader backHref="/contentadmin" backText="메인페이지로 돌아가기" title="마일리지 관리" description="사용자 마일리지를 조회하고 지급합니다" />
+      <SimpleSubHeader title="마일리지 관리" description="사용자 마일리지를 조회하고 지급합니다" />
 
       {pageError && <div className="mt-4 p-4 text-red-600 bg-red-50 rounded-lg font-medium">🚨 {pageError}</div>}
 
@@ -87,7 +86,8 @@ export default function PointPage() {
         </div>
 
         {isLoading ? (
-          <div className="p-10 text-center">로딩 중...</div>
+          // 로딩 중일 때 LoadingSpinner 컴포넌트 호출
+          <LoadingSpinner text="학생 정보를 불러오는 중입니다..." />
         ) : (
           students.map((student) => (
             <StudentItem
