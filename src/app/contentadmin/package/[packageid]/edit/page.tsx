@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import PackageForm from "@/features/contentmanage/package/PackageForm";
-import SubHeader from "@/features/contentmanage/SubHeader";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 
 import {
   packages,
@@ -12,9 +12,7 @@ export default function EditPackagePage() {
 
   const params = useParams();
 
-  const packageid =
-    Number(params.packageid);
-
+  const packageid = Number(params.packageid);
   // 현재 패키지 찾기
   const packageItem =
     packages.find(
@@ -24,22 +22,18 @@ export default function EditPackagePage() {
 
   // 없으면 종료
   if (!packageItem) {
-
     return null;
   }
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
-
       <SubHeader
         backHref="/contentadmin/package"
         backText="패키지 목록으로 돌아가기"
         title="패키지 수정"
         description="패키지 정보를 수정합니다"
       />
-
       <div className="mt-6">
-
         <PackageForm
           mode="edit"
           initialData={{

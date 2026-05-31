@@ -106,7 +106,6 @@ export default function QuizCard({
                   : "border-[#E4E7EC]"
               }`}
             >
-
               {/* 왼쪽 */}
               <div className="flex items-center gap-3">
 

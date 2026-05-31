@@ -4,11 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 
 import QuizForm from "@/features/contentmanage/quiz/QuizForm";
-import SubHeader from "@/features/contentmanage/SubHeader";
-import {
-  getAdminQuizDetail,
-  type AdminQuiz,
-} from "@/features/services/adminQuiz.service";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
+import {getAdminQuizDetail} from "@/features/services/adminQuiz.service";
+import { AdminQuiz } from "@/features/contentmanage/types";
 
 export default function EditQuizPage() {
   const params = useParams();

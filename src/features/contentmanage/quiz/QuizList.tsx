@@ -6,10 +6,8 @@ import { useState } from "react";
 import QuizCard from "./QuizCard";
 import CompleteModal from "@/features/common/CompleteModal";
 import Modal from "@/features/common/Modal";
-import {
-  deleteAdminQuiz,
-} from "@/features/services/adminQuiz.service";
-import {AdminQuiz} from "../types";
+import { deleteAdminQuiz } from "@/features/services/adminQuiz.service";
+import { AdminQuiz } from "../types";
 
 interface QuizListProps {
   quizzes?: AdminQuiz[];
@@ -23,11 +21,18 @@ export default function QuizList({
   const router = useRouter();
 
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openDeleteCompleteModal, setOpenDeleteCompleteModal] = useState(false);
-  const [selectedQuiz, setSelectedQuiz] = useState<AdminQuiz | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [openDeleteCompleteModal, setOpenDeleteCompleteModal] =
+    useState(false);
 
-  const safeQuizzes = Array.isArray(quizzes) ? quizzes : [];
+  const [selectedQuiz, setSelectedQuiz] =
+    useState<AdminQuiz | null>(null);
+
+  const [deleteError, setDeleteError] =
+    useState<string | null>(null);
+
+  const safeQuizzes = Array.isArray(quizzes)
+    ? quizzes
+    : [];
 
   const handleDelete = async () => {
     if (!selectedQuiz) return;
@@ -35,13 +40,20 @@ export default function QuizList({
     try {
       setDeleteError(null);
 
-      await deleteAdminQuiz(selectedQuiz.courseId, selectedQuiz.quizId);
+      await deleteAdminQuiz(
+        selectedQuiz.courseId,
+        selectedQuiz.quizId
+      );
 
       setOpenDeleteModal(false);
+
+      // 삭제 완료 모달 먼저 띄움
       setOpenDeleteCompleteModal(true);
-      onDeleted?.();
     } catch (error: any) {
-      setDeleteError(error?.message || "퀴즈 삭제에 실패했습니다.");
+      setDeleteError(
+        error?.message ||
+          "퀴즈 삭제에 실패했습니다."
+      );
     }
   };
 
@@ -63,18 +75,29 @@ export default function QuizList({
           quiz.option4 || "",
         ];
 
-        const answer = options[(quiz.correctOption || 1) - 1] || "";
+        const answer =
+          options[
+            (quiz.correctOption || 1) - 1
+          ] || "";
 
         return (
           <QuizCard
             key={`${quiz.courseId}-${quiz.quizId}`}
-            lectureTitle={quiz.lectureTitle || `강의 ID ${quiz.courseId}`}
+            lectureTitle={
+              quiz.lectureTitle ||
+              `강의 ID ${quiz.courseId}`
+            }
             question={quiz.question || ""}
             options={options}
             answer={answer}
-            explanation={quiz.explanation || ""}
+            explanation={
+              quiz.explanation || ""
+            }
             onView={() => {
-              console.log("퀴즈 보기:", quiz);
+              console.log(
+                "퀴즈 보기:",
+                quiz
+              );
             }}
             onEdit={() =>
               router.push(
@@ -93,7 +116,11 @@ export default function QuizList({
       <Modal
         open={openDeleteModal}
         title="퀴즈 삭제"
-        description={deleteError ? deleteError : "정말 삭제하시겠습니까?"}
+        description={
+          deleteError
+            ? deleteError
+            : "정말 삭제하시겠습니까?"
+        }
         confirmText="삭제"
         cancelText="취소"
         onConfirm={handleDelete}
@@ -112,6 +139,9 @@ export default function QuizList({
         onConfirm={() => {
           setOpenDeleteCompleteModal(false);
           setSelectedQuiz(null);
+
+          // 모달 확인 후 목록 새로고침
+          onDeleted?.();
         }}
       />
     </div>

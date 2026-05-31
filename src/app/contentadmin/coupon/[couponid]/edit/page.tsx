@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import LectureUpdateForm from "@/features/contentmanage/lecture/LectureUpdateForm";
-import LectureHeader from "@/features/contentmanage/LectureHeader";
+import LectureHeader from "@/features/contentmanage/common/LectureHeader";
 import { getAdminCourse, updateAdminCourse } from "@/features/services/adminCourse.service";
 
 export default function LectureEditPage() {

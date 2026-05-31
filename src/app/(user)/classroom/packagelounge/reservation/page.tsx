@@ -1,4 +1,4 @@
-import SubHeader from "@/features/contentmanage/SubHeader";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 import Airplane from "@/features/reservation/components/Airplan";
 import HotelInfo from "@/features/reservation/components/HotelInfo";
 import LectureInfo from "@/features/reservation/components/LectureInfo";

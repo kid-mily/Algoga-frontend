@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import FindHeader from "@/features/auth/components/findheader";
+import FindHeader from "@/features/auth/components/FindHeader";
 import Link from "next/link";
 import { findPassword } from "@/features/services/auth.service";
 

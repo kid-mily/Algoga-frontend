@@ -5,14 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 
 import QuizList from "@/features/contentmanage/quiz/QuizList";
 import SimpleSubHeader from "@/features/common/SimpleSubHeader";
-import {
-  getAdminCourses,
-  type AdminCourse,
-} from "@/features/services/adminCourse.service";
-import {
-  getAdminQuizzes,
-  type AdminQuiz,
+import {getAdminCourses} from "@/features/services/adminCourse.service";
+import { getAdminQuizzes
 } from "@/features/services/adminQuiz.service";
+import { AdminCourse, AdminQuiz } from "@/features/contentmanage/types";
 
 export default function QuizPage() {
   const [selectedLecture, setSelectedLecture] = useState<string>("all");

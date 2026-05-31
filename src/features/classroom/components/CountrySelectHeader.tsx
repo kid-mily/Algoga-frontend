@@ -1,4 +1,4 @@
-import SubHeader from "../../contentmanage/SubHeader";
+import SubHeader from "../../contentmanage/common/SubHeader";
 import SearchBar from "./SearchBar";
 
 
