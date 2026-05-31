@@ -5,10 +5,9 @@ import { authApi } from "@/lib/auth"; // 실제 사용하는 API 모듈에 맞�
 
 import RegisterHeader from "@/features/auth/components/RegisterHeader";
 import RegisterStepHeader from "@/features/auth/components/RegisterStepHeader";
-import RegisterInfoForm from "@/features/auth/components/RegisteInforForm";
+import RegisterInfoForm from "@/features/auth/components/RegisterInfoForm";
 import RegisterAgreeForm from "@/features/auth/components/RegisterAgreeForm";
 import RegisterCompleteForm from "@/features/auth/components/RegisterCompleteForm";
-import CompleteModal from "@/features/common/CompleteModal"; // 공통 모달 경로
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1);

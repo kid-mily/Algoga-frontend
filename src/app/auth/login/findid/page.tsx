@@ -1,5 +1,5 @@
 import LoginSidebar from "@/features/auth/components/LoginSideBar";
-import FindIdForm from "@/features/auth/components/findidform";
+import FindIdForm from "@/features/auth/components/FindIdForm";
 
 export default function FindIdPage() {
   return (
