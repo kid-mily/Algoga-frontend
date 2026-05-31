@@ -1,5 +1,5 @@
 import LoginSidebar from "@/features/auth/components/LoginSideBar";
-import FindPwComplete from "@/features/auth/components/findpwcomplete";
+import FindPwComplete from "@/features/auth/components/FindPwComplete";
 
 export default function FindIdPage() {
   return (
