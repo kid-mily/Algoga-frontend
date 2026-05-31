@@ -33,16 +33,12 @@ export default function LectureEditPage() {
   if (!lecture) return <div className="p-10">강의 정보를 찾을 수 없습니다.</div>;
 
   const handleEdit = async (data: any, thumbnailFile?: File, attachments?: File[]) => {
-    console.log("전송할 폼 데이터:", data);
     try {
-      // 🌟 폼에서 넘겨준 명시적인 status가 있으면 우선 사용, 없으면 2차 방어로 계산
       const isPublicBool = String(data.isPublic) === "true";
       const targetStatus = data.status || (isPublicBool ? "PUBLISHED" : "DRAFT");
       
-      console.log("변환된 status:", targetStatus);
-      
       await updateAdminCourse(lectureId, {
-        countryId: lecture.countryId,
+        countryId: lecture.countryId, // 수정 시에는 원래 있던 countryId를 그대로 보냄
         title: data.title,
         description: data.description,
         price: Number(data.price),
@@ -58,14 +54,11 @@ export default function LectureEditPage() {
     }
   };
 
-  // 🌟 순서가 뒤바뀐 최종 판별 함수
   const getIsPublic = (lectureData: any) => {
-    // 1순위: 명확한 isPublic 불리언 값이 있다면 가장 먼저 믿는다!
     if (lectureData.isPublic !== undefined) return String(lectureData.isPublic) === "true";
     if (lectureData.is_public !== undefined) return String(lectureData.is_public) === "true";
     if (lectureData.public !== undefined) return String(lectureData.public) === "true"; 
 
-    // 2순위: isPublic이 아예 없을 때만 status 문자열 확인
     if (lectureData.status) {
       const s = String(lectureData.status).toUpperCase();
       if (s === "PUBLIC" || s === "OPEN" || s === "PUBLISHED") return true;
@@ -73,6 +66,16 @@ export default function LectureEditPage() {
     }
     
     return false;
+  };
+
+  // 🌟 백엔드에서 countryName이 안 올 경우 countryId를 통해 국가 이름으로 변환하는 함수
+  const getCountryName = () => {
+    if (lecture.countryName) return lecture.countryName;
+    const id = String(lecture.countryId);
+    if (id === "1") return "일본";
+    if (id === "2") return "프랑스";
+    if (id === "3") return "미국";
+    return id || "";
   };
 
   const currentIsPublic = getIsPublic(lecture);
@@ -83,12 +86,11 @@ export default function LectureEditPage() {
       <div className="mt-6">
         <LectureUpdateForm
           initialData={{
-            country: lecture.countryName || "",
+            country: getCountryName(), // 🌟 변환된 국가 이름을 폼에 전달
             title: lecture.title || "",
             description: lecture.description || "",
             price: String(lecture.price || ""),
             mileage: String(lecture.mileage || ""),
-            // 🌟 확실한 문자열 주입 ("true" 또는 "false")
             isPublic: currentIsPublic ? "true" : "false", 
           }}
           onSubmit={handleEdit}

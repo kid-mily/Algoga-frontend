@@ -33,9 +33,7 @@ export default function LectureUpdateForm({
   const [preview, setPreview] = useState("/images/thumb.png");
   const [attachments, setAttachments] = useState<File[]>([]);
 
-  // 🌟 인라인 에러 상태
   const [errors, setErrors] = useState({
-    country: "",
     title: "",
     description: "",
     price: "",
@@ -68,11 +66,10 @@ export default function LectureUpdateForm({
   };
 
   const handleSubmit = async () => {
-    // 🌟 유효성 검사
-    let newErrors = { country: "", title: "", description: "", price: "" };
+    let newErrors = { title: "", description: "", price: "" };
     let hasError = false;
 
-    if (!formData.country) { newErrors.country = "국가를 선택해주세요."; hasError = true; }
+    // 🌟 국가는 수정 불가(disabled)이므로 에러 검사에서 제외했습니다!
     if (!formData.title.trim()) { newErrors.title = "강의 제목을 입력해주세요."; hasError = true; }
     if (!formData.description.trim()) { newErrors.description = "강의 설명을 입력해주세요."; hasError = true; }
     if (!formData.price || Number(formData.price) < 0) { newErrors.price = "올바른 가격을 입력해주세요."; hasError = true; }
@@ -117,16 +114,18 @@ export default function LectureUpdateForm({
                 name="country" 
                 value={formData.country} 
                 onChange={handleChange} 
-                className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
-                  errors.country ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
-                }`}
+                disabled // 국가 수정 불가 처리
+                className="mt-2 h-[48px] w-full cursor-not-allowed rounded-[12px] border border-transparent bg-[#F2F4F7] px-4 text-[14px] text-[#98A2B3] outline-none"
               >
                 <option value="">국가 선택</option>
                 <option value="일본">일본</option>
                 <option value="프랑스">프랑스</option>
                 <option value="미국">미국</option>
+                {/* 🌟 1,2,3 외에 다른 값이 와도 화면에 표시될 수 있도록 동적 처리 */}
+                {formData.country && !["일본", "프랑스", "미국"].includes(formData.country) && (
+                  <option value={formData.country}>{formData.country}</option>
+                )}
               </select>
-              {errors.country && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.country}</p>}
             </div>
             
             <div>
