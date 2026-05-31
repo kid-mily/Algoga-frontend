@@ -5,10 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import QuizList from "@/features/contentmanage/quiz/QuizList";
 import SimpleSubHeader from "@/features/common/SimpleSubHeader";
-import {getAdminCourses} from "@/features/services/adminCourse.service";
-import { getAdminQuizzes
-} from "@/features/services/adminQuiz.service";
+import { getAdminCourses } from "@/features/services/adminCourse.service";
+import { getAdminQuizzes } from "@/features/services/adminQuiz.service";
 import { AdminCourse, AdminQuiz } from "@/features/contentmanage/types";
+// 🌟 스피너 컴포넌트 추가
+import LoadingSpinner from "@/features/common/LoadingSpinner";
 
 export default function QuizPage() {
   const [selectedLecture, setSelectedLecture] = useState<string>("all");
@@ -200,8 +201,8 @@ export default function QuizPage() {
       </div>
 
       {isLoading && (
-        <div className="mt-6 rounded-[18px] border border-[#E4E7EC] bg-white p-8 text-center text-[14px] text-[#98A2B3]">
-          퀴즈 목록을 불러오는 중입니다...
+        <div className="mt-6 flex justify-center rounded-[18px] border border-[#E4E7EC] bg-white p-8">
+          <LoadingSpinner text="퀴즈 목록을 불러오는 중입니다..." />
         </div>
       )}
 

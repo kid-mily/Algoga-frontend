@@ -5,8 +5,10 @@ import { useParams, useSearchParams } from "next/navigation";
 
 import QuizForm from "@/features/contentmanage/quiz/QuizForm";
 import SubHeader from "@/features/contentmanage/common/SubHeader";
-import {getAdminQuizDetail} from "@/features/services/adminQuiz.service";
+import { getAdminQuizDetail } from "@/features/services/adminQuiz.service";
 import { AdminQuiz } from "@/features/contentmanage/types";
+// 🌟 스피너 컴포넌트 추가
+import LoadingSpinner from "@/features/common/LoadingSpinner";
 
 export default function EditQuizPage() {
   const params = useParams();
@@ -49,12 +51,11 @@ export default function EditQuizPage() {
     fetchQuiz();
   }, [quizId, courseId]);
 
+  //  스피너 영역
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
-        <div className="rounded-[18px] border border-[#E4E7EC] bg-white p-8 text-center text-[14px] text-[#98A2B3]">
-          퀴즈 정보를 불러오는 중입니다...
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#F8F8F8] px-8 py-8">
+        <LoadingSpinner text="퀴즈 정보를 불러오는 중입니다..." />
       </div>
     );
   }

@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import SubHeader from "@/features/contentmanage/common/SubHeader";
-
-// 🌟 실제 API 함수 호출
 import { getPointHistory, PointHistory } from "@/features/services/adminPoint.service";
+// 🌟 스피너 컴포넌트 추가
+import LoadingSpinner from "@/features/common/LoadingSpinner";
 
 export default function PointDetailPage() {
   const params = useParams();
@@ -38,7 +38,6 @@ export default function PointDetailPage() {
     <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
       <SubHeader backHref="/contentadmin/point" backText="마일리지 목록으로 돌아가기" title={`마일리지 상세 사용 내역 (유저 ID: ${studentid})`} />
 
-      {/* 🌟 에러 발생 시 빨간 박스 출력 */}
       {apiError && (
         <div className="mt-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]">
           🚨 {apiError}
@@ -57,20 +56,19 @@ export default function PointDetailPage() {
           <div>사유</div>
         </div>
 
+        {/* 🌟 스피너 교체 영역 */}
         {isLoading ? (
-          <div className="p-10 text-center text-[14px] text-[#667085]">내역을 불러오는 중입니다...</div>
+          <LoadingSpinner text="내역을 불러오는 중입니다..." />
         ) : logs.length === 0 ? (
           <div className="p-10 text-center text-[14px] text-[#667085]">마일리지 내역이 없습니다.</div>
         ) : (
           logs.map((log) => {
-            // 백엔드 명세에 따라 "GIVE", "EARN" 등 적립을 의미하는 문자열 판별
             const isPlus = log.type === "GIVE" || log.type === "EARN" || log.type === "적립";
             
             return (
               <div key={log.pointId || log.mileageId} className="grid grid-cols-[1fr_1fr_1fr_2fr] items-center border-b border-[#E4E7EC] px-6 py-5">
                 <div className="flex items-center gap-2 text-[15px] text-[#667085]">
                   <img src="/images/calendar.svg" alt="달력" className="h-[15px] w-[15px]" />
-                  {/* 날짜 포맷은 백엔드에서 오는 데이터 형태에 따라 앞 10자리만 자르기 등 추가 가능 */}
                   {log.createdAt ? log.createdAt.substring(0, 10) : "-"}
                 </div>
 

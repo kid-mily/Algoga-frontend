@@ -9,6 +9,8 @@ import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 import Modal from "@/features/common/Modal";
 import CompleteModal from "@/features/common/CompleteModal";
 import StudentForm from "@/features/contentmanage/lecture/StudentForm";
+// 🌟 스피너 추가
+import LoadingSpinner from "@/features/common/LoadingSpinner";
 
 import { getAdminCourses, getCourseCountries, deleteAdminCourse } from "@/features/services/adminCourse.service";
 
@@ -25,7 +27,6 @@ export default function LecturePage() {
 
   const [isLoading, setIsLoading] = useState(true);
   
-  // 🌟 전체 화면 에러 및 페이지 내 인라인 에러 상태
   const [fetchError, setFetchError] = useState("");
   const [pageError, setPageError] = useState("");
 
@@ -33,7 +34,6 @@ export default function LecturePage() {
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
 
-  // 🌟 수강생 관리 모달 상태 (새로 추가된 부분)
   const [studentModalOpen, setStudentModalOpen] = useState(false);
   const [targetCourseForStudent, setTargetCourseForStudent] = useState<{ id: number; title: string } | null>(null);
 
@@ -129,11 +129,14 @@ export default function LecturePage() {
     }
   };
 
+  // 🌟 스피너 교체 영역
   if (isLoading) {
     return (
       <div className="w-full">
         <SimpleSubHeader title="강의 관리" description="나라별 강의 콘텐츠를 등록하고 관리합니다" />
-        <div className="mt-5 rounded-[20px] border border-[#E4E7EC] bg-white p-10 text-center text-[14px] text-[#667085]">강의 목록을 불러오는 중입니다...</div>
+        <div className="mt-5 flex justify-center rounded-[20px] border border-[#E4E7EC] bg-white py-10">
+          <LoadingSpinner text="강의 목록을 불러오는 중입니다..." />
+        </div>
       </div>
     );
   }
@@ -151,10 +154,9 @@ export default function LecturePage() {
     <div className="w-full">
       <SimpleSubHeader title="강의 관리" description="나라별 강의 콘텐츠를 등록하고 관리합니다" />
 
-      {/* 🌟 삭제 오류 등 페이지 인라인 에러 박스 */}
       {pageError && (
         <div className="mt-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]">
-          🚨 {pageError}
+           {pageError}
         </div>
       )}
 
@@ -202,13 +204,10 @@ export default function LecturePage() {
               price={formatPrice(lecture.price)} 
               isPublic={getIsPublic(lecture)} 
               onChapterManage={() => router.push(`/contentadmin/lecture/${currentCourseId}/chapter/new`)} 
-              
-              // 🌟 수강생 아이콘 클릭 시, 모달창 띄우기 (데이터 연동)
               onUsersClick={() => { 
                 setTargetCourseForStudent({ id: currentCourseId, title: lecture.title || "" }); 
                 setStudentModalOpen(true); 
               }} 
-              
               onEditClick={() => router.push(`/contentadmin/lecture/${currentCourseId}/edit`)} 
               onDeleteClick={() => { 
                 setSelectedCourseId(currentCourseId); 
@@ -237,7 +236,6 @@ export default function LecturePage() {
       <Modal open={deleteModalOpen} title="강의 삭제" description="정말 이 강의를 삭제하시겠습니까? (관련된 챕터도 모두 삭제됩니다)" confirmText="삭제" cancelText="취소" onConfirm={handleDeleteConfirm} onCancel={() => { setDeleteModalOpen(false); setSelectedCourseId(null); }} />
       <CompleteModal open={completeModalOpen} title="삭제 완료" description="강의가 성공적으로 삭제되었습니다." buttonText="확인" onConfirm={() => setCompleteModalOpen(false)} />
       
-      {/* 🌟 수강생 목록 조회 모달 연결 */}
       <StudentForm 
         open={studentModalOpen} 
         onClose={() => setStudentModalOpen(false)} 
