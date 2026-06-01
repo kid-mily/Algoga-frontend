@@ -164,7 +164,7 @@ export default function SingleLecturePaymentPage() {
                     backHref={`/classroom/${continentCode}/${countryId}/lecture/${courseId}`}
                     backText="강의로 돌아가기"
                     title="결제하기"
-                    description="쿠폰 and 마일리지를 적용한 뒤 결제를 진행해주세요."
+                    description="쿠폰과 마일리지를 적용한 뒤 결제를 진행해주세요."
                 />
 
                 {errorMessage && (
