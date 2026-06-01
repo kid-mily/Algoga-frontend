@@ -64,7 +64,7 @@ export default function ContentSidebar() {
     if (!payload || payload.type !== "ADMIN") {
       localStorage.removeItem("adminAccessToken");
       localStorage.removeItem("adminRefreshToken");
-      router.replace("/auth/admin-login");
+      router.replace("/auth/adminlogin");
       return;
     }
 
