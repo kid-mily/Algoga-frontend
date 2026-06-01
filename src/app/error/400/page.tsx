@@ -15,7 +15,7 @@ export default function Error500Page() {
 
   return (
     <main className="p-10">
-      <h1 className="text-5xl font-bold mb-6">500</h1>
+      <h1 className="text-5xl font-bold mb-6">400</h1>
 
       <h2 className="mb-4 text-xl">
         서버 오류가 발생했습니다.

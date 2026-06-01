@@ -25,53 +25,36 @@ export const createAuthInterceptor = (
   };
 };
 
-// 🌟 에러 공통 처리 함수
+//  에러 공통 처리 함수
 export const errorInterceptor = (error: AxiosError) => {
   const errorData = error.response?.data;
+  const status = error.response?.status; //  상태 코드 추출
 
   console.log("API 요청 실패:", {
     url: error.config?.url,
     baseURL: error.config?.baseURL,
-    status: error.response?.status,
+    status: status,
     message: (errorData as any)?.message,
     data: errorData,
   });
 
   if (typeof window !== "undefined") {
-    sessionStorage.setItem(
-      "errorData",
-      JSON.stringify(errorData)
-    );
+    sessionStorage.setItem("errorData", JSON.stringify(errorData));
 
-    // 테스트 중: 모든 에러를 모달로
-    window.dispatchEvent(
-      new CustomEvent("api-error", {
-        detail: errorData,
-      })
-    );
-
-    /*
-    배포 시 사용
-
-    const status = error.response?.status;
-
-    if (status === 400) {
-      window.location.href = "/error/400";
-      return Promise.reject(error);
-    }
-
+    // 1️치명적인 서버 에러(500)인 경우에만 500 에러 페이지로 강제 이동
     if (status === 500) {
-      window.location.href = "/error/500";
+      window.location.href = "/error/500"; // 또는 Next.js의 error.tsx가 잡도록 놔둬도 됩니다.
       return Promise.reject(error);
     }
 
+    // 2️ 500 에러가 아닌 나머지 모든 에러(400, 404, 409 등)는 전역 모달을 띄움
     window.dispatchEvent(
       new CustomEvent("api-error", {
         detail: errorData,
       })
     );
-    */
   }
 
   return Promise.reject(error);
+
 };
