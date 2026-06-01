@@ -78,9 +78,11 @@ export default function CalendarGrid({
                 <div
                   className={`absolute top-10 h-3 w-20 rounded-full ${
                     schedule.type === 'TRIP'
-                      ? 'bg-[#A8DCCF]'  // 여행 일정
-                      : 'bg-[#F59E0B]'  // 그 외 일정
-                  }`}
+                      ? 'bg-[#A8DCCF]'
+                      : schedule.type === 'FLIGHT'
+                      ? 'bg-[#60A5FA]'
+                      : 'bg-[#F59E0B]'
+                    }`}
                 />
               )}
             </div>

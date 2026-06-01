@@ -10,7 +10,7 @@ export default function ScheduleSidebar({ schedules }: ScheduleSidebarProps) {
         다가오는 일정
       </div>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-5 overflow-y-auto">
         {schedules.map((schedule, index) => (
           <div
             key={`${schedule.scheduleId}-${index}`}
@@ -19,10 +19,13 @@ export default function ScheduleSidebar({ schedules }: ScheduleSidebarProps) {
             <div className="flex items-start gap-3">
               <div
                 className={`mt-2 h-3 w-3 rounded-full ${
-                  schedule.type === 'TRAVEL'
+                  schedule.type === 'TRIP'
                     ? 'bg-[#A8DCCF]'
+                    : schedule.type === 'FLIGHT'
+                    ? 'bg-[#60A5FA]'
                     : 'bg-[#F59E0B]'
-                }`}
+                  }`}
+
               />
 
               <div className="flex flex-col">
