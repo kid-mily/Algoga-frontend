@@ -1,21 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { authApi } from "@/lib/auth"; // 실제 사용하는 API 모듈에 맞게 경로 수정
+import { signup } from "@/features/services/signup.service"; 
 
 import RegisterHeader from "@/features/auth/components/RegisterHeader";
 import RegisterStepHeader from "@/features/auth/components/RegisterStepHeader";
 import RegisterInfoForm from "@/features/auth/components/RegisterInfoForm";
 import RegisterAgreeForm from "@/features/auth/components/RegisterAgreeForm";
 import RegisterCompleteForm from "@/features/auth/components/RegisterCompleteForm";
+import CompleteModal from "@/features/common/CompleteModal";
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [modal, setModal] = useState({ open: false, title: "", description: "" });
   
-  // 🌟 Step 1 이메일 인풋창 밑에 보여줄 에러 텍스트 상태
-  const [serverEmailError, setServerEmailError] = useState("");
+  //  객체 형태로 변경: 어디서 에러가 났는지(field)와 에러 메시지를 함께 저장
+  const [serverError, setServerError] = useState({ field: "", message: "" });
 
   const [formData, setFormData] = useState({
     name: "",
@@ -38,34 +39,9 @@ export default function RegisterPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // 🌟 [핵심] Step 1에서 '다음' 버튼 누를 때 실행 (여기서 막습니다!)
-  const handleNextStep1 = async () => {
-    try {
-      setIsLoading(true);
-      setServerEmailError(""); // 기존 에러 초기화
-
-      /* 💡 백엔드에 이메일 중복 확인 API가 있다면 여기서 호출하세요.
-        만약 API 응답이 "중복"이거나 500/409 에러가 발생하면 
-        setServerEmailError()에 메시지를 넣고 return; 하여 막습니다.
-      */
-      
-      // 예시: 백엔드 이메일 중복 확인 (구현된 api 코드에 맞게 주석 해제하여 사용)
-      /*
-      const isDuplicate = await authApi.checkEmail(formData.email);
-      if (isDuplicate) {
-        setServerEmailError("이미 사용 중인 이메일입니다.");
-        return; // 🌟 에러가 있으면 Step 2로 절대 넘어가지 않고 여기서 함수 종료!
-      }
-      */
-
-      // API 통과 시에만 Step 2로 이동
-      setStep(2);
-    } catch (error: any) {
-      // API 통신 실패 시에도 넘어가지 않고 빨간 글씨 띄움
-      setServerEmailError(error.message || "이메일 중복 확인 중 서버 오류가 발생했습니다.");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleNextStep1 = () => {
+    setServerError({ field: "", message: "" }); // Step 2로 갈 때 에러 초기화
+    setStep(2);
   };
 
   const handleSignup = async () => {
@@ -76,12 +52,26 @@ export default function RegisterPage() {
         return;
       }
 
-      // 최종 회원가입 통신
-      await authApi.signup(formData); // 실제 구현된 회원가입 함수 사용
+      // 백엔드 회원가입 통신
+      await signup(formData);
       setStep(3); // 성공 시 Step 3으로 넘어감
 
     } catch (error: any) {
-      setModal({ open: true, title: "회원가입 실패", description: error.message || "서버 오류가 발생했습니다." });
+      const errMsg = error.message || "서버 오류가 발생했습니다.";
+      
+      // 🌟 [핵심] 에러 내용에 따라 어떤 필드의 에러인지 구분
+      if (errMsg.includes("아이디")) {
+        // 에러 메시지에 '아이디'가 포함된 경우
+        setServerError({ field: "username", message: errMsg });
+        setStep(1); 
+      } else if (errMsg.includes("이메일") || errMsg.includes("사용") || errMsg.includes("중복") || errMsg.includes("존재")) {
+        // 그 외 이메일 중복 관련 에러인 경우
+        setServerError({ field: "email", message: errMsg });
+        setStep(1); 
+      } else {
+        // 중복 문제가 아닌 다른 서버 에러는 공통 모달로 띄움
+        setModal({ open: true, title: "회원가입 실패", description: errMsg });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -98,10 +88,10 @@ export default function RegisterPage() {
             <RegisterInfoForm
               formData={formData}
               onChange={handleChange}
-              onNext={handleNextStep1} // 🌟 단순 이동이 아닌 중복검사 로직 연결
+              onNext={handleNextStep1}
               isLoading={isLoading}
-              serverEmailError={serverEmailError}       
-              setServerEmailError={setServerEmailError} 
+              serverError={serverError}       
+              setServerError={setServerError} 
             />
           )}
 
@@ -124,6 +114,14 @@ export default function RegisterPage() {
           )}
         </section>
       </div>
+
+      <CompleteModal
+        open={modal.open}
+        title={modal.title}
+        description={modal.description}
+        buttonText="확인"
+        onConfirm={() => setModal({ open: false, title: "", description: "" })}
+      />
     </main>
   );
 }

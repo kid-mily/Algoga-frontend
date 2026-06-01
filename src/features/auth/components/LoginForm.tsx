@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { login } from "@/features/services/auth.service";
-import CompleteModal from "@/features/common/CompleteModal"; // 사용 중인 공통 모달 임포트
 
 export default function LoginForm() {
   const router = useRouter();
@@ -191,15 +190,6 @@ export default function LoginForm() {
           <Link href="/auth/register" className="font-semibold text-[#6D9D9B]">회원가입</Link>
         </div>
       </form>
-
-      {/* 🌟 로그인 에러 시 나타날 공통 모달 */}
-      <CompleteModal
-        open={modal.open}
-        title={modal.title}
-        description={modal.description}
-        buttonText="확인"
-        onConfirm={() => setModal({ open: false, title: "", description: "" })}
-      />
     </div>
   );
 }

@@ -7,8 +7,8 @@ interface RegisterInfoFormProps {
   onChange: (field: string, value: string) => void;
   onNext: () => void;
   isLoading?: boolean;
-  serverEmailError?: string; 
-  setServerEmailError?: (msg: string) => void; 
+  serverError?: { field: string; message: string }; // 🌟 객체 형태로 변경
+  setServerError?: (err: { field: string; message: string }) => void; // 🌟 객체 형태로 변경
 }
 
 export default function RegisterInfoForm({ 
@@ -16,8 +16,8 @@ export default function RegisterInfoForm({
   onChange, 
   onNext, 
   isLoading, 
-  serverEmailError, 
-  setServerEmailError 
+  serverError, 
+  setServerError 
 }: RegisterInfoFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEtcRoute, setIsEtcRoute] = useState(formData.signupPath !== "" && !["search", "social", "friend", "ad"].includes(formData.signupPath));
@@ -98,18 +98,28 @@ export default function RegisterInfoForm({
           {errors.name && <p className="mt-1 text-[13px] text-red-500">{errors.name}</p>}
         </div>
 
-        {/* 아이디 */}
+        {/* 🌟 아이디 */}
         <div>
           <label className="text-[16px] font-semibold text-[#111827]">아이디 *</label>
           <input
             type="text"
             value={formData.username}
-            onChange={(e) => onChange("username", e.target.value)}
+            onChange={(e) => {
+              onChange("username", e.target.value);
+              // 아이디를 수정하면 서버 에러 지우기
+              if (serverError?.field === "username" && setServerError) {
+                setServerError({ field: "", message: "" });
+              }
+            }}
             placeholder="4자 이상 20자 이하"
             className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
             disabled={isLoading}
           />
           {errors.username && <p className="mt-1 text-[13px] text-red-500">{errors.username}</p>}
+          {/* 🌟 아이디 중복 관련 백엔드 에러 표시 */}
+          {serverError?.field === "username" && !errors.username && (
+            <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
+          )}
         </div>
 
         {/* 비밀번호 */}
@@ -158,7 +168,7 @@ export default function RegisterInfoForm({
           {errors.nickname && <p className="mt-1 text-[13px] text-red-500">{errors.nickname}</p>}
         </div>
 
-        {/* 🌟 이메일: 프론트엔드 검사 에러와 서버 중복 에러를 모두 처리 */}
+        {/* 🌟 이메일 */}
         <div className="col-span-2">
           <label className="text-[16px] font-semibold text-[#111827]">이메일 *</label>
           <input
@@ -166,21 +176,21 @@ export default function RegisterInfoForm({
             value={formData.email}
             onChange={(e) => {
               onChange("email", e.target.value);
-              // 사용자가 이메일을 수정하면 서버 에러 메시지 초기화
-              if (setServerEmailError) setServerEmailError(""); 
+              // 이메일을 수정하면 서버 에러 지우기
+              if (serverError?.field === "email" && setServerError) {
+                setServerError({ field: "", message: "" });
+              }
             }}
             placeholder="example@algoga.com"
-            className={`mt-3 h-[35px] w-full rounded-[16px] border bg-[#F9FAFB] px-5 text-[15px] outline-none ${
-              errors.email || serverEmailError ? "border-red-500" : "border-[#D0D5DD]"
-            }`}
+            className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
             disabled={isLoading}
           />
-          {/* 1순위: 형식 틀림 에러 */}
+          {/* 프론트엔드 자체 에러 (형식 등) */}
           {errors.email && <p className="mt-1 text-[13px] text-red-500">{errors.email}</p>}
           
-          {/* 2순위: 서버 중복 에러 (형식이 맞을 때만 띄움) */}
-          {serverEmailError && !errors.email && (
-            <p className="mt-1 text-[13px] text-red-500">{serverEmailError}</p>
+          {/* 🌟 이메일 중복 관련 백엔드 에러 표시 */}
+          {serverError?.field === "email" && !errors.email && (
+            <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
           )}
         </div>
 
