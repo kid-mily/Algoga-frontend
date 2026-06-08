@@ -1,6 +1,6 @@
 import axios from "axios";
 import { adminApi } from "@/lib/api";
-import { Student } from "../contentmanage/types";
+import { Student } from "../contentmanage/lecture/types";
 
 // 공통 에러 핸들러
 const getErrorMessage = (error: unknown, fallbackMessage: string) => {

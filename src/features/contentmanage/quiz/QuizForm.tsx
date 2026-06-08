@@ -9,7 +9,7 @@ import {
   createAdminQuiz,
   updateAdminQuiz,
 } from "@/features/services/adminQuiz.service";
-import { AdminCourse } from "../types";
+import { AdminCourse } from "../lecture/types";
 
 type QuizFormMode = "create" | "edit";
 

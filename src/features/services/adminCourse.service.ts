@@ -2,7 +2,11 @@
 
 import axios from "axios";
 import { api, adminApi } from "@/lib/api";
-import { AdminCourse, CourseCountry, CreateAdminCoursePayload } from "../contentmanage/types";
+import {
+  AdminCourse,
+  CourseCountry,
+  CreateAdminCoursePayload,
+} from "../contentmanage/lecture/types";
 
 // ------------------------------------------
 // 2. 공통 에러 핸들러

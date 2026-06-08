@@ -2,7 +2,10 @@
 
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
-import { AdminLoginRequest , AdminLoginResponse, CreateAdminCoursePayload } from "../contentmanage/types";
+import {
+  AdminLoginRequest,
+  AdminLoginResponse,
+} from "../contentmanage/auth/types";
 
 const getErrorMessage = (error: unknown, fallbackMessage: string) => {
   if (error instanceof AxiosError) {
