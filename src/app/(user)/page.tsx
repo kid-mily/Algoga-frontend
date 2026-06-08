@@ -26,6 +26,7 @@ export default function Home() {
       <div className="max-w-4xl w-full mx-auto mt-5">
         <Calender/>
         <LearnMethod />
+        
         {/* 공지사항, ai 일정 추천 */}
         <div className="mt-5 gap-5 flex justify-between">
           <NoticeSection />
