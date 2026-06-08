@@ -42,18 +42,24 @@ export default function StudentItem({
       <div className="flex items-center gap-3">
 
         {/* 프로필 */}
-        <div className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#439A97] text-[18px] font-bold text-white shadow-sm">
+       <div className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#439A97] text-[18px] text-white">
+          {/* name이 있으면 첫 글자를 띄우고, 없으면 기본값(예: '익' 또는 '?')을 띄웁니다 */}
+          {name ? name[0] : "?"} 
+        </div>
 
-          {name[0]}
+        {/* 이름 텍스트를 출력하는 곳도 안전하게 바꿔주세요 */}
+        <div className="ml-3 flex flex-col">
+          <span className="text-[15px] font-bold text-[#111827]">
+            {name || "알 수 없음"}
+          </span>
+          {/* ... */}
         </div>
 
         {/* 이름 */}
         <div>
-
           <p className="text-[15px] font-bold text-[#111827]">
             {name}
           </p>
-
           <p className="mt-0.5 text-[13px] text-[#98A2B3]">
             {lecture}
           </p>
@@ -67,7 +73,6 @@ export default function StudentItem({
 
       {/* 상태 */}
       <div>
-
         <div
           className={`inline-flex rounded-full px-3 py-1.5 text-[13px] font-semibold ${
             status === "complete"

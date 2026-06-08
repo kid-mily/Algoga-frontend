@@ -40,19 +40,34 @@ const getErrorMessage = (error: unknown, fallbackMessage: string) => {
 // ------------------------------------------
 // 1. 수강생 및 보유 마일리지 목록 조회 (GET)
 // ------------------------------------------
+// 1. 수강생 및 보유 마일리지 목록 조회 (GET)
 export const getStudentsPoints = async (): Promise<StudentPointInfo[]> => {
   try {
     const response = await adminApi.get(`/api/v1/admin/mileages`);
     
-    // 🌟 핵심: 백엔드가 보내주는 data.users 구조를 정확히 짚어줍니다.
+    // 🌟 디버깅용: 백엔드가 정확히 어떤 구조로 응답하는지 확인 (F12 네트워크 탭과 비교)
+    console.log("🚀 백엔드 마일리지 응답 원본:", response.data);
+
+    // 응답 형태가 { data: { users: [...] } } 인지, 아니면 그냥 [ ... ] 인지 확인이 필요합니다.
+    // 백엔드 응답이 바로 배열이라면 response.data 자체가 리스트일 수 있습니다.
     const resData = response.data;
-    const users = resData.data?.users || []; 
+    
+    // 데이터를 유연하게 추출하는 로직
+    // 1) resData.data.users 가 있는 경우
+    // 2) resData.users 가 있는 경우
+    // 3) resData 자체가 배열인 경우
+    const users = resData.data?.users || resData.users || (Array.isArray(resData) ? resData : []);
+
+    if (users.length === 0) {
+      console.warn("⚠️ 마일리지 목록이 비어있거나 응답 구조가 다릅니다.");
+    }
 
     return users.map((item: any) => ({
       userId: item.userId,
       userName: item.userName,
       email: item.email,
-      totalPoint: item.totalMileage ?? 0, 
+      // 🌟 필드명 정확히 확인! item.totalMileage인지 item.mileage인지 확인하세요.
+      totalPoint: item.totalMileage ?? item.mileage ?? 0, 
     }));
   } catch (error: any) {
     throw new Error(getErrorMessage(error, "수강생 목록 조회 실패"));
