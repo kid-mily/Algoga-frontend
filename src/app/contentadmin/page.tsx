@@ -11,27 +11,6 @@ export default function ContentPage() {
   return (
     <div>
       콘텐츠 매니저 메인 페이지
-
-      {/* <Modal
-        open={open}
-        onConfirm={() => console.log("확인")}
-        onCancel={() => setOpen(false)}
-      /> */}
-
-       {/* <CheckModal
-      open={open}
-      title="완료되었습니다"
-      description="등록이 완료되었습니다."
-      onConfirm={() => setOpen(false)}
-    /> */}
-
-
-    {/* <CompleteModal
-      open={open}
-      title="알림"
-      description="로그인에 성공하였습니다."
-      onConfirm={() => setOpen(false)}
-    /> */}
     </div>
   );
 }

@@ -1,54 +1,50 @@
-interface ScheduleSidebarProps {
-  schedules: {
-    id: number
-    title: string
-    date: string
-    type: string
-    dday: string
-  }[]
-}
+import { ScheduleSidebarProps } from "./types";
 
-export default function ScheduleSidebar({
-  schedules,
-}: ScheduleSidebarProps) {
+export default function ScheduleSidebar({ schedules }: ScheduleSidebarProps) {
+
+  if (!schedules) return null;
+
   return (
-    <aside className="bg-[#F8FAFC] p-8">
-      <h3 className="mb-8 text-xl font-bold text-[#0A1628]">
+    <div className="bg-[#F8FAFC] p-8">
+      <div className="mb-8 text-xl font-bold text-[#0A1628]">
         다가오는 일정
-      </h3>
+      </div>
 
-      <div className="flex flex-col gap-5">
-        {schedules.map((schedule) => (
-          <article
-            key={schedule.id}
+      <div className="flex flex-col gap-5 overflow-y-auto">
+        {schedules.map((schedule, index) => (
+          <div
+            key={`${schedule.scheduleId}-${index}`}
             className="flex items-center justify-between rounded-3xl border border-[#EEF2F6] bg-white p-5"
           >
             <div className="flex items-start gap-3">
               <div
                 className={`mt-2 h-3 w-3 rounded-full ${
-                  schedule.type === 'TRAVEL'
+                  schedule.type === 'TRIP'
                     ? 'bg-[#A8DCCF]'
+                    : schedule.type === 'FLIGHT'
+                    ? 'bg-[#60A5FA]'
                     : 'bg-[#F59E0B]'
-                }`}
+                  }`}
+
               />
 
               <div className="flex flex-col">
-                <p className="font-bold text-[#0A1628]">
+                <div className="font-bold text-[#0A1628]">
                   {schedule.title}
-                </p>
+                </div>
 
-                <span className="mt-1 text-sm text-[#94A3B8]">
-                  {schedule.date}
-                </span>
+                <div className="mt-1 text-sm text-[#94A3B8]">
+                  {schedule.eventDate}
+                </div>
               </div>
             </div>
 
-            <span className="font-bold text-[#F59E0B]">
-              {schedule.dday}
-            </span>
-          </article>
+            <div className="font-bold text-[#F59E0B]">
+              {schedule.dDayText}
+            </div>
+          </div>
         ))}
       </div>
-    </aside>
+    </div>
   )
 }

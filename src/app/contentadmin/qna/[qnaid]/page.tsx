@@ -4,7 +4,7 @@
 
 import { useParams } from "next/navigation";
 
-import SubHeader from "@/features/contentmanage/SubHeader";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 
 import QnaCard from "@/features/contentmanage/qna/QnaCard";
 import QnaForm from "@/features/contentmanage/qna/QnaForm";

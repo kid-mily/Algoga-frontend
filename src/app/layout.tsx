@@ -1,3 +1,4 @@
+import GlobalErrorModal from "@/features/common/ErrorModal";
 import "./globals.css";
 
 export default function RootLayout({
@@ -8,6 +9,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <GlobalErrorModal />
+
         {children}
       </body>
     </html>

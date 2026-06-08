@@ -1,0 +1,18 @@
+title: "[TODO] "
+body:
+  - type: textarea
+    id: name1
+    attributes:
+      label: 김민지
+      value: "- [ ] "
+    validations:
+      required: false
+
+  - type: textarea
+    id: name2
+    attributes:
+      label: 이주은
+      value: "- [ ] "
+    validations:
+      required: false
+

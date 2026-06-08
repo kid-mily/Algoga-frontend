@@ -2,21 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import BannerItem from './BannerItem';
+import { Banner } from './types';
+import { getMainBanners } from '@/features/services/banner.service';
 
-interface Banner {
-  id: number;
-  imageUrl: string;
-  linkUrl: string;
-}
 
 export default function MainBanner() {
-  // 백엔드 데이터 들어올 자리
   const [banners, setBanners] = useState<Banner[]>([]);
-
-  // 현재 배너 index
   const [current, setCurrent] = useState(0);
 
-  // 다음 배너
+  // 다음 배너로 이동
   const nextBanner = () => {
     if (current === banners.length - 1) {
       setCurrent(0);
@@ -25,7 +19,7 @@ export default function MainBanner() {
     }
   };
 
-  // 이전 배너
+  // 이전 배너로 이동
   const prevBanner = () => {
     if (current === 0) {
       setCurrent(banners.length - 1);
@@ -35,44 +29,46 @@ export default function MainBanner() {
   };
 
   useEffect(() => {
-    // 추후 axios 연결
+    // API 호출
+    const bannersAPI = async () => {
+      const data = await getMainBanners();
+      // 데이터가 정상적으로 들어왔을 때만 상태 업데이트
+      if (data && data.length > 0) {
+        setBanners(data);
+      }
+    };
 
-    // 임시 데이터
-    const mockData: Banner[] = [
-      {
-        id: 1,
-        imageUrl: '/images/banner1.png',
-        linkUrl: '/event/1',
-      },
-      {
-        id: 2,
-        imageUrl: '/images/banner2.png',
-        linkUrl: '/event/2',
-      },
-      {
-        id: 3,
-        imageUrl: '/images/banner3.png',
-        linkUrl: '/event/3',
-      },
-    ];
-
-    setBanners(mockData);
+    bannersAPI();
   }, []);
 
-   // 데이터 없을 때
+  // 자동 슬라이드
+  useEffect(() => {
+    if (banners.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrent((prev) => {
+        if (prev === banners.length - 1) {
+          return 0;
+        }
+        
+        return prev + 1;
+      });
+    }, 5000);
+    
+    return () => clearInterval(interval);}, [banners]);
+
+  // 데이터 없을 때
   if (banners.length === 0) {
     return (
-      <div className="h-[320px] rounded-3xl bg-gray-200" />
+      <div className="h-[200px] w-full max-w-5xl mx-auto rounded-3xl bg-gray-200 animate-pulse" />
     );
   }
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto">
+    <div className="relative w-full max-w-4xl mx-auto">
       {/* 현재 배너 */}
-      <BannerItem banner={banners[current]} />
-
-      {/* top-1/2: 부모 높이의 50% 위치 */}
-      {/* -translate-y-1/2: 자기 높이의 절반만큼 위로 다시 올림 */}
+      <BannerItem
+      banner={banners[current]}
+    />
       
       {/* 이전 버튼 */}
       <button
@@ -96,16 +92,15 @@ export default function MainBanner() {
       <div className="absolute bottom-5 left-1/2 z-30 flex -translate-x-1/2 gap-3">
         {banners.map((_, index) => (
           <button
-            key={index}
+            key={banners[index].bannerId}
             onClick={() => setCurrent(index)}
             className={`
-              h-3 w-3 rounded-full
+              h-3 w-3 rounded-full transition-colors
               ${current === index ? 'bg-white' : 'bg-white/40'}
             `}
           />
         ))}
       </div>
-
     </div>
   );
 }

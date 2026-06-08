@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import NoticeItem from './NoticeItem'
-import { getMainNotices, Notice } from '@/features/services/notice.service'
+import { Notice } from './types' 
+import { api } from '@/lib/api' 
 
 const colorMap: Record<string, string> = {
   EVENT: 'blue',
@@ -11,42 +12,29 @@ const colorMap: Record<string, string> = {
 }
 
 export default function NoticeSection() {
-  // const [notices, setNotices] = useState<Notice[]>([])
-  const [notices, setNotices] = useState<Notice[]>([
-  {
-    noticeId: 1,
-    tag: 'EVENT',
-    title: '여름 맞이 이벤트 안내',
-    date: '2026-05-22',
-    time: '15:30',
-  },
-  {
-    noticeId: 2,
-    tag: 'NOTICE',
-    title: '서비스 점검 공지',
-    date: '2026-05-21',
-    time: '18:00',
-  },
-  {
-    noticeId: 3,
-    tag: 'UPDATE',
-    title: '신규 기능 업데이트',
-    date: '2026-05-20',
-    time: '12:00',
-  },
-])
+  const [notices, setNotices] = useState<Notice[]>([])
 
-  // useEffect(() => {
-  //   const fetchNotices = async () => {
-  //     try {
-  //       const data = await getMainNotices()
-  //       setNotices(data)
-  //     } catch (error) {
-  //       console.error(error)
-  //     }
-  //   }
-  //   fetchNotices()
-  // }, [])
+  useEffect(() => {
+    const fetchNotices = async () => {
+      try {
+        // 🌟 fetch 대신 커스텀 api(axios) 사용
+        const response = await api.get('/api/v1/public/notices/main')
+        
+        // axios는 응답 객체의 `data` 프로퍼티 안에 실제 서버 응답을 담아줍니다.
+        // 서버 응답 구조가 { status, code, message, data: [...] } 이므로 
+        // response.data (전체 JSON) -> response.data.data (공지사항 배열) 로 접근합니다.
+        const result = response.data
+
+        if (result.status === 200 && result.data) {
+          setNotices(result.data)
+        }
+      } catch (error) {
+        console.error('공지사항 데이터를 가져오는데 실패했습니다:', error)
+      }
+    }
+    
+    fetchNotices()
+  }, [])
 
   return (
     <div className="w-1/2 h-full bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -67,7 +55,7 @@ export default function NoticeSection() {
             category={notice.tag}
             title={notice.title}
             date={notice.date}
-            color={colorMap[notice.tag]}
+            color={colorMap[notice.tag] || 'gray'}
           />
         ))}
       </ul>

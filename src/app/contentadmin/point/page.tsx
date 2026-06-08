@@ -1,218 +1,112 @@
 "use client";
 
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-import SubHeader from "@/features/contentmanage/SubHeader";
-
 import StudentItem from "@/features/contentmanage/point/StudentItem";
-import PointItem from "@/features/contentmanage/point/PointItem";
-
 import GiveForm from "@/features/contentmanage/point/GiveForm";
 import RecallForm from "@/features/contentmanage/point/RecallForm";
-
 import CompleteModal from "@/features/common/CompleteModal";
-
-import {
-  students,
-  pointLogs,
-} from "@/features/contentmanage/MockData";
+import { getStudentsPoints, givePoints, recallPoints, StudentPointInfo } from "@/features/services/adminPoint.service";
+import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import LoadingSpinner from "@/features/common/LoadingSpinner";
 
 export default function PointPage() {
-
   const router = useRouter();
+  const [students, setStudents] = useState<StudentPointInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
 
-  // 지급 모달
-  const [openGive, setOpenGive] =
-    useState(false);
+  const [openGive, setOpenGive] = useState(false);
+  const [openRecall, setOpenRecall] = useState(false);
+  const [completeOpen, setCompleteOpen] = useState(false);
+  const [completeText, setCompleteText] = useState("");
 
-  // 회수 모달
-  const [openRecall, setOpenRecall] =
-    useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<{ userId: number; name: string; point: number; } | null>(null);
 
-  // 완료 모달
-  const [
-    completeOpen,
-    setCompleteOpen,
-  ] = useState(false);
+  useEffect(() => {
+    fetchStudents();
+  }, []);
 
-  // 완료 메시지
-  const [
-    completeText,
-    setCompleteText,
-  ] = useState("");
+  const fetchStudents = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getStudentsPoints();
+      setStudents(data);
+    } catch (error: any) {
+      setPageError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // 선택된 학생
-  const [
-    selectedStudent,
-    setSelectedStudent,
-  ] = useState<{
-    name: string;
-    point: number;
-  } | null>(null);
+  const handleGivePoints = async (amount: number, reason: string) => {
+    if (!selectedStudent) return false;
+    try {
+      await givePoints({ userId: selectedStudent.userId, amount, reason });
+      setOpenGive(false);
+      setCompleteText("마일리지가 성공적으로 지급되었습니다.");
+      setCompleteOpen(true);
+      fetchStudents(); 
+      return true;
+    } catch (error: any) {
+      setPageError(error.message);
+      setOpenGive(false);
+      return false;
+    }
+  };
+
+  const handleRecallPoints = async (amount: number, reason: string) => {
+    if (!selectedStudent) return false;
+    try {
+      await recallPoints({ userId: selectedStudent.userId, amount, reason });
+      setOpenRecall(false);
+      setCompleteText("마일리지가 성공적으로 회수되었습니다.");
+      setCompleteOpen(true);
+      fetchStudents(); 
+      return true;
+    } catch (error: any) {
+      setPageError(error.message);
+      setOpenRecall(false);
+      return false;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
+      <SimpleSubHeader title="마일리지 관리" description="사용자 마일리지를 조회하고 지급합니다" />
 
-      {/* 헤더 */}
-      <SubHeader
-        backHref="/contentadmin"
-        backText="메인페이지로 돌아가기"
-        title="마일리지 관리"
-        description="사용자 마일리지를 조회하고 지급합니다"
-      />
+      {pageError && <div className="mt-4 p-4 text-red-600 bg-red-50 rounded-lg font-medium">🚨 {pageError}</div>}
 
-      {/* 검색 */}
-      <div className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4">
-        <div className="flex h-[42px] items-center rounded-[12px] border border-[#E4E7EC] px-3">
-          <img
-            src="/images/search.svg"
-            alt="검색"
-            className="h-[16px] w-[16px]"
-          />
-          <input
-            type="text"
-            placeholder="uuid, 사용자 이름, 이메일 검색..."
-            className="ml-2 flex-1 bg-transparent text-[14px] outline-none placeholder:text-[#98A2B3]"
-          />
-        </div>
-      </div>
-
-      {/* 사용자 마일리지 */}
       <div className="mt-5 overflow-hidden rounded-[20px] border border-[#E4E7EC] bg-white">
-        {/* 헤더 */}
-        <div className="grid grid-cols-[2fr_2fr_1fr_1fr] border-b border-[#E4E7EC] bg-[#FCFCFD] px-6 py-4 text-[14px] font-semibold text-[#667085]">
+        <div className="grid grid-cols-[2fr_2fr_1fr_1fr] border-b border-[#E4E7EC] bg-[#FCFCFD] px-6 py-4 font-semibold text-[#667085]">
           <div>사용자</div>
           <div>보유 마일리지</div>
-          <div>최근 업데이트</div>
+          <div>상세 정보</div>
           <div className="text-center">액션</div>
         </div>
 
-        {/* 리스트 */}
-        {students.map((student) => (
-          <StudentItem
-            key={student.id}
-            name={student.name}
-            email={student.email}
-            point={student.point}
-            updatedAt={student.updatedAt}
-            // 지급
-            onGive={() => {
-              setSelectedStudent({
-                name: student.name,
-                point: student.point,
-              });
-              setOpenGive(true);
-            }}
-
-            // 회수
-            onTake={() => {
-              setSelectedStudent({
-                name: student.name,
-                point: student.point,
-              });
-
-              setOpenRecall(true);
-            }}
-          />
-        ))}
+        {isLoading ? (
+          // 로딩 중일 때 LoadingSpinner 컴포넌트 호출
+          <LoadingSpinner text="학생 정보를 불러오는 중입니다..." />
+        ) : (
+          students.map((student) => (
+            <StudentItem
+              key={student.userId}
+              name={student.userName}
+              email={student.email}
+              point={student.totalPoint}
+              updatedAt="상세 내역 확인 ➔"
+              onClick={() => router.push(`/contentadmin/point/${student.userId}`)}
+              onGive={() => { setSelectedStudent({ userId: student.userId, name: student.userName, point: student.totalPoint }); setOpenGive(true); }}
+              onTake={() => { setSelectedStudent({ userId: student.userId, name: student.userName, point: student.totalPoint }); setOpenRecall(true); }}
+            />
+          ))
+        )}
       </div>
 
-      {/* 지급/사용 내역 */}
-      <div className="mt-7 overflow-hidden rounded-[20px] border border-[#E4E7EC] bg-white">
-        {/* 제목 */}
-        <div className="border-b border-[#E4E7EC] px-6 py-5">
-          <h2 className="text-[18px] font-bold text-[#111827]">
-            최근 지급/사용 내역
-          </h2>
-        </div>
-
-        {/* 헤더 */}
-        <div className="grid grid-cols-[1fr_1fr_1fr_2fr_1fr_1fr_1fr] border-b border-[#E4E7EC] bg-[#FCFCFD] px-6 py-4 text-[14px] font-semibold text-[#667085]">
-          <div>사용자</div>
-          <div>유형</div>
-          <div>금액</div>
-          <div>사유</div>
-          <div>처리자</div>
-          <div>일시</div>
-          <div className="text-center">상세</div>
-        </div>
-
-        {/* 리스트 */}
-        {pointLogs.map((log) => (
-          <PointItem
-            key={log.id}
-            name={log.name}
-            type={
-              log.type as
-                | "적립"
-                | "사용"
-            }
-            amount={log.amount}
-            reason={log.reason}
-            manager={log.manager}
-            createdAt={log.createdAt}
-            onDetail={() =>
-              router.push(
-                `/contentadmin/point/${log.id}`
-              )
-            }
-          />
-        ))}
-      </div>
-
-      {/* 지급 모달 */}
-      <GiveForm
-        open={openGive}
-        studentName={
-          selectedStudent?.name || ""
-        }
-        currentPoint={
-          selectedStudent?.point || 0
-        }
-        onClose={() =>
-          setOpenGive(false)
-        }
-        onSubmit={() => {
-          setOpenGive(false);
-          setCompleteText(
-            "마일리지가 지급되었습니다."
-          );
-          setCompleteOpen(true);
-        }}
-      />
-
-      {/* 회수 모달 */}
-      <RecallForm
-        open={openRecall}
-        studentName={
-          selectedStudent?.name || ""
-        }
-        currentPoint={
-          selectedStudent?.point || 0
-        }
-        onClose={() =>
-          setOpenRecall(false)
-        }
-        onSubmit={() => {
-          setOpenRecall(false);
-          setCompleteText(
-            "마일리지가 회수되었습니다."
-          );
-          setCompleteOpen(true);
-        }}
-      />
-      {/* 완료 모달 */}
-      <CompleteModal
-        open={completeOpen}
-        title="처리 완료"
-        description={completeText}
-        buttonText="확인"
-        onConfirm={() =>
-          setCompleteOpen(false)
-        }
-      />
+      <GiveForm open={openGive} studentName={selectedStudent?.name || ""} currentPoint={selectedStudent?.point || 0} onClose={() => setOpenGive(false)} onSubmit={handleGivePoints} />
+      <RecallForm open={openRecall} studentName={selectedStudent?.name || ""} currentPoint={selectedStudent?.point || 0} onClose={() => setOpenRecall(false)} onSubmit={handleRecallPoints} />
+      <CompleteModal open={completeOpen} title="처리 완료" description={completeText} buttonText="확인" onConfirm={() => setCompleteOpen(false)} />
     </div>
   );
 }

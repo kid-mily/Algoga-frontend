@@ -1,3 +1,5 @@
+// 메인 페이지
+
 import LearnMethod from "@/features/main/components/LearningMethod";
 import NoticeSection from "@/features/main/components/NoticeSection";
 import AiSchedule from "@/features/main/components/AiSchedule";
@@ -10,7 +12,7 @@ export default function Home() {
     <div className="p-10 w-full min-h-screen bg-[#f5f6f8]">
         
         {/* 베너 */}
-        <div className="max-w-5xl mx-auto mb-5">
+        <div className="max-w-4xl mx-auto mb-5">
             <Banner/>
         </div>
 
@@ -19,9 +21,9 @@ export default function Home() {
         <MapSection />
       </div>
 
-      {/* 아래 영역 */}
+      {/* 캘린더 */}
       {/* 학습방법 */}
-      <div className="max-w-5xl w-full mx-auto mt-5">
+      <div className="max-w-4xl w-full mx-auto mt-5">
         <Calender/>
         <LearnMethod />
         {/* 공지사항, ai 일정 추천 */}
