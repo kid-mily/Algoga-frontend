@@ -6,10 +6,11 @@ import {
   getLectureCountriesAction,
   getLectureListAction,
 } from "../actions";
+import { AdminCourseRecord, CourseCountry } from "../types";
 
 export function useAdminLectureList() {
-  const [lectures, setLectures] = useState<any[]>([]);
-  const [countries, setCountries] = useState<any[]>([]);
+  const [lectures, setLectures] = useState<AdminCourseRecord[]>([]);
+  const [countries, setCountries] = useState<CourseCountry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
 
@@ -25,8 +26,10 @@ export function useAdminLectureList() {
 
       setLectures(courseData);
       setCountries(countryData);
-    } catch (error: any) {
-      setFetchError(error.message || "강의 목록을 불러오지 못했습니다.");
+    } catch (error: unknown) {
+      setFetchError(
+        error instanceof Error ? error.message : "강의 목록을 불러오지 못했습니다."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +46,8 @@ export function useAdminLectureList() {
   };
 
   useEffect(() => {
-    fetchLectures();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchLectures();
   }, []);
 
   return {

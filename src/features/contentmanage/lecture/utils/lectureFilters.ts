@@ -1,6 +1,14 @@
 import { getIsPublic, getLectureCountryId } from "./lectureFormatters";
+import {
+  AdminCourseRecord,
+  CourseCountry,
+  LectureFilterParams,
+} from "../types";
 
-export function withCountryNames(lectures: any[], countries: any[]) {
+export function withCountryNames(
+  lectures: AdminCourseRecord[],
+  countries: CourseCountry[]
+) {
   const countryNameMap = new Map<number, string>();
 
   countries.forEach((country) => {
@@ -22,7 +30,7 @@ export function withCountryNames(lectures: any[], countries: any[]) {
   });
 }
 
-export function getCountryOptions(lectures: any[]) {
+export function getCountryOptions(lectures: AdminCourseRecord[]) {
   const names = lectures
     .map((lecture) => lecture.countryName)
     .filter((country): country is string => Boolean(country));
@@ -30,13 +38,10 @@ export function getCountryOptions(lectures: any[]) {
   return Array.from(new Set(names));
 }
 
-type FilterParams = {
-  searchKeyword: string;
-  countryFilter: string;
-  statusFilter: string;
-};
-
-export function filterLectures(lectures: any[], filters: FilterParams) {
+export function filterLectures(
+  lectures: AdminCourseRecord[],
+  filters: LectureFilterParams
+) {
   const keyword = filters.searchKeyword.trim().toLowerCase();
 
   return lectures.filter((lecture) => {

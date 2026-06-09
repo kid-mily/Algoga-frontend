@@ -97,6 +97,7 @@ export const createAdminCourse = async (
       title: payload.title.trim(),
       description: payload.description.trim(),
       price: payload.price,
+      mileage: payload.mileage ?? 0,
       level: payload.level,
       status: payload.status, 
       isPublic: payload.status === "PUBLISHED" 
@@ -172,6 +173,7 @@ export const updateAdminCourse = async (courseId: number, payload: any) => {
       title: payload.title?.trim(),
       description: payload.description?.trim(),
       price: payload.price,
+      mileage: payload.mileage ?? 0,
       level: payload.level,
       status: payload.status, 
       isPublic: payload.status === "PUBLISHED" 

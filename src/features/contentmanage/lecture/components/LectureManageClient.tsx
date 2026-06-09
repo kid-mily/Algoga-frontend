@@ -27,7 +27,6 @@ const getErrorMessage = (error: unknown, fallbackMessage: string) => {
 
 export default function LectureManageClient() {
   const router = useRouter();
-
   const { lectures, countries, isLoading, fetchError, removeLecture } =
     useAdminLectureList();
 
@@ -35,12 +34,10 @@ export default function LectureManageClient() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [countryFilter, setCountryFilter] = useState("all");
-
   const [actionError, setActionError] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
-
   const [studentModalOpen, setStudentModalOpen] = useState(false);
   const [targetCourseForStudent, setTargetCourseForStudent] =
     useState<{ id: number; title: string } | null>(null);
@@ -92,75 +89,83 @@ export default function LectureManageClient() {
       setSelectedCourseId(null);
     } catch (error: unknown) {
       setDeleteModalOpen(false);
-      setActionError(getErrorMessage(error, "Failed to delete lecture."));
+      setActionError(getErrorMessage(error, "강의 삭제에 실패했습니다."));
     }
   };
 
   return (
-    <div className="w-full">
-      <SimpleSubHeader
-        title="강의 관리"
-        description="나라에 대한 강의를 등록하고 수정합니다."
-      />
+    <main className="w-full" aria-labelledby="lecture-management-title">
+      <section aria-labelledby="lecture-management-title">
+        <SimpleSubHeader
+          title="강의 관리"
+          description="국가별 강의 콘텐츠를 등록하고 관리합니다."
+        />
+      </section>
 
-      {isLoading && <AdminLoadingState text="Loading lectures..." />}
-
+      {isLoading && <AdminLoadingState text="강의를 불러오는 중..." />}
       {!isLoading && fetchError && <AdminErrorBanner message={fetchError} />}
 
       {!isLoading && !fetchError && (
         <>
           <AdminErrorBanner message={actionError} />
 
-          <LectureToolbar
-            searchKeyword={searchKeyword}
-            countryFilter={countryFilter}
-            statusFilter={statusFilter}
-            countryOptions={countryOptions}
-            onSearchKeywordChange={(value) => {
-              setSearchKeyword(value);
-              resetPage();
-            }}
-            onCountryFilterChange={(value) => {
-              setCountryFilter(value);
-              resetPage();
-            }}
-            onStatusFilterChange={(value) => {
-              setStatusFilter(value);
-              resetPage();
-            }}
-          />
-
-          <LectureTable
-            lectures={currentLectures}
-            totalCount={filteredLectures.length}
-            onChapterManage={(courseId) =>
-              router.push(`/contentadmin/lecture/${courseId}/chapter/new`)
-            }
-            onUsersClick={(course) => {
-              setTargetCourseForStudent(course);
-              setStudentModalOpen(true);
-            }}
-            onEditClick={(courseId) =>
-              router.push(`/contentadmin/lecture/${courseId}/edit`)
-            }
-            onDeleteClick={(courseId) => {
-              setSelectedCourseId(courseId);
-              setDeleteModalOpen(true);
-            }}
-          >
-            <LecturePagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
+          <section aria-label="강의 검색 및 필터 영역">
+            <LectureToolbar
+              searchKeyword={searchKeyword}
+              countryFilter={countryFilter}
+              statusFilter={statusFilter}
+              countryOptions={countryOptions}
+              onSearchKeywordChange={(value) => {
+                setSearchKeyword(value);
+                resetPage();
+              }}
+              onCountryFilterChange={(value) => {
+                setCountryFilter(value);
+                resetPage();
+              }}
+              onStatusFilterChange={(value) => {
+                setStatusFilter(value);
+                resetPage();
+              }}
             />
-          </LectureTable>
+          </section>
+
+          <section aria-labelledby="lecture-list-title">
+            <h2 id="lecture-list-title" className="sr-only">
+              강의 목록
+            </h2>
+            <LectureTable
+              lectures={currentLectures}
+              totalCount={filteredLectures.length}
+              onChapterManage={(courseId) =>
+                router.push(`/contentadmin/lecture/${courseId}/chapter/new`)
+              }
+              onUsersClick={(course) => {
+                setTargetCourseForStudent(course);
+                setStudentModalOpen(true);
+              }}
+              onEditClick={(courseId) =>
+                router.push(`/contentadmin/lecture/${courseId}/edit`)
+              }
+              onDeleteClick={(courseId) => {
+                setSelectedCourseId(courseId);
+                setDeleteModalOpen(true);
+              }}
+            >
+              <LecturePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </LectureTable>
+          </section>
         </>
       )}
 
       <Modal
         open={deleteModalOpen}
         title="강의 삭제"
-        description="강의를 삭제하시겠습니까? 관련된 챕터도 모두 삭제됩니다."
+        description="정말 이 강의를 삭제하시겠습니까? 연결된 챕터도 함께 삭제됩니다."
         confirmText="삭제"
         cancelText="취소"
         onConfirm={handleDeleteConfirm}
@@ -172,8 +177,8 @@ export default function LectureManageClient() {
 
       <CompleteModal
         open={completeModalOpen}
-        title="강의 삭제"
-        description="강의 삭제가 완료되었습니다."
+        title="삭제 완료"
+        description="강의가 삭제되었습니다."
         buttonText="확인"
         onConfirm={() => setCompleteModalOpen(false)}
       />
@@ -184,6 +189,6 @@ export default function LectureManageClient() {
         courseId={targetCourseForStudent?.id || null}
         courseTitle={targetCourseForStudent?.title || ""}
       />
-    </div>
+    </main>
   );
 }

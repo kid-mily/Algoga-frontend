@@ -1,12 +1,14 @@
-export function getLectureId(lecture: any) {
-  return lecture.courseId || lecture.course_id || lecture.id;
+import { AdminCourseRecord } from "../types";
+
+export function getLectureId(lecture: AdminCourseRecord) {
+  return lecture.courseId || lecture.course_id || lecture.id || 0;
 }
 
-export function getLectureCountryId(lecture: any) {
-  return lecture.countryId || lecture.country_id;
+export function getLectureCountryId(lecture: AdminCourseRecord) {
+  return lecture.countryId || lecture.country_id || 0;
 }
 
-export function getIsPublic(lecture: any) {
+export function getIsPublic(lecture: AdminCourseRecord) {
   if (lecture.status) {
     const status = String(lecture.status).toUpperCase();
 
