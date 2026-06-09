@@ -6,7 +6,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import QuizForm from "@/features/contentmanage/quiz/QuizForm";
 import SubHeader from "@/features/contentmanage/common/SubHeader";
 import { getAdminQuizDetail } from "@/features/services/adminQuiz.service";
-import { AdminQuiz } from "@/features/contentmanage/types";
+import { AdminQuiz } from "@/features/contentmanage/quiz/types";
 // 🌟 스피너 컴포넌트 추가
 import LoadingSpinner from "@/features/common/LoadingSpinner";
 

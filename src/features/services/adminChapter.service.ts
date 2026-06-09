@@ -1,7 +1,10 @@
 // src/features/services/adminChapter.service.ts
 
 import { adminApi } from "@/lib/api";
-import { AdminChapter , CreateAdminChapterPayload} from "../contentmanage/types";
+import {
+  AdminChapter,
+  CreateAdminChapterPayload,
+} from "../contentmanage/lecture/types";
 
 // 1. 챕터 목록 조회
 export const getAdminChapters = async (courseId: number): Promise<AdminChapter[]> => {
@@ -20,6 +23,7 @@ export const createAdminChapter = async (payload: CreateAdminChapterPayload) => 
     const formData = new FormData();
     const requestData = {
       title: payload.title,
+      description: payload.description,
       durationSeconds: payload.durationSeconds,
       chapterOrder: payload.chapterOrder,
     };
@@ -41,6 +45,7 @@ export const updateAdminChapter = async (
   chapterId: number,
   payload: {
     title: string;
+    description: string;
     durationSeconds: number;
     chapterOrder: number;
     video?: File | null;
@@ -50,6 +55,7 @@ export const updateAdminChapter = async (
     const formData = new FormData();
     const requestData = {
       title: payload.title,
+      description: payload.description,
       durationSeconds: payload.durationSeconds,
       chapterOrder: payload.chapterOrder,
     };

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CourseCountry } from "../types"; 
+import { CourseCountry } from "../types";
 import {
-  createAdminCourse,
-  getCourseCountries,
-} from "@/features/services/adminCourse.service";
+  createLectureAction,
+  getLectureCountriesAction,
+} from "../actions";
 
 interface LectureFormProps {
   onNext?: (courseId: number) => void;
@@ -54,7 +54,7 @@ export default function LectureForm({ onNext }: LectureFormProps) {
     const fetchCountries = async () => {
       try {
         setIsCountryLoading(true);
-        const data = await getCourseCountries();
+        const data = await getLectureCountriesAction();
         setCountries(data);
       } catch (error: any) {
         setGlobalError(error.message || "국가 목록을 불러오지 못했습니다.");
@@ -127,7 +127,7 @@ export default function LectureForm({ onNext }: LectureFormProps) {
 
       const targetStatus = formData.isPublic === "true" ? "PUBLISHED" : "DRAFT";
 
-      const createdCourse = await createAdminCourse({
+      const createdCourse = await createLectureAction({
         countryId: Number(formData.countryId),
         title: formData.title.trim(),
         description: formData.description.trim(),

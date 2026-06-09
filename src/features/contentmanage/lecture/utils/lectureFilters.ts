@@ -1,0 +1,63 @@
+import { getIsPublic, getLectureCountryId } from "./lectureFormatters";
+
+export function withCountryNames(lectures: any[], countries: any[]) {
+  const countryNameMap = new Map<number, string>();
+
+  countries.forEach((country) => {
+    countryNameMap.set(country.countryId, country.countryName);
+  });
+
+  return lectures.map((lecture) => {
+    const countryId = getLectureCountryId(lecture);
+    const mappedCountryName = countryNameMap.get(countryId);
+
+    return {
+      ...lecture,
+      countryName:
+        lecture.countryName ||
+        lecture.country_name ||
+        mappedCountryName ||
+        `국가 ID ${countryId}`,
+    };
+  });
+}
+
+export function getCountryOptions(lectures: any[]) {
+  const names = lectures
+    .map((lecture) => lecture.countryName)
+    .filter((country): country is string => Boolean(country));
+
+  return Array.from(new Set(names));
+}
+
+type FilterParams = {
+  searchKeyword: string;
+  countryFilter: string;
+  statusFilter: string;
+};
+
+export function filterLectures(lectures: any[], filters: FilterParams) {
+  const keyword = filters.searchKeyword.trim().toLowerCase();
+
+  return lectures.filter((lecture) => {
+    const title = lecture.title || "";
+    const description = lecture.description || "";
+    const countryName = lecture.countryName || "";
+    const isPublic = getIsPublic(lecture);
+
+    const matchesSearch =
+      keyword === "" ||
+      title.toLowerCase().includes(keyword) ||
+      description.toLowerCase().includes(keyword);
+
+    const matchesCountry =
+      filters.countryFilter === "all" || countryName === filters.countryFilter;
+
+    const matchesStatus =
+      filters.statusFilter === "all" ||
+      (filters.statusFilter === "public" && isPublic) ||
+      (filters.statusFilter === "private" && !isPublic);
+
+    return matchesSearch && matchesCountry && matchesStatus;
+  });
+}

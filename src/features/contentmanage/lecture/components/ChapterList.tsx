@@ -7,7 +7,7 @@ import ChapterCard from "./ChapterCard";
 import CompleteModal from "@/features/common/CompleteModal";
 import Modal from "@/features/common/Modal";
 
-import { deleteAdminChapter, getAdminChapters } from "@/features/services/adminChapter.service";
+import { deleteChapterAction, getChapterListAction } from "../actions";
 import { AdminChapter } from "../types";
 
 interface ChapterListProps {
@@ -44,7 +44,7 @@ export default function ChapterList({ lectureId, hideEdit = false }: ChapterList
     try {
       setIsLoading(true);
       setErrorMessage("");
-      const data = await getAdminChapters(lectureId);
+      const data = await getChapterListAction(lectureId);
       setChapters(data);
     } catch (error: any) {
       setErrorMessage("챕터 목록을 불러오지 못했습니다.");
@@ -61,7 +61,7 @@ export default function ChapterList({ lectureId, hideEdit = false }: ChapterList
     if (!selectedChapterId) return;
     try {
       setErrorMessage("");
-      await deleteAdminChapter(lectureId, selectedChapterId);
+      await deleteChapterAction(lectureId, selectedChapterId);
       setChapters((prev) => prev.filter((chapter) => chapter.chapterId !== selectedChapterId));
       setOpenDeleteModal(false);
       setOpenDeleteCompleteModal(true);

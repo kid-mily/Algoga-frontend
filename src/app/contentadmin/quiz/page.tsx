@@ -7,7 +7,8 @@ import QuizList from "@/features/contentmanage/quiz/QuizList";
 import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 import { getAdminCourses } from "@/features/services/adminCourse.service";
 import { getAdminQuizzes } from "@/features/services/adminQuiz.service";
-import { AdminCourse, AdminQuiz } from "@/features/contentmanage/types";
+import { AdminCourse } from "@/features/contentmanage/lecture/types";
+import { AdminQuiz } from "@/features/contentmanage/quiz/types";
 // 🌟 스피너 컴포넌트 추가
 import LoadingSpinner from "@/features/common/LoadingSpinner";
 

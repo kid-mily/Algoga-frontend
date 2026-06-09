@@ -134,3 +134,11 @@ export interface Student {
   email: string;
   enrolledAt: string; // 수강 시작일 등
 }
+
+// 수강생 조회
+export interface Student {
+  userId: number;
+  userName: string;
+  email: string;
+  enrolledAt: string; // 수강 시작일 등
+}

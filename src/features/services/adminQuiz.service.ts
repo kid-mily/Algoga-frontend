@@ -1,5 +1,9 @@
 import { adminApi } from "@/lib/api";
-import { AdminQuiz, CreateAdminQuizPayload,UpdateAdminQuizPayload } from "../contentmanage/types"
+import {
+  AdminQuiz,
+  CreateAdminQuizPayload,
+  UpdateAdminQuizPayload,
+} from "../contentmanage/quiz/types";
 
 const getErrorMessage = (error: any, fallbackMessage: string) => {
   return error?.response?.data?.message || error?.message || fallbackMessage;

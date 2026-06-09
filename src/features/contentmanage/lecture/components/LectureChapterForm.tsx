@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ChapterItem from "./ChapterItem";
-import { createAdminChapter } from "@/features/services/adminChapter.service";
+import { createChapterAction } from "../actions";
 
 interface Chapter {
   id: number;
@@ -148,7 +148,7 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
       setIsSubmitting(true);
       for (const [index, chapter] of chapters.entries()) {
         if (!chapter.video) continue;
-        await createAdminChapter({
+        await createChapterAction({
           courseId,
           title: chapter.title,
           description: chapter.description,
