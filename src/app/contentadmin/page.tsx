@@ -1,9 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Modal from "@/features/common/Modal";
-import CheckModal from "@/features/common/CheckModal";
-import CompleteModal from "@/features/common/CompleteModal";
 
 export default function ContentPage() {
   const [open, setOpen] = useState(true);

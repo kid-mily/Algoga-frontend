@@ -62,6 +62,24 @@ export interface AdminChapter {
 
 export type AdminChapterRecord = AdminChapter & {
   id?: number;
+  chapter_id?: number;
+  course_id?: number;
+  chapterTitle?: string;
+  chapter_title?: string;
+  chapterDescription?: string;
+  chapter_description?: string;
+  chapterContent?: string;
+  chapter_content?: string;
+  content?: string;
+  contents?: string;
+  summary?: string;
+  detail?: string;
+  details?: string;
+  intro?: string;
+  introduction?: string;
+  duration_seconds?: number;
+  chapter_order?: number;
+  video_url?: string;
 };
 
 export interface CreateAdminChapterPayload {
