@@ -15,26 +15,9 @@ import {
 import {
   CreateAdminChapterPayload,
   CreateAdminCoursePayload,
+  UpdateChapterPayload,
+  UpdateLecturePayload,
 } from "./types";
-
-type UpdateLecturePayload = {
-  countryId: number;
-  title: string;
-  description: string;
-  price: number;
-  level: string;
-  status: string;
-  thumbnail?: File;
-  files?: File[];
-};
-
-type UpdateChapterPayload = {
-  title: string;
-  description: string;
-  durationSeconds: number;
-  chapterOrder: number;
-  video?: File | null;
-};
 
 export const getLectureListAction = () => {
   return getAdminCourses();

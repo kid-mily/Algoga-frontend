@@ -3,21 +3,11 @@
 import { useState } from "react";
 import ChapterItem from "./ChapterItem";
 import { createChapterAction } from "../actions";
-
-interface Chapter {
-  id: number;
-  title: string;
-  description: string;
-  video: File | null;
-  preview: string;
-  durationSeconds: number;
-}
-
-interface LectureChapterFormProps {
-  courseId: number;
-  onPrev: () => void;
-  onSubmit: () => void;
-}
+import {
+  ChapterErrors,
+  LectureChapterDraft,
+  LectureChapterFormProps,
+} from "../types";
 
 const formatDuration = (durationSeconds: number) => {
   if (!durationSeconds || durationSeconds <= 0) return "";
@@ -52,14 +42,12 @@ const getVideoDurationSeconds = (file: File): Promise<number> => {
 };
 
 export default function LectureChapterForm({ courseId, onPrev, onSubmit }: LectureChapterFormProps) {
-  const [chapters, setChapters] = useState<Chapter[]>([
+  const [chapters, setChapters] = useState<LectureChapterDraft[]>([
     { id: 1, title: "", description: "", video: null, preview: "", durationSeconds: 0 },
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // 🌟 전역 에러 및 각 챕터별 인라인 에러 관리 상태
   const [globalError, setGlobalError] = useState("");
-  const [chapterErrors, setChapterErrors] = useState<{ [key: number]: any }>({});
+  const [chapterErrors, setChapterErrors] = useState<Record<number, ChapterErrors>>({});
 
   const handleAddChapter = () => {
     if (chapters.length >= 5) {
@@ -73,23 +61,23 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
   };
 
   const handleRemoveChapter = (id: number) => {
-    setChapters((prev) => prev.filter((ch) => ch.id !== id).map((ch, idx) => ({ ...ch, id: idx + 1 })));
+    setChapters((prev) => prev.filter((chapter) => chapter.id !== id).map((chapter, index) => ({ ...chapter, id: index + 1 })));
     setChapterErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors[id];
-      return newErrors;
+      const nextErrors = { ...prev };
+      delete nextErrors[id];
+      return nextErrors;
     });
   };
 
   const handleTitleChange = (id: number, value: string) => {
-    setChapters((prev) => prev.map((ch) => (ch.id === id ? { ...ch, title: value } : ch)));
+    setChapters((prev) => prev.map((chapter) => (chapter.id === id ? { ...chapter, title: value } : chapter)));
     if (chapterErrors[id]?.title) {
       setChapterErrors((prev) => ({ ...prev, [id]: { ...prev[id], title: "" } }));
     }
   };
 
   const handleDescriptionChange = (id: number, value: string) => {
-    setChapters((prev) => prev.map((ch) => (ch.id === id ? { ...ch, description: value } : ch)));
+    setChapters((prev) => prev.map((chapter) => (chapter.id === id ? { ...chapter, description: value } : chapter)));
     if (chapterErrors[id]?.description) {
       setChapterErrors((prev) => ({ ...prev, [id]: { ...prev[id], description: "" } }));
     }
@@ -104,19 +92,19 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
     const preview = URL.createObjectURL(file);
     try {
       const durationSeconds = await getVideoDurationSeconds(file);
-      setChapters((prev) => prev.map((ch) => (ch.id === id ? { ...ch, video: file, preview, durationSeconds } : ch)));
+      setChapters((prev) => prev.map((chapter) => (chapter.id === id ? { ...chapter, video: file, preview, durationSeconds } : chapter)));
       if (chapterErrors[id]?.video) {
         setChapterErrors((prev) => ({ ...prev, [id]: { ...prev[id], video: "" } }));
       }
-    } catch (error: any) {
+    } catch {
       URL.revokeObjectURL(preview);
-      setChapterErrors((prev) => ({ ...prev, [id]: { ...prev[id], video: "영상 길이를 확인하지 못했습니다." } }));
+      setChapterErrors((prev) => ({ ...prev, [id]: { ...prev[id], video: "영상 길이를 확인할 수 없습니다." } }));
     }
   };
 
   const validateChapters = () => {
     setGlobalError("");
-    const newErrors: { [key: number]: any } = {};
+    const newErrors: Record<number, ChapterErrors> = {};
     let hasError = false;
 
     if (!courseId) {
@@ -125,11 +113,22 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
     }
 
     for (const chapter of chapters) {
-      const errors: any = {};
-      if (!chapter.title.trim()) { errors.title = "챕터 제목을 입력해주세요."; hasError = true; }
-      if (!chapter.description.trim()) { errors.description = "챕터 설명을 입력해주세요."; hasError = true; }
-      if (!chapter.video) { errors.video = "영상을 업로드해주세요."; hasError = true; }
-      else if (chapter.durationSeconds < 1) { errors.video = "영상 길이는 1초 이상이어야 합니다."; hasError = true; }
+      const errors: ChapterErrors = {};
+      if (!chapter.title.trim()) {
+        errors.title = "챕터 제목을 입력해주세요.";
+        hasError = true;
+      }
+      if (!chapter.description.trim()) {
+        errors.description = "챕터 설명을 입력해주세요.";
+        hasError = true;
+      }
+      if (!chapter.video) {
+        errors.video = "챕터 영상을 업로드해주세요.";
+        hasError = true;
+      } else if (chapter.durationSeconds < 1) {
+        errors.video = "영상 길이는 1초 이상이어야 합니다.";
+        hasError = true;
+      }
 
       if (Object.keys(errors).length > 0) newErrors[chapter.id] = errors;
     }
@@ -158,19 +157,21 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
         });
       }
       onSubmit();
-    } catch (error: any) {
-      setGlobalError(error.message || "챕터 등록에 실패했습니다. 서버 로그를 확인해주세요.");
+    } catch (error) {
+      setGlobalError(error instanceof Error ? error.message : "챕터 등록에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="rounded-[20px] border border-[#E4E7EC] bg-white p-6">
-      <div className="flex items-center justify-between">
+    <section aria-labelledby="lecture-chapter-form-title" className="rounded-[20px] border border-[#E4E7EC] bg-white p-6">
+      <header className="flex items-center justify-between">
         <div>
-          <h2 className="text-[24px] font-bold text-[#111827]">챕터 상세 정보</h2>
-          <p className="mt-1 text-[15px] text-[#98A2B3]">강의 챕터를 구성합니다</p>
+          <h2 id="lecture-chapter-form-title" className="text-[24px] font-bold text-[#111827]">
+            챕터 상세 정보
+          </h2>
+          <p className="mt-1 text-[15px] text-[#98A2B3]">강의 챕터를 구성합니다.</p>
         </div>
         <button
           type="button"
@@ -178,19 +179,22 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
           disabled={isSubmitting}
           className="h-[44px] rounded-full bg-[#439A97] px-5 text-[14px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#CFE5E4]"
         >
-          + 챕터 추가
+          챕터 추가
         </button>
-      </div>
+      </header>
 
       {globalError && (
-        <div className="mt-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]">
-          🚨 {globalError}
-        </div>
+        <p
+          role="alert"
+          className="mt-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]"
+        >
+          {globalError}
+        </p>
       )}
 
-      <div className="mt-6 space-y-4">
+      <ol className="mt-6 space-y-4" aria-label="챕터 목록">
         {chapters.map((chapter) => (
-          <div key={chapter.id}>
+          <li key={chapter.id}>
             <ChapterItem
               id={chapter.id}
               title={chapter.title}
@@ -205,14 +209,14 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
             />
             {chapter.video && !chapterErrors[chapter.id]?.video && (
               <p className="mt-2 text-[13px] font-medium text-[#439A97]">
-                ✅ 영상 길이: {formatDuration(chapter.durationSeconds)}
+                영상 길이: {formatDuration(chapter.durationSeconds)}
               </p>
             )}
-          </div>
+          </li>
         ))}
-      </div>
+      </ol>
 
-      <div className="mt-8 flex justify-between">
+      <footer className="mt-8 flex justify-between">
         <button
           type="button"
           onClick={onPrev}
@@ -229,7 +233,7 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
         >
           {isSubmitting ? "챕터 등록 중..." : "강의 등록 완료"}
         </button>
-      </div>
-    </div>
+      </footer>
+    </section>
   );
 }

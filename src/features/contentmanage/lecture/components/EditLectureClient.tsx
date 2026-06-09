@@ -8,10 +8,7 @@ import AdminLoadingState from "@/features/common/AdminLoadingState";
 import { updateLectureAction } from "../actions";
 import { useAdminLectureDetail } from "../hooks/useAdminLectureDetail";
 import { getIsPublic } from "../utils/lectureFormatters";
-
-type EditLectureClientProps = {
-  lectureId: number;
-};
+import { EditLectureClientProps, EditLecturePayload } from "../types";
 
 export default function EditLectureClient({
   lectureId,
@@ -19,7 +16,7 @@ export default function EditLectureClient({
   const { lecture, isLoading, error } = useAdminLectureDetail(lectureId);
 
   const handleEdit = async (
-    data: any,
+    data: EditLecturePayload,
     thumbnailFile?: File,
     attachments?: File[]
   ) => {
@@ -34,6 +31,7 @@ export default function EditLectureClient({
         title: data.title,
         description: data.description,
         price: Number(data.price),
+        mileage: Number(data.mileage || 0),
         level: lecture.level || "BEGINNER",
         status: targetStatus,
         thumbnail: thumbnailFile,
@@ -41,28 +39,32 @@ export default function EditLectureClient({
       });
 
       return true;
-    } catch (error: any) {
-      alert(error.message || "강의 수정에 실패했습니다.");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "강의 수정에 실패했습니다.";
+      alert(message);
       return false;
     }
   };
 
   if (isLoading) {
-    return <AdminLoadingState text="강의 정보를 불러오는 중입니다..." />;
+    return <AdminLoadingState text="강의를 불러오는 중..." />;
   }
 
   if (error || !lecture) {
-    return <AdminErrorBanner message={error || "강의 정보를 찾을 수 없습니다."} />;
+    return <AdminErrorBanner message={error || "강의를 찾을 수 없습니다."} />;
   }
 
   return (
-    <div className="p-6">
-      <LectureHeader
-        title="강의 수정"
-        description="여행 강의를 수정하고 관리합니다"
-      />
+    <main className="p-6" aria-labelledby="edit-lecture-title">
+      <section aria-labelledby="edit-lecture-title">
+        <LectureHeader
+          title="강의 수정"
+          description="강의 콘텐츠와 설정을 수정합니다."
+        />
+      </section>
 
-      <div className="mt-6">
+      <section className="mt-6" aria-label="강의 수정 폼">
         <LectureUpdateForm
           initialData={{
             country: lecture.countryName || String(lecture.countryId || ""),
@@ -74,7 +76,7 @@ export default function EditLectureClient({
           }}
           onSubmit={handleEdit}
         />
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

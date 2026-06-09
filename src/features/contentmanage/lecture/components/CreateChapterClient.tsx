@@ -8,10 +8,7 @@ import ChapterForm from "@/features/contentmanage/lecture/components/ChapterForm
 import CompleteModal from "@/features/common/CompleteModal";
 
 import { createChapterAction, getChapterListAction } from "../actions";
-
-type CreateChapterClientProps = {
-  lectureId: number;
-};
+import { ChapterSubmitPayload, CreateChapterClientProps } from "../types";
 
 export default function CreateChapterClient({
   lectureId,
@@ -22,14 +19,14 @@ export default function CreateChapterClient({
     description: "",
   });
 
-  const handleCreate = async (data: any) => {
+  const handleCreate = async (data: ChapterSubmitPayload) => {
     const durationSeconds = Number(data.duration);
 
     if (Number.isNaN(durationSeconds) || durationSeconds < 1) {
       setAlertModal({
         open: true,
-        title: "Input error",
-        description: "Duration must be a number greater than 0 seconds.",
+        title: "입력 오류",
+        description: "영상 길이는 0초보다 큰 숫자여야 합니다.",
       });
       return false;
     }
@@ -40,8 +37,8 @@ export default function CreateChapterClient({
       if (currentChapters.length >= 5) {
         setAlertModal({
           open: true,
-          title: "Chapter limit",
-          description: "You can register up to 5 chapters.",
+          title: "챕터 개수 제한",
+          description: "챕터는 최대 5개까지 등록할 수 있습니다.",
         });
         return false;
       }
@@ -61,36 +58,41 @@ export default function CreateChapterClient({
       });
 
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       setAlertModal({
         open: true,
-        title: "Create failed",
-        description: error.message || "Failed to create chapter.",
+        title: "등록 실패",
+        description:
+          error instanceof Error ? error.message : "챕터 등록에 실패했습니다.",
       });
       return false;
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] px-10 py-10">
-      <SubHeader
-        backHref="/contentadmin/lecture"
-        backText="강의관리로 돌아가기"
-        title="챕터관리"
-        description="새로운 챕터를 등록하고 수정합니다."
-      />
+    <main className="min-h-screen bg-[#F8F8F8] px-10 py-10">
+      <section aria-labelledby="chapter-management-title">
+        <SubHeader
+          backHref="/contentadmin/lecture"
+          backText="강의 목록으로"
+          title="챕터 관리"
+          description="강의 챕터를 등록하고 관리합니다."
+        />
+      </section>
 
       <ChapterList lectureId={lectureId} />
 
-      <ChapterForm mode="create" onSubmit={handleCreate} />
+      <section aria-label="챕터 등록 폼">
+        <ChapterForm mode="create" onSubmit={handleCreate} />
+      </section>
 
       <CompleteModal
         open={alertModal.open}
         title={alertModal.title}
         description={alertModal.description}
-        buttonText="OK"
+        buttonText="확인"
         onConfirm={() => setAlertModal((prev) => ({ ...prev, open: false }))}
       />
-    </div>
+    </main>
   );
 }

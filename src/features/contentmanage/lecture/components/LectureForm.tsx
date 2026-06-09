@@ -1,24 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CourseCountry } from "../types";
-import {
-  createLectureAction,
-  getLectureCountriesAction,
-} from "../actions";
-
-interface LectureFormProps {
-  onNext?: (courseId: number) => void;
-}
-
-interface CourseFormData {
-  countryId: string;
-  title: string;
-  description: string;
-  price: string;
-  level: string;
-  isPublic: string;
-}
+import { FormEvent, useEffect, useState } from "react";
+import { CourseCountry, CourseFormData, LectureFormProps } from "../types";
+import { createLectureAction, getLectureCountriesAction } from "../actions";
 
 export default function LectureForm({ onNext }: LectureFormProps) {
   const [formData, setFormData] = useState<CourseFormData>({
@@ -26,20 +10,17 @@ export default function LectureForm({ onNext }: LectureFormProps) {
     title: "",
     description: "",
     price: "",
+    mileage: "",
     level: "BEGINNER",
     isPublic: "true",
   });
 
   const [countries, setCountries] = useState<CourseCountry[]>([]);
   const [isCountryLoading, setIsCountryLoading] = useState(true);
-  
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [preview, setPreview] = useState("");
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // 🌟 에러 상태 관리 추가
   const [errors, setErrors] = useState({
     countryId: "",
     title: "",
@@ -56,8 +37,8 @@ export default function LectureForm({ onNext }: LectureFormProps) {
         setIsCountryLoading(true);
         const data = await getLectureCountriesAction();
         setCountries(data);
-      } catch (error: any) {
-        setGlobalError(error.message || "국가 목록을 불러오지 못했습니다.");
+      } catch (error) {
+        setGlobalError(error instanceof Error ? error.message : "국가 목록을 불러오지 못했습니다.");
       } finally {
         setIsCountryLoading(false);
       }
@@ -71,23 +52,22 @@ export default function LectureForm({ onNext }: LectureFormProps) {
     };
   }, [preview]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // 입력을 시작하면 해당 필드의 에러 메시지 지우기
+
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setErrors((prev) => ({ ...prev, thumbnail: "썸네일은 이미지 파일만 업로드할 수 있습니다." }));
-      e.target.value = "";
+      setErrors((prev) => ({ ...prev, thumbnail: "이미지 파일만 업로드할 수 있습니다." }));
+      event.target.value = "";
       return;
     }
 
@@ -97,24 +77,41 @@ export default function LectureForm({ onNext }: LectureFormProps) {
     setErrors((prev) => ({ ...prev, thumbnail: "" }));
   };
 
-  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    setAttachments(Array.from(e.target.files));
+  const handleAttachmentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return;
+    setAttachments(Array.from(event.target.files));
   };
 
-  const handleNext = async () => {
-    // 🌟 유효성 검사 (alert 대신 에러 상태 설정)
-    let newErrors = { countryId: "", title: "", description: "", price: "", level: "", thumbnail: "" };
+  const handleNext = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const newErrors = { countryId: "", title: "", description: "", price: "", level: "", thumbnail: "" };
     let hasError = false;
 
-    if (!formData.countryId) { newErrors.countryId = "국가를 선택해주세요."; hasError = true; }
-    if (!formData.title.trim()) { newErrors.title = "강의 제목을 입력해주세요."; hasError = true; }
-    if (!formData.description.trim()) { newErrors.description = "강의 설명을 입력해주세요."; hasError = true; }
-    if (!formData.price || Number(formData.price) < 0 || Number.isNaN(Number(formData.price))) { 
-      newErrors.price = "가격은 0원 이상 숫자로 입력해주세요."; hasError = true; 
+    if (!formData.countryId) {
+      newErrors.countryId = "국가를 선택해주세요.";
+      hasError = true;
     }
-    if (!formData.level) { newErrors.level = "강의 난이도를 선택해주세요."; hasError = true; }
-    if (!thumbnail) { newErrors.thumbnail = "썸네일 이미지를 등록해주세요."; hasError = true; }
+    if (!formData.title.trim()) {
+      newErrors.title = "강의 제목을 입력해주세요.";
+      hasError = true;
+    }
+    if (!formData.description.trim()) {
+      newErrors.description = "강의 설명을 입력해주세요.";
+      hasError = true;
+    }
+    if (!formData.price || Number(formData.price) < 0 || Number.isNaN(Number(formData.price))) {
+      newErrors.price = "올바른 가격을 입력해주세요.";
+      hasError = true;
+    }
+    if (!formData.level) {
+      newErrors.level = "강의 난이도를 선택해주세요.";
+      hasError = true;
+    }
+    if (!thumbnail) {
+      newErrors.thumbnail = "썸네일 이미지를 등록해주세요.";
+      hasError = true;
+    }
 
     if (hasError) {
       setErrors(newErrors);
@@ -126,12 +123,12 @@ export default function LectureForm({ onNext }: LectureFormProps) {
       setGlobalError("");
 
       const targetStatus = formData.isPublic === "true" ? "PUBLISHED" : "DRAFT";
-
       const createdCourse = await createLectureAction({
         countryId: Number(formData.countryId),
         title: formData.title.trim(),
         description: formData.description.trim(),
         price: Number(formData.price),
+        mileage: Number(formData.mileage || 0),
         level: formData.level,
         status: targetStatus,
         thumbnail: thumbnail as File,
@@ -141,36 +138,53 @@ export default function LectureForm({ onNext }: LectureFormProps) {
       if (onNext && createdCourse?.courseId) {
         onNext(createdCourse.courseId);
       } else {
-        setGlobalError("강의는 등록되었지만, 정상적인 과정 ID를 반환받지 못했습니다.");
+        setGlobalError("강의는 등록되었지만 강의 ID를 확인하지 못했습니다.");
       }
-    } catch (error: any) {
-      setGlobalError(error.message || "강의 등록에 실패했습니다.");
+    } catch (error) {
+      setGlobalError(error instanceof Error ? error.message : "강의 등록에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="rounded-[20px] border border-[#E4E7EC] bg-white p-6">
-      <h2 className="text-[24px] font-bold text-[#111827]">강의 기본 정보</h2>
-      <p className="mt-1 text-[15px] text-[#98A2B3]">강의의 뼈대가 되는 기본 정보를 입력합니다</p>
+    <form
+      aria-labelledby="lecture-form-title"
+      className="rounded-[20px] border border-[#E4E7EC] bg-white p-6"
+      onSubmit={handleNext}
+    >
+      <header>
+        <h2 id="lecture-form-title" className="text-[24px] font-bold text-[#111827]">
+          강의 기본 정보
+        </h2>
+        <p className="mt-1 text-[15px] text-[#98A2B3]">강의 기본 정보를 입력합니다.</p>
+      </header>
 
-      {/* 🌟 서버 에러 출력 박스 */}
       {globalError && (
-        <div className="mt-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]">
-          🚨 {globalError}
-        </div>
+        <p
+          role="alert"
+          className="mt-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]"
+        >
+          {globalError}
+        </p>
       )}
 
-      <div className="mt-6 space-y-6">
+      <fieldset className="mt-6 space-y-6" disabled={isSubmitting}>
+        <legend className="sr-only">강의 기본 정보 입력 영역</legend>
+
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-[14px] font-semibold text-[#111827]">국가 선택 *</label>
+            <label htmlFor="lecture-country" className="text-[14px] font-semibold text-[#111827]">
+              국가 선택 *
+            </label>
             <select
+              id="lecture-country"
               name="countryId"
               value={formData.countryId}
               onChange={handleChange}
               disabled={isCountryLoading || isSubmitting}
+              aria-invalid={Boolean(errors.countryId)}
+              aria-describedby={errors.countryId ? "lecture-country-error" : undefined}
               className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
                 errors.countryId ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
               }`}
@@ -182,78 +196,130 @@ export default function LectureForm({ onNext }: LectureFormProps) {
                 </option>
               ))}
             </select>
-            {errors.countryId && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.countryId}</p>}
+            {errors.countryId && (
+              <p id="lecture-country-error" className="mt-1 text-[13px] text-[#DC2626]">
+                {errors.countryId}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="text-[14px] font-semibold text-[#111827]">상태 (공개 여부) *</label>
+            <label htmlFor="lecture-status" className="text-[14px] font-semibold text-[#111827]">
+              상태 *
+            </label>
             <select
+              id="lecture-status"
               name="isPublic"
               value={formData.isPublic}
               onChange={handleChange}
               className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none focus:border-[#439A97]"
             >
-              <option value="true">공개 (PUBLISHED)</option>
-              <option value="false">비공개 (DRAFT)</option>
+              <option value="true">공개</option>
+              <option value="false">비공개</option>
             </select>
           </div>
         </div>
 
         <div>
-          <label className="text-[14px] font-semibold text-[#111827]">강의 제목 *</label>
+          <label htmlFor="lecture-title" className="text-[14px] font-semibold text-[#111827]">
+            강의 제목 *
+          </label>
           <input
+            id="lecture-title"
             type="text"
             name="title"
             value={formData.title}
             onChange={handleChange}
-            disabled={isSubmitting}
-            placeholder="예: 프랑스 파리 여행 완벽 가이드"
+            placeholder="강의 제목 입력"
+            aria-invalid={Boolean(errors.title)}
+            aria-describedby={errors.title ? "lecture-title-error" : undefined}
             className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
               errors.title ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
             }`}
           />
-          {errors.title && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.title}</p>}
+          {errors.title && (
+            <p id="lecture-title-error" className="mt-1 text-[13px] text-[#DC2626]">
+              {errors.title}
+            </p>
+          )}
         </div>
 
         <div>
-          <label className="text-[14px] font-semibold text-[#111827]">강의 설명 *</label>
+          <label htmlFor="lecture-description" className="text-[14px] font-semibold text-[#111827]">
+            강의 설명 *
+          </label>
           <textarea
+            id="lecture-description"
             name="description"
             value={formData.description}
             onChange={handleChange}
-            disabled={isSubmitting}
-            placeholder="강의에 대한 상세한 설명을 입력해주세요"
+            placeholder="강의 설명 입력"
+            aria-invalid={Boolean(errors.description)}
+            aria-describedby={errors.description ? "lecture-description-error" : undefined}
             className={`mt-2 h-[120px] w-full resize-none rounded-[12px] border p-4 text-[14px] outline-none transition-colors ${
               errors.description ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
             }`}
           />
-          {errors.description && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.description}</p>}
+          {errors.description && (
+            <p id="lecture-description-error" className="mt-1 text-[13px] text-[#DC2626]">
+              {errors.description}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-[14px] font-semibold text-[#111827]">가격 (원) *</label>
+            <label htmlFor="lecture-price" className="text-[14px] font-semibold text-[#111827]">
+              가격 *
+            </label>
             <input
+              id="lecture-price"
               type="number"
               name="price"
               value={formData.price}
               onChange={handleChange}
-              disabled={isSubmitting}
-              placeholder="예: 50000"
+              placeholder="50000"
+              aria-invalid={Boolean(errors.price)}
+              aria-describedby={errors.price ? "lecture-price-error" : undefined}
               className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
                 errors.price ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
               }`}
             />
-            {errors.price && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.price}</p>}
+            {errors.price && (
+              <p id="lecture-price-error" className="mt-1 text-[13px] text-[#DC2626]">
+                {errors.price}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="text-[14px] font-semibold text-[#111827]">난이도 *</label>
+            <label htmlFor="lecture-mileage" className="text-[14px] font-semibold text-[#111827]">
+              마일리지
+            </label>
+            <div className="relative mt-2">
+              <input
+                id="lecture-mileage"
+                type="number"
+                name="mileage"
+                value={formData.mileage}
+                onChange={handleChange}
+                className="h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 pr-10 text-[14px] outline-none focus:border-[#439A97]"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] text-[#667085]">P</span>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="lecture-level" className="text-[14px] font-semibold text-[#111827]">
+              난이도 *
+            </label>
             <select
+              id="lecture-level"
               name="level"
               value={formData.level}
               onChange={handleChange}
-              disabled={isSubmitting}
+              aria-invalid={Boolean(errors.level)}
+              aria-describedby={errors.level ? "lecture-level-error" : undefined}
               className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
                 errors.level ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
               }`}
@@ -262,55 +328,82 @@ export default function LectureForm({ onNext }: LectureFormProps) {
               <option value="INTERMEDIATE">중급</option>
               <option value="ADVANCED">고급</option>
             </select>
-            {errors.level && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.level}</p>}
+            {errors.level && (
+              <p id="lecture-level-error" className="mt-1 text-[13px] text-[#DC2626]">
+                {errors.level}
+              </p>
+            )}
           </div>
         </div>
 
         <div>
-          <label className="text-[14px] font-semibold text-[#111827]">썸네일 이미지 *</label>
-          <label className={`mt-2 flex h-[180px] cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed transition-colors ${
-            errors.thumbnail ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#D0D5DD] bg-[#FCFCFD]"
-          }`}>
+          <label htmlFor="lecture-thumbnail" className="text-[14px] font-semibold text-[#111827]">
+            썸네일 이미지 *
+          </label>
+          <label
+            htmlFor="lecture-thumbnail"
+            className={`mt-2 flex h-[180px] cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed transition-colors ${
+              errors.thumbnail ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#D0D5DD] bg-[#FCFCFD]"
+            }`}
+          >
             {preview ? (
-              <img src={preview} alt="썸네일" className="h-full w-full rounded-[16px] object-cover" />
+              <img src={preview} alt="강의 썸네일 미리보기" className="h-full w-full rounded-[16px] object-cover" />
             ) : (
               <>
-                <img src="/images/upload.svg" alt="업로드" className="h-[32px] w-[32px]" />
-                <p className="mt-4 text-[14px] font-medium text-[#344054]">이미지 파일 업로드 (JPG, PNG)</p>
+                <img src="/images/upload.svg" alt="업로드" aria-hidden className="h-[32px] w-[32px]" />
+                <span className="mt-4 text-[14px] font-medium text-[#344054]">이미지 파일 업로드 (JPG, PNG)</span>
               </>
             )}
-            <input type="file" accept="image/*" className="hidden" disabled={isSubmitting} onChange={handleThumbnailChange} />
+            <input
+              id="lecture-thumbnail"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              aria-invalid={Boolean(errors.thumbnail)}
+              aria-describedby={errors.thumbnail ? "lecture-thumbnail-error" : undefined}
+              onChange={handleThumbnailChange}
+            />
           </label>
-          {errors.thumbnail && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.thumbnail}</p>}
+          {errors.thumbnail && (
+            <p id="lecture-thumbnail-error" className="mt-1 text-[13px] text-[#DC2626]">
+              {errors.thumbnail}
+            </p>
+          )}
         </div>
 
         <div>
-          <label className="text-[14px] font-semibold text-[#111827]">첨부 자료 (선택)</label>
-          <label className="mt-2 flex h-[120px] cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-[#D0D5DD] bg-[#FCFCFD]">
-            <img src="/images/upload.svg" alt="업로드" className="h-[24px] w-[24px]" />
-            <p className="mt-2 text-[13px] font-medium text-[#344054]">PDF, PPT, DOC 업로드</p>
-            <input type="file" multiple className="hidden" disabled={isSubmitting} onChange={handleAttachmentChange} />
+          <label htmlFor="lecture-attachments" className="text-[14px] font-semibold text-[#111827]">
+            첨부 자료
+          </label>
+          <label
+            htmlFor="lecture-attachments"
+            className="mt-2 flex h-[120px] cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-[#D0D5DD] bg-[#FCFCFD]"
+          >
+            <img src="/images/upload.svg" alt="업로드" aria-hidden className="h-[24px] w-[24px]" />
+            <span className="mt-2 text-[13px] font-medium text-[#344054]">PDF, PPT, DOC 업로드</span>
+            <input id="lecture-attachments" type="file" multiple className="hidden" onChange={handleAttachmentChange} />
           </label>
           {attachments.length > 0 && (
-            <div className="mt-3 space-y-1">
-              {attachments.map((file, index) => (
-                <p key={index} className="text-[13px] text-[#667085]">📎 {file.name}</p>
+            <ul className="mt-3 space-y-1" aria-label="선택된 첨부 파일">
+              {attachments.map((file) => (
+                <li key={file.name} className="text-[13px] text-[#667085]">
+                  {file.name}
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </div>
-      </div>
+      </fieldset>
 
-      <div className="mt-8 flex justify-end">
+      <footer className="mt-8 flex justify-end">
         <button
-          type="button"
-          onClick={handleNext}
+          type="submit"
           disabled={isSubmitting}
           className="flex h-[48px] items-center rounded-[14px] bg-[#439A97] px-8 text-[15px] font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#CFE5E4]"
         >
           {isSubmitting ? "처리 중..." : "다음 단계로"}
         </button>
-      </div>
-    </div>
+      </footer>
+    </form>
   );
 }
