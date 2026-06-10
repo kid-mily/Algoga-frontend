@@ -1,26 +1,88 @@
-import axios from "axios";
-import { createAuthInterceptor, errorInterceptor } from "./interceptors";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
+type TokenKey = "accessToken" | "adminAccessToken";
 
-// ==========================================
-// 1. 일반 유저용 API (일반 로그인, 마이페이지 등)
-// ==========================================
-export const api = axios.create({
-  baseURL: BASE_URL,
-});
+async function request<T>(
+  path: string,
+  options: RequestInit = {},
+  tokenKey?: TokenKey
+): Promise<T> {
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem(tokenKey ?? "accessToken")
+      : null;
 
-// 일반 유저는 'accessToken'을 사용하도록 인터셉터 연결
-api.interceptors.request.use(createAuthInterceptor("accessToken"));
-api.interceptors.response.use((response) => response, errorInterceptor);
+  const response = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    },
+  });
 
-// ==========================================
-// 2. 관리자(Admin)용 API (강의 관리 등)
-// ==========================================
-export const adminApi = axios.create({
-  baseURL: BASE_URL,
-});
+  const result = await response.json();
 
-// 관리자는 'adminAccessToken'을 사용하도록 인터셉터 연결
-adminApi.interceptors.request.use(createAuthInterceptor("adminAccessToken"));
-adminApi.interceptors.response.use((response) => response, errorInterceptor);
+  if (!response.ok) {
+    throw new Error(result.message || "API 요청 실패");
+  }
+
+  return result;
+}
+
+export const api = {
+  get: <T>(path: string) =>
+    request<T>(path, { method: "GET" }, "accessToken"),
+
+  post: <T>(path: string, data?: unknown) =>
+    request<T>(
+      path,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+      "accessToken"
+    ),
+
+  put: <T>(path: string, data?: unknown) =>
+    request<T>(
+      path,
+      {
+        method: "PUT",
+        body: JSON.stringify(data),
+      },
+      "accessToken"
+    ),
+
+  delete: <T>(path: string) =>
+    request<T>(path, { method: "DELETE" }, "accessToken"),
+};
+
+export const adminApi = {
+  get: <T>(path: string) =>
+    request<T>(path, { method: "GET" }, "adminAccessToken"),
+
+  post: <T>(path: string, data?: unknown) =>
+    request<T>(
+      path,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+      "adminAccessToken"
+    ),
+
+  put: <T>(path: string, data?: unknown) =>
+    request<T>(
+      path,
+      {
+        method: "PUT",
+        body: JSON.stringify(data),
+      },
+      "adminAccessToken"
+    ),
+
+  delete: <T>(path: string) =>
+    request<T>(path, { method: "DELETE" }, "adminAccessToken"),
+};
