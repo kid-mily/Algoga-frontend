@@ -13,6 +13,7 @@ export type ApiResponse<T> = {
 
 type ApiRequestOptions = RequestInit & {
   params?: Record<string, string | number | boolean | undefined>;
+  skipAuth?: boolean;
 };
 
 const buildUrl = (
@@ -37,19 +38,20 @@ async function request<T>(
   options: ApiRequestOptions = {},
   tokenKey: TokenKey = "accessToken"
 ): Promise<T> {
+  const { params, skipAuth, ...fetchOptions } = options;
   const token =
-    typeof window !== "undefined"
+    !skipAuth && typeof window !== "undefined"
       ? localStorage.getItem(tokenKey)
       : null;
 
-  const isFormData = options.body instanceof FormData;
+  const isFormData = fetchOptions.body instanceof FormData;
 
-  const response = await fetch(buildUrl(path, options.params), {
-    ...options,
+  const response = await fetch(buildUrl(path, params), {
+    ...fetchOptions,
     headers: {
       ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers || {}),
+      ...(fetchOptions.headers || {}),
     },
   });
 
