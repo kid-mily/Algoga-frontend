@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { CourseCountry, CourseFormData, LectureFormProps } from "../types";
 import { createLectureAction, getLectureCountriesAction } from "../actions";
+import { toNumberOrZero } from "@/features/common/utils/number";
 
 export default function LectureForm({ onNext }: LectureFormProps) {
   const [formData, setFormData] = useState<CourseFormData>({
@@ -128,7 +129,7 @@ export default function LectureForm({ onNext }: LectureFormProps) {
         title: formData.title.trim(),
         description: formData.description.trim(),
         price: Number(formData.price),
-        mileage: Number(formData.mileage || 0),
+        mileage: toNumberOrZero(formData.mileage),
         level: formData.level,
         status: targetStatus,
         thumbnail: thumbnail as File,

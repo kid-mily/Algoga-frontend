@@ -1,26 +1,39 @@
 // src/features/services/adminCourse.service.ts
 
-import axios from "axios";
 import { api, adminApi } from "@/lib/api";
+import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 import {
   AdminCourse,
   CourseCountry,
   CreateAdminCoursePayload,
+  UpdateLecturePayload,
 } from "../contentmanage/lecture/types";
+
+type ContinentRecord = {
+  continentCode?: string;
+  continent_code?: string;
+  continentName?: string;
+  continent?: string;
+};
+
+type CountryRecord = {
+  countryId?: number;
+  country_id?: number;
+  countryName?: string;
+  name?: string;
+  countryCode?: string;
+  country_code?: string;
+};
+
+type CourseIdRecord = {
+  courseId?: number;
+  course_id?: number;
+  id?: number;
+};
 
 // ------------------------------------------
 // 2. 공통 에러 핸들러
 // ------------------------------------------
-const getErrorMessage = (error: unknown, fallbackMessage: string) => {
-  if (axios.isAxiosError(error)) {
-    return error.response?.data?.message || fallbackMessage;
-  }
-  if (error instanceof Error) {
-    return error.message || fallbackMessage;
-  }
-  return fallbackMessage;
-};
-
 // ------------------------------------------
 // 3. 강의 목록 조회 (getAdminCourses)
 // ------------------------------------------
@@ -40,7 +53,7 @@ export const getAdminCourses = async (): Promise<AdminCourse[]> => {
     if (Array.isArray(data?.content)) return data.content;
     
     return [];
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`🔥 강의 목록 조회 에러:`, error);
     throw new Error(getErrorMessage(error, "관리자 강의 목록 조회에 실패했습니다."));
   }
@@ -57,7 +70,7 @@ export const getCourseCountries = async (): Promise<CourseCountry[]> => {
     const continents = continentResponse.data.data ?? [];
 
     const countryGroups = await Promise.all(
-      continents.map(async (continent: any) => {
+      continents.map(async (continent: ContinentRecord) => {
         const continentCode = continent.continentCode ?? continent.continent_code ?? "";
         if (!continentCode) return [];
         
@@ -66,7 +79,7 @@ export const getCourseCountries = async (): Promise<CourseCountry[]> => {
         });
         const countries = countryResponse.data.data ?? [];
         
-        return countries.map((country: any) => ({
+        return countries.map((country: CountryRecord) => ({
           countryId: country.countryId ?? country.country_id ?? 0,
           countryName: country.countryName ?? country.name ?? "",
           countryCode: country.countryCode ?? country.country_code,
@@ -77,7 +90,7 @@ export const getCourseCountries = async (): Promise<CourseCountry[]> => {
     );
     
     return countryGroups.flat().filter((country) => country.countryId && country.countryName);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`🔥 국가 목록 조회 에러:`, error);
     throw new Error(getErrorMessage(error, "국가 목록 조회에 실패했습니다."));
   }
@@ -126,7 +139,9 @@ export const createAdminCourse = async (
     if (typeof rawData === "number") {
       newCourseId = rawData;
     } else if (typeof rawData === "object" && rawData !== null) {
-      newCourseId = rawData.courseId || rawData.course_id || rawData.id || 0;
+      const courseRecord = rawData as CourseIdRecord;
+      newCourseId =
+        courseRecord.courseId || courseRecord.course_id || courseRecord.id || 0;
     }
 
     if (!newCourseId) {
@@ -139,7 +154,7 @@ export const createAdminCourse = async (
       title: payload.title,
       status: payload.status || "DRAFT",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`🔥 강의 등록 에러:`, error);
     throw new Error(getErrorMessage(error, "관리자 강의 등록에 실패했습니다."));
   }
@@ -155,7 +170,7 @@ export const getAdminCourse = async (courseId: number): Promise<AdminCourse> => 
       params: { t: new Date().getTime() } 
     });
     return response.data.data || response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`🔥 강의 상세 조회 에러:`, error);
     throw new Error(getErrorMessage(error, "강의 상세 조회에 실패했습니다."));
   }
@@ -164,7 +179,10 @@ export const getAdminCourse = async (courseId: number): Promise<AdminCourse> => 
 // ------------------------------------------
 // 7. 강의 수정 (updateAdminCourse)
 // ------------------------------------------
-export const updateAdminCourse = async (courseId: number, payload: any) => {
+export const updateAdminCourse = async (
+  courseId: number,
+  payload: UpdateLecturePayload
+) => {
   try {
     const formData = new FormData();
 
@@ -198,7 +216,7 @@ export const updateAdminCourse = async (courseId: number, payload: any) => {
 
     const response = await adminApi.put(`/api/v1/admin/courses/${courseId}`, formData);
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`🔥 강의 수정 에러:`, error);
     throw new Error(getErrorMessage(error, "강의 수정에 실패했습니다."));
   }
@@ -211,7 +229,7 @@ export const deleteAdminCourse = async (courseId: number) => {
   try {
     const response = await adminApi.delete(`/api/v1/admin/courses/${courseId}`);
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`🔥 강의 삭제 에러:`, error);
     throw new Error(getErrorMessage(error, "강의 삭제에 실패했습니다."));
   }

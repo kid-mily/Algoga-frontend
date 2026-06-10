@@ -66,6 +66,7 @@ export default function EditChapterClient({
 
       <section aria-label="챕터 수정 폼">
         <ChapterForm
+          key={`${chapter.chapterId}-${chapter.description || ""}`}
           mode="edit"
           initialChapter={{
             id: chapter.chapterId || (chapter as { id?: number }).id || 0,

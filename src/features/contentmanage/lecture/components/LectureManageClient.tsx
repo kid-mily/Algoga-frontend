@@ -8,6 +8,7 @@ import Modal from "@/features/common/Modal";
 import CompleteModal from "@/features/common/CompleteModal";
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import AdminLoadingState from "@/features/common/AdminLoadingState";
+import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 
 import StudentForm from "./StudentForm";
 import LectureToolbar from "./LectureToolbar";
@@ -20,10 +21,6 @@ import {
   getCountryOptions,
   withCountryNames,
 } from "../utils/lectureFilters";
-
-const getErrorMessage = (error: unknown, fallbackMessage: string) => {
-  return error instanceof Error ? error.message || fallbackMessage : fallbackMessage;
-};
 
 export default function LectureManageClient() {
   const router = useRouter();

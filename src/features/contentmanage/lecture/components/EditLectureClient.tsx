@@ -4,6 +4,8 @@ import LectureHeader from "@/features/contentmanage/common/LectureHeader";
 import LectureUpdateForm from "@/features/contentmanage/lecture/components/LectureUpdateForm";
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import AdminLoadingState from "@/features/common/AdminLoadingState";
+import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
+import { toNumberOrZero } from "@/features/common/utils/number";
 
 import { updateLectureAction } from "../actions";
 import { useAdminLectureDetail } from "../hooks/useAdminLectureDetail";
@@ -31,7 +33,7 @@ export default function EditLectureClient({
         title: data.title,
         description: data.description,
         price: Number(data.price),
-        mileage: Number(data.mileage || 0),
+        mileage: toNumberOrZero(data.mileage),
         level: lecture.level || "BEGINNER",
         status: targetStatus,
         thumbnail: thumbnailFile,
@@ -40,19 +42,19 @@ export default function EditLectureClient({
 
       return true;
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "강의 수정에 실패했습니다.";
-      alert(message);
+      alert(getErrorMessage(error, "강의 수정에 실패했습니다."));
       return false;
     }
   };
 
   if (isLoading) {
-    return <AdminLoadingState text="강의를 불러오는 중..." />;
+    return <AdminLoadingState text="강의를 불러오는 중입니다." />;
   }
 
   if (error || !lecture) {
-    return <AdminErrorBanner message={error || "강의를 찾을 수 없습니다."} />;
+    return (
+      <AdminErrorBanner message={error || "강의를 찾을 수 없습니다."} />
+    );
   }
 
   return (

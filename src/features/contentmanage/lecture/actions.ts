@@ -9,6 +9,7 @@ import {
 import {
   createAdminChapter,
   deleteAdminChapter,
+  getAdminChapter,
   getAdminChapters,
   updateAdminChapter,
 } from "@/features/services/adminChapter.service";
@@ -48,6 +49,13 @@ export const deleteLectureAction = (lectureId: number) => {
 
 export const getChapterListAction = (lectureId: number) => {
   return getAdminChapters(lectureId);
+};
+
+export const getChapterDetailAction = (
+  lectureId: number,
+  chapterId: number
+) => {
+  return getAdminChapter(lectureId, chapterId);
 };
 
 export const createChapterAction = (payload: CreateAdminChapterPayload) => {

@@ -1,5 +1,3 @@
-// src/features/contentmanage/LoginForm.tsx
-
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -49,7 +47,6 @@ export default function AdminLoginForm() {
 
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-
       localStorage.setItem("adminAccessToken", data.accessToken);
 
       if (data.refreshToken) {
@@ -70,7 +67,7 @@ export default function AdminLoginForm() {
         관리자 로그인
       </h1>
       <p className="mt-2 text-[15px] text-[#98A2B3]">
-        콘텐츠 매니저 계정에 로그인하세요
+        매니저 계정에 로그인하세요
       </p>
       <form
         className="mt-5"

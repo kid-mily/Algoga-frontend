@@ -17,9 +17,11 @@ export function useAdminChapterDetail(lectureId: number, chapterId: number) {
         setError("");
 
         const chapters = await getChapterListAction(lectureId);
-        const target = chapters.find(
-          (item: AdminChapterRecord) => (item.chapterId || item.id) === chapterId
-        );
+        const target =
+          chapters.find((item: AdminChapterRecord) => {
+            const currentChapterId = item.chapterId || item.id;
+            return Number(currentChapterId) === Number(chapterId);
+          }) ?? null;
 
         if (!target) {
           setChapter(null);
