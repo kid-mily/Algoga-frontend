@@ -25,10 +25,12 @@ export default function Header() {
 
     useEffect(() => {
         const fetchUser = async () => {
+            setIsLoading(true);
             // 브라우저 환경에서만 로컬 스토리지 접근
             const token = localStorage.getItem("accessToken");
             
             if (!token) {
+                setUser(null);
                 setIsLoading(false);
                 return; // 토큰이 없으면 API 호출 건너뜀 (비로그인 상태)
             }
@@ -39,12 +41,18 @@ export default function Header() {
                 setUser(userData);
             } catch (error) {
                 console.error("유저 정보 로드 실패:", error);
+                setUser(null);
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchUser();
+        window.addEventListener("auth-state-changed", fetchUser);
+
+        return () => {
+            window.removeEventListener("auth-state-changed", fetchUser);
+        };
     }, []);
 
     // 데이터를 가져오는 동안 UI가 깨지거나 깜빡이는 것을 방지

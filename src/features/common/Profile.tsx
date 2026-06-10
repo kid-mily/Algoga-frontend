@@ -25,6 +25,7 @@ export default function Profile({ user }: Props) {
         } finally {
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
+            window.dispatchEvent(new Event("auth-state-changed"));
             // 🌟 모달 오픈
             setLogoutModal({ open: true });
         }

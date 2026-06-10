@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { login } from "@/features/services/auth.service";
+import CompleteModal from "@/features/common/CompleteModal";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -66,6 +67,7 @@ export default function LoginForm() {
       if (data.refreshToken) {
         localStorage.setItem("refreshToken", data.refreshToken);
       }
+      window.dispatchEvent(new Event("auth-state-changed"));
 
       if (data.requiresPasswordChange) {
         router.push("/auth/login/newpw");
@@ -73,13 +75,18 @@ export default function LoginForm() {
       }
 
       router.push("/");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("로그인 에러:", error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : "아이디 또는 비밀번호를 확인해주세요.";
+
       // 🌟 alert 제거 후 모달 호출로 변경
       setModal({
         open: true,
         title: "로그인 실패",
-        description: error.message || "아이디 또는 비밀번호를 확인해주세요."
+        description: message,
       });
     } finally {
       setIsLoading(false);
@@ -87,109 +94,119 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="w-[400px]">
-      <h1 className="text-[32px] font-bold text-[#111827]">로그인</h1>
-      <p className="mt-2 text-[15px] text-[#98A2B3]">계정에 로그인하세요</p>
+    <>
+      <div className="w-[400px]">
+        <h1 className="text-[32px] font-bold text-[#111827]">로그인</h1>
+        <p className="mt-2 text-[15px] text-[#98A2B3]">계정에 로그인하세요</p>
 
-      <form className="mt-5" onSubmit={handleLogin}>
-        {/* 아이디 입력 */}
-        <div className="relative">
-          <label className="text-[16px] font-semibold text-[#111827]">아이디</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => {
-              const value = e.target.value;
-              setUsername(value);
-              validateUsername(value);
-            }}
-            disabled={isLoading}
-            placeholder="아이디를 입력해주세요"
-            className={`mt-3 h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 text-[15px] outline-none ${
-              usernameError ? "border border-[#DC2626]" : "border border-[#D0D5DD]"
-            }`}
-          />
-          {usernameError && <p className="absolute mt-1 text-[13px] text-[#DC2626]">{usernameError}</p>}
-        </div>
-
-        {/* 비밀번호 입력 */}
-        <div className="relative mt-8">
-          <label className="text-[16px] font-semibold text-[#111827]">비밀번호</label>
-          <div className="relative mt-3">
+        <form className="mt-5" onSubmit={handleLogin}>
+          {/* 아이디 입력 */}
+          <div className="relative">
+            <label className="text-[16px] font-semibold text-[#111827]">아이디</label>
             <input
-              type={showPassword ? "text" : "password"}
-              value={password}
+              type="text"
+              value={username}
               onChange={(e) => {
                 const value = e.target.value;
-                setPassword(value);
-                validatePassword(value);
+                setUsername(value);
+                validateUsername(value);
               }}
               disabled={isLoading}
-              placeholder="비밀번호를 입력해주세요"
-              className={`h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 pr-14 text-[15px] outline-none ${
-                passwordError ? "border border-[#DC2626]" : "border border-[#D0D5DD]"
+              placeholder="아이디를 입력해주세요"
+              className={`mt-3 h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 text-[15px] outline-none ${
+                usernameError ? "border border-[#DC2626]" : "border border-[#D0D5DD]"
               }`}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-4 top-1/2 -translate-y-1/2"
-            >
-              <img src="/images/eye.svg" alt={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"} className="h-5 w-5" />
-            </button>
+            {usernameError && <p className="absolute mt-1 text-[13px] text-[#DC2626]">{usernameError}</p>}
           </div>
-          {passwordError && <p className="absolute mt-1 text-[13px] text-[#DC2626]">{passwordError}</p>}
-        </div>
 
-        {/* 하단 링크 */}
-        <div className="mt-8 flex items-center justify-between">
-          <label className="flex items-center gap-2 text-[14px] text-[#344054]">
-            <input type="checkbox" /> 로그인 상태 유지
-          </label>
-          <div className="flex items-center gap-2 text-[14px] text-[#6B9D9B]">
-            <Link href="/auth/login/findid">아이디 찾기</Link>
-            <span>|</span>
-            <Link href="/auth/login/findpw">비밀번호 찾기</Link>
+          {/* 비밀번호 입력 */}
+          <div className="relative mt-8">
+            <label className="text-[16px] font-semibold text-[#111827]">비밀번호</label>
+            <div className="relative mt-3">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setPassword(value);
+                  validatePassword(value);
+                }}
+                disabled={isLoading}
+                placeholder="비밀번호를 입력해주세요"
+                className={`h-[56px] w-full rounded-[16px] bg-[#F9FAFB] px-5 pr-14 text-[15px] outline-none ${
+                  passwordError ? "border border-[#DC2626]" : "border border-[#D0D5DD]"
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-4 top-1/2 -translate-y-1/2"
+              >
+                <img src="/images/eye.svg" alt={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"} className="h-5 w-5" />
+              </button>
+            </div>
+            {passwordError && <p className="absolute mt-1 text-[13px] text-[#DC2626]">{passwordError}</p>}
           </div>
-        </div>
 
-        {/* 로그인 버튼 */}
-        <button
-          type="submit"
-          disabled={!isValid || isLoading}
-          className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition ${
-            isValid && !isLoading ? "bg-[#439A97] hover:bg-[#367c79]" : "cursor-not-allowed bg-[#D0D5DD]"
-          }`}
-        >
-          {isLoading ? "로그인 중..." : "로그인"}
-        </button>
+          {/* 하단 링크 */}
+          <div className="mt-8 flex items-center justify-between">
+            <label className="flex items-center gap-2 text-[14px] text-[#344054]">
+              <input type="checkbox" /> 로그인 상태 유지
+            </label>
+            <div className="flex items-center gap-2 text-[14px] text-[#6B9D9B]">
+              <Link href="/auth/login/findid">아이디 찾기</Link>
+              <span>|</span>
+              <Link href="/auth/login/findpw">비밀번호 찾기</Link>
+            </div>
+          </div>
 
-        <Link
-          href="/"
-          className="mt-4 block w-full text-center text-[14px] text-[#98A2B3]"
-        >
-          메인으로 돌아가기
-        </Link>
-        
-        {/* 소셜 로그인 */}
-        <div className="mt-5 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[#E4E7EC]" />
-          <span className="text-[12px] text-[#98A2B3]">또는 소셜 로그인</span>
-          <div className="h-px flex-1 bg-[#E4E7EC]" />
-        </div>
+          {/* 로그인 버튼 */}
+          <button
+            type="submit"
+            disabled={!isValid || isLoading}
+            className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition ${
+              isValid && !isLoading ? "bg-[#439A97] hover:bg-[#367c79]" : "cursor-not-allowed bg-[#D0D5DD]"
+            }`}
+          >
+            {isLoading ? "로그인 중..." : "로그인"}
+          </button>
 
-        <button type="button" className="mt-5 flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#FEE500] text-[17px] font-semibold text-black">
-          카카오로 계속하기
-        </button>
-        <button type="button" className="mt-4 flex h-[56px] w-full items-center justify-center rounded-[16px] border border-[#D0D5DD] bg-[#F2F4F7] text-[17px] font-semibold text-[#344054]">
-          구글로 계속하기
-        </button>
+          <Link
+            href="/"
+            className="mt-4 block w-full text-center text-[14px] text-[#98A2B3]"
+          >
+            메인으로 돌아가기
+          </Link>
+          
+          {/* 소셜 로그인 */}
+          <div className="mt-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#E4E7EC]" />
+            <span className="text-[12px] text-[#98A2B3]">또는 소셜 로그인</span>
+            <div className="h-px flex-1 bg-[#E4E7EC]" />
+          </div>
 
-        <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
-          계정이 없으신가요?{" "}
-          <Link href="/auth/register" className="font-semibold text-[#6D9D9B]">회원가입</Link>
-        </div>
-      </form>
-    </div>
+          <button type="button" className="mt-5 flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#FEE500] text-[17px] font-semibold text-black">
+            카카오로 계속하기
+          </button>
+          <button type="button" className="mt-4 flex h-[56px] w-full items-center justify-center rounded-[16px] border border-[#D0D5DD] bg-[#F2F4F7] text-[17px] font-semibold text-[#344054]">
+            구글로 계속하기
+          </button>
+
+          <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
+            계정이 없으신가요?{" "}
+            <Link href="/auth/register" className="font-semibold text-[#6D9D9B]">회원가입</Link>
+          </div>
+        </form>
+      </div>
+
+      <CompleteModal
+        open={modal.open}
+        title={modal.title}
+        description={modal.description}
+        buttonText="확인"
+        onConfirm={() => setModal((prev) => ({ ...prev, open: false }))}
+      />
+    </>
   );
 }
