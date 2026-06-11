@@ -56,8 +56,9 @@ export default function RegisterPage() {
       await signup(formData);
       setStep(3); // 성공 시 Step 3으로 넘어감
 
-    } catch (error: any) {
-      const errMsg = error.message || "서버 오류가 발생했습니다.";
+    } catch (error: unknown) {
+      const errMsg =
+        error instanceof Error ? error.message : "서버 오류가 발생했습니다.";
       
       // 🌟 [핵심] 에러 내용에 따라 어떤 필드의 에러인지 구분
       if (errMsg.includes("아이디")) {

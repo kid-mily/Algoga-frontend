@@ -1,9 +1,28 @@
 "use client";
 
 import { useState } from "react";
+import {
+  checkUsernameDuplicate,
+  sendSignupEmailCode,
+  verifySignupEmailCode,
+} from "@/features/services/signup.service";
+
+interface RegisterFormData {
+  name: string;
+  username: string;
+  password: string;
+  passwordConfirm: string;
+  email: string;
+  phone: string;
+  birthDate: string;
+  gender: string;
+  nickname: string;
+  referralCode: string;
+  signupPath: string;
+}
 
 interface RegisterInfoFormProps {
-  formData: any;
+  formData: RegisterFormData;
   onChange: (field: string, value: string) => void;
   onNext: () => void;
   isLoading?: boolean;
@@ -21,6 +40,18 @@ export default function RegisterInfoForm({
 }: RegisterInfoFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEtcRoute, setIsEtcRoute] = useState(formData.signupPath !== "" && !["search", "social", "friend", "ad"].includes(formData.signupPath));
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isUsernameChecked, setIsUsernameChecked] = useState(false);
+  const [usernameMessage, setUsernameMessage] = useState("");
+  const [isSendingEmailCode, setIsSendingEmailCode] = useState(false);
+  const [isVerifyingEmailCode, setIsVerifyingEmailCode] = useState(false);
+  const [isEmailCodeSent, setIsEmailCodeSent] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isEmailDuplicated, setIsEmailDuplicated] = useState(false);
+  const [emailCode, setEmailCode] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -40,9 +71,16 @@ export default function RegisterInfoForm({
       newErrors.passwordConfirm = "비밀번호가 일치하지 않습니다.";
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email || !emailRegex.test(formData.email)) {
       newErrors.email = "올바른 이메일 형식을 입력해주세요.";
+    }
+
+    if (!newErrors.username && !isUsernameChecked) {
+      newErrors.username = "아이디 중복 확인을 완료해주세요.";
+    }
+
+    if (!newErrors.email && !isEmailVerified) {
+      newErrors.email = "이메일 인증을 완료해주세요.";
     }
 
     const phoneRegex = /^\d{2,3}-\d{3,4}-\d{4}$/;
@@ -79,6 +117,155 @@ export default function RegisterInfoForm({
     }
   };
 
+  const handleUsernameChange = (value: string) => {
+    onChange("username", value);
+    setIsUsernameChecked(false);
+    setUsernameMessage("");
+
+    if (serverError?.field === "username" && setServerError) {
+      setServerError({ field: "", message: "" });
+    }
+  };
+
+  const handleEmailChange = (value: string) => {
+    onChange("email", value);
+    setIsEmailCodeSent(false);
+    setIsEmailVerified(false);
+    setIsEmailDuplicated(false);
+    setEmailCode("");
+    setEmailMessage("");
+
+    if (serverError?.field === "email" && setServerError) {
+      setServerError({ field: "", message: "" });
+    }
+  };
+
+  const handleUsernameCheck = async () => {
+    const username = formData.username.trim();
+
+    if (username.length < 4 || username.length > 20) {
+      setErrors((prev) => ({
+        ...prev,
+        username: "아이디는 4자 이상 20자 이하로 입력해주세요.",
+      }));
+      return;
+    }
+
+    try {
+      setIsCheckingUsername(true);
+      setUsernameMessage("");
+      setErrors((prev) => ({ ...prev, username: "" }));
+
+      const result = await checkUsernameDuplicate(username);
+      const resultText = typeof result === "string" ? result : "";
+      const isDuplicated =
+        result === false || /중복|이미|사용\s?중|존재/.test(resultText);
+
+      if (isDuplicated) {
+        setIsUsernameChecked(false);
+        setUsernameMessage("");
+        setErrors((prev) => ({
+          ...prev,
+          username: "이미 사용 중인 아이디입니다.",
+        }));
+        return;
+      }
+
+      setIsUsernameChecked(true);
+      setUsernameMessage("사용 가능한 아이디입니다.");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "아이디 중복 확인에 실패했습니다.";
+
+      setIsUsernameChecked(false);
+      setUsernameMessage("");
+      setErrors((prev) => ({
+        ...prev,
+        username: message,
+      }));
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
+  const handleSendEmailCode = async () => {
+    const email = formData.email.trim();
+
+    if (!emailRegex.test(email)) {
+      setErrors((prev) => ({
+        ...prev,
+        email: "올바른 이메일 형식을 입력해주세요.",
+      }));
+      return;
+    }
+
+    try {
+      setIsSendingEmailCode(true);
+      setIsEmailDuplicated(false);
+      setIsEmailVerified(false);
+      setEmailCode("");
+      setEmailMessage("");
+      setErrors((prev) => ({ ...prev, email: "" }));
+
+      await sendSignupEmailCode(email);
+      setIsEmailCodeSent(true);
+      setEmailMessage("인증번호를 이메일로 보냈습니다.");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "이메일 인증번호 발송에 실패했습니다.";
+      const duplicated = /이미|가입|중복|존재|사용/.test(message);
+
+      setIsEmailCodeSent(false);
+      setIsEmailVerified(false);
+      setIsEmailDuplicated(duplicated);
+      setEmailMessage("");
+      setErrors((prev) => ({
+        ...prev,
+        email: duplicated ? "이미 가입된 이메일입니다." : message,
+      }));
+    } finally {
+      setIsSendingEmailCode(false);
+    }
+  };
+
+  const handleVerifyEmailCode = async () => {
+    if (!emailCode.trim()) {
+      setEmailMessage("");
+      setErrors((prev) => ({
+        ...prev,
+        emailCode: "인증번호를 입력해주세요.",
+      }));
+      return;
+    }
+
+    try {
+      setIsVerifyingEmailCode(true);
+      setErrors((prev) => ({ ...prev, emailCode: "" }));
+
+      await verifySignupEmailCode(formData.email.trim(), emailCode.trim());
+      setIsEmailVerified(true);
+      setEmailMessage("이메일 인증이 완료되었습니다.");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "인증번호 확인에 실패했습니다.";
+
+      setIsEmailVerified(false);
+      setEmailMessage("");
+      setErrors((prev) => ({
+        ...prev,
+        emailCode: message,
+      }));
+    } finally {
+      setIsVerifyingEmailCode(false);
+    }
+  };
+
   return (
     <div className="mt-3 w-full rounded-[35px] bg-white p-8 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
       <h2 className="text-[25px] font-bold text-[#111827]">기본 정보 입력</h2>
@@ -101,21 +288,28 @@ export default function RegisterInfoForm({
         {/* 🌟 아이디 */}
         <div>
           <label className="text-[16px] font-semibold text-[#111827]">아이디 *</label>
-          <input
-            type="text"
-            value={formData.username}
-            onChange={(e) => {
-              onChange("username", e.target.value);
-              // 아이디를 수정하면 서버 에러 지우기
-              if (serverError?.field === "username" && setServerError) {
-                setServerError({ field: "", message: "" });
-              }
-            }}
-            placeholder="4자 이상 20자 이하"
-            className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
-            disabled={isLoading}
-          />
+          <div className="mt-3 flex gap-2">
+            <input
+              type="text"
+              value={formData.username}
+              onChange={(e) => handleUsernameChange(e.target.value)}
+              placeholder="4자 이상 20자 이하"
+              className="h-[35px] min-w-0 flex-1 rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+              disabled={isLoading}
+            />
+            <button
+              type="button"
+              onClick={handleUsernameCheck}
+              disabled={isLoading || isCheckingUsername || !formData.username.trim()}
+              className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+            >
+              {isCheckingUsername ? "확인 중" : "중복 확인"}
+            </button>
+          </div>
           {errors.username && <p className="mt-1 text-[13px] text-red-500">{errors.username}</p>}
+          {!errors.username && usernameMessage && (
+            <p className="mt-1 text-[13px] text-[#439A97]">{usernameMessage}</p>
+          )}
           {/* 🌟 아이디 중복 관련 백엔드 에러 표시 */}
           {serverError?.field === "username" && !errors.username && (
             <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
@@ -171,27 +365,67 @@ export default function RegisterInfoForm({
         {/* 🌟 이메일 */}
         <div className="col-span-2">
           <label className="text-[16px] font-semibold text-[#111827]">이메일 *</label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => {
-              onChange("email", e.target.value);
-              // 이메일을 수정하면 서버 에러 지우기
-              if (serverError?.field === "email" && setServerError) {
-                setServerError({ field: "", message: "" });
+          <div className="mt-3 flex gap-2">
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleEmailChange(e.target.value)}
+              placeholder="example@algoga.com"
+              className="h-[35px] min-w-0 flex-1 rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+              disabled={isLoading || isEmailVerified}
+            />
+            <button
+              type="button"
+              onClick={handleSendEmailCode}
+              disabled={
+                isLoading ||
+                isSendingEmailCode ||
+                isEmailDuplicated ||
+                isEmailVerified ||
+                !emailRegex.test(formData.email)
               }
-            }}
-            placeholder="example@algoga.com"
-            className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
-            disabled={isLoading}
-          />
+              className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+            >
+              {isSendingEmailCode ? "발송 중" : isEmailCodeSent ? "재발송" : "인증"}
+            </button>
+          </div>
           {/* 프론트엔드 자체 에러 (형식 등) */}
           {errors.email && <p className="mt-1 text-[13px] text-red-500">{errors.email}</p>}
+          {!errors.email && emailMessage && (
+            <p className={`mt-1 text-[13px] ${isEmailVerified ? "text-[#439A97]" : "text-[#667085]"}`}>
+              {emailMessage}
+            </p>
+          )}
           
           {/* 🌟 이메일 중복 관련 백엔드 에러 표시 */}
           {serverError?.field === "email" && !errors.email && (
             <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
           )}
+
+          {isEmailCodeSent && !isEmailVerified && (
+            <div className="mt-3 flex gap-2">
+              <input
+                type="text"
+                value={emailCode}
+                onChange={(e) => {
+                  setEmailCode(e.target.value);
+                  setErrors((prev) => ({ ...prev, emailCode: "" }));
+                }}
+                placeholder="인증번호 입력"
+                className="h-[35px] min-w-0 flex-1 rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+                disabled={isLoading || isVerifyingEmailCode}
+              />
+              <button
+                type="button"
+                onClick={handleVerifyEmailCode}
+                disabled={isLoading || isVerifyingEmailCode || !emailCode.trim()}
+                className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+              >
+                {isVerifyingEmailCode ? "확인 중" : "확인"}
+              </button>
+            </div>
+          )}
+          {errors.emailCode && <p className="mt-1 text-[13px] text-red-500">{errors.emailCode}</p>}
         </div>
 
         {/* 전화번호 */}
