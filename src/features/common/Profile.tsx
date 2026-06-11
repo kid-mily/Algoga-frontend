@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { logout } from "@/features/services/auth.service";
 import CompleteModal from "./CompleteModal";
+import { deleteCookie } from "@/lib/cookie";
 
 type Props = {
     user: {
@@ -23,6 +24,8 @@ export default function Profile({ user }: Props) {
         } catch (error) {
             console.error("로그아웃 API 호출 실패:", error);
         } finally {
+            deleteCookie("accessToken");
+            deleteCookie("refreshToken");
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
             window.dispatchEvent(new Event("auth-state-changed"));

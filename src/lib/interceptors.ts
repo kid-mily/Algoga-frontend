@@ -1,4 +1,5 @@
 import { InternalAxiosRequestConfig, AxiosError } from "axios";
+import { getCookie } from "@/lib/cookie";
 
 // 🌟 토큰과 데이터 타입(JSON/FormData)을 알아서 세팅해주는 함수
 export const createAuthInterceptor = (
@@ -6,7 +7,7 @@ export const createAuthInterceptor = (
 ) => {
   return (config: InternalAxiosRequestConfig) => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem(tokenKey);
+      const token = getCookie(tokenKey);
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -27,14 +28,14 @@ export const createAuthInterceptor = (
 
 //  에러 공통 처리 함수
 export const errorInterceptor = (error: AxiosError) => {
-  const errorData = error.response?.data;
+  const errorData = error.response?.data as { message?: string } | undefined;
   const status = error.response?.status; //  상태 코드 추출
 
   console.log("API 요청 실패:", {
     url: error.config?.url,
     baseURL: error.config?.baseURL,
     status: status,
-    message: (errorData as any)?.message,
+    message: errorData?.message,
     data: errorData,
   });
 
