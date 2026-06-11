@@ -1,5 +1,5 @@
 import LoginSidebar from "@/features/auth/components/LoginSideBar";
-import AdminLoginForm from "@/features/contentmanage/common/LoginForm";
+import AdminLoginForm from "@/features/contentmanage/auth/LoginForm";
 
 export default function AdminLoginPage() {
   return (
