@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Navbar from "./Navbar";
 import Profile from "./Profile";
 import { getMe } from "@/features/services/user.service"; // 경로 유지
+import { getCookie } from "@/lib/cookie";
 
 // 유저 데이터 타입 정의 (필요에 따라 수정하세요)
 interface UserProfile {
@@ -26,8 +27,8 @@ export default function Header() {
     useEffect(() => {
         const fetchUser = async () => {
             setIsLoading(true);
-            // 브라우저 환경에서만 로컬 스토리지 접근
-            const token = localStorage.getItem("accessToken");
+            // 브라우저 환경에서만 쿠키로 접근
+            const token = getCookie("accessToken");
             
             if (!token) {
                 setUser(null);

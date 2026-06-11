@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { deleteCookie, getCookie } from "@/lib/cookie";
 
 interface AdminTokenPayload {
   sub?: string; // loginId
@@ -11,6 +12,16 @@ interface AdminTokenPayload {
   id?: number;
   exp?: number;
 }
+
+const getAdminTokenPayload = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const adminAccessToken = getCookie("adminAccessToken");
+
+  return adminAccessToken ? decodeJwtPayload(adminAccessToken) : null;
+};
 
 const decodeJwtPayload = (token: string): AdminTokenPayload | null => {
   try {
@@ -48,31 +59,38 @@ export default function ContentSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const [adminLoginId, setAdminLoginId] = useState("");
-  const [adminRole, setAdminRole] = useState("");
+  const [adminInfo] = useState(() => {
+    const payload = getAdminTokenPayload();
+
+    return {
+      loginId: payload?.sub || "",
+      role: payload?.role || "",
+    };
+  });
 
   useEffect(() => {
-    const adminAccessToken = localStorage.getItem("adminAccessToken");
+    const adminAccessToken = getCookie("adminAccessToken");
 
     if (!adminAccessToken) {
-      router.replace("/auth/admin-login");
+      router.replace("/auth/adminlogin");
       return;
     }
 
     const payload = decodeJwtPayload(adminAccessToken);
 
     if (!payload || payload.type !== "ADMIN") {
+      deleteCookie("adminAccessToken");
+      deleteCookie("adminRefreshToken");
       localStorage.removeItem("adminAccessToken");
       localStorage.removeItem("adminRefreshToken");
       router.replace("/auth/adminlogin");
       return;
     }
-
-    setAdminLoginId(payload.sub || "");
-    setAdminRole(payload.role || "");
   }, [router]);
 
   const handleAdminLogout = () => {
+    deleteCookie("adminAccessToken");
+    deleteCookie("adminRefreshToken");
     localStorage.removeItem("adminAccessToken");
     localStorage.removeItem("adminRefreshToken");
 
@@ -80,7 +98,7 @@ export default function ContentSidebar() {
     router.refresh();
   };
 
-  const adminInitial = adminLoginId ? adminLoginId[0].toUpperCase() : "?";
+  const adminInitial = adminInfo.loginId ? adminInfo.loginId[0].toUpperCase() : "?";
 
   return (
     <aside className="flex w-[240px] flex-col border-r border-[#E4E7EC] bg-white">
@@ -91,7 +109,7 @@ export default function ContentSidebar() {
         </div>
 
         <span className="truncate text-[20px] font-semibold text-[#111827]">
-          {adminLoginId || "관리자"}
+          {adminInfo.loginId || "관리자"}
         </span>
       </div>
 
@@ -248,11 +266,11 @@ export default function ContentSidebar() {
 
           <div className="min-w-0">
             <p className="truncate text-[14px] font-semibold text-[#111827]">
-              {adminLoginId}
+              {adminInfo.loginId}
             </p>
 
             <p className="truncate text-[13px] text-[#98A2B3]">
-              {formatRole(adminRole)}
+              {formatRole(adminInfo.role)}
             </p>
           </div>
         </div>

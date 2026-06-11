@@ -1,3 +1,5 @@
+import { getCookie } from "./cookie";
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
 
@@ -40,9 +42,9 @@ async function request<T>(
 ): Promise<T> {
   const { params, skipAuth, ...fetchOptions } = options;
   const token =
-    !skipAuth && typeof window !== "undefined"
-      ? localStorage.getItem(tokenKey)
-      : null;
+  !skipAuth && typeof window !== "undefined"
+    ? getCookie(tokenKey)
+    : null;
 
   const isFormData = fetchOptions.body instanceof FormData;
 

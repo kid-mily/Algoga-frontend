@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { adminLogin } from "@/features/services/adminAuth.service";
+import { deleteCookie, setCookie } from "@/lib/cookie";
 
 export default function AdminLoginForm() {
   const router = useRouter();
@@ -45,17 +46,25 @@ export default function AdminLoginForm() {
         throw new Error("관리자 로그인 토큰을 받지 못했습니다.");
       }
 
+      deleteCookie("accessToken");
+      deleteCookie("refreshToken");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      localStorage.setItem("adminAccessToken", data.accessToken);
+      localStorage.removeItem("adminAccessToken");
+      localStorage.removeItem("adminRefreshToken");
+
+      setCookie("adminAccessToken", data.accessToken);
 
       if (data.refreshToken) {
-        localStorage.setItem("adminRefreshToken", data.refreshToken);
+        setCookie("adminRefreshToken", data.refreshToken);
       }
 
       router.push("/contentadmin/lecture");
-    } catch (error: any) {
-      alert(error.message || "관리자 로그인에 실패했습니다.");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "관리자 로그인에 실패했습니다.";
+
+      alert(message);
     } finally {
       setIsLoading(false);
     }

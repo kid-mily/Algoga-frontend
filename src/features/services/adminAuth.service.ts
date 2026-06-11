@@ -1,4 +1,5 @@
 import { api, ApiResponse } from "@/lib/api";
+import { deleteCookie } from "@/lib/cookie";
 import {
   AdminLoginRequest,
   AdminLoginResponse,
@@ -16,6 +17,8 @@ export const adminLogin = async (
 };
 
 export const adminLogout = () => {
+  deleteCookie("adminAccessToken");
+  deleteCookie("adminRefreshToken");
   localStorage.removeItem("adminAccessToken");
   localStorage.removeItem("adminRefreshToken");
 };
