@@ -1,44 +1,12 @@
 import { adminApi, ApiResponse } from "@/lib/api";
-
-export interface PointHistory {
-  pointId?: number;
-  mileageId?: number;
-  userId: number;
-  amount: number;
-  type?: string;
-  reason: string;
-  createdAt: string;
-}
-
-export interface StudentPointInfo {
-  userId: number;
-  userName: string;
-  email: string;
-  totalPoint: number;
-}
-
-export interface PointPayload {
-  userId: number;
-  amount: number;
-  reason: string;
-}
-
-type StudentPointRecord = {
-  userId: number;
-  userName: string;
-  email: string;
-  totalMileage?: number;
-  mileage?: number;
-};
-
-type MileageUsersResponse = {
-  users?: StudentPointRecord[];
-  content?: StudentPointRecord[];
-};
-
-type PointHistoryResponse = {
-  content?: PointHistory[];
-};
+import {
+  MileageUsersResponse,
+  PointHistory,
+  PointHistoryResponse,
+  PointPayload,
+  StudentPointInfo,
+  StudentPointRecord,
+} from "@/features/contentmanage/point/types";
 
 export const getStudentsPoints = async (): Promise<StudentPointInfo[]> => {
   const response = await adminApi.get<
