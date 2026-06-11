@@ -52,6 +52,8 @@ export default function AdminLoginForm() {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("adminAccessToken");
       localStorage.removeItem("adminRefreshToken");
+      deleteCookie("adminAccessToken");
+      deleteCookie("adminRefreshToken");
 
       setCookie("adminAccessToken", data.accessToken);
 

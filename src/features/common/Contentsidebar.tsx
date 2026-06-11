@@ -19,8 +19,13 @@ const getAdminTokenPayload = () => {
   }
 
   const adminAccessToken = getCookie("adminAccessToken");
+  const payload = adminAccessToken ? decodeJwtPayload(adminAccessToken) : null;
 
-  return adminAccessToken ? decodeJwtPayload(adminAccessToken) : null;
+  if (!payload || payload.type !== "ADMIN" || isTokenExpired(payload)) {
+    return null;
+  }
+
+  return payload;
 };
 
 const decodeJwtPayload = (token: string): AdminTokenPayload | null => {
@@ -55,6 +60,21 @@ const formatRole = (role?: string) => {
     .replaceAll("_", " ");
 };
 
+const isTokenExpired = (payload: AdminTokenPayload) => {
+  if (!payload.exp) {
+    return false;
+  }
+
+  return payload.exp <= Math.floor(Date.now() / 1000);
+};
+
+const clearAdminToken = () => {
+  deleteCookie("adminAccessToken");
+  deleteCookie("adminRefreshToken");
+  localStorage.removeItem("adminAccessToken");
+  localStorage.removeItem("adminRefreshToken");
+};
+
 export default function ContentSidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -78,21 +98,15 @@ export default function ContentSidebar() {
 
     const payload = decodeJwtPayload(adminAccessToken);
 
-    if (!payload || payload.type !== "ADMIN") {
-      deleteCookie("adminAccessToken");
-      deleteCookie("adminRefreshToken");
-      localStorage.removeItem("adminAccessToken");
-      localStorage.removeItem("adminRefreshToken");
+    if (!payload || payload.type !== "ADMIN" || isTokenExpired(payload)) {
+      clearAdminToken();
       router.replace("/auth/adminlogin");
       return;
     }
   }, [router]);
 
   const handleAdminLogout = () => {
-    deleteCookie("adminAccessToken");
-    deleteCookie("adminRefreshToken");
-    localStorage.removeItem("adminAccessToken");
-    localStorage.removeItem("adminRefreshToken");
+    clearAdminToken();
 
     router.push("/auth/adminlogin");
     router.refresh();

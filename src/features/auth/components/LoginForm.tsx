@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { login } from "@/features/services/auth.service";
 import CompleteModal from "@/features/common/CompleteModal";
-import { setCookie } from "@/lib/cookie";
+import { deleteCookie, setCookie } from "@/lib/cookie";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -66,6 +66,8 @@ export default function LoginForm() {
 
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      deleteCookie("accessToken");
+      deleteCookie("refreshToken");
 
       setCookie("accessToken", data.accessToken);
 
