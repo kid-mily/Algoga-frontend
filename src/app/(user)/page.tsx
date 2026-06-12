@@ -6,33 +6,65 @@ import AiSchedule from "@/features/main/components/AiSchedule";
 import Banner from "@/features/main/components/Banner";
 import Calender from "@/features/main/components/ScheduleCalendar";
 import MapSection from "./main/MapSection";
+import { getMainNotices } from "@/features/services/notice.service";
+import { getMethodSchedules } from "@/features/services/schedule.service";
 
-export default function Home() {
+// 30분 마다 페이지 재생성
+export const revalidate = 1800;
+
+// 현재 년/월 반환
+const getCurrentYearMonth = () => {
+  const now = new Date();
+
+  return {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+  };
+};
+
+export default async function Home() {
+  const { year, month } = getCurrentYearMonth();
+
+  const [ notices, schedules] = await Promise.all([ 
+    getMainNotices(),
+    getMethodSchedules(year, month),
+  ]);
+
   return (
-    <div className="p-10 w-full min-h-screen bg-[#f5f6f8]">
-        
-        {/* 베너 */}
-        <div className="max-w-4xl mx-auto mb-5">
-            <Banner/>
-        </div>
+    <main className="min-h-screen w-full bg-[#f5f6f8] px-10 py-10">
+      <h1 className="sr-only">메인 페이지</h1>
+
+      {/* 메인 배너 영역 */}
+      <section className="mx-auto mb-5 max-w-4xl">
+        <Banner/>
+      </section>
 
       {/* 지도 */}
-      <div className="max-w-5xl w-full h-[500px] border rounded-xl overflow-hidden shadow-lg bg-white mx-auto">
+      <section
+        className="mx-auto h-[500px] w-full max-w-5xl overflow-hidden rounded-xl border bg-white shadow-lg"
+      >
         <MapSection />
-      </div>
+      </section>
 
-      {/* 캘린더 */}
-      {/* 학습방법 */}
-      <div className="max-w-4xl w-full mx-auto mt-5">
-        <Calender/>
+      {/* 메인 컨텐츠 영역 */}
+      <section className="mx-auto mt-5 w-full max-w-4xl">
+
+        {/* 캘린더 */}
+        <Calender
+          initialYear={year}
+          initialMonth={month}
+          initialSchedules={schedules}
+        />
+
+        {/* 학습 방법 */}
         <LearnMethod />
-        
-        {/* 공지사항, ai 일정 추천 */}
-        <div className="mt-5 gap-5 flex justify-between">
-          <NoticeSection />
+
+        {/* 공지사항 및 Ai 일정 추천 */}
+        <div className="mt-5 flex justify-between gap-5">
+          <NoticeSection notices={notices} />
           <AiSchedule />
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
