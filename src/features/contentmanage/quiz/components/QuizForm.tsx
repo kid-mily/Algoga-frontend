@@ -23,10 +23,13 @@ const emptyQuiz = {
 export default function QuizForm({
   mode = "create",
   initialQuiz = emptyQuiz,
+  defaultCourseId,
 }: QuizFormProps) {
   const router = useRouter();
   const [courses, setCourses] = useState<AdminCourse[]>([]);
-  const [courseId, setCourseId] = useState<number>(initialQuiz.courseId);
+  const [courseId, setCourseId] = useState<number>(
+    initialQuiz.courseId || defaultCourseId || 0
+  );
   const [question, setQuestion] = useState(initialQuiz.question);
   const [options, setOptions] = useState<string[]>([
     initialQuiz.option1,
@@ -265,7 +268,9 @@ export default function QuizForm({
         buttonText="확인"
         onConfirm={() => {
           setOpenCompleteModal(false);
-          router.push("/contentadmin/quiz");
+          router.push(
+            courseId ? `/contentadmin/quiz?courseId=${courseId}` : "/contentadmin/quiz"
+          );
         }}
       />
     </form>

@@ -1,67 +1,36 @@
-"use client";
-
-import { useParams } from "next/navigation";
-import PackageForm from "@/features/contentmanage/package/PackageForm";
+import type { Metadata } from "next";
 import SubHeader from "@/features/contentmanage/common/SubHeader";
+import AccommodationFormClient from "@/features/contentmanage/package/components/AccommodationFormClient";
 
-import {
-  packages,
-} from "@/features/contentmanage/MockData";
+interface EditPackagePageProps {
+  params: Promise<{
+    packageid: string;
+  }>;
+}
 
-export default function EditPackagePage() {
+export const metadata: Metadata = {
+  title: "숙소 수정 | 알고가 관리자",
+  description: "패키지 구성에 사용할 숙소 정보를 수정합니다.",
+};
 
-  const params = useParams();
-
-  const packageid = Number(params.packageid);
-  // 현재 패키지 찾기
-  const packageItem =
-    packages.find(
-      (item) =>
-        item.id === packageid
-    );
-
-  // 없으면 종료
-  if (!packageItem) {
-    return null;
-  }
+export default async function EditPackagePage({ params }: EditPackagePageProps) {
+  const { packageid } = await params;
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
+    <main className="min-h-screen bg-[#F8F8F8] px-8 py-8">
       <SubHeader
         backHref="/contentadmin/package"
-        backText="패키지 목록으로 돌아가기"
-        title="패키지 수정"
-        description="패키지 정보를 수정합니다"
+        backText="패키지 관리로 돌아가기"
+        title="숙소 수정"
+        description="패키지 구성에 사용할 숙소 정보를 수정합니다"
       />
-      <div className="mt-6">
-        <PackageForm
+
+      <section className="mt-6">
+        <AccommodationFormClient
           mode="edit"
-          initialData={{
-            title:
-              packageItem.title,
-            destination:
-              packageItem.location,
-            nights:
-              Number(
-                packageItem.duration.split("박")[0]
-              ),
-            discountPercent:
-              packageItem.discountPercent,
-            description:
-              packageItem.description,
-            lecture:
-              packageItem.lecture,
-            airline:
-              packageItem.flight.airline,
-            airlinePrice:
-              packageItem.flight.price,
-            hotel:
-              packageItem.hotel.hotel,
-            hotelPrice:
-              packageItem.hotel.price,
-          }}
+          accommodationId={packageid}
         />
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

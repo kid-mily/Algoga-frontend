@@ -53,6 +53,7 @@ export type QuizFormData = {
 export type QuizFormProps = {
   mode?: QuizFormMode;
   initialQuiz?: QuizFormData;
+  defaultCourseId?: number;
 };
 
 export type QuizCardProps = {
@@ -75,6 +76,7 @@ export type QuizToolbarProps = {
   searchKeyword: string;
   selectedLecture: string;
   courses: import("../lecture/types").AdminCourse[];
+  createHref?: string;
   onSearchKeywordChange: (value: string) => void;
   onSelectedLectureChange: (value: string) => void;
 };
@@ -82,4 +84,12 @@ export type QuizToolbarProps = {
 export type EditQuizClientProps = {
   quizId: number;
   courseId: number;
+};
+
+export type QuizManageClientProps = {
+  initialCourseId?: string;
+};
+
+export type CreateQuizClientProps = {
+  defaultCourseId?: number;
 };

@@ -10,6 +10,7 @@ export default function LectureTable({
   lectures,
   totalCount,
   onChapterManage,
+  onQuizManage,
   onUsersClick,
   onEditClick,
   onDeleteClick,
@@ -19,24 +20,24 @@ export default function LectureTable({
     <div className="mt-5 w-full max-w-full overflow-hidden rounded-[20px] border border-[#E4E7EC] bg-white">
       <table className="w-full table-fixed border-collapse">
         <caption className="sr-only">
-          국가, 가격, 챕터 관리, 상태, 관리 버튼이 포함된 강의 목록입니다.
+          국가, 가격, 챕터와 퀴즈 관리, 상태, 관리 버튼이 포함된 강의 목록입니다.
         </caption>
         <colgroup>
-          <col className="w-[10%]" />
-          <col className="w-[12%]" />
-          <col className="w-[31%]" />
-          <col className="w-[12%]" />
+          <col className="w-[9%]" />
           <col className="w-[11%]" />
+          <col className="w-[30%]" />
+          <col className="w-[11%]" />
+          <col className="w-[15%]" />
           <col className="w-[8%]" />
           <col className="w-[16%]" />
         </colgroup>
         <thead>
           <tr className="border-b border-[#E4E7EC] bg-[#FCFCFD] text-[13px] font-semibold text-[#667085]">
-            <th scope="col" className="px-3 py-4 text-left">썸네일</th>
+            <th scope="col" className="px-3 py-4 text-center">썸네일</th>
             <th scope="col" className="px-3 py-4 text-left">국가</th>
             <th scope="col" className="px-3 py-4 text-left">강의 제목</th>
             <th scope="col" className="px-3 py-4 text-left">가격</th>
-            <th scope="col" className="px-3 py-4 text-left">챕터</th>
+            <th scope="col" className="px-3 py-4 text-center">콘텐츠</th>
             <th scope="col" className="px-3 py-4 text-center">상태</th>
             <th scope="col" className="px-3 py-4 text-center">관리</th>
           </tr>
@@ -62,6 +63,7 @@ export default function LectureTable({
                   price={formatPrice(lecture.price)}
                   isPublic={getIsPublic(lecture)}
                   onChapterManage={() => onChapterManage(courseId)}
+                  onQuizManage={() => onQuizManage(courseId)}
                   onUsersClick={() =>
                     onUsersClick({ id: courseId, title: lecture.title || "" })
                   }

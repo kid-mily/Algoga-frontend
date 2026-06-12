@@ -1,19 +1,25 @@
-import PackageForm from "@/features/contentmanage/package/PackageForm";
+import type { Metadata } from "next";
 import SubHeader from "@/features/contentmanage/common/SubHeader";
-export default function CreatePackagePage() {
+import AccommodationFormClient from "@/features/contentmanage/package/components/AccommodationFormClient";
 
+export const metadata: Metadata = {
+  title: "숙소 등록 | 알고가 관리자",
+  description: "패키지 구성에 사용할 새 숙소를 등록합니다.",
+};
+
+export default function CreatePackagePage() {
   return (
-    <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
+    <main className="min-h-screen bg-[#F8F8F8] px-8 py-8">
       <SubHeader
         backHref="/contentadmin/package"
-        backText="패키지 목록으로 돌아가기"
-        title="패키지 등록"
-        description="새로운 여행 패키지를 등록합니다"
+        backText="패키지 관리로 돌아가기"
+        title="숙소 등록"
+        description="패키지 구성에 사용할 숙소를 등록합니다"
       />
 
-      <div className="mt-6">
-        <PackageForm mode="create" />
-      </div>
-    </div>
+      <section className="mt-6">
+        <AccommodationFormClient mode="create" />
+      </section>
+    </main>
   );
 }

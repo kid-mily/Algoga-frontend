@@ -6,6 +6,16 @@ export const metadata: Metadata = {
   description: "강의에 연결할 새 퀴즈를 등록하는 콘텐츠 관리자 화면입니다.",
 };
 
-export default function CreateQuizPage() {
-  return <CreateQuizClient />;
+type CreateQuizPageProps = {
+  searchParams: Promise<{
+    courseId?: string;
+  }>;
+};
+
+export default async function CreateQuizPage({
+  searchParams,
+}: CreateQuizPageProps) {
+  const { courseId } = await searchParams;
+
+  return <CreateQuizClient defaultCourseId={Number(courseId) || undefined} />;
 }

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import PointDetailClient from "@/features/contentmanage/point/components/PointDetailClient";
 
 interface PointDetailPageProps {
-  params: {
+  params: Promise<{
     studentid: string;
-  };
+  }>;
 }
 
 export const metadata: Metadata = {
@@ -12,6 +13,13 @@ export const metadata: Metadata = {
   description: "사용자 마일리지 지급, 회수, 사용 내역을 확인합니다.",
 };
 
-export default function PointDetailPage({ params }: PointDetailPageProps) {
-  return <PointDetailClient studentId={Number(params.studentid)} />;
+export default async function PointDetailPage({ params }: PointDetailPageProps) {
+  const { studentid } = await params;
+  const studentId = Number(studentid);
+
+  if (!Number.isInteger(studentId) || studentId <= 0) {
+    notFound();
+  }
+
+  return <PointDetailClient studentId={studentId} />;
 }

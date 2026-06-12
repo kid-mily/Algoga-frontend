@@ -7,6 +7,7 @@ interface PointHistoryRowProps {
 export default function PointHistoryRow({ log }: PointHistoryRowProps) {
   const isPlus = log.type === "GIVE" || log.type === "EARN" || log.type === "적립";
   const dateText = log.createdAt ? log.createdAt.substring(0, 10) : "-";
+  const displayAmount = Math.abs(log.amount);
 
   return (
     <tr className="border-b border-[#E4E7EC]">
@@ -34,7 +35,7 @@ export default function PointHistoryRow({ log }: PointHistoryRowProps) {
         }`}
       >
         {isPlus ? "+" : "-"}
-        {log.amount.toLocaleString()}원
+        {displayAmount.toLocaleString()}원
       </td>
       <td className="px-6 py-5 text-[15px] text-[#344054]">
         {log.reason}

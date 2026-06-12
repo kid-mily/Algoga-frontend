@@ -137,6 +137,9 @@ export default function LectureManageClient() {
               onChapterManage={(courseId) =>
                 router.push(`/contentadmin/lecture/${courseId}/chapter/new`)
               }
+              onQuizManage={(courseId) =>
+                router.push(`/contentadmin/quiz?courseId=${courseId}`)
+              }
               onUsersClick={(course) => {
                 setTargetCourseForStudent(course);
                 setStudentModalOpen(true);

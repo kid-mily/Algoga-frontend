@@ -199,6 +199,7 @@ export interface LectureCardProps {
   price?: string | number | null;
   isPublic?: boolean;
   onChapterManage?: () => void;
+  onQuizManage?: () => void;
   onUsersClick?: () => void;
   onEditClick?: () => void;
   onDeleteClick?: () => void;
@@ -258,6 +259,7 @@ export type LectureTableProps = {
   lectures: LectureRow[];
   totalCount: number;
   onChapterManage: (courseId: number) => void;
+  onQuizManage: (courseId: number) => void;
   onUsersClick: (course: { id: number; title: string }) => void;
   onEditClick: (courseId: number) => void;
   onDeleteClick: (courseId: number) => void;

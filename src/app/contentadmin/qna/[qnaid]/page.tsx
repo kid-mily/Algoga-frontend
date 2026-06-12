@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import AdminQnaAnswerClient from "@/features/contentmanage/qna/components/AdminQnaAnswerClient";
 
 interface AnswerQnaPageProps {
-  params: {
+  params: Promise<{
     qnaid: string;
-  };
-  searchParams: {
+  }>;
+  searchParams: Promise<{
     courseId?: string;
-  };
+  }>;
 }
 
 export const metadata: Metadata = {
@@ -15,14 +15,17 @@ export const metadata: Metadata = {
   description: "학생 Q&A에 답변을 작성합니다.",
 };
 
-export default function AnswerQnaPage({
+export default async function AnswerQnaPage({
   params,
   searchParams,
 }: AnswerQnaPageProps) {
+  const { qnaid } = await params;
+  const { courseId = "" } = await searchParams;
+
   return (
     <AdminQnaAnswerClient
-      courseId={searchParams.courseId || ""}
-      qnaId={params.qnaid}
+      courseId={courseId}
+      qnaId={qnaid}
       mode="answer"
     />
   );

@@ -174,26 +174,6 @@ export default function ContentSidebar() {
           </Link>
 
           <Link
-            href="/contentadmin/quiz"
-            className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
-              pathname === "/contentadmin/quiz"
-                ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
-                : "text-[#344054] hover:bg-[#F5F7FA]"
-            }`}
-          >
-            <img
-              src={
-                pathname === "/contentadmin/quiz"
-                  ? "/images/quiz-active.svg"
-                  : "/images/quiz.svg"
-              }
-              alt="퀴즈"
-              className="h-[20px] w-[20px]"
-            />
-            퀴즈 관리
-          </Link>
-
-          <Link
             href="/contentadmin/coupon"
             className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
               pathname === "/contentadmin/coupon"

@@ -12,6 +12,9 @@ export default function EditQuizClient({ quizId, courseId }: EditQuizClientProps
   const [quiz, setQuiz] = useState<AdminQuiz | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const backHref = courseId
+    ? `/contentadmin/quiz?courseId=${courseId}`
+    : "/contentadmin/quiz";
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -54,7 +57,7 @@ export default function EditQuizClient({ quizId, courseId }: EditQuizClientProps
     <main className="min-h-screen bg-[#F8F8F8] px-8 py-8" aria-labelledby="edit-quiz-title">
       <section aria-labelledby="edit-quiz-title">
         <SubHeader
-          backHref="/contentadmin/quiz"
+          backHref={backHref}
           backText="퀴즈 목록으로 돌아가기"
           title="퀴즈 수정"
           description="퀴즈 정보를 수정합니다."

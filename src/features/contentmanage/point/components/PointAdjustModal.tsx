@@ -60,7 +60,9 @@ export default function PointAdjustModal({
   const modeText = getModeText(mode);
 
   const amountValue = Number(amount || 0);
-  const isActive = amountValue > 0 && reason.trim() !== "";
+  const isRecallOverLimit = mode === "recall" && amountValue > currentPoint;
+  const isActive =
+    amountValue > 0 && reason.trim() !== "" && !isRecallOverLimit;
   const nextPoint =
     mode === "give" ? currentPoint + amountValue : currentPoint - amountValue;
 
@@ -87,11 +89,16 @@ export default function PointAdjustModal({
     }
 
     setIsSubmitting(true);
-    const success = await onSubmit(amountValue, reason.trim());
-    setIsSubmitting(false);
+    try {
+      const success = await onSubmit(amountValue, reason.trim());
 
-    if (success) {
-      resetForm();
+      if (success) {
+        resetForm();
+      }
+    } catch (submitError) {
+      console.error("마일리지 조정 실패:", submitError);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -150,12 +157,19 @@ export default function PointAdjustModal({
               id="point-adjust-amount"
               type="number"
               min={1}
+              max={mode === "recall" ? currentPoint : undefined}
               placeholder={modeText.amountPlaceholder}
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
               className="mt-3 h-[56px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
             />
           </section>
+
+          {isRecallOverLimit && (
+            <p role="alert" className="mt-3 text-[13px] font-medium text-[#DC2626]">
+              보유 마일리지보다 많이 회수할 수 없습니다.
+            </p>
+          )}
 
           <section className="mt-6">
             <label

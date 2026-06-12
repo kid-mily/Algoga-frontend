@@ -1,0 +1,11 @@
+export const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+};
+
+export const isAbortError = (error: unknown) => {
+  return error instanceof DOMException && error.name === "AbortError";
+};

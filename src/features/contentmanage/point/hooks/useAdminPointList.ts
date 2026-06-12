@@ -7,25 +7,25 @@ import {
   recallPoints,
 } from "@/features/services/adminPoint.service";
 import { PointPayload, StudentPointInfo } from "../types";
-
-const getErrorMessage = (error: unknown, fallback: string) => {
-  return error instanceof Error ? error.message : fallback;
-};
+import { getErrorMessage, isAbortError } from "../utils/errorUtils";
 
 export const useAdminPointList = () => {
   const [students, setStudents] = useState<StudentPointInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchStudents = useCallback(async () => {
+  const fetchStudents = useCallback(async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       setError("");
-      const data = await getStudentsPoints();
+      const data = await getStudentsPoints(signal);
+      if (signal?.aborted) return;
       setStudents(data);
     } catch (fetchError: unknown) {
+      if (isAbortError(fetchError) || signal?.aborted) return;
       setError(getErrorMessage(fetchError, "학생 마일리지 정보를 불러오지 못했습니다."));
     } finally {
+      if (signal?.aborted) return;
       setIsLoading(false);
     }
   }, []);
@@ -61,9 +61,17 @@ export const useAdminPointList = () => {
   );
 
   useEffect(() => {
-    queueMicrotask(() => {
-      fetchStudents();
+    const abortController = new AbortController();
+
+    void Promise.resolve().then(() => {
+      if (!abortController.signal.aborted) {
+        void fetchStudents(abortController.signal);
+      }
     });
+
+    return () => {
+      abortController.abort();
+    };
   }, [fetchStudents]);
 
   return {
