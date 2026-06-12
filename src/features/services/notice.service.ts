@@ -1,8 +1,10 @@
-import { api } from "@/lib/api"
+import { api, ApiResponse } from "@/lib/api";
+import { Notice } from "../main/components/Types";
 
-// 메인 공지 조회
 export const getMainNotices = async () => {
-  const response = await api.get('/api/v1/public/notices/main')
+  const response = await api.get<ApiResponse<Notice[]>>(
+    "/api/v1/public/notices/main"
+  );
 
-  return response.data.data
-}
+  return response.data;
+};
