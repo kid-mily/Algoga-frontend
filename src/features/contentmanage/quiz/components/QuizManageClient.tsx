@@ -1,12 +1,15 @@
 "use client";
 
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 import LoadingSpinner from "@/features/common/LoadingSpinner";
 import QuizList from "./QuizList";
 import QuizToolbar from "./QuizToolbar";
 import { useAdminQuizList } from "../hooks/useAdminQuizList";
+import { QuizManageClientProps } from "../types";
+import SubHeader from "../../common/SubHeader";
 
-export default function QuizManageClient() {
+export default function QuizManageClient({
+  initialCourseId = "all",
+}: QuizManageClientProps) {
   const {
     selectedLecture,
     setSelectedLecture,
@@ -17,12 +20,18 @@ export default function QuizManageClient() {
     isLoading,
     errorMessage,
     refetch,
-  } = useAdminQuizList();
+  } = useAdminQuizList(initialCourseId);
+  const createHref =
+    selectedLecture === "all"
+      ? "/contentadmin/quiz/new"
+      : `/contentadmin/quiz/new?courseId=${selectedLecture}`;
 
   return (
     <main className="min-h-screen bg-[#F8F8F8] px-8 py-8" aria-labelledby="quiz-management-title">
       <section aria-labelledby="quiz-management-title">
-        <SimpleSubHeader
+        <SubHeader
+          backHref="/contentadmin/lecture"
+          backText="강의관리로 돌아가기"
           title="퀴즈 관리"
           description="강의별 퀴즈를 등록하고 관리합니다."
         />
@@ -33,6 +42,7 @@ export default function QuizManageClient() {
           searchKeyword={searchKeyword}
           selectedLecture={selectedLecture}
           courses={courses}
+          createHref={createHref}
           onSearchKeywordChange={setSearchKeyword}
           onSelectedLectureChange={setSelectedLecture}
         />

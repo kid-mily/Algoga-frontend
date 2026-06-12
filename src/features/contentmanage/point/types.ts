@@ -37,11 +37,10 @@ export type StudentPointRecord = {
   mileage?: number;
 };
 
-export type MileageUsersResponse = {
-  users?: StudentPointRecord[];
-  content?: StudentPointRecord[];
-};
+export type MileageUsersResponse =
+  | { users: StudentPointRecord[] }
+  | { content: StudentPointRecord[] };
 
 export type PointHistoryResponse = {
-  content?: PointHistory[];
+  content: PointHistory[];
 };

@@ -10,8 +10,10 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return error instanceof Error ? error.message || fallback : fallback;
 };
 
-export function useAdminQuizList() {
-  const [selectedLecture, setSelectedLecture] = useState("all");
+export function useAdminQuizList(initialCourseId = "all") {
+  const [selectedLecture, setSelectedLecture] = useState(
+    initialCourseId || "all"
+  );
   const [searchKeyword, setSearchKeyword] = useState("");
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [quizzes, setQuizzes] = useState<AdminQuizWithLecture[]>([]);

@@ -5,6 +5,7 @@ export default function QuizToolbar({
   searchKeyword,
   selectedLecture,
   courses,
+  createHref = "/contentadmin/quiz/new",
   onSearchKeywordChange,
   onSelectedLectureChange,
 }: QuizToolbarProps) {
@@ -57,7 +58,7 @@ export default function QuizToolbar({
         </div>
 
         <Link
-          href="/contentadmin/quiz/new"
+          href={createHref}
           className="flex h-[42px] shrink-0 items-center rounded-[12px] bg-[#439A97] px-5 text-[14px] font-semibold text-white transition hover:opacity-90"
         >
           + 퀴즈 등록

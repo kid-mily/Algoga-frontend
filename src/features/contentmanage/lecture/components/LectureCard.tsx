@@ -9,6 +9,7 @@ export default function LectureCard({
   price,
   isPublic = false,
   onChapterManage,
+  onQuizManage,
   onUsersClick,
   onEditClick,
   onDeleteClick,
@@ -21,20 +22,20 @@ export default function LectureCard({
 
   return (
     <tr className="border-b border-[#E4E7EC] bg-white text-[14px] text-[#111827]">
-      <td className="px-3 py-4 align-middle">
+      <td className="px-3 py-4 text-center align-middle">
         {thumbnail ? (
           <Image
             src={thumbnail}
             alt={`${displayTitle} 강의 썸네일`}
             width={80}
             height={52}
-            className="rounded-[12px] object-cover"
+            className="mx-auto rounded-[12px] object-cover"
           />
         ) : (
           <div
             role="img"
             aria-label={`${displayTitle} 강의 썸네일 없음`}
-            className="flex h-[52px] w-[80px] items-center justify-center rounded-[12px] bg-[#F2F4F7] text-[11px] text-[#98A2B3]"
+            className="mx-auto flex h-[52px] w-[80px] items-center justify-center rounded-[12px] bg-[#F2F4F7] text-[11px] text-[#98A2B3]"
           >
             이미지 없음
           </div>
@@ -62,15 +63,25 @@ export default function LectureCard({
         </span>
       </td>
 
-      <td className="px-3 py-4 align-middle">
-        <button
-          type="button"
-          onClick={onChapterManage}
-          aria-label={`${displayTitle} 챕터 관리`}
-          className="whitespace-nowrap rounded-full border border-[#B7E4C7] bg-[#EAF7EE] px-2.5 py-1.5 text-[12px] font-semibold text-[#43A047]"
-        >
-          챕터관리
-        </button>
+      <td className="px-3 py-4 text-center align-middle">
+        <div className="flex min-w-0 items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={onChapterManage}
+            aria-label={`${displayTitle} 챕터 관리`}
+            className="whitespace-nowrap rounded-full border border-[#B7E4C7] bg-[#EAF7EE] px-2.5 py-1.5 text-[12px] font-semibold text-[#43A047]"
+          >
+            챕터관리
+          </button>
+          <button
+            type="button"
+            onClick={onQuizManage}
+            aria-label={`${displayTitle} 퀴즈 관리`}
+            className="whitespace-nowrap rounded-full border border-[#B7D7E8] bg-[#ECF7FC] px-2.5 py-1.5 text-[12px] font-semibold text-[#1570EF]"
+          >
+            퀴즈관리
+          </button>
+        </div>
       </td>
 
       <td className="px-3 py-4 text-center align-middle">

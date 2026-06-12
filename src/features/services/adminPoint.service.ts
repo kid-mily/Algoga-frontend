@@ -8,15 +8,19 @@ import {
   StudentPointRecord,
 } from "@/features/contentmanage/point/types";
 
-export const getStudentsPoints = async (): Promise<StudentPointInfo[]> => {
+export const getStudentsPoints = async (
+  signal?: AbortSignal
+): Promise<StudentPointInfo[]> => {
   const response = await adminApi.get<
     ApiResponse<MileageUsersResponse | StudentPointRecord[]>
-  >("/api/v1/admin/mileages");
+  >("/api/v1/admin/mileages", { signal });
 
   const data = response.data;
   const users = Array.isArray(data)
     ? data
-    : data.users || data.content || [];
+    : "users" in data
+      ? data.users
+      : data.content;
 
   return users.map((item) => ({
     userId: item.userId,
@@ -26,41 +30,50 @@ export const getStudentsPoints = async (): Promise<StudentPointInfo[]> => {
   }));
 };
 
-export const givePoints = async (payload: PointPayload) => {
+export const givePoints = async (
+  payload: PointPayload,
+  signal?: AbortSignal
+) => {
   const { userId, ...restPayload } = payload;
 
   const response = await adminApi.post<ApiResponse<unknown>>(
     `/api/v1/admin/mileages/users/${userId}/earn`,
-    restPayload
+    restPayload,
+    { signal }
   );
 
   return response.data;
 };
 
-export const recallPoints = async (payload: PointPayload) => {
+export const recallPoints = async (
+  payload: PointPayload,
+  signal?: AbortSignal
+) => {
   const { userId, ...restPayload } = payload;
 
   const response = await adminApi.post<ApiResponse<unknown>>(
     `/api/v1/admin/mileages/users/${userId}/use`,
-    restPayload
+    restPayload,
+    { signal }
   );
 
   return response.data;
 };
 
 export const getPointHistory = async (
-  userId: number
+  userId: number,
+  signal?: AbortSignal
 ): Promise<PointHistory[]> => {
   const response = await adminApi.get<
     ApiResponse<PointHistory[] | PointHistoryResponse>
   >(`/api/v1/admin/mileages/users/${userId}/histories`, {
     params: { t: Date.now() },
+    signal,
   });
 
   const data = response.data;
 
   if (Array.isArray(data)) return data;
-  if (Array.isArray(data.content)) return data.content;
 
-  return [];
+  return data.content;
 };

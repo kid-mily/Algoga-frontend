@@ -67,9 +67,13 @@ export default function PointHistoryTable({
                 </td>
               </tr>
             ) : (
-              logs.map((log) => (
+              logs.map((log, index) => (
                 <PointHistoryRow
-                  key={log.pointId || log.mileageId || `${log.userId}-${log.createdAt}`}
+                  key={
+                    log.pointId ??
+                    log.mileageId ??
+                    `${log.userId}-${log.createdAt}-${index}`
+                  }
                   log={log}
                 />
               ))
