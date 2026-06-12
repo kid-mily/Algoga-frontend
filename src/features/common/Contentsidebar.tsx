@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { deleteCookie, getCookie } from "@/lib/cookie";
 
@@ -13,19 +13,12 @@ interface AdminTokenPayload {
   exp?: number;
 }
 
-const getAdminTokenPayload = () => {
+const getAdminAccessToken = () => {
   if (typeof window === "undefined") {
     return null;
   }
 
-  const adminAccessToken = getCookie("adminAccessToken");
-  const payload = adminAccessToken ? decodeJwtPayload(adminAccessToken) : null;
-
-  if (!payload || payload.type !== "ADMIN" || isTokenExpired(payload)) {
-    return null;
-  }
-
-  return payload;
+  return getCookie("adminAccessToken");
 };
 
 const decodeJwtPayload = (token: string): AdminTokenPayload | null => {
@@ -75,18 +68,48 @@ const clearAdminToken = () => {
   localStorage.removeItem("adminRefreshToken");
 };
 
+const subscribeAdminToken = (onStoreChange: () => void) => {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  window.addEventListener("auth-state-changed", onStoreChange);
+  window.addEventListener("storage", onStoreChange);
+
+  return () => {
+    window.removeEventListener("auth-state-changed", onStoreChange);
+    window.removeEventListener("storage", onStoreChange);
+  };
+};
+
+const getAdminTokenSnapshot = () => getAdminAccessToken() || "";
+const getServerAdminTokenSnapshot = () => "";
+
 export default function ContentSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const adminAccessToken = useSyncExternalStore(
+    subscribeAdminToken,
+    getAdminTokenSnapshot,
+    getServerAdminTokenSnapshot
+  );
+  const adminPayload = useMemo(() => {
+    if (!adminAccessToken) {
+      return null;
+    }
 
-  const [adminInfo] = useState(() => {
-    const payload = getAdminTokenPayload();
+    const payload = decodeJwtPayload(adminAccessToken);
 
-    return {
-      loginId: payload?.sub || "",
-      role: payload?.role || "",
-    };
-  });
+    if (!payload || payload.type !== "ADMIN" || isTokenExpired(payload)) {
+      return null;
+    }
+
+    return payload;
+  }, [adminAccessToken]);
+  const adminInfo = {
+    loginId: adminPayload?.sub || "",
+    role: adminPayload?.role || "",
+  };
 
   useEffect(() => {
     const adminAccessToken = getCookie("adminAccessToken");
