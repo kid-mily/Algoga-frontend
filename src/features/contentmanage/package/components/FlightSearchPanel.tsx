@@ -11,14 +11,24 @@ export default function FlightSearchPanel() {
   const [departureDate, setDepartureDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
   const [adults, setAdults] = useState(1);
+  const [formError, setFormError] = useState("");
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!origin.trim() || !destination.trim() || !departureDate) {
+      const missingFields = [
+        !origin.trim() ? "origin" : "",
+        !destination.trim() ? "destination" : "",
+        !departureDate ? "departureDate" : "",
+      ].filter(Boolean);
+
+      setFormError("필수 항목을 모두 입력해주세요.");
+      console.warn("항공편 검색 필수값 누락:", missingFields);
       return;
     }
 
+    setFormError("");
     submitSearch({
       origin: origin.trim(),
       destination: destination.trim(),
@@ -39,7 +49,10 @@ export default function FlightSearchPanel() {
           <span className="mb-2 block text-[13px] font-semibold text-[#344054]">출발지</span>
           <input
             value={origin}
-            onChange={(event) => setOrigin(event.target.value)}
+            onChange={(event) => {
+              setOrigin(event.target.value);
+              setFormError("");
+            }}
             placeholder="ICN"
             className="h-[42px] w-full rounded-[12px] border border-[#E4E7EC] px-3 text-[14px] outline-none"
           />
@@ -48,7 +61,10 @@ export default function FlightSearchPanel() {
           <span className="mb-2 block text-[13px] font-semibold text-[#344054]">도착지</span>
           <input
             value={destination}
-            onChange={(event) => setDestination(event.target.value)}
+            onChange={(event) => {
+              setDestination(event.target.value);
+              setFormError("");
+            }}
             placeholder="NRT"
             className="h-[42px] w-full rounded-[12px] border border-[#E4E7EC] px-3 text-[14px] outline-none"
           />
@@ -58,7 +74,10 @@ export default function FlightSearchPanel() {
           <input
             type="date"
             value={departureDate}
-            onChange={(event) => setDepartureDate(event.target.value)}
+            onChange={(event) => {
+              setDepartureDate(event.target.value);
+              setFormError("");
+            }}
             className="h-[42px] w-full rounded-[12px] border border-[#E4E7EC] px-3 text-[14px] outline-none"
           />
         </label>
@@ -92,6 +111,12 @@ export default function FlightSearchPanel() {
           </button>
         </footer>
       </form>
+
+      {formError && (
+        <section role="alert" className="mt-4 rounded-[12px] bg-[#FEF2F2] p-4 text-[14px] text-[#DC2626]">
+          {formError}
+        </section>
+      )}
 
       {error && (
         <section role="alert" className="mt-4 rounded-[12px] bg-[#FEF2F2] p-4 text-[14px] text-[#DC2626]">

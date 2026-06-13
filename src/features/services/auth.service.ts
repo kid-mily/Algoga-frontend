@@ -5,20 +5,10 @@ import {
   LoginResponse,
   ResetPasswordRequest,
 } from "@/features/auth/types";
-import { api, ApiResponse } from "@/lib/api";
-
-type AuthApiResponse<T> = ApiResponse<T> | T;
-
-const unwrapData = <T>(response: AuthApiResponse<T>): T => {
-  if (response && typeof response === "object" && "data" in response) {
-    return (response as ApiResponse<T>).data;
-  }
-
-  return response as T;
-};
+import { api, ApiResult, unwrapData } from "@/lib/api";
 
 export const login = async (user: LoginRequest): Promise<LoginResponse> => {
-  const response = await api.post<AuthApiResponse<LoginResponse>>(
+  const response = await api.post<ApiResult<LoginResponse>>(
     "/api/v1/auth/login",
     user,
     { skipAuth: true }

@@ -20,27 +20,27 @@ export const useAdminPointHistory = (studentId: number) => {
         const data = await getPointHistory(studentId, abortController.signal);
         if (abortController.signal.aborted) return;
         setLogs(data);
+        setIsLoading(false);
       } catch (fetchError: unknown) {
         if (isAbortError(fetchError) || abortController.signal.aborted) return;
         setError(getErrorMessage(fetchError, "상세 내역을 불러오지 못했습니다."));
-      } finally {
-        if (abortController.signal.aborted) return;
         setIsLoading(false);
       }
     };
 
-    void Promise.resolve().then(() => {
-      if (abortController.signal.aborted) return;
-
-      if (Number.isFinite(studentId) && studentId > 0) {
-        void fetchHistory();
-        return;
-      }
-
+    const handleInvalidStudentId = async () => {
       setLogs([]);
       setError("유효하지 않은 학생 ID입니다.");
       setIsLoading(false);
-    });
+    };
+
+    if (abortController.signal.aborted) return;
+
+    if (Number.isFinite(studentId) && studentId > 0) {
+      void fetchHistory();
+    } else {
+      void handleInvalidStudentId();
+    }
 
     return () => {
       abortController.abort();

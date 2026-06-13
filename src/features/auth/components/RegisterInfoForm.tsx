@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   checkUsernameDuplicate,
   sendSignupEmailCode,
@@ -50,8 +50,20 @@ export default function RegisterInfoForm({
   const [isEmailDuplicated, setIsEmailDuplicated] = useState(false);
   const [emailCode, setEmailCode] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
+  const usernameCheckControllerRef = useRef<AbortController | null>(null);
+  const emailCodeControllerRef = useRef<AbortController | null>(null);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isAbortError = (error: unknown) => {
+    return error instanceof DOMException && error.name === "AbortError";
+  };
+
+  useEffect(() => {
+    return () => {
+      usernameCheckControllerRef.current?.abort();
+      emailCodeControllerRef.current?.abort();
+    };
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -118,6 +130,8 @@ export default function RegisterInfoForm({
   };
 
   const handleUsernameChange = (value: string) => {
+    usernameCheckControllerRef.current?.abort();
+    setIsCheckingUsername(false);
     onChange("username", value);
     setIsUsernameChecked(false);
     setUsernameMessage("");
@@ -128,6 +142,8 @@ export default function RegisterInfoForm({
   };
 
   const handleEmailChange = (value: string) => {
+    emailCodeControllerRef.current?.abort();
+    setIsSendingEmailCode(false);
     onChange("email", value);
     setIsEmailCodeSent(false);
     setIsEmailVerified(false);
@@ -151,17 +167,23 @@ export default function RegisterInfoForm({
       return;
     }
 
+    usernameCheckControllerRef.current?.abort();
+    const controller = new AbortController();
+    usernameCheckControllerRef.current = controller;
+
     try {
       setIsCheckingUsername(true);
       setUsernameMessage("");
       setErrors((prev) => ({ ...prev, username: "" }));
 
-      const result = await checkUsernameDuplicate(username);
-      const resultText = typeof result === "string" ? result : "";
-      const isDuplicated =
-        result === false || /중복|이미|사용\s?중|존재/.test(resultText);
+      const isAvailable = await checkUsernameDuplicate(
+        username,
+        controller.signal
+      );
 
-      if (isDuplicated) {
+      if (controller.signal.aborted) return;
+
+      if (!isAvailable) {
         setIsUsernameChecked(false);
         setUsernameMessage("");
         setErrors((prev) => ({
@@ -174,6 +196,8 @@ export default function RegisterInfoForm({
       setIsUsernameChecked(true);
       setUsernameMessage("사용 가능한 아이디입니다.");
     } catch (error: unknown) {
+      if (isAbortError(error) || controller.signal.aborted) return;
+
       const message =
         error instanceof Error
           ? error.message
@@ -186,7 +210,9 @@ export default function RegisterInfoForm({
         username: message,
       }));
     } finally {
-      setIsCheckingUsername(false);
+      if (!controller.signal.aborted) {
+        setIsCheckingUsername(false);
+      }
     }
   };
 
@@ -201,6 +227,10 @@ export default function RegisterInfoForm({
       return;
     }
 
+    emailCodeControllerRef.current?.abort();
+    const controller = new AbortController();
+    emailCodeControllerRef.current = controller;
+
     try {
       setIsSendingEmailCode(true);
       setIsEmailDuplicated(false);
@@ -209,10 +239,15 @@ export default function RegisterInfoForm({
       setEmailMessage("");
       setErrors((prev) => ({ ...prev, email: "" }));
 
-      await sendSignupEmailCode(email);
+      await sendSignupEmailCode(email, controller.signal);
+
+      if (controller.signal.aborted) return;
+
       setIsEmailCodeSent(true);
       setEmailMessage("인증번호를 이메일로 보냈습니다.");
     } catch (error: unknown) {
+      if (isAbortError(error) || controller.signal.aborted) return;
+
       const message =
         error instanceof Error
           ? error.message
@@ -228,7 +263,9 @@ export default function RegisterInfoForm({
         email: duplicated ? "이미 가입된 이메일입니다." : message,
       }));
     } finally {
-      setIsSendingEmailCode(false);
+      if (!controller.signal.aborted) {
+        setIsSendingEmailCode(false);
+      }
     }
   };
 
@@ -301,6 +338,11 @@ export default function RegisterInfoForm({
               type="button"
               onClick={handleUsernameCheck}
               disabled={isLoading || isCheckingUsername || !formData.username.trim()}
+              aria-label={
+                isCheckingUsername
+                  ? "중복 확인: 사용자 이름 검사 중"
+                  : "중복 확인: 사용자 이름 검사"
+              }
               className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
             >
               {isCheckingUsername ? "확인 중" : "중복 확인"}
@@ -308,7 +350,9 @@ export default function RegisterInfoForm({
           </div>
           {errors.username && <p className="mt-1 text-[13px] text-red-500">{errors.username}</p>}
           {!errors.username && usernameMessage && (
-            <p className="mt-1 text-[13px] text-[#439A97]">{usernameMessage}</p>
+            <p aria-live="polite" className="mt-1 text-[13px] text-[#439A97]">
+              {usernameMessage}
+            </p>
           )}
           {/* 🌟 아이디 중복 관련 백엔드 에러 표시 */}
           {serverError?.field === "username" && !errors.username && (
@@ -371,7 +415,12 @@ export default function RegisterInfoForm({
               value={formData.email}
               onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="example@algoga.com"
-              className="h-[35px] min-w-0 flex-1 rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+              aria-invalid={isEmailDuplicated || !!errors.email}
+              className={`h-[35px] min-w-0 flex-1 rounded-[16px] border bg-[#F9FAFB] px-5 text-[15px] outline-none ${
+                isEmailDuplicated
+                  ? "border-red-500 ring-1 ring-red-100"
+                  : "border-[#D0D5DD]"
+              }`}
               disabled={isLoading || isEmailVerified}
             />
             <button
@@ -384,6 +433,11 @@ export default function RegisterInfoForm({
                 isEmailVerified ||
                 !emailRegex.test(formData.email)
               }
+              aria-label={
+                isSendingEmailCode
+                  ? "인증: 이메일 인증번호 발송 중"
+                  : "인증: 이메일 인증번호 발송"
+              }
               className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
             >
               {isSendingEmailCode ? "발송 중" : isEmailCodeSent ? "재발송" : "인증"}
@@ -392,7 +446,10 @@ export default function RegisterInfoForm({
           {/* 프론트엔드 자체 에러 (형식 등) */}
           {errors.email && <p className="mt-1 text-[13px] text-red-500">{errors.email}</p>}
           {!errors.email && emailMessage && (
-            <p className={`mt-1 text-[13px] ${isEmailVerified ? "text-[#439A97]" : "text-[#667085]"}`}>
+            <p
+              aria-live="polite"
+              className={`mt-1 text-[13px] ${isEmailVerified ? "text-[#439A97]" : "text-[#667085]"}`}
+            >
               {emailMessage}
             </p>
           )}
@@ -419,6 +476,11 @@ export default function RegisterInfoForm({
                 type="button"
                 onClick={handleVerifyEmailCode}
                 disabled={isLoading || isVerifyingEmailCode || !emailCode.trim()}
+                aria-label={
+                  isVerifyingEmailCode
+                    ? "확인: 이메일 인증번호 확인 중"
+                    : "확인: 이메일 인증번호 확인"
+                }
                 className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
               >
                 {isVerifyingEmailCode ? "확인 중" : "확인"}
@@ -532,6 +594,7 @@ export default function RegisterInfoForm({
         type="button"
         onClick={handleNextClick}
         disabled={isLoading} 
+        aria-label={isLoading ? "다음 단계 이동 준비 중" : "다음 단계로 이동"}
         className={`mt-8 h-[43px] w-full rounded-[18px] text-[18px] font-semibold text-white transition ${
           isLoading ? "bg-[#D0D5DD] cursor-not-allowed" : "bg-[#439A97] hover:bg-[#357c7a]"
         }`}

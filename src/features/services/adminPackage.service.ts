@@ -6,17 +6,7 @@ import {
   normalizeAccommodation,
   normalizeFlight,
 } from "@/features/contentmanage/package/types";
-import { adminApi, api, ApiResponse } from "@/lib/api";
-
-type PackageApiResponse<T> = ApiResponse<T> | T;
-
-const unwrapData = <T>(response: PackageApiResponse<T>): T => {
-  if (response && typeof response === "object" && "data" in response) {
-    return (response as ApiResponse<T>).data;
-  }
-
-  return response as T;
-};
+import { adminApi, api, ApiResult, unwrapData } from "@/lib/api";
 
 const unwrapList = (data: unknown) => {
   if (Array.isArray(data)) return data;
@@ -50,10 +40,12 @@ const buildAccommodationFormData = (payload: AccommodationPayload) => {
 };
 
 export const getCountryAccommodations = async (
-  countryId: string | number
+  countryId: string | number,
+  signal?: AbortSignal
 ): Promise<Accommodation[]> => {
-  const response = await api.get<PackageApiResponse<unknown>>(
-    `/api/v1/countries/${countryId}/accommodations`
+  const response = await api.get<ApiResult<unknown>>(
+    `/api/v1/countries/${countryId}/accommodations`,
+    { signal }
   );
   const data = unwrapData(response);
 
@@ -63,20 +55,26 @@ export const getCountryAccommodations = async (
 };
 
 export const getAccommodation = async (
-  accommodationId: string | number
+  accommodationId: string | number,
+  signal?: AbortSignal
 ): Promise<Accommodation> => {
-  const response = await api.get<PackageApiResponse<unknown>>(
-    `/api/v1/accommodations/${accommodationId}`
+  const response = await api.get<ApiResult<unknown>>(
+    `/api/v1/accommodations/${accommodationId}`,
+    { signal }
   );
   const data = unwrapData(response);
 
   return normalizeAccommodation(data, Number(accommodationId));
 };
 
-export const createAccommodation = async (payload: AccommodationPayload) => {
-  const response = await adminApi.post<PackageApiResponse<unknown>>(
+export const createAccommodation = async (
+  payload: AccommodationPayload,
+  signal?: AbortSignal
+) => {
+  const response = await adminApi.post<ApiResult<unknown>>(
     "/api/v1/admin/accommodations",
-    buildAccommodationFormData(payload)
+    buildAccommodationFormData(payload),
+    { signal }
   );
 
   return unwrapData(response);
@@ -84,18 +82,20 @@ export const createAccommodation = async (payload: AccommodationPayload) => {
 
 export const updateAccommodation = async (
   accommodationId: string | number,
-  payload: AccommodationPayload
+  payload: AccommodationPayload,
+  signal?: AbortSignal
 ) => {
-  const response = await adminApi.put<PackageApiResponse<unknown>>(
+  const response = await adminApi.put<ApiResult<unknown>>(
     `/api/v1/admin/accommodations/${accommodationId}`,
-    buildAccommodationFormData(payload)
+    buildAccommodationFormData(payload),
+    { signal }
   );
 
   return unwrapData(response);
 };
 
 export const deleteAccommodation = async (accommodationId: string | number) => {
-  const response = await adminApi.delete<PackageApiResponse<unknown>>(
+  const response = await adminApi.delete<ApiResult<unknown>>(
     `/api/v1/admin/accommodations/${accommodationId}`
   );
 
@@ -103,9 +103,10 @@ export const deleteAccommodation = async (accommodationId: string | number) => {
 };
 
 export const searchFlights = async (
-  params: FlightSearchParams
+  params: FlightSearchParams,
+  signal?: AbortSignal
 ): Promise<Flight[]> => {
-  const response = await api.get<PackageApiResponse<unknown>>(
+  const response = await api.get<ApiResult<unknown>>(
     "/api/v1/public/flights/search",
     {
       params: {
@@ -116,6 +117,7 @@ export const searchFlights = async (
         adults: params.adults || 1,
       },
       skipAuth: true,
+      signal,
     }
   );
   const data = unwrapData(response);

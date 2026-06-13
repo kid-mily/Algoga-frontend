@@ -28,7 +28,7 @@ export default function QuizForm({
   const router = useRouter();
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [courseId, setCourseId] = useState<number>(
-    initialQuiz.courseId || defaultCourseId || 0
+    initialQuiz.courseId ?? defaultCourseId ?? 0
   );
   const [question, setQuestion] = useState(initialQuiz.question);
   const [options, setOptions] = useState<string[]>([
@@ -47,16 +47,25 @@ export default function QuizForm({
   const isCreateMode = mode === "create";
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchCourses = async () => {
       try {
-        const courseList = await getLectureListAction();
+        const courseList = await getLectureListAction(controller.signal);
+        if (controller.signal.aborted) return;
         setCourses(courseList);
       } catch (error: unknown) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        if (controller.signal.aborted) return;
         setErrorMessage(error instanceof Error ? error.message : "강의 목록을 불러오지 못했습니다.");
       }
     };
 
     void fetchCourses();
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   const handleOptionChange = (index: number, value: string) => {

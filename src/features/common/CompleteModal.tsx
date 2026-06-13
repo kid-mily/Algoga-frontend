@@ -42,6 +42,7 @@ export default function CompleteModal({
           <div className="mt-12">
 
             <button
+              type="button"
               onClick={onConfirm}
               className="h-[48px] w-[180px] rounded-[16px] bg-[#439A97] text-[18px] font-semibold text-white transition-colors duration-200 hover:bg-[#367c79]"
             >

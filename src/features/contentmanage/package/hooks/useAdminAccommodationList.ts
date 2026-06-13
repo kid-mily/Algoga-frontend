@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   deleteAccommodation,
   getCountryAccommodations,
 } from "@/features/services/adminPackage.service";
 import { getCourseCountries } from "@/features/services/adminCourse.service";
-import { CourseCountry } from "@/features/contentmanage/lecture/types";
-import { Accommodation } from "../types";
+import { Accommodation, CourseCountry } from "../types";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   return error instanceof Error ? error.message : fallback;
@@ -20,23 +19,37 @@ export const useAdminAccommodationList = () => {
   const [isLoadingCountries, setIsLoadingCountries] = useState(true);
   const [isLoadingAccommodations, setIsLoadingAccommodations] = useState(false);
   const [error, setError] = useState("");
+  const countriesRequestIdRef = useRef(0);
+  const accommodationsRequestIdRef = useRef(0);
 
-  const fetchCountries = useCallback(async () => {
+  const fetchCountries = useCallback(async (signal?: AbortSignal) => {
+    const requestId = ++countriesRequestIdRef.current;
+    const isCurrent = () =>
+      countriesRequestIdRef.current === requestId && !signal?.aborted;
+
     try {
       setIsLoadingCountries(true);
       setError("");
-      const data = await getCourseCountries();
+      const data = await getCourseCountries(signal);
+      if (!isCurrent()) return;
       setCountries(data);
       setSelectedCountryId((prev) => prev || String(data[0]?.countryId || ""));
     } catch (fetchError: unknown) {
+      if (!isCurrent()) return;
       setError(getErrorMessage(fetchError, "국가 목록을 불러오지 못했습니다."));
     } finally {
+      if (!isCurrent()) return;
       setIsLoadingCountries(false);
     }
   }, []);
 
-  const fetchAccommodations = useCallback(async () => {
+  const fetchAccommodations = useCallback(async (signal?: AbortSignal) => {
+    const requestId = ++accommodationsRequestIdRef.current;
+    const isCurrent = () =>
+      accommodationsRequestIdRef.current === requestId && !signal?.aborted;
+
     if (!selectedCountryId) {
+      if (!isCurrent()) return;
       setAccommodations([]);
       return;
     }
@@ -44,11 +57,14 @@ export const useAdminAccommodationList = () => {
     try {
       setIsLoadingAccommodations(true);
       setError("");
-      const data = await getCountryAccommodations(selectedCountryId);
+      const data = await getCountryAccommodations(selectedCountryId, signal);
+      if (!isCurrent()) return;
       setAccommodations(data);
     } catch (fetchError: unknown) {
+      if (!isCurrent()) return;
       setError(getErrorMessage(fetchError, "숙소 목록을 불러오지 못했습니다."));
     } finally {
+      if (!isCurrent()) return;
       setIsLoadingAccommodations(false);
     }
   }, [selectedCountryId]);
@@ -69,15 +85,29 @@ export const useAdminAccommodationList = () => {
   );
 
   useEffect(() => {
-    queueMicrotask(() => {
-      fetchCountries();
+    const controller = new AbortController();
+
+    void Promise.resolve().then(() => {
+      if (controller.signal.aborted) return;
+      void fetchCountries(controller.signal);
     });
+
+    return () => {
+      controller.abort();
+    };
   }, [fetchCountries]);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      fetchAccommodations();
+    const controller = new AbortController();
+
+    void Promise.resolve().then(() => {
+      if (controller.signal.aborted) return;
+      void fetchAccommodations(controller.signal);
     });
+
+    return () => {
+      controller.abort();
+    };
   }, [fetchAccommodations]);
 
   return {

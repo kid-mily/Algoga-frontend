@@ -1,3 +1,11 @@
+export interface CourseCountry {
+  countryId: number;
+  countryName: string;
+  countryCode?: string;
+  continentCode?: string;
+  continentName?: string;
+}
+
 export interface Accommodation {
   accommodationId: number;
   countryId: number;
@@ -112,7 +120,7 @@ export const normalizeAccommodation = (
     ),
     countryId: getNestedNumber(
       record,
-      ["countryId", "country_id", "id"],
+      ["countryId", "country_id"],
       ["country"]
     ),
     name: getString(record, [

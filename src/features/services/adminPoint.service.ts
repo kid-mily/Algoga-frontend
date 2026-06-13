@@ -74,6 +74,8 @@ export const getPointHistory = async (
   const data = response.data;
 
   if (Array.isArray(data)) return data;
+  if (Array.isArray(data.content)) return data.content;
 
-  return data.content;
+  console.warn("예상하지 못한 마일리지 내역 응답:", data);
+  return [];
 };

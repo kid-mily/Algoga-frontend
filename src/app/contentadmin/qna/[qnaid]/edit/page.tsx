@@ -6,7 +6,7 @@ interface EditQnaPageProps {
     qnaid: string;
   }>;
   searchParams: Promise<{
-    courseId?: string;
+    courseId?: string | string[];
   }>;
 }
 
@@ -20,11 +20,14 @@ export default async function EditQnaPage({
   searchParams,
 }: EditQnaPageProps) {
   const { qnaid } = await params;
-  const { courseId = "" } = await searchParams;
+  const { courseId } = await searchParams;
+  const normalizedCourseId = Array.isArray(courseId)
+    ? courseId[0] || ""
+    : courseId || "";
 
   return (
     <AdminQnaAnswerClient
-      courseId={courseId}
+      courseId={normalizedCourseId}
       qnaId={qnaid}
       mode="detail"
     />

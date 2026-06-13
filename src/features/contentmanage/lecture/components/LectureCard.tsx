@@ -73,14 +73,16 @@ export default function LectureCard({
           >
             챕터관리
           </button>
-          <button
-            type="button"
-            onClick={onQuizManage}
-            aria-label={`${displayTitle} 퀴즈 관리`}
-            className="whitespace-nowrap rounded-full border border-[#B7D7E8] bg-[#ECF7FC] px-2.5 py-1.5 text-[12px] font-semibold text-[#1570EF]"
-          >
-            퀴즈관리
-          </button>
+          {onQuizManage && (
+            <button
+              type="button"
+              onClick={onQuizManage}
+              aria-label={`${displayTitle} 퀴즈 관리`}
+              className="whitespace-nowrap rounded-full border border-[#B7D7E8] bg-[#ECF7FC] px-2.5 py-1.5 text-[12px] font-semibold text-[#1570EF]"
+            >
+              퀴즈관리
+            </button>
+          )}
         </div>
       </td>
 

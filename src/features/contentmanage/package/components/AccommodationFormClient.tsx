@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/CompleteModal";
 import {
@@ -9,7 +9,7 @@ import {
   updateAccommodation,
 } from "@/features/services/adminPackage.service";
 import { getCourseCountries } from "@/features/services/adminCourse.service";
-import { CourseCountry } from "@/features/contentmanage/lecture/types";
+import { CourseCountry } from "../types";
 
 interface AccommodationFormClientProps {
   mode: "create" | "edit";
@@ -34,22 +34,30 @@ export default function AccommodationFormClient({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [completeOpen, setCompleteOpen] = useState(false);
+  const submitControllerRef = useRef<AbortController | null>(null);
   const imagePreviewUrl = useMemo(
     () => (imageFile ? URL.createObjectURL(imageFile) : ""),
     [imageFile]
   );
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchInitialData = async () => {
       try {
         setIsLoading(true);
         setError("");
-        const countryData = await getCourseCountries();
+        const countryData = await getCourseCountries(controller.signal);
+        if (controller.signal.aborted) return;
         setCountries(countryData);
         setCountryId((prev) => prev || String(countryData[0]?.countryId || ""));
 
         if (mode === "edit" && accommodationId) {
-          const accommodation = await getAccommodation(accommodationId);
+          const accommodation = await getAccommodation(
+            accommodationId,
+            controller.signal
+          );
+          if (controller.signal.aborted) return;
           setCountryId(String(accommodation.countryId || countryData[0]?.countryId || ""));
           setName(accommodation.name);
           setAddress(accommodation.address);
@@ -58,19 +66,23 @@ export default function AccommodationFormClient({
           setCurrentImageUrl(accommodation.imageUrl || "");
         }
       } catch (fetchError: unknown) {
+        if (controller.signal.aborted) return;
         setError(
           fetchError instanceof Error
             ? fetchError.message
             : "숙소 정보를 불러오지 못했습니다."
         );
       } finally {
+        if (controller.signal.aborted) return;
         setIsLoading(false);
       }
     };
 
-    queueMicrotask(() => {
-      fetchInitialData();
-    });
+    void fetchInitialData();
+
+    return () => {
+      controller.abort();
+    };
   }, [mode, accommodationId]);
 
   useEffect(() => {
@@ -80,6 +92,12 @@ export default function AccommodationFormClient({
       }
     };
   }, [imagePreviewUrl]);
+
+  useEffect(() => {
+    return () => {
+      submitControllerRef.current?.abort();
+    };
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -103,25 +121,37 @@ export default function AccommodationFormClient({
       image: imageFile,
     };
 
+    submitControllerRef.current?.abort();
+    const submitController = new AbortController();
+    submitControllerRef.current = submitController;
+
     try {
       setIsSubmitting(true);
       setError("");
 
       if (mode === "edit" && accommodationId) {
-        await updateAccommodation(accommodationId, payload);
+        await updateAccommodation(
+          accommodationId,
+          payload,
+          submitController.signal
+        );
       } else {
-        await createAccommodation(payload);
+        await createAccommodation(payload, submitController.signal);
       }
 
+      if (submitController.signal.aborted) return;
       setCompleteOpen(true);
     } catch (submitError: unknown) {
+      if (submitController.signal.aborted) return;
       setError(
         submitError instanceof Error
           ? submitError.message
           : "숙소 저장에 실패했습니다."
       );
     } finally {
-      setIsSubmitting(false);
+      if (!submitController.signal.aborted) {
+        setIsSubmitting(false);
+      }
     }
   };
 

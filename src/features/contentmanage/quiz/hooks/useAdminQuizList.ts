@@ -109,8 +109,7 @@ export function useAdminQuizList(initialCourseId = "all") {
     };
 
     void reloadQuizzes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedLecture]);
+  }, [selectedLecture, courses]);
 
   const filteredQuizzes = useMemo(() => {
     const keyword = searchKeyword.trim().toLowerCase();
