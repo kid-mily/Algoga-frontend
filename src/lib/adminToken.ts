@@ -31,7 +31,9 @@ export const decodeJwtPayload = (token: string): AdminTokenPayload | null => {
 };
 
 export const isAdminTokenExpired = (payload: AdminTokenPayload) => {
-  if (!payload.exp) return false;
+  if (typeof payload.exp !== "number" || !Number.isFinite(payload.exp)) {
+    return true;
+  }
 
   return payload.exp <= Math.floor(Date.now() / 1000);
 };
