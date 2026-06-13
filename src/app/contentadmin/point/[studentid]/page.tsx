@@ -15,9 +15,14 @@ export const metadata: Metadata = {
 
 export default async function PointDetailPage({ params }: PointDetailPageProps) {
   const { studentid } = await params;
+
+  if (!/^\d+$/.test(studentid)) {
+    notFound();
+  }
+
   const studentId = Number(studentid);
 
-  if (!Number.isInteger(studentId) || studentId <= 0) {
+  if (!Number.isSafeInteger(studentId) || studentId <= 0) {
     notFound();
   }
 

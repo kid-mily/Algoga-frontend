@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Accommodation } from "../types";
 
 interface AccommodationRowProps {
@@ -17,16 +18,21 @@ export default function AccommodationRow({
         <section className="flex items-center gap-3">
           <span className="flex h-[44px] w-[44px] shrink-0 items-center justify-center overflow-hidden rounded-[12px] bg-[#F2F4F7]">
             {accommodation.imageUrl ? (
-              <img
+              <Image
                 src={accommodation.imageUrl}
                 alt={`${accommodation.name} 숙소 이미지`}
+                width={44}
+                height={44}
+                sizes="44px"
                 className="h-full w-full object-cover"
               />
             ) : (
-              <img
+              <Image
                 src="/images/hotel.svg"
                 alt=""
                 aria-hidden="true"
+                width={20}
+                height={20}
                 className="h-[20px] w-[20px]"
               />
             )}

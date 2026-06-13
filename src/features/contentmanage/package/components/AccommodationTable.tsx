@@ -36,10 +36,10 @@ export default function AccommodationTable({
           </colgroup>
           <thead className="border-b border-[#E4E7EC] bg-[#FCFCFD]">
             <tr>
-              <th className="px-5 py-4 text-left text-[13px] font-semibold text-[#667085]">숙소</th>
-              <th className="px-5 py-4 text-left text-[13px] font-semibold text-[#667085]">설명</th>
-              <th className="px-5 py-4 text-left text-[13px] font-semibold text-[#667085]">1박 가격</th>
-              <th className="px-5 py-4 text-center text-[13px] font-semibold text-[#667085]">관리</th>
+              <th scope="col" className="px-5 py-4 text-left text-[13px] font-semibold text-[#667085]">숙소</th>
+              <th scope="col" className="px-5 py-4 text-left text-[13px] font-semibold text-[#667085]">설명</th>
+              <th scope="col" className="px-5 py-4 text-left text-[13px] font-semibold text-[#667085]">1박 가격</th>
+              <th scope="col" className="px-5 py-4 text-center text-[13px] font-semibold text-[#667085]">관리</th>
             </tr>
           </thead>
           <tbody>

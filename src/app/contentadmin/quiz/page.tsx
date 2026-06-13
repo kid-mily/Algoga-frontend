@@ -8,12 +8,18 @@ export const metadata: Metadata = {
 
 type QuizPageProps = {
   searchParams: Promise<{
-    courseId?: string;
+    courseId?: string | string[];
   }>;
 };
 
 export default async function QuizPage({ searchParams }: QuizPageProps) {
   const { courseId } = await searchParams;
+  const rawCourseId = Array.isArray(courseId) ? courseId[0] : courseId;
+  const parsedCourseId = rawCourseId ? Number(rawCourseId) : NaN;
+  const initialCourseId =
+    Number.isSafeInteger(parsedCourseId) && parsedCourseId > 0
+      ? String(parsedCourseId)
+      : "all";
 
-  return <QuizManageClient initialCourseId={courseId || "all"} />;
+  return <QuizManageClient initialCourseId={initialCourseId} />;
 }

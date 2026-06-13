@@ -13,9 +13,20 @@ export type ApiResponse<T> = {
   data: T;
 };
 
-type ApiRequestOptions = RequestInit & {
+export type ApiResult<T> = ApiResponse<T> | T;
+
+export const unwrapData = <T>(response: ApiResult<T>): T => {
+  if (response && typeof response === "object" && "data" in response) {
+    return (response as ApiResponse<T>).data;
+  }
+
+  return response as T;
+};
+
+export type ApiRequestOptions = RequestInit & {
   params?: Record<string, string | number | boolean | undefined>;
   skipAuth?: boolean;
+  timeoutMs?: number;
 };
 
 const buildUrl = (
@@ -40,22 +51,50 @@ async function request<T>(
   options: ApiRequestOptions = {},
   tokenKey: TokenKey = "accessToken"
 ): Promise<T> {
-  const { params, skipAuth, ...fetchOptions } = options;
+  const { params, skipAuth, timeoutMs = 15000, signal, ...fetchOptions } = options;
   const token =
   !skipAuth && typeof window !== "undefined"
     ? getCookie(tokenKey)
     : null;
 
   const isFormData = fetchOptions.body instanceof FormData;
+  const controller = new AbortController();
+  let didTimeout = false;
+  const timeoutId =
+    timeoutMs > 0
+      ? globalThis.setTimeout(() => {
+          didTimeout = true;
+          controller.abort();
+        }, timeoutMs)
+      : null;
 
-  const response = await fetch(buildUrl(path, params), {
-    ...fetchOptions,
-    headers: {
-      ...(isFormData ? {} : { "Content-Type": "application/json" }),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(fetchOptions.headers || {}),
-    },
-  });
+  const abortRequest = () => controller.abort();
+  signal?.addEventListener("abort", abortRequest, { once: true });
+
+  let response: Response;
+
+  try {
+    response = await fetch(buildUrl(path, params), {
+      ...fetchOptions,
+      signal: controller.signal,
+      headers: {
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(fetchOptions.headers || {}),
+      },
+    });
+  } catch (error: unknown) {
+    if (didTimeout) {
+      throw new Error("API 요청 시간이 초과되었습니다.");
+    }
+
+    throw error;
+  } finally {
+    if (timeoutId) {
+      globalThis.clearTimeout(timeoutId);
+    }
+    signal?.removeEventListener("abort", abortRequest);
+  }
 
   const result = await response.json().catch(() => null);
 

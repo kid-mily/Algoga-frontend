@@ -33,7 +33,9 @@ type CourseListResponse = AdminCourse[] | {
   content?: AdminCourse[];
 };
 
-export const getAdminCourses = async (): Promise<AdminCourse[]> => {
+export const getAdminCourses = async (
+  signal?: AbortSignal
+): Promise<AdminCourse[]> => {
   try {
     const response = await adminApi.get<ApiResponse<CourseListResponse>>(
       "/api/v1/admin/courses",
@@ -43,6 +45,7 @@ export const getAdminCourses = async (): Promise<AdminCourse[]> => {
           size: 100,
           t: Date.now(),
         },
+        signal,
       }
     );
 
@@ -59,12 +62,15 @@ export const getAdminCourses = async (): Promise<AdminCourse[]> => {
   }
 };
 
-export const getCourseCountries = async (): Promise<CourseCountry[]> => {
+export const getCourseCountries = async (
+  signal?: AbortSignal
+): Promise<CourseCountry[]> => {
   try {
     const continentResponse = await api.get<ApiResponse<ContinentRecord[]>>(
       "/api/v1/maps/continents",
       {
         params: { t: Date.now() },
+        signal,
       }
     );
 
@@ -81,6 +87,7 @@ export const getCourseCountries = async (): Promise<CourseCountry[]> => {
           `/api/v1/maps/continents/${continentCode}/countries`,
           {
             params: { t: Date.now() },
+            signal,
           }
         );
 

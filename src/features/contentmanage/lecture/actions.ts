@@ -20,8 +20,8 @@ import {
   UpdateLecturePayload,
 } from "./types";
 
-export const getLectureListAction = () => {
-  return getAdminCourses();
+export const getLectureListAction = (signal?: AbortSignal) => {
+  return getAdminCourses(signal);
 };
 
 export const getLectureCountriesAction = () => {

@@ -252,6 +252,46 @@ export default function ContentSidebar() {
             Q&A 관리
           </Link>
 
+          <Link
+            href="/contentadmin/review"
+            className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
+              pathname === "/contentadmin/review"
+                ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
+                : "text-[#344054] hover:bg-[#F5F7FA]"
+            }`}
+          >
+            <img
+              src={
+                pathname === "/contentadmin/review"
+                  ? "/images/review-active.svg"
+                  : "/images/review.svg"
+              }
+              alt="후기"
+              className="h-[20px] w-[20px]"
+            />
+            후기 관리
+          </Link>
+
+          <Link
+            href="/contentadmin/evalution"
+            className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
+              pathname === "/contentadmin/evalution"
+                ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
+                : "text-[#344054] hover:bg-[#F5F7FA]"
+            }`}
+          >
+            <img
+              src={
+                pathname === "/contentadmin/evalution"
+                  ? "/images/evalution-active.svg"
+                  : "/images/evaluation.svg"
+              }
+              alt="진단평가"
+              className="h-[20px] w-[20px]"
+            />
+            진단평가 관리
+          </Link>
+
           
         </div>
       </nav>
