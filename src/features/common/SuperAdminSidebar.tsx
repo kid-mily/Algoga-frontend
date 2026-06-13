@@ -5,44 +5,20 @@ import { usePathname, useRouter } from "next/navigation";
 
 const menus = [
   {
-    name: "고객 문의 관리",
-    href: "/csadmin/inquiry",
-    icon: "/images/qna.svg",
-    activeIcon: "/images/qna-active.svg",
-  },
-  {
-    name: "환불 요청 관리",
-    href: "/csadmin/refunds",
-    icon: "/images/refund.svg",
-    activeIcon: "/images/Payment.svg",
-  },
-  {
-    name: "공지사항 관리",
-    href: "/csadmin/notices",
-    icon: "/images/notice.svg",
-    activeIcon: "/images/NoticeIcon-active.svg",
-  },
-  {
-    name: "배너 관리",
-    href: "/csadmin/banners",
-    icon: "/images/banner.svg",
-    activeIcon: "/images/banner-active.svg",
-  },
-  {
-    name: "유저 활동 관리",
-    href: "/csadmin/users",
+    name: "관리자 계정 관리",
+    href: "/superadmin/manage",
     icon: "/images/users.svg",
     activeIcon: "/images/users-active.svg",
   },
   {
-    name: "신고 내역 관리",
-    href: "/csadmin/reports",
-    icon: "/images/report.svg",
-    activeIcon: "/images/report-active.svg",
+    name: "블랙리스트 관리",
+    href: "/superadmin/blacklist",
+    icon: "/images/blacklist.svg",
+    activeIcon: "/images/blacklist-active.svg",
   },
 ];
 
-export default function CsSidebar() {
+export default function SuperAdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -50,15 +26,14 @@ export default function CsSidebar() {
     <aside className="flex w-[240px] flex-col border-r border-[#E4E7EC] bg-white">
       <header className="flex items-center gap-3 border-b border-[#E4E7EC] px-6 py-5">
         <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#6FA8A5] text-[14px] font-semibold text-white">
-          CS
+          SA
         </div>
-
         <span className="text-[20px] font-semibold text-[#111827]">
-          CS Admin
+          Super Admin
         </span>
       </header>
 
-      <nav className="flex-1 px-4 py-6" aria-label="CS 관리자 메뉴">
+      <nav className="flex-1 px-4 py-6" aria-label="슈퍼 관리자 메뉴">
         <ul className="space-y-2">
           {menus.map((menu) => {
             const isActive =
@@ -116,9 +91,9 @@ export default function CsSidebar() {
 
           <div>
             <p className="text-[14px] font-semibold text-[#111827]">
-              김관리자
+              슈퍼관리자
             </p>
-            <p className="text-[13px] text-[#98A2B3]">cs@algoga.kr</p>
+            <p className="text-[13px] text-[#98A2B3]">super@algoga.kr</p>
           </div>
         </div>
       </footer>

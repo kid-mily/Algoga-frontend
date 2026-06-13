@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { adminLogin } from "@/features/services/adminAuth.service";
+import { getAdminRedirectPath } from "@/lib/adminToken";
 import { deleteCookie, setCookie } from "@/lib/cookie";
 
 export default function AdminLoginForm() {
@@ -12,11 +13,14 @@ export default function AdminLoginForm() {
   const [password, setPassword] = useState("");
   const [loginIdError, setLoginIdError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     const trimmedLoginId = loginId.trim();
     let hasError = false;
+
+    setServerError("");
 
     if (!trimmedLoginId) {
       setLoginIdError("관리자 아이디를 입력해주세요.");
@@ -61,12 +65,12 @@ export default function AdminLoginForm() {
         setCookie("adminRefreshToken", data.refreshToken);
       }
 
-      router.push("/contentadmin/lecture");
+      router.push(getAdminRedirectPath(data.accessToken));
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "관리자 로그인에 실패했습니다.";
 
-      alert(message);
+      setServerError(message);
     } finally {
       setIsLoading(false);
     }
@@ -102,6 +106,10 @@ export default function AdminLoginForm() {
               if (loginIdError) {
                 setLoginIdError("");
               }
+
+              if (serverError) {
+                setServerError("");
+              }
             }}
             placeholder="managers 테이블의 login_id를 입력해주세요"
             autoComplete="username"
@@ -132,6 +140,10 @@ export default function AdminLoginForm() {
 
                 if (passwordError) {
                   setPasswordError("");
+                }
+
+                if (serverError) {
+                  setServerError("");
                 }
               }}
               placeholder="비밀번호를 입력해주세요"
@@ -168,6 +180,12 @@ export default function AdminLoginForm() {
             로그인 상태 유지
           </label>
         </div>
+
+        {serverError && (
+          <p className="mt-4 text-[14px] font-medium text-[#EF4444]" role="alert">
+            {serverError}
+          </p>
+        )}
 
         <button
           type="submit"
