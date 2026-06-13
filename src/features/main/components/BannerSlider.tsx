@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Banner } from "./Types";
@@ -16,9 +16,9 @@ export default function BannerSlider({ banners }: BannerSliderProps) {
     const hasMultipleBanners = banners.length > 1;
 
     // 다음
-    const nextBanner = () => {
-        setCurrentIndex((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
-    };
+   const nextBanner = useCallback(() => {
+    setCurrentIndex((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
+    }, [banners.length]);
 
     // 이전
     const prevBanner = () => {
@@ -31,7 +31,7 @@ export default function BannerSlider({ banners }: BannerSliderProps) {
         const interval = window.setInterval(nextBanner, 3000);  // 3초
 
         return () => window.clearInterval(interval);
-    }, [hasMultipleBanners, banners.length]);
+    }, [hasMultipleBanners, nextBanner]);
 
     if (!hasBanners) {
         return (
