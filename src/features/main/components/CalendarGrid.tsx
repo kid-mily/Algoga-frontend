@@ -83,6 +83,7 @@ export default function CalendarGrid({
               key={fullDate}
               type="button"
               onClick={() => onSelectDate(fullDate)}
+              aria-label={`${month}월 ${date}일 선택`}
               className={`flex h-20 flex-col rounded-xl border px-2 py-2 text-left transition ${
                 isSelected
                   ? "border-[#439A97] bg-[#F0FDF9]"

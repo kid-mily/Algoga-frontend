@@ -6,12 +6,7 @@ import CalendarGrid from "./CalendarGrid";
 import ScheduleSidebar from "./ScheduleSidebar";
 import { Schedule } from "./Types";
 import { getMethodSchedules } from "@/features/services/schedule.service";
-
-interface ScheduleCalendarProps {
-  initialYear: number;
-  initialMonth: number;
-  initialSchedules: Schedule[];
-}
+import { getCookie } from "@/lib/cookie";
 
 const formatDate = (year: number, month: number, date: number) => {
   return `${year}-${String(month).padStart(2, "0")}-${String(date).padStart(
@@ -20,22 +15,24 @@ const formatDate = (year: number, month: number, date: number) => {
   )}`;
 };
 
-export default function ScheduleCalendar({
-  initialYear,
-  initialMonth,
-  initialSchedules,
-}: ScheduleCalendarProps) {
+export default function ScheduleCalendar() {
+  const today = new Date();
+
   const [currentDate, setCurrentDate] = useState(
-    new Date(initialYear, initialMonth - 1, 1)
+    () => new Date(today.getFullYear(), today.getMonth(), 1)
   );
-  const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
+
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
 
-  const [selectedDate, setSelectedDate] = useState(
-    formatDate(year, month, new Date().getDate())
+  const [selectedDate, setSelectedDate] = useState(() =>
+    formatDate(today.getFullYear(), today.getMonth() + 1, 1)
   );
 
   const selectedSchedules = useMemo(() => {
@@ -43,48 +40,74 @@ export default function ScheduleCalendar({
   }, [schedules, selectedDate]);
 
   const prevMonth = () => {
-    const nextDate = new Date(year, currentDate.getMonth() - 1, 1);
-    setCurrentDate(nextDate);
-    setSelectedDate(formatDate(nextDate.getFullYear(), nextDate.getMonth() + 1, 1));
+    setCurrentDate((prev) => {
+      const nextDate = new Date(prev.getFullYear(), prev.getMonth() - 1, 1);
+
+      setSelectedDate(
+        formatDate(nextDate.getFullYear(), nextDate.getMonth() + 1, 1)
+      );
+
+      return nextDate;
+    });
   };
 
   const nextMonth = () => {
-    const nextDate = new Date(year, currentDate.getMonth() + 1, 1);
-    setCurrentDate(nextDate);
-    setSelectedDate(formatDate(nextDate.getFullYear(), nextDate.getMonth() + 1, 1));
+    setCurrentDate((prev) => {
+      const nextDate = new Date(prev.getFullYear(), prev.getMonth() + 1, 1);
+
+      setSelectedDate(
+        formatDate(nextDate.getFullYear(), nextDate.getMonth() + 1, 1)
+      );
+
+      return nextDate;
+    });
   };
 
   useEffect(() => {
-    let isMounted = true;
+    const token = getCookie("accessToken");
+
+    setIsLoggedIn(Boolean(token));
+    setIsAuthChecked(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthChecked) return;
+
+    if (!isLoggedIn) {
+      setSchedules([]);
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+
+    const controller = new AbortController();
 
     const fetchSchedules = async () => {
       try {
         setIsLoading(true);
+        setError(null);
 
-        const data = await getMethodSchedules(year, month);
+        const data = await getMethodSchedules(year, month, controller.signal);
 
-        if (isMounted) {
-          setSchedules(data);
-        }
+        setSchedules(data);
       } catch (error) {
-        console.error("일정 데이터를 불러오지 못했습니다.", error);
+        if (error instanceof Error && error.name === "AbortError") return;
 
-        if (isMounted) {
-          setSchedules([]);
-        }
+        console.error("일정 데이터를 불러오지 못했습니다:", error);
+
+        setSchedules([]);
+        setError("일정을 불러올 수 없습니다.");
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     };
 
     fetchSchedules();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
-  }, [year, month]);
+  }, [isAuthChecked, isLoggedIn, year, month]);
 
   return (
     <section
@@ -98,17 +121,11 @@ export default function ScheduleCalendar({
         nextMonth={nextMonth}
       />
 
-      {isLoading && (
-        <div className="border-b border-[#EEF2F6] bg-[#F8FAFC] px-8 py-2 text-sm font-medium text-[#64748B]">
-          일정을 불러오는 중입니다.
-        </div>
-      )}
-
       <div className="grid grid-cols-[1fr_320px]">
         <CalendarGrid
           year={year}
           month={month}
-          schedules={schedules}
+          schedules={isLoggedIn ? schedules : []}
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
         />
@@ -116,6 +133,10 @@ export default function ScheduleCalendar({
         <ScheduleSidebar
           schedules={selectedSchedules}
           selectedDate={selectedDate}
+          isLoggedIn={isLoggedIn}
+          isAuthChecked={isAuthChecked}
+          isLoading={isLoading}
+          error={error}
         />
       </div>
     </section>

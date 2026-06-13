@@ -46,6 +46,10 @@ export interface Schedule {
 export interface ScheduleSidebarProps {
     schedules: Schedule[];
     selectedDate: string;
+    isLoggedIn?: boolean;
+    isAuthChecked?: boolean;
+    isLoading?: boolean;
+    error?: string | null;
 }
 
 export interface CalendarGridProps {

@@ -4,7 +4,12 @@ import { Banner } from "../main/components/Types";
 
 export const getMainBanners = async (): Promise<Banner[]> => {
   try {
-    const response = await api.get<ApiResponse<Banner[]>>("/api/v1/banner");
+    const response = await api.get<ApiResponse<Banner[]>>(
+      "/api/v1/banner",
+      {
+      next: {revalidate: 1800 }, // ISR // 30분 마다 재생성
+    }
+    );
 
     return response.data;
   } catch (error) {

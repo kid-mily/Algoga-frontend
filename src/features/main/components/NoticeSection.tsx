@@ -1,6 +1,6 @@
-import Link from "next/link";
-import NoticeItem from "./NoticeItem";
-import { Notice } from "./Types";
+import Link from 'next/link';
+import NoticeItem from './NoticeItem'
+import { getMainNotices } from '@/features/services/notice.service'
 
 const noticeTagConfig = {
   EVENT: {
@@ -17,28 +17,27 @@ const noticeTagConfig = {
   },
 } as const;
 
-interface NoticeSectionProps {
-  notices: Notice[];
-}
+export default async function NoticeSection() {
+  const notices = await getMainNotices();
 
-export default function NoticeSection({ notices }: NoticeSectionProps) {
   return (
-    <section className="h-full w-1/2 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-      <header className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#0A1628]">공지사항</h1>
+    <section className="h-full rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-[#0A1628]">
+          공지사항
+        </h2>
 
-        <Link
-          href="/notice"
-          className="cursor-pointer text-sm text-gray-400 transition hover:text-gray-600"
-        >
+        <Link href="/notice" 
+        className="text-sm text-gray-400 hover:text-gray-600 transition">
           더보기
-          {" >"}
         </Link>
-      </header>
+      </div>
 
       <ul className="divide-y divide-gray-100">
         {notices.map((notice) => {
           const config = noticeTagConfig[notice.tag];
+
+          if (!config) return null;
 
           return (
             <NoticeItem
@@ -52,5 +51,5 @@ export default function NoticeSection({ notices }: NoticeSectionProps) {
         })}
       </ul>
     </section>
-  );
+  )
 }
