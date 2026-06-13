@@ -26,6 +26,7 @@ export const unwrapData = <T>(response: ApiResult<T>): T => {
 export type ApiRequestOptions = RequestInit & {
   params?: Record<string, string | number | boolean | undefined>;
   skipAuth?: boolean;
+  suppressGlobalError?: boolean;
   timeoutMs?: number;
 };
 
@@ -51,7 +52,14 @@ async function request<T>(
   options: ApiRequestOptions = {},
   tokenKey: TokenKey = "accessToken"
 ): Promise<T> {
-  const { params, skipAuth, timeoutMs = 15000, signal, ...fetchOptions } = options;
+  const {
+    params,
+    skipAuth,
+    suppressGlobalError,
+    timeoutMs = 15000,
+    signal,
+    ...fetchOptions
+  } = options;
   const token =
   !skipAuth && typeof window !== "undefined"
     ? getCookie(tokenKey)
@@ -99,7 +107,7 @@ async function request<T>(
   const result = await response.json().catch(() => null);
 
   if (!response.ok) {
-    if (typeof window !== "undefined") {
+    if (!suppressGlobalError && typeof window !== "undefined") {
       sessionStorage.setItem("errorData", JSON.stringify(result));
 
       if (response.status === 500) {
