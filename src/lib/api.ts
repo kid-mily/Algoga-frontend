@@ -66,6 +66,9 @@ async function request<T>(
     : null;
 
   const isFormData = fetchOptions.body instanceof FormData;
+  const hasBody = fetchOptions.body !== undefined && fetchOptions.body !== null;
+  const contentHeaders =
+    hasBody && !isFormData ? { "Content-Type": "application/json" } : {};
   const controller = new AbortController();
   let didTimeout = false;
   const timeoutId =
@@ -86,7 +89,8 @@ async function request<T>(
       ...fetchOptions,
       signal: controller.signal,
       headers: {
-        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+        Accept: "application/json",
+        ...contentHeaders,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(fetchOptions.headers || {}),
       },
