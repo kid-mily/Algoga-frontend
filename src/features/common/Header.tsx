@@ -61,7 +61,6 @@ export default function Header() {
         return <header className="bg-white w-full h-16 flex items-center justify-between px-5" />;
     }
 
-    // 🌟 요청하신 기존 UI/태그 구조 완벽 유지 🌟
     return (
         <header className="bg-white w-full h-16 flex items-center justify-between px-5">
             <Link href='/'> 

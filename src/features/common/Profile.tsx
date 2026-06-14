@@ -5,6 +5,7 @@ import { useState } from "react";
 import { logout } from "@/features/services/auth.service";
 import CompleteModal from "./CompleteModal";
 import { deleteCookie } from "@/lib/cookie";
+import Image from "next/image";
 
 type Props = {
     user: {
@@ -15,7 +16,7 @@ type Props = {
 export default function Profile({ user }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     
-    // 🌟 상태 변수명을 logoutModal로 명확하게 사용
+    // 상태 변수명을 logoutModal로 명확하게 사용
     const [logoutModal, setLogoutModal] = useState({ open: false });
 
     const handleLogout = async () => {
@@ -29,16 +30,36 @@ export default function Profile({ user }: Props) {
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
             window.dispatchEvent(new Event("auth-state-changed"));
-            // 🌟 모달 오픈
+            // 모달 오픈
             setLogoutModal({ open: true });
         }
     };
 
     return (
         <div className="flex gap-6 items-center pr-5">
-            <img src="/images/FriendIcon.svg" alt="친구" className="w-6 h-6 cursor-pointer" />
-            <img src="/images/ChatIcon.svg" alt="채팅" className="w-6 h-6 cursor-pointer" />
-            <img src="/images/NoticeIcon.svg" alt="알림" className="w-6 h-6 cursor-pointer" />
+            <Image
+            src="/images/FriendIcon.svg"
+            alt="친구"
+            width={24}
+            height={24}
+            className="cursor-pointer"
+            />
+
+            <Image
+            src="/images/ChatIcon.svg"
+            alt="채팅"
+            width={24}
+            height={24}
+            className="cursor-pointer"
+            />
+
+            <Image
+            src="/images/NoticeIcon.svg"
+            alt="알림"
+            width={24}
+            height={24}
+            className="cursor-pointer"
+            />
             
             {user ? (
                 <div className="relative">
@@ -57,9 +78,12 @@ export default function Profile({ user }: Props) {
                     </div>
                     {isOpen && (
                         <div className="absolute right-0 top-10 w-40 bg-white border rounded-lg shadow-lg p-3 flex flex-col gap-3 z-10">
-                            <p className="cursor-pointer hover:text-[#286E6B]">
+                            <Link
+                                href="/mypage" 
+                                className="cursor-pointer hover:text-[#286E6B]"
+                            >
                                 마이페이지
-                            </p>
+                            </Link>
                             <hr />
                             <p 
                                 className="cursor-pointer hover:text-red-500"

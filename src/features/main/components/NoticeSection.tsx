@@ -42,6 +42,7 @@ export default async function NoticeSection() {
           return (
             <NoticeItem
               key={notice.noticeId}
+              noticeId={notice.noticeId}
               category={config.label}
               title={notice.title}
               date={notice.date}
