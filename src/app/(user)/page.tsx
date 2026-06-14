@@ -3,10 +3,11 @@ import NoticeSection from "@/features/main/components/NoticeSection";
 import AiSchedule from "@/features/main/components/AiSchedule";
 import Banner from "@/features/main/components/Banner";
 import MapSection from "./main/MapSection";
-import { getMainNotices } from "@/features/services/notice.service";
 import ScheduleCalendar from "@/features/main/components/ScheduleCalendar";
+import { getMainNotices } from "@/features/services/notice.service";
 
 export default async function Home() {
+  // 메인 공지사항 데이터 조회
   const notices = await getMainNotices();
 
   return (
