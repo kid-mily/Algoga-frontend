@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { useState } from "react";
 import ChapterItem from "./ChapterItem";
 import { createChapterAction } from "../actions";
@@ -183,14 +184,7 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
         </button>
       </header>
 
-      {globalError && (
-        <p
-          role="alert"
-          className="mt-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]"
-        >
-          {globalError}
-        </p>
-      )}
+      <AdminErrorBanner message={globalError} className="mt-4" />
 
       <ol className="mt-6 space-y-4" aria-label="챕터 목록">
         {chapters.map((chapter) => (

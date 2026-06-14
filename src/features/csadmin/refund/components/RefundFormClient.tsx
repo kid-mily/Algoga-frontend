@@ -1,23 +1,13 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent } from "react";
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import CompleteModal from "@/features/common/CompleteModal";
 import Modal from "@/features/common/Modal";
-import {
-  approveRefund,
-  completeRefund,
-  getAdminRefundById,
-  rejectRefund,
-  requestRefundReview,
-} from "@/features/services/adminRefund.service";
-import {
-  CsRefund,
-  CsRefundFormData,
-  refundStatusOptions,
-  toRefundFormData,
-} from "../types";
+import { refundStatusOptions, CsRefundFormData } from "../types";
+import { useRefundForm } from "../hooks/useRefundForm";
 import RefundStatusBadge from "./RefundStatusBadge";
 import { RefundCancelSection, RefundReservationSection } from "./RefundInfoSections";
 import RefundSidePanel from "./RefundSidePanel";
@@ -27,109 +17,28 @@ type RefundFormClientProps = {
   refundId: number;
 };
 
-const emptyForm: CsRefundFormData = {
-  reason: "",
-  refundAmount: "0",
-  adminMemo: "",
-  status: "정산 검토중",
-  rejectReason: "",
-};
-
 export default function RefundFormClient({ mode, refundId }: RefundFormClientProps) {
   const router = useRouter();
-  const [refund, setRefund] = useState<CsRefund | null>(null);
-  const [formData, setFormData] = useState<CsRefundFormData>(emptyForm);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [completeOpen, setCompleteOpen] = useState(false);
+  const {
+    refund,
+    formData,
+    error,
+    isLoading,
+    isSubmitting,
+    confirmOpen,
+    completeOpen,
+    setConfirmOpen,
+    setCompleteOpen,
+    updateField,
+    saveRefund,
+  } = useRefundForm(refundId, mode);
 
   const title = mode === "create" ? "환불 검토 요청" : "환불 요청 처리";
   const completeDescription =
     mode === "create"
       ? "환불 검토 요청이 완료되었습니다."
       : "환불 요청 처리가 완료되었습니다.";
-
-  const fetchRefund = useCallback(async (signal?: AbortSignal) => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const data = await getAdminRefundById(refundId, signal);
-
-      if (signal?.aborted) return;
-
-      if (!data) {
-        setError("환불 요청 정보를 찾을 수 없습니다.");
-        return;
-      }
-
-      setRefund(data);
-      setFormData(toRefundFormData(data));
-    } catch (fetchError: unknown) {
-      if (signal?.aborted) return;
-
-      setError(
-        fetchError instanceof Error
-          ? fetchError.message
-          : "환불 요청 정보를 불러오지 못했습니다."
-      );
-    } finally {
-      if (!signal?.aborted) {
-        setIsLoading(false);
-      }
-    }
-  }, [refundId]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => {
-      void fetchRefund(controller.signal);
-    }, 0);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
-    };
-  }, [fetchRefund]);
-
-  const updateField = <K extends keyof CsRefundFormData>(
-    key: K,
-    value: CsRefundFormData[K]
-  ) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const saveRefund = async () => {
-    if (!refund) return;
-
-    try {
-      setIsSubmitting(true);
-      setError("");
-
-      if (mode === "create") {
-        await requestRefundReview(refund.refundId);
-      } else if (formData.status === "환불 승인") {
-        await approveRefund(refund.refundId);
-      } else if (formData.status === "반려") {
-        await rejectRefund(refund.refundId);
-      } else if (formData.status === "환불 완료") {
-        await completeRefund(refund.refundId);
-      } else {
-        await requestRefundReview(refund.refundId);
-      }
-
-      setCompleteOpen(true);
-    } catch (submitError: unknown) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "환불 요청 처리에 실패했습니다."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const statusOptions = refundStatusOptions.filter((status) => status !== "ALL");
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -154,9 +63,10 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
 
   if (!refund) {
     return (
-      <section role="alert" className="rounded-[16px] bg-[#FEF2F2] p-6 text-[#DC2626]">
-        {error || "환불 요청 정보를 찾을 수 없습니다."}
-      </section>
+      <AdminErrorBanner
+        message={error || "환불 요청 정보를 찾을 수 없습니다."}
+        className=""
+      />
     );
   }
 
@@ -182,14 +92,7 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
         </div>
       </header>
 
-      {error && (
-        <section
-          role="alert"
-          className="mb-4 rounded-[12px] bg-[#FEF2F2] p-4 text-[14px] text-[#DC2626]"
-        >
-          {error}
-        </section>
-      )}
+      <AdminErrorBanner message={error} className="mb-4" />
 
       <div className="grid grid-cols-[minmax(0,1fr)_380px] gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="space-y-6">
@@ -259,13 +162,11 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
                     }
                     className="h-[44px] w-full rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] outline-none focus:border-[#639E9B]"
                   >
-                    {refundStatusOptions
-                      .filter((status) => status !== "ALL" && status !== "취소 요청")
-                      .map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
+                    {statusOptions.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}
@@ -318,7 +219,10 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
         title="처리 완료"
         description={completeDescription}
         buttonText="확인"
-        onConfirm={() => router.push("/csadmin/refund")}
+        onConfirm={() => {
+          setCompleteOpen(false);
+          router.push("/csadmin/refund");
+        }}
       />
     </main>
   );

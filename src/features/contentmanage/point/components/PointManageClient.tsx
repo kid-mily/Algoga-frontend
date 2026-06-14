@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import CompleteModal from "@/features/common/CompleteModal";
@@ -74,14 +75,7 @@ export default function PointManageClient() {
         description="사용자 마일리지를 조회하고 지급합니다"
       />
 
-      {error && (
-        <section
-          role="alert"
-          className="mt-4 rounded-lg bg-red-50 p-4 font-medium text-red-600"
-        >
-          {error}
-        </section>
-      )}
+      <AdminErrorBanner message={error} className="mt-4" />
 
       <PointTable
         students={students}

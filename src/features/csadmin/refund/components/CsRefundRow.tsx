@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { CsRefund } from "../types";
 import RefundStatusBadge from "./RefundStatusBadge";
 
@@ -40,6 +40,7 @@ export default function CsRefundRow({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/csadmin/refund/${refund.refundId}`}
+            aria-label={`상세 보기: 환불 ${refund.refundId}`}
             className="rounded-[8px] border border-[#D0D5DD] px-3 py-2 text-[13px] font-semibold text-[#344054]"
           >
             상세
@@ -48,6 +49,8 @@ export default function CsRefundRow({
             <button
               type="button"
               disabled={isProcessing}
+              aria-disabled={isProcessing}
+              aria-label={`검토: 환불 ${refund.refundId}`}
               onClick={() => onAction(refund.refundId, "review")}
               className="rounded-[8px] border border-[#D0D5DD] px-3 py-2 text-[13px] font-semibold text-[#344054] disabled:opacity-50"
             >
@@ -58,6 +61,8 @@ export default function CsRefundRow({
             <button
               type="button"
               disabled={isProcessing}
+              aria-disabled={isProcessing}
+              aria-label={`승인: 환불 ${refund.refundId}`}
               onClick={() => onAction(refund.refundId, "approve")}
               className="rounded-[8px] border border-[#BBF7D0] px-3 py-2 text-[13px] font-semibold text-[#16A34A] disabled:opacity-50"
             >
@@ -68,6 +73,8 @@ export default function CsRefundRow({
             <button
               type="button"
               disabled={isProcessing}
+              aria-disabled={isProcessing}
+              aria-label={`반려: 환불 ${refund.refundId}`}
               onClick={() => onAction(refund.refundId, "reject")}
               className="rounded-[8px] border border-[#FCA5A5] px-3 py-2 text-[13px] font-semibold text-[#DC2626] disabled:opacity-50"
             >
@@ -78,6 +85,8 @@ export default function CsRefundRow({
             <button
               type="button"
               disabled={isProcessing}
+              aria-disabled={isProcessing}
+              aria-label={`완료: 환불 ${refund.refundId}`}
               onClick={() => onAction(refund.refundId, "complete")}
               className="rounded-[8px] border border-[#BBF7D0] px-3 py-2 text-[13px] font-semibold text-[#16A34A] disabled:opacity-50"
             >

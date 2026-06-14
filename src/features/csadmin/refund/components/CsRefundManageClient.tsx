@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import CompleteModal from "@/features/common/CompleteModal";
 import { downloadRefundExcel } from "@/features/services/adminRefund.service";
-import { CsRefund } from "../types";
+import { CsRefund, CsRefundStatus } from "../types";
 import { useCsRefundList } from "../hooks/useCsRefundList";
 import CsRefundPagination from "./CsRefundPagination";
 import CsRefundTable from "./CsRefundTable";
@@ -12,6 +13,8 @@ import CsRefundToolbar from "./CsRefundToolbar";
 type CsRefundManageClientProps = {
   initialRefunds: CsRefund[];
 };
+
+const PAGE_SIZE = 8;
 
 export default function CsRefundManageClient({
   initialRefunds,
@@ -33,9 +36,36 @@ export default function CsRefundManageClient({
     runRefundAction,
   } = useCsRefundList(initialRefunds);
   const [downloadError, setDownloadError] = useState("");
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(filteredRefunds.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const pagedRefunds = useMemo(() => {
+    const start = (safeCurrentPage - 1) * PAGE_SIZE;
+
+    return filteredRefunds.slice(start, start + PAGE_SIZE);
+  }, [filteredRefunds, safeCurrentPage]);
+
+  const handleSearchKeywordChange = (value: string) => {
+    setSearchKeyword(value);
+    setCurrentPage(1);
+  };
+
+  const handleSelectedStatusChange = (value: CsRefundStatus | "ALL") => {
+    setSelectedStatus(value);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+  };
 
   const handleExcelDownload = async () => {
+    if (isDownloading) return;
+
     try {
+      setIsDownloading(true);
       setDownloadError("");
       await downloadRefundExcel();
     } catch (downloadError: unknown) {
@@ -44,6 +74,8 @@ export default function CsRefundManageClient({
           ? downloadError.message
           : "환불 내역 엑셀 다운로드에 실패했습니다."
       );
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -63,35 +95,34 @@ export default function CsRefundManageClient({
         <button
           type="button"
           onClick={handleExcelDownload}
-          className="flex h-[40px] items-center gap-2 rounded-[10px] border border-[#E4E7EC] bg-white px-4 text-[14px] font-semibold text-[#344054]"
+          disabled={isDownloading}
+          className="flex h-[40px] items-center gap-2 rounded-[10px] border border-[#E4E7EC] bg-white px-4 text-[14px] font-semibold text-[#344054] disabled:cursor-not-allowed disabled:text-[#98A2B3]"
         >
-          내보내기
+          {isDownloading ? "내보내는 중..." : "내보내기"}
         </button>
       </header>
 
-      {(error || downloadError) && (
-        <section
-          role="alert"
-          className="mb-4 rounded-[12px] bg-[#FEF2F2] p-4 text-[14px] text-[#DC2626]"
-        >
-          {error || downloadError}
-        </section>
-      )}
+      <AdminErrorBanner message={error || downloadError} className="mb-4" />
 
       <CsRefundToolbar
         searchKeyword={searchKeyword}
         selectedStatus={selectedStatus}
-        onSearchKeywordChange={setSearchKeyword}
-        onSelectedStatusChange={setSelectedStatus}
+        onSearchKeywordChange={handleSearchKeywordChange}
+        onSelectedStatusChange={handleSelectedStatusChange}
       />
 
       <CsRefundTable
-        refunds={filteredRefunds}
+        refunds={pagedRefunds}
         isLoading={isLoading}
         processingId={processingId}
         onAction={runRefundAction}
       />
-      <CsRefundPagination totalCount={filteredRefunds.length} />
+      <CsRefundPagination
+        currentPage={safeCurrentPage}
+        totalCount={filteredRefunds.length}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       <CompleteModal
         open={completeOpen}

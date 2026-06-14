@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/CompleteModal";
@@ -92,14 +93,7 @@ export default function AdminQnaAnswerClient({
         description={qna?.title}
       />
 
-      {error && (
-        <section
-          role="alert"
-          className="mt-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]"
-        >
-          {error}
-        </section>
-      )}
+      <AdminErrorBanner message={error} className="mt-4" />
 
       {isLoading ? (
         <section className="mt-5 rounded-[18px] bg-white">
