@@ -1,17 +1,33 @@
 // 나라 선택
 
 import CountrySelectHeader from "@/features/classroom/components/CountrySelectHeader";
-import CountrySelectForm from "@/features/classroom/components/CountrySelectSection";
+import CountrySelectSection from "@/features/classroom/components/CountrySelectSection";
+import { getCountries } from "@/features/services/countrySelect.service";
 
-export default function CountrySelectPage() {
-    return (
-        <div className="p-10 w-full min-h-screen bg-[#f5f6f8]">
-            <div className="w-full max-w-4xl mx-auto pt-4 px-4">
-                <CountrySelectHeader/>
-                <div className="w-full mx-auto mt-10">
-                    <CountrySelectForm/>
-                </div>
-            </div>
-        </div>
-    );
+export const revalidate = 1800;
+
+interface CountrySelectPageProps {
+  params: Promise<{
+    continentCode: string;
+  }>;
+}
+
+export default async function CountrySelectPage({
+  params,
+}: CountrySelectPageProps) {
+  const { continentCode } = await params;
+
+  const countries = await getCountries(continentCode.toUpperCase());
+
+  return (
+    <main className="min-h-screen w-full bg-[#f5f6f8] p-10">
+      <section className="mx-auto w-full max-w-4xl px-4 pt-4">
+        <CountrySelectHeader />
+
+        <section className="mt-10 w-full">
+          <CountrySelectSection countries={countries} />
+        </section>
+      </section>
+    </main>
+  );
 }

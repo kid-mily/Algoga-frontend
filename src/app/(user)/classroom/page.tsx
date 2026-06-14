@@ -3,15 +3,24 @@
 import ContinentHeader from "@/features/classroom/components/ContinentHeader";
 import ContinentSelectForm from "@/features/classroom/components/ContinentSelectForm";
 import LearnMethod from "@/features/main/components/LearningMethod";
+import { getContinents } from "@/features/services/ContinentSelection.service";
 
-export default function ClassRoomMainPage() {
+export const revalidate = 1800;
+
+export default async function ClassRoomMainPage() {
+  const continents = await getContinents();
+
   return (
-    <div className="w-full min-h-screen bg-[#F5F7FA] p-10">
-      <ContinentHeader/>
-      <ContinentSelectForm />
-      <div className="w-full max-w-4xl mx-auto px-4 mt-10">
-          <LearnMethod />
-        </div>
-    </div>
+    <main className="min-h-screen w-full bg-[#F5F7FA] p-10">
+      <ContinentHeader />
+
+      <section className="mx-auto w-full max-w-4xl px-4">
+        <ContinentSelectForm continents={continents} />
+      </section>
+
+      <section className="mx-auto mt-10 w-full max-w-4xl px-4">
+        <LearnMethod />
+      </section>
+    </main>
   );
 }
