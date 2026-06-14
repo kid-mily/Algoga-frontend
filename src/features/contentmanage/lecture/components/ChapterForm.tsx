@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { FormEvent, useState } from "react";
 import CompleteModal from "@/features/common/CompleteModal";
 import { ChapterFormProps } from "../types";
@@ -138,14 +139,7 @@ export default function ChapterForm({
         )}
       </header>
 
-      {globalError && (
-        <p
-          role="alert"
-          className="mt-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]"
-        >
-          {globalError}
-        </p>
-      )}
+      <AdminErrorBanner message={globalError} className="mt-4" />
 
       <fieldset className="mt-6 space-y-4" disabled={isSubmitting}>
         <legend className="sr-only">챕터 정보 입력 영역</legend>

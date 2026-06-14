@@ -38,10 +38,18 @@ const unwrapList = (data: unknown): ManagerApiRecord[] => {
 };
 
 export const normalizeManager = (
-  item: ManagerApiRecord,
-  index = 0
-): AdminManager => {
-  const managerId = item.managerId ?? item.id ?? index + 1;
+  item: ManagerApiRecord
+): AdminManager | null => {
+  const managerId = item.managerId ?? item.id;
+
+  if (
+    typeof managerId !== "number" ||
+    !Number.isSafeInteger(managerId) ||
+    managerId <= 0
+  ) {
+    return null;
+  }
+
   const role =
     item.role ?? item.managerRole ?? item.authority ?? "CS_MANAGER";
 
@@ -75,7 +83,11 @@ export const getAdminManagers = async (
   );
   const data = unwrapData(response);
 
-  return unwrapList(data).map((item, index) => normalizeManager(item, index));
+  return unwrapList(data).flatMap((item) => {
+    const manager = normalizeManager(item);
+
+    return manager ? [manager] : [];
+  });
 };
 
 export const createAdminManager = async (
@@ -113,7 +125,14 @@ export const getAdminManagerById = async (
   managerId: number,
   signal?: AbortSignal
 ): Promise<AdminManager | null> => {
-  const managers = await getAdminManagers("", signal);
+  const response = await adminApi.get<ApiResult<ManagerApiRecord | null>>(
+    `/api/v1/admin/managers/${managerId}`,
+    {
+      suppressGlobalError: true,
+      signal,
+    }
+  );
+  const data = unwrapData(response);
 
-  return managers.find((manager) => manager.managerId === managerId) ?? null;
+  return data ? normalizeManager(data) : null;
 };

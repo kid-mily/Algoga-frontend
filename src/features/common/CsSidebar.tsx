@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { deleteCookie } from "@/lib/cookie";
 
 const menus = [
   {
@@ -12,13 +13,13 @@ const menus = [
   },
   {
     name: "환불 요청 관리",
-    href: "/csadmin/refunds",
+    href: "/csadmin/refund",
     icon: "/images/refund.svg",
     activeIcon: "/images/Payment.svg",
   },
   {
     name: "공지사항 관리",
-    href: "/csadmin/notices",
+    href: "/csadmin/notice",
     icon: "/images/notice.svg",
     activeIcon: "/images/NoticeIcon-active.svg",
   },
@@ -45,6 +46,19 @@ const menus = [
 export default function CsSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("adminAccessToken");
+    localStorage.removeItem("adminRefreshToken");
+    sessionStorage.clear();
+    deleteCookie("accessToken");
+    deleteCookie("refreshToken");
+    deleteCookie("adminAccessToken");
+    deleteCookie("adminRefreshToken");
+    router.push("/auth/adminlogin");
+  };
 
   return (
     <aside className="flex w-[240px] flex-col border-r border-[#E4E7EC] bg-white">
@@ -92,7 +106,7 @@ export default function CsSidebar() {
       <footer className="border-t border-[#E4E7EC] p-4">
         <button
           type="button"
-          onClick={() => router.push("/auth/adminlogin")}
+          onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-[12px] px-4 py-3 text-left text-[15px] text-[#344054] hover:bg-[#F5F7FA]"
         >
           <img

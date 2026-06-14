@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/CompleteModal";
@@ -198,14 +199,7 @@ export default function EvalutionFormClient({
         />
       </header>
 
-      {error && (
-        <section
-          role="alert"
-          className="mb-4 rounded-[12px] bg-[#FEF2F2] p-4 text-[14px] text-[#DC2626]"
-        >
-          {error}
-        </section>
-      )}
+      <AdminErrorBanner message={error} className="mb-4" />
 
       <section className="mb-6 rounded-[16px] border border-[#E4E7EC] bg-white p-6">
         <h2 className="mb-6 text-[17px] font-bold text-[#111827]">문제 내용</h2>

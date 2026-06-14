@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/CompleteModal";
@@ -242,11 +243,7 @@ export default function QuizForm({
         </div>
       </fieldset>
 
-      {errorMessage && (
-        <p role="alert" className="mt-5 rounded-[14px] bg-red-50 p-3 text-[14px] text-red-500">
-          {errorMessage}
-        </p>
-      )}
+      <AdminErrorBanner message={errorMessage} className="mt-5" />
 
       <footer className="mt-8 flex items-center justify-end border-t border-[#E4E7EC] pt-6">
         <button

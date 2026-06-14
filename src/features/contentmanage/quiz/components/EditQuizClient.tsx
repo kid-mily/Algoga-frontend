@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { useEffect, useState } from "react";
 
 import LoadingSpinner from "@/features/common/LoadingSpinner";
@@ -65,12 +66,7 @@ export default function EditQuizClient({ quizId, courseId }: EditQuizClientProps
       </section>
 
       {errorMessage || !quiz ? (
-        <section
-          role="alert"
-          className="mt-6 rounded-[18px] border border-[#E4E7EC] bg-white p-8 text-center text-[14px] text-red-500"
-        >
-          {errorMessage || "퀴즈 정보를 찾을 수 없습니다."}
-        </section>
+        <AdminErrorBanner message={errorMessage || "퀴즈 정보를 찾을 수 없습니다."} className="mt-6" />
       ) : (
         <section aria-label="퀴즈 수정 폼">
           <QuizForm

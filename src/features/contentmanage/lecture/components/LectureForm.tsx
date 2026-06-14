@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { FormEvent, useEffect, useState } from "react";
 import { CourseCountry, CourseFormData, LectureFormProps } from "../types";
 import { createLectureAction, getLectureCountriesAction } from "../actions";
@@ -161,14 +162,7 @@ export default function LectureForm({ onNext }: LectureFormProps) {
         <p className="mt-1 text-[15px] text-[#98A2B3]">강의 기본 정보를 입력합니다.</p>
       </header>
 
-      {globalError && (
-        <p
-          role="alert"
-          className="mt-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]"
-        >
-          {globalError}
-        </p>
-      )}
+      <AdminErrorBanner message={globalError} className="mt-4" />
 
       <fieldset className="mt-6 space-y-6" disabled={isSubmitting}>
         <legend className="sr-only">강의 기본 정보 입력 영역</legend>

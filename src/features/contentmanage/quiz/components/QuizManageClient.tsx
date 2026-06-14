@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import LoadingSpinner from "@/features/common/LoadingSpinner";
 import QuizList from "./QuizList";
 import QuizToolbar from "./QuizToolbar";
@@ -53,18 +54,11 @@ export default function QuizManageClient({
           aria-live="polite"
           className="mt-6 flex justify-center rounded-[18px] border border-[#E4E7EC] bg-white p-8"
         >
-          <LoadingSpinner text="퀴즈 목록을 불러오는 중입니다..." />
+          <LoadingSpinner text="?? ??? ???? ????..." />
         </section>
       )}
 
-      {!isLoading && errorMessage && (
-        <section
-          role="alert"
-          className="mt-6 rounded-[18px] border border-[#E4E7EC] bg-white p-8 text-center text-[14px] text-red-500"
-        >
-          {errorMessage}
-        </section>
-      )}
+      {!isLoading && <AdminErrorBanner message={errorMessage} className="mt-6" />}
 
       {!isLoading && !errorMessage && (
         <QuizList quizzes={filteredQuizzes} onDeleted={refetch} />
