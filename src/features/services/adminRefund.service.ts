@@ -1,4 +1,4 @@
-﻿import { getCookie } from "@/lib/cookie";
+import { getCookie } from "@/lib/cookie";
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import {
   CsRefund,
@@ -6,7 +6,7 @@ import {
   refundStatusLabel,
 } from "@/features/csadmin/refund/types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 const formatDateTime = (value: string | undefined) => {
   if (!value) return "-";
@@ -43,7 +43,7 @@ export const normalizeRefund = (item: RefundRequestApiRecord): CsRefund => {
     id: `REF${String(item.refundId).padStart(3, "0")}`,
     bookingId: item.bookingNumber || `BK${String(item.bookingId).padStart(6, "0")}`,
     user: item.userName || `회원 #${item.userId}`,
-    email: `회원 #${item.userId}`,
+    userLabel: `회원 #${item.userId}`,
     product: item.productName || "-",
     requestedAt: formatDate(item.createdAt),
     requestDateTime: formatDateTime(item.createdAt),
@@ -117,24 +117,55 @@ export const completeRefund = async (refundId: number): Promise<void> => {
   );
 };
 
-export const downloadRefundExcel = async () => {
-  const token = getCookie("adminAccessToken");
-  const response = await fetch(`${BASE_URL}/api/v1/admin/refund-requests/excel`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(errorData?.message || "환불 내역 엑셀 다운로드에 실패했습니다.");
+/** 클라이언트 전용 함수 - 브라우저 API와 다운로드 UI를 사용합니다. */
+export const downloadRefundExcel = async (signal?: AbortSignal) => {
+  if (!BASE_URL) {
+    throw new Error("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
   }
 
-  const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "refund-requests.xlsx";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.URL.revokeObjectURL(url);
+  const token = getCookie("adminAccessToken");
+  const controller = new AbortController();
+  const abortRequest = () => controller.abort();
+  let didTimeout = false;
+  const timeoutId = window.setTimeout(() => {
+    didTimeout = true;
+    controller.abort();
+  }, 15000);
+
+  signal?.addEventListener("abort", abortRequest, { once: true });
+
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/admin/refund-requests/excel`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "환불 내역 엑셀 다운로드에 실패했습니다.");
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "refund-requests.xlsx";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error: unknown) {
+    if (didTimeout) {
+      throw new Error("환불 내역 엑셀 다운로드 시간이 초과되었습니다.");
+    }
+
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("환불 내역 엑셀 다운로드가 취소되었습니다.");
+    }
+
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+    signal?.removeEventListener("abort", abortRequest);
+  }
 };

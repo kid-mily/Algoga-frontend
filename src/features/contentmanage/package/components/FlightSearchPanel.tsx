@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { FormEvent, useState } from "react";
 import LoadingSpinner from "@/features/common/LoadingSpinner";
 import { useFlightSearch } from "../hooks/useFlightSearch";
@@ -112,17 +113,9 @@ export default function FlightSearchPanel() {
         </footer>
       </form>
 
-      {formError && (
-        <section role="alert" className="mt-4 rounded-[12px] bg-[#FEF2F2] p-4 text-[14px] text-[#DC2626]">
-          {formError}
-        </section>
-      )}
+      <AdminErrorBanner message={formError} className="mt-4" />
 
-      {error && (
-        <section role="alert" className="mt-4 rounded-[12px] bg-[#FEF2F2] p-4 text-[14px] text-[#DC2626]">
-          {error}
-        </section>
-      )}
+      <AdminErrorBanner message={error} className="mt-4" />
 
       <section className="mt-5" aria-busy={isSearching}>
         {isSearching ? (

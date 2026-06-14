@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { CsInquiry } from "../types";
 import { useCsInquiryList } from "../hooks/useCsInquiryList";
 import CsInquiryPagination from "./CsInquiryPagination";
@@ -55,14 +56,7 @@ export default function CsInquiryManageClient({
         onSelectedStatusChange={setSelectedStatus}
       />
 
-      {error && (
-        <section
-          role="alert"
-          className="mb-4 rounded-[12px] bg-[#FEF2F2] p-4 text-[14px] text-[#DC2626]"
-        >
-          {error}
-        </section>
-      )}
+      <AdminErrorBanner message={error} className="mb-4" />
 
       <CsInquiryTable inquiries={filteredInquiries} isLoading={isLoading} />
       <CsInquiryPagination

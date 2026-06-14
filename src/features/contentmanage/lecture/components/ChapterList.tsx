@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -95,14 +96,7 @@ export default function ChapterList({
         챕터 목록
       </h2>
 
-      {errorMessage && (
-        <div
-          role="alert"
-          className="rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-center text-[14px] font-medium text-[#DC2626]"
-        >
-          {errorMessage}
-        </div>
-      )}
+      <AdminErrorBanner message={errorMessage} className="" />
 
       {chapters.length === 0 ? (
         <p className="rounded-[18px] border border-[#E4E7EC] bg-white p-8 text-center text-[14px] text-[#98A2B3]">

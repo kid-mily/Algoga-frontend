@@ -1,4 +1,4 @@
-﻿import { ReactNode } from "react";
+import { ReactNode } from "react";
 import { CsRefund } from "../types";
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -9,6 +9,23 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+const getDaysUntilUseDate = (useDate: string) => {
+  const target = new Date(useDate);
+
+  if (!useDate || Number.isNaN(target.getTime())) {
+    return "정보 없음";
+  }
+
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const targetStart = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+  const diffDays = Math.ceil(
+    (targetStart.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  return `${diffDays}일`;
+};
 
 function Timeline({
   title,
@@ -56,6 +73,7 @@ function Timeline({
 
 export default function RefundSidePanel({ refund }: { refund: CsRefund }) {
   const hasRegistered = refund.status !== "취소 요청";
+  const daysUntilUseDate = getDaysUntilUseDate(refund.useDate);
 
   return (
     <aside className="space-y-6">
@@ -71,7 +89,7 @@ export default function RefundSidePanel({ refund }: { refund: CsRefund }) {
             </div>
             <div>
               <p className="text-[16px] font-bold text-[#111827]">{refund.user}</p>
-              <p className="text-[13px] text-[#667085]">{refund.email}</p>
+              <p className="text-[13px] text-[#667085]">{refund.userLabel}</p>
             </div>
           </div>
 
@@ -119,7 +137,9 @@ export default function RefundSidePanel({ refund }: { refund: CsRefund }) {
           <p>· 출발 6일 이내: 환불 불가</p>
         </div>
         <div className="my-4 border-t border-[#9ACBC7]" />
-        <p className="text-[13px] text-[#439A97]">현재 출발일까지: 37일</p>
+        <p className="text-[13px] text-[#439A97]">
+          현재 출발일까지: {daysUntilUseDate}
+        </p>
       </section>
     </aside>
   );

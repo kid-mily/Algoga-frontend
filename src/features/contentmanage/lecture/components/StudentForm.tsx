@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { useEffect, useState } from "react";
 import StudentItem from "./StudentItem";
 import { getCourseStudents } from "@/features/services/adminStudent.service";
@@ -92,11 +93,7 @@ export default function StudentForm({
           </div>
         </header>
 
-        {apiError && (
-          <div role="alert" className="bg-[#FEF2F2] px-7 py-3 text-[14px] font-medium text-[#DC2626]">
-            {apiError}
-          </div>
-        )}
+        <AdminErrorBanner message={apiError} className="" />
 
         <form
           role="search"

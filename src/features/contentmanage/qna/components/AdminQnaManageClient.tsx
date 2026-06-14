@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/features/common/LoadingSpinner";
 import SimpleSubHeader from "@/features/common/SimpleSubHeader";
@@ -77,14 +78,7 @@ export default function AdminQnaManageClient() {
         </fieldset>
       </form>
 
-      {error && (
-        <section
-          role="alert"
-          className="mt-4 rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]"
-        >
-          {error}
-        </section>
-      )}
+      <AdminErrorBanner message={error} className="mt-4" />
 
       <section
         aria-labelledby="admin-qna-list-title"

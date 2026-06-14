@@ -1,4 +1,4 @@
-﻿export type RefundApiStatus =
+export type RefundApiStatus =
   | "REQUESTED"
   | "REVIEWING"
   | "IN_REVIEW"
@@ -41,7 +41,7 @@ export type CsRefund = {
   userId: number;
   id: string;
   user: string;
-  email: string;
+  userLabel: string;
   product: string;
   requestedAt: string;
   requestDateTime: string;

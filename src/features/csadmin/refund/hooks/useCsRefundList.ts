@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   approveRefund,
   completeRefund,
@@ -19,6 +19,7 @@ export const useCsRefundList = (initialRefunds: CsRefund[]) => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const inFlightRef = useRef(false);
 
   const fetchRefunds = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -82,7 +83,9 @@ export const useCsRefundList = (initialRefunds: CsRefund[]) => {
     refundId: number,
     action: "review" | "approve" | "reject" | "complete"
   ) => {
-    if (processingId) return;
+    if (inFlightRef.current) return;
+
+    inFlightRef.current = true;
 
     const actionMap = {
       review: requestRefundReview,
@@ -111,6 +114,7 @@ export const useCsRefundList = (initialRefunds: CsRefund[]) => {
           : "환불 요청 처리에 실패했습니다."
       );
     } finally {
+      inFlightRef.current = false;
       setProcessingId(null);
     }
   };

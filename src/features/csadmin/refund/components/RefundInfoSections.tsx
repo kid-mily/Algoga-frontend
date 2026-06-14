@@ -1,4 +1,4 @@
-﻿import { CsRefund } from "../types";
+import { CsRefund } from "../types";
 
 const formatWon = (value: number) => `${value.toLocaleString()}원`;
 
@@ -62,7 +62,7 @@ export function RefundCancelSection({ refund }: { refund: CsRefund }) {
       </header>
 
       <dl className="space-y-5 px-6 py-6">
-        <Info label="취소 요청자" value={`${refund.user} (${refund.email})`} />
+        <Info label="취소 요청자" value={`${refund.user} (${refund.userLabel})`} />
         <Info label="취소 요청 일시" value={refund.requestDateTime} />
         <div>
           <dt className="mb-2 text-[13px] font-semibold text-[#667085]">

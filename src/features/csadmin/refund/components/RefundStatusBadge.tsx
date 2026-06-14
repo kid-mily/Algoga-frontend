@@ -1,4 +1,4 @@
-﻿import { CsRefundStatus } from "../types";
+import { CsRefundStatus } from "../types";
 
 export default function RefundStatusBadge({ status }: { status: CsRefundStatus }) {
   if (status === "취소 요청") {

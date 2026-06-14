@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import CompleteModal from "@/features/common/CompleteModal";
 import {
   answerAdminInquiry,
@@ -123,14 +124,7 @@ export default function CsInquiryDetailClient({
         )}
       </header>
 
-      {error && (
-        <section
-          role="alert"
-          className="mb-4 rounded-[12px] bg-[#FEF2F2] p-4 text-[14px] text-[#DC2626]"
-        >
-          {error}
-        </section>
-      )}
+      <AdminErrorBanner message={error} className="mb-4" />
 
       {inquiry && (
         <div className="grid gap-6">

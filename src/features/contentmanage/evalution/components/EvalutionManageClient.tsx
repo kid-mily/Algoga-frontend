@@ -1,5 +1,6 @@
 "use client";
 
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { useRouter } from "next/navigation";
 import { EvalutionQuestion } from "../types";
 import EvalutionDeleteModals from "./EvalutionDeleteModals";
@@ -45,14 +46,7 @@ export default function EvalutionManageClient({
         </p>
       </header>
 
-      {error && (
-        <section
-          role="alert"
-          className="mb-4 rounded-[12px] bg-[#FEF2F2] p-4 text-[14px] text-[#DC2626]"
-        >
-          {error}
-        </section>
-      )}
+      <AdminErrorBanner message={error} className="mb-4" />
 
       <section
         aria-labelledby="evalution-question-management-title"
