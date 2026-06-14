@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   deleteAdminManager,
   getAdminManagers,
@@ -9,11 +9,13 @@ import { AdminManager, ManagerRole } from "../types";
 export const useManagerList = (initialManagers: AdminManager[]) => {
   const [managers, setManagers] = useState<AdminManager[]>(initialManagers);
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState("");
   const [selectedRole, setSelectedRole] = useState<ManagerRole | "ALL">("ALL");
   const [deleteTarget, setDeleteTarget] = useState<AdminManager | null>(null);
   const [deleteCompleteOpen, setDeleteCompleteOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const isDeletingRef = useRef(false);
 
   const fetchManagers = useCallback(
     async (signal?: AbortSignal) => {
@@ -32,7 +34,7 @@ export const useManagerList = (initialManagers: AdminManager[]) => {
         setIsLoading(true);
         setError("");
 
-        const data = await getAdminManagers(searchKeyword, signal);
+        const data = await getAdminManagers(debouncedSearchKeyword, signal);
 
         if (signal?.aborted) return;
 
@@ -52,19 +54,27 @@ export const useManagerList = (initialManagers: AdminManager[]) => {
         }
       }
     },
-    [initialManagers, searchKeyword]
+    [debouncedSearchKeyword, initialManagers]
   );
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchKeyword(searchKeyword);
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchKeyword]);
+
+  useEffect(() => {
     const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      void fetchManagers(controller.signal);
+    }, 0);
 
-    void Promise.resolve().then(() => {
-      if (!controller.signal.aborted) {
-        void fetchManagers(controller.signal);
-      }
-    });
-
-    return () => controller.abort();
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, [fetchManagers]);
 
   const filteredManagers = useMemo(() => {
@@ -82,7 +92,9 @@ export const useManagerList = (initialManagers: AdminManager[]) => {
   }, [managers, searchKeyword, selectedRole]);
 
   const deleteManager = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || isDeletingRef.current) return;
+
+    isDeletingRef.current = true;
 
     try {
       setError("");
@@ -98,6 +110,8 @@ export const useManagerList = (initialManagers: AdminManager[]) => {
           ? deleteError.message
           : "관리자 계정 삭제에 실패했습니다."
       );
+    } finally {
+      isDeletingRef.current = false;
     }
   };
 

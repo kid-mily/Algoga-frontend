@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ const menus = [
   },
   {
     name: "환불 요청 관리",
-    href: "/csadmin/refunds",
+    href: "/csadmin/refund",
     icon: "/images/refund.svg",
     activeIcon: "/images/Payment.svg",
   },

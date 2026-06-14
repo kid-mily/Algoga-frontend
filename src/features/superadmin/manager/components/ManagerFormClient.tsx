@@ -96,14 +96,14 @@ export default function ManagerFormClient({
 
   useEffect(() => {
     const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      void fetchManager(controller.signal);
+    }, 0);
 
-    void Promise.resolve().then(() => {
-      if (!controller.signal.aborted) {
-        void fetchManager(controller.signal);
-      }
-    });
-
-    return () => controller.abort();
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, [fetchManager]);
 
   const updateField = <K extends keyof ManagerFormData>(
@@ -136,6 +136,18 @@ export default function ManagerFormClient({
 
     if (!formData.email.trim()) {
       setError("이메일을 입력해주세요.");
+      return false;
+    }
+
+    const phoneRegex = /^01[016789]-?\d{3,4}-?\d{4}$/;
+    if (!phoneRegex.test(formData.phone.trim())) {
+      setError("유효한 전화번호를 입력해주세요.");
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setError("유효한 이메일을 입력해주세요.");
       return false;
     }
 
@@ -178,7 +190,9 @@ export default function ManagerFormClient({
       return;
     }
 
-    void saveManager();
+    void saveManager().catch((saveError: unknown) => {
+      console.error("saveManager failed:", saveError);
+    });
   };
 
   if (isLoading) {
@@ -221,22 +235,24 @@ export default function ManagerFormClient({
           </h2>
 
           <div className="grid grid-cols-2 gap-4">
-            <label className="block">
+            <label className="block" htmlFor="manager-login-id">
               <span className="mb-3 block text-[14px] font-semibold text-[#344054]">
                 로그인 ID <span className="text-red-500">*</span>
               </span>
               <input
+                id="manager-login-id"
                 value={formData.loginId}
                 onChange={(event) => updateField("loginId", event.target.value)}
                 className="h-[42px] w-full rounded-[10px] border border-[#D0D5DD] px-4 text-[14px] outline-none focus:border-[#639E9B]"
               />
             </label>
 
-            <label className="block">
+            <label className="block" htmlFor="manager-password">
               <span className="mb-3 block text-[14px] font-semibold text-[#344054]">
                 비밀번호 {mode === "create" && <span className="text-red-500">*</span>}
               </span>
               <input
+                id="manager-password"
                 type="password"
                 value={formData.password}
                 onChange={(event) => updateField("password", event.target.value)}
@@ -253,22 +269,24 @@ export default function ManagerFormClient({
           </h2>
 
           <div className="grid grid-cols-2 gap-4">
-            <label className="block">
+            <label className="block" htmlFor="manager-name">
               <span className="mb-3 block text-[14px] font-semibold text-[#344054]">
                 이름 <span className="text-red-500">*</span>
               </span>
               <input
+                id="manager-name"
                 value={formData.name}
                 onChange={(event) => updateField("name", event.target.value)}
                 className="h-[42px] w-full rounded-[10px] border border-[#D0D5DD] px-4 text-[14px] outline-none focus:border-[#639E9B]"
               />
             </label>
 
-            <label className="block">
+            <label className="block" htmlFor="manager-phone">
               <span className="mb-3 block text-[14px] font-semibold text-[#344054]">
                 전화번호 <span className="text-red-500">*</span>
               </span>
               <input
+                id="manager-phone"
                 value={formData.phone}
                 onChange={(event) =>
                   updateField("phone", formatPhoneNumber(event.target.value))
@@ -278,11 +296,12 @@ export default function ManagerFormClient({
               />
             </label>
 
-            <label className="block">
+            <label className="block" htmlFor="manager-email">
               <span className="mb-3 block text-[14px] font-semibold text-[#344054]">
                 이메일 <span className="text-red-500">*</span>
               </span>
               <input
+                id="manager-email"
                 type="email"
                 value={formData.email}
                 onChange={(event) => updateField("email", event.target.value)}
@@ -348,7 +367,9 @@ export default function ManagerFormClient({
         cancelText="취소"
         onConfirm={() => {
           setConfirmOpen(false);
-          void saveManager();
+          void saveManager().catch((saveError: unknown) => {
+            console.error("saveManager failed:", saveError);
+          });
         }}
         onCancel={() => setConfirmOpen(false)}
       />
