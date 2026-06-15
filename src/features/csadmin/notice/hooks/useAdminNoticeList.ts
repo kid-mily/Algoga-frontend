@@ -8,12 +8,14 @@ export const useAdminNoticeList = (initialNotices: AdminNotice[]) => {
   const [notices, setNotices] = useState<AdminNotice[]>(initialNotices);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedTag, setSelectedTag] = useState<NoticeTag>("ALL");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const fetchNotices = useCallback(async (signal?: AbortSignal) => {
+    await Promise.resolve();
+
     try {
       setIsLoading(true);
       setError("");
@@ -39,12 +41,12 @@ export const useAdminNoticeList = (initialNotices: AdminNotice[]) => {
 
   useEffect(() => {
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => {
-      void fetchNotices(controller.signal);
-    }, 0);
+
+    void (async () => {
+      await fetchNotices(controller.signal);
+    })();
 
     return () => {
-      window.clearTimeout(timeoutId);
       controller.abort();
     };
   }, [fetchNotices]);

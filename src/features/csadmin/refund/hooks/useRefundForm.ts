@@ -30,6 +30,8 @@ export const useRefundForm = (refundId: number, mode: RefundFormMode) => {
   const [completeOpen, setCompleteOpen] = useState(false);
 
   const fetchRefund = useCallback(async (signal?: AbortSignal) => {
+    await Promise.resolve();
+
     try {
       setIsLoading(true);
       setError("");
@@ -61,12 +63,12 @@ export const useRefundForm = (refundId: number, mode: RefundFormMode) => {
 
   useEffect(() => {
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => {
-      void fetchRefund(controller.signal);
-    }, 0);
+
+    void (async () => {
+      await fetchRefund(controller.signal);
+    })();
 
     return () => {
-      window.clearTimeout(timeoutId);
       controller.abort();
     };
   }, [fetchRefund]);

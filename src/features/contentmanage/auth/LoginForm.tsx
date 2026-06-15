@@ -111,7 +111,7 @@ export default function AdminLoginForm() {
                 setServerError("");
               }
             }}
-            placeholder="managers 테이블의 login_id를 입력해주세요"
+            placeholder="아이디를 입력해주세요"
             autoComplete="username"
             className={`mt-3 h-[56px] w-full rounded-[16px] border bg-[#F9FAFB] px-5 text-[15px] outline-none placeholder:text-[#98A2B3] disabled:cursor-not-allowed disabled:bg-[#EEF2F6] ${
               loginIdError ? "border-[#EF4444]" : "border-[#D0D5DD]"

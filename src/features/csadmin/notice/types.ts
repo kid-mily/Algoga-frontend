@@ -1,12 +1,13 @@
-export type NoticeTag = "ALL" | "NOTICE" | "EVENT" | "MAINTENANCE" | string;
+export type NoticeTag = "ALL" | "NOTICE" | "EVENT" | "MAINTENANCE";
+export type NoticeApiTag = NoticeTag | (string & {});
 
 export type AdminNoticeApiRecord = Partial<{
   noticeId: number;
   id: number;
   title: string;
   content: string;
-  tag: NoticeTag;
-  type: NoticeTag;
+  tag: NoticeApiTag;
+  type: NoticeApiTag;
   createdAt: string;
   created_at: string;
   createdDate: string;
@@ -26,7 +27,7 @@ export type AdminNotice = {
   displayId: string;
   title: string;
   content: string;
-  tag: NoticeTag;
+  tag: NoticeApiTag;
   tagLabel: string;
   createdAt: string;
   updatedAt: string;
@@ -55,8 +56,12 @@ export const noticeFilterOptions = [
   ...noticeTagOptions,
 ];
 
-export const getNoticeTagLabel = (tag: NoticeTag) => {
-  return noticeTagOptions.find((option) => option.value === tag)?.label ?? "공지";
+export const isNoticeTag = (tag: string): tag is NoticeTag => {
+  return ["ALL", "NOTICE", "EVENT", "MAINTENANCE"].includes(tag);
+};
+
+export const getNoticeTagLabel = (tag: NoticeApiTag) => {
+  return noticeTagOptions.find((option) => option.value === tag)?.label ?? tag;
 };
 
 export const emptyNoticeForm: NoticeFormData = {

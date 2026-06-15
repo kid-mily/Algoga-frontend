@@ -46,9 +46,7 @@ export default function NoticeFormClient({ mode, noticeId }: NoticeFormClientPro
       return;
     }
 
-    void saveNotice().catch((saveError: unknown) => {
-      console.error("saveNotice failed:", saveError);
-    });
+    void saveNotice();
   };
 
   if (isLoading) {
@@ -168,9 +166,7 @@ export default function NoticeFormClient({ mode, noticeId }: NoticeFormClientPro
         cancelText="취소"
         onConfirm={() => {
           setConfirmOpen(false);
-          void saveNotice().catch((saveError: unknown) => {
-            console.error("saveNotice failed:", saveError);
-          });
+          void saveNotice();
         }}
         onCancel={() => setConfirmOpen(false)}
       />

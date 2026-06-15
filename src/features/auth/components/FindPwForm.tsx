@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import FindHeader from "@/features/auth/components/FindHeader";
 import Link from "next/link";
 import { findPassword } from "@/features/services/auth.service";
-import Modal from "@/features/common/Modal"; // 필요 시 모달로 변경 가능
 
 export default function FindPwForm() {
   const router = useRouter();
@@ -98,7 +97,7 @@ export default function FindPwForm() {
           disabled={isLoading}
           className="mt-8 h-[45px] w-full rounded-[20px] bg-[#439A97] text-[20px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#CFE5E4]"
         >
-          {isLoading ? "전송 중..." : "임시비밀번호전송"}
+          {isLoading ? "전송 중..." : "임시 비밀번호 전송"}
         </button>
 
         <Link

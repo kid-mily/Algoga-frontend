@@ -113,9 +113,7 @@ export default function FlightSearchPanel() {
         </footer>
       </form>
 
-      <AdminErrorBanner message={formError} className="mt-4" />
-
-      <AdminErrorBanner message={error} className="mt-4" />
+      <AdminErrorBanner message={formError || error} className="mt-4" />
 
       <section className="mt-5" aria-busy={isSearching}>
         {isSearching ? (
