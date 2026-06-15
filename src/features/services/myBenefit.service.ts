@@ -28,10 +28,23 @@ export interface MyMileage {
 }
 
 export const getMyCoupons = async (): Promise<MyCoupon[]> => {
-    const response = await api.get("/api/v1/my/coupons", {
-        params: { t: Date.now() },
-    });
-    return unwrap<MyCoupon[]>(response, []);
+  const response = await api.get("/api/v1/my/coupons", {
+    params: { t: Date.now() },
+    credentials: "include",
+    suppressGlobalError: true,
+  });
+
+  return unwrap<MyCoupon[]>(response, []);
+};
+
+export const getMyMileage = async (): Promise<MyMileage> => {
+  const response = await api.get("/api/v1/my/mileages", {
+    params: { t: Date.now() },
+    credentials: "include",
+    suppressGlobalError: true,
+  });
+
+  return unwrap<MyMileage>(response, { totalMileage: 0, histories: [] });
 };
 
 export const getUsableCouponsByCourse = async (
@@ -44,11 +57,4 @@ export const getUsableCouponsByCourse = async (
         coupon.usable === true &&
         String(coupon.status).toUpperCase() === "ISSUED"
     );
-};
-
-export const getMyMileage = async (): Promise<MyMileage> => {
-    const response = await api.get("/api/v1/my/mileages", {
-        params: { t: Date.now() },
-    });
-    return unwrap<MyMileage>(response, { totalMileage: 0, histories: [] });
 };

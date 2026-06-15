@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "@/features/common/Modal";
-import { getCookie } from "@/lib/cookie";
 import { CourseItem } from "./types";
 
 interface LectureActionCardProps {
@@ -31,15 +30,8 @@ export default function LectureActionCard({
   const paymentHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}/payment/single`;
 
   const handleActionClick = () => {
-    const token = getCookie("accessToken");
-
-    if (!token) {
-      setIsLoginModalOpen(true);
-      return;
-    }
-
-    router.push(isPaid ? studyHref : paymentHref);
-  };
+  router.push(isPaid ? studyHref : paymentHref);
+};
 
   const handleLoginConfirm = () => {
     setIsLoginModalOpen(false);
