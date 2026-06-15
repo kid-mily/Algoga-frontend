@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import { Accommodation } from "../types";
 
 interface AccommodationRowProps {
@@ -7,19 +7,34 @@ interface AccommodationRowProps {
   onDelete: (accommodation: Accommodation) => void;
 }
 
+const isAllowedImageUrl = (imageUrl?: string) => {
+  if (!imageUrl) return false;
+  if (imageUrl.startsWith("/")) return true;
+
+  try {
+    const url = new URL(imageUrl);
+
+    return url.hostname === "algoga-bucket.kro.kr";
+  } catch {
+    return false;
+  }
+};
+
 export default function AccommodationRow({
   accommodation,
   onEdit,
   onDelete,
 }: AccommodationRowProps) {
+  const canRenderAccommodationImage = isAllowedImageUrl(accommodation.imageUrl);
+
   return (
     <tr className="border-b border-[#E4E7EC]">
       <td className="px-5 py-5">
         <section className="flex items-center gap-3">
           <span className="flex h-[44px] w-[44px] shrink-0 items-center justify-center overflow-hidden rounded-[12px] bg-[#F2F4F7]">
-            {accommodation.imageUrl ? (
+            {canRenderAccommodationImage ? (
               <Image
-                src={accommodation.imageUrl}
+                src={accommodation.imageUrl || "/images/hotel.svg"}
                 alt={`${accommodation.name} 숙소 이미지`}
                 width={44}
                 height={44}

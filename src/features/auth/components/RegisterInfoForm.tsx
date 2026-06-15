@@ -494,7 +494,7 @@ export default function RegisterInfoForm({
 
         {/* 전화번호 */}
         <div className="col-span-2">
-          <FormLabel required>생년월일</FormLabel>
+          <FormLabel required>전화번호</FormLabel>
           <input
             type="text"
             value={formData.phone}

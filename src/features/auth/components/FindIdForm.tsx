@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,7 @@ export default function FindIdForm() {
       // 🌟 3. 백엔드 개발자분 말씀대로 응답 구조에 맞게 데이터 추출
       // 백엔드 응답: { status: 200, data: { maskedId: "alg***" }, message: "..." }
       // result는 response.data 이므로, 실제 값은 result.data.maskedId 에 있습니다.
-      const maskedId = result?.data?.maskedId || result?.maskedId;
+      const maskedId = result.maskedId;
 
       if (!maskedId) {
         throw new Error("아이디 정보를 찾을 수 없습니다.");
@@ -40,9 +40,10 @@ export default function FindIdForm() {
       sessionStorage.setItem("foundUserId", maskedId);
       router.push("/auth/login/findidcomplete");
 
-    } catch (error: any) {
-      // Axios 에러는 auth.service.ts에서 깔끔하게 메시지로 던져주므로 바로 출력하면 됩니다.
-      setErrorMessage(error.message || "아이디 찾기에 실패했습니다.");
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "아이디 찾기에 실패했습니다."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -109,3 +110,5 @@ export default function FindIdForm() {
     </div>
   );
 }
+
+
