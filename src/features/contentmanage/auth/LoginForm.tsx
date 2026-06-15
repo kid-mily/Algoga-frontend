@@ -2,7 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { adminLogin } from "@/features/services/adminAuth.service";
+import {
+  adminLogin,
+  getAdminLoginRole,
+  getAdminRedirectPathByRole,
+} from "@/features/services/adminAuth.service";
 
 export default function AdminLoginForm() {
   const router = useRouter();
@@ -39,13 +43,18 @@ export default function AdminLoginForm() {
     try {
       setIsLoading(true);
 
-      await adminLogin({
+      const admin = await adminLogin({
         loginId: trimmedLoginId,
         password,
       });
+      const role = getAdminLoginRole(admin);
+
+      if (!role) {
+        throw new Error("관리자 역할 정보를 받지 못했습니다.");
+      }
 
       window.dispatchEvent(new Event("auth-state-changed"));
-      router.push("/contentadmin/lecture");
+      router.push(getAdminRedirectPathByRole(role));
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "관리자 로그인에 실패했습니다.";
@@ -178,4 +187,7 @@ export default function AdminLoginForm() {
     </div>
   );
 }
+
+
+
 

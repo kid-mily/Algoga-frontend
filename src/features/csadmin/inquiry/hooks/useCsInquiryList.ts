@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { getAdminInquiries } from "@/features/services/adminInquiry.service";
 import {
   CsInquiry,
@@ -40,12 +40,12 @@ export const useCsInquiryList = (initialInquiries: CsInquiry[]) => {
       } catch (fetchError: unknown) {
         if (signal?.aborted) return;
 
-        setInquiries(initialInquiries);
-        setTotalCount(initialInquiries.length);
-        setTotalPages(Math.max(1, Math.ceil(initialInquiries.length / 8)));
+        setInquiries([]);
+        setTotalCount(0);
+        setTotalPages(1);
         setError(
           fetchError instanceof Error
-            ? `${fetchError.message} 임시 데이터를 표시합니다.`
+            ? fetchError.message
             : "고객 문의 목록을 불러오지 못했습니다."
         );
       } finally {
@@ -54,7 +54,7 @@ export const useCsInquiryList = (initialInquiries: CsInquiry[]) => {
         }
       }
     },
-    [currentPage, initialInquiries, selectedCategory, selectedStatus]
+    [currentPage, selectedCategory, selectedStatus]
   );
 
   useEffect(() => {
@@ -120,3 +120,6 @@ export const useCsInquiryList = (initialInquiries: CsInquiry[]) => {
     refetch: fetchInquiries,
   };
 };
+
+
+

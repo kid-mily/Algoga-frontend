@@ -1,5 +1,6 @@
 ﻿import {
   FindIdRequest,
+  FindIdResponse,
   FindPasswordRequest,
   LoginRequest,
   LoginResponse,
@@ -17,12 +18,23 @@ export const login = async (user: LoginRequest): Promise<LoginResponse> => {
   return unwrapData<LoginResponse | null>(response) ?? {};
 };
 
-export const findId = async (payload: FindIdRequest) => {
-  return api.post("/api/v1/auth/find-id", payload, { skipAuth: true, suppressGlobalError: true });
+export const findId = async (
+  payload: FindIdRequest
+): Promise<FindIdResponse> => {
+  const response = await api.post<ApiResult<FindIdResponse>>(
+    "/api/v1/auth/find-id",
+    payload,
+    { skipAuth: true, suppressGlobalError: true }
+  );
+
+  return unwrapData<FindIdResponse>(response);
 };
 
 export const findPassword = async (payload: FindPasswordRequest) => {
-  return api.post("/api/v1/auth/find-password", payload, { skipAuth: true, suppressGlobalError: true });
+  return api.post("/api/v1/auth/find-password", payload, {
+    skipAuth: true,
+    suppressGlobalError: true,
+  });
 };
 
 export const resetPassword = async (payload: ResetPasswordRequest) => {
@@ -32,4 +44,3 @@ export const resetPassword = async (payload: ResetPasswordRequest) => {
 export const logout = async () => {
   return api.post("/api/v1/auth/logout");
 };
-

@@ -2,7 +2,47 @@
 import {
   AdminLoginRequest,
   AdminLoginResponse,
+  AdminRole,
 } from "../contentmanage/auth/types";
+
+const normalizeRole = (role: AdminRole | undefined) => {
+  return role?.replace(/^ROLE_/, "").toUpperCase() ?? "";
+};
+
+const firstRole = (roles: AdminLoginResponse["roles"]) => {
+  if (Array.isArray(roles)) {
+    return roles[0];
+  }
+
+  return roles;
+};
+
+export const getAdminLoginRole = (admin: AdminLoginResponse) => {
+  return normalizeRole(
+    admin.role ??
+      admin.managerRole ??
+      admin.authority ??
+      firstRole(admin.authorities) ??
+      firstRole(admin.roles) ??
+      admin.type
+  );
+};
+
+export const getAdminRedirectPathByRole = (role: string) => {
+  if (role === "SUPER_ADMIN") {
+    return "/superadmin/manage";
+  }
+
+  if (role === "CS_MANAGER") {
+    return "/csadmin/inquiry";
+  }
+
+  if (role === "SETTLEMENT_MANAGER") {
+    return "/csadmin/refund";
+  }
+
+  return "/contentadmin/lecture";
+};
 
 export const adminLogin = async (
   payload: AdminLoginRequest

@@ -68,19 +68,15 @@ const createBannerFormData = (
   file: File | null,
   bannerId?: number
 ) => {
-  const payload = {
-    ...(bannerId ? { bannerId } : {}),
-    linkUrl: formData.linkUrl.trim(),
-    text: formData.text.trim(),
-    fileType: formData.fileType,
-    isVisible: formData.isVisible,
-  };
   const multipart = new FormData();
 
-  multipart.append(
-    "data",
-    new Blob([JSON.stringify(payload)], { type: "application/json" })
-  );
+  if (bannerId) {
+    multipart.append("bannerId", String(bannerId));
+  }
+
+  multipart.append("linkUrl", formData.linkUrl.trim());
+  multipart.append("text", formData.text.trim());
+  multipart.append("isVisible", String(formData.isVisible));
 
   if (file) {
     multipart.append("image", file);
@@ -161,3 +157,5 @@ export const getMainBanners = async (): Promise<AdminBanner[]> => {
     return banner ? [banner] : [];
   });
 };
+
+

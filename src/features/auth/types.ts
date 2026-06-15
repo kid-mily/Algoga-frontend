@@ -53,6 +53,10 @@ export interface FindIdRequest {
   email: string;
 }
 
+export interface FindIdResponse {
+  maskedId: string;
+}
+
 export interface ResetPasswordRequest {
   newPassword: string;
 }
@@ -73,4 +77,6 @@ export interface UpdatePasswordRequest {
   currentPassword: string;
   newPassword: string;
 }
+
+
 
