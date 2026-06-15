@@ -59,3 +59,25 @@ export interface ApiErrorResponse {
   message?: string;
   traceId?: string;
 }
+
+export interface UpdateProfileRequest {
+  nickname: string;
+  phone: string;
+  email: string;
+  profileImage: File | null;
+}
+
+export interface UpdateProfileResponse {
+  accessToken: string;
+  refreshToken: string;
+  requiresPasswordChange: boolean;
+}
+
+export interface VerifyPasswordRequest {
+  password: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
