@@ -1,11 +1,10 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { login } from "@/features/services/auth.service";
 import CompleteModal from "@/features/common/CompleteModal";
-import { deleteCookie, setCookie } from "@/lib/cookie";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -60,23 +59,9 @@ export default function LoginForm() {
         password,
       });
 
-      if (!data?.accessToken) {
-        throw new Error("서버로부터 로그인 토큰을 받지 못했습니다.");
-      }
-
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      deleteCookie("accessToken");
-      deleteCookie("refreshToken");
-
-      setCookie("accessToken", data.accessToken);
-
-      if (data.refreshToken) {
-        setCookie("refreshToken", data.refreshToken);
-      }
       window.dispatchEvent(new Event("auth-state-changed"));
 
-      if (data.requiresPasswordChange) {
+      if (data?.requiresPasswordChange) {
         router.push("/auth/login/newpw");
         return;
       }
@@ -217,3 +202,4 @@ export default function LoginForm() {
     </>
   );
 }
+

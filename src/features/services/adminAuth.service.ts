@@ -1,5 +1,4 @@
-import { api, ApiResponse } from "@/lib/api";
-import { deleteCookie } from "@/lib/cookie";
+﻿import { api, ApiResult, unwrapData } from "@/lib/api";
 import {
   AdminLoginRequest,
   AdminLoginResponse,
@@ -8,17 +7,17 @@ import {
 export const adminLogin = async (
   payload: AdminLoginRequest
 ): Promise<AdminLoginResponse> => {
-  const response = await api.post<ApiResponse<AdminLoginResponse>>(
+  const response = await api.post<ApiResult<AdminLoginResponse | null>>(
     "/api/v1/auth/admin/login",
-    payload
+    payload,
+    { skipAuth: true, suppressGlobalError: true }
   );
 
-  return response.data;
+  return unwrapData<AdminLoginResponse | null>(response) ?? {};
 };
 
 export const adminLogout = () => {
-  deleteCookie("adminAccessToken");
-  deleteCookie("adminRefreshToken");
   localStorage.removeItem("adminAccessToken");
   localStorage.removeItem("adminRefreshToken");
 };
+

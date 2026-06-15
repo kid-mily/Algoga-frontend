@@ -1,4 +1,4 @@
-import {
+﻿import {
   FindIdRequest,
   FindPasswordRequest,
   LoginRequest,
@@ -8,13 +8,13 @@ import {
 import { api, ApiResult, unwrapData } from "@/lib/api";
 
 export const login = async (user: LoginRequest): Promise<LoginResponse> => {
-  const response = await api.post<ApiResult<LoginResponse>>(
+  const response = await api.post<ApiResult<LoginResponse | null>>(
     "/api/v1/auth/login",
     user,
     { skipAuth: true }
   );
 
-  return unwrapData<LoginResponse>(response);
+  return unwrapData<LoginResponse | null>(response) ?? {};
 };
 
 export const findId = async (payload: FindIdRequest) => {

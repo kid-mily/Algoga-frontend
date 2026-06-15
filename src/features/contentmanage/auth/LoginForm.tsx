@@ -1,10 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { adminLogin } from "@/features/services/adminAuth.service";
-import { getAdminRedirectPath } from "@/lib/adminToken";
-import { deleteCookie, setCookie } from "@/lib/cookie";
 
 export default function AdminLoginForm() {
   const router = useRouter();
@@ -41,31 +39,13 @@ export default function AdminLoginForm() {
     try {
       setIsLoading(true);
 
-      const data = await adminLogin({
+      await adminLogin({
         loginId: trimmedLoginId,
         password,
       });
 
-      if (!data?.accessToken) {
-        throw new Error("관리자 로그인 토큰을 받지 못했습니다.");
-      }
-
-      deleteCookie("accessToken");
-      deleteCookie("refreshToken");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("adminAccessToken");
-      localStorage.removeItem("adminRefreshToken");
-      deleteCookie("adminAccessToken");
-      deleteCookie("adminRefreshToken");
-
-      setCookie("adminAccessToken", data.accessToken);
-
-      if (data.refreshToken) {
-        setCookie("adminRefreshToken", data.refreshToken);
-      }
-
-      router.push(getAdminRedirectPath(data.accessToken));
+      window.dispatchEvent(new Event("auth-state-changed"));
+      router.push("/contentadmin/lecture");
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "관리자 로그인에 실패했습니다.";
@@ -198,3 +178,4 @@ export default function AdminLoginForm() {
     </div>
   );
 }
+

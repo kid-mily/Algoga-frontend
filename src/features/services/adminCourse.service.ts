@@ -1,4 +1,4 @@
-import { api, adminApi, ApiResponse } from "@/lib/api";
+﻿import { api, adminApi, ApiResponse } from "@/lib/api";
 import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 import {
   AdminCourse,
@@ -46,6 +46,7 @@ export const getAdminCourses = async (
           t: Date.now(),
         },
         signal,
+        suppressGlobalError: true,
       }
     );
 
@@ -71,6 +72,7 @@ export const getCourseCountries = async (
       {
         params: { t: Date.now() },
         signal,
+        suppressGlobalError: true,
       }
     );
 
@@ -88,6 +90,7 @@ export const getCourseCountries = async (
           {
             params: { t: Date.now() },
             signal,
+        suppressGlobalError: true,
           }
         );
 
@@ -239,3 +242,4 @@ export const deleteAdminCourse = async (courseId: number) => {
     throw new Error(getErrorMessage(error, "강의 삭제에 실패했습니다."));
   }
 };
+

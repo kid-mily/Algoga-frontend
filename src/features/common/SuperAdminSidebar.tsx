@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { deleteCookie } from "@/lib/cookie";
 
 const menus = [
   {
@@ -29,10 +28,6 @@ export default function SuperAdminSidebar() {
     localStorage.removeItem("adminAccessToken");
     localStorage.removeItem("adminRefreshToken");
     sessionStorage.clear();
-    deleteCookie("accessToken");
-    deleteCookie("refreshToken");
-    deleteCookie("adminAccessToken");
-    deleteCookie("adminRefreshToken");
     router.replace("/auth/adminlogin");
   };
 
@@ -114,3 +109,4 @@ export default function SuperAdminSidebar() {
     </aside>
   );
 }
+

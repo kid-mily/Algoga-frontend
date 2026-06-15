@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   deleteAdminManager,
   getAdminManagers,
 } from "@/features/services/adminManager.service";
-import { getCurrentAdminPayload, hasAdminRole } from "@/lib/adminToken";
 import { AdminManager, ManagerRole } from "../types";
 
 export const useManagerList = (initialManagers: AdminManager[]) => {
@@ -19,16 +18,6 @@ export const useManagerList = (initialManagers: AdminManager[]) => {
 
   const fetchManagers = useCallback(
     async (signal?: AbortSignal) => {
-      const adminPayload = getCurrentAdminPayload();
-
-      if (!hasAdminRole(adminPayload, ["SUPER_ADMIN"])) {
-        setManagers(initialManagers);
-        setError(
-          "슈퍼 관리자 권한으로 로그인해야 관리자 계정 API를 호출할 수 있습니다. 임시 데이터를 표시합니다."
-        );
-        setIsLoading(false);
-        return;
-      }
 
       try {
         setIsLoading(true);
@@ -131,3 +120,4 @@ export const useManagerList = (initialManagers: AdminManager[]) => {
     deleteManager,
   };
 };
+

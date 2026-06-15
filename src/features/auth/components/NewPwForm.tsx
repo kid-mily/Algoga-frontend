@@ -1,10 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { resetPassword } from "@/features/services/auth.service";
 import CompleteModal from "@/features/common/CompleteModal"; // 🌟 모달 임포트 (경로 확인 필요)
-import { getCookie, deleteCookie } from "@/lib/cookie";
 
 export default function NewPwForm() {
   const router = useRouter();
@@ -89,31 +88,12 @@ export default function NewPwForm() {
     if (password !== confirmPassword) {
       return;
     }
-
-    const accessToken = getCookie("accessToken");
-
-    if (!accessToken) {
-      // 🌟 alert 대체
-      setModal({
-        open: true,
-        title: "알림",
-        description: "로그인 정보가 없습니다. 임시 비밀번호로 다시 로그인해주세요.",
-        redirect: "/auth/login",
-      });
-      return;
-    }
-
     try {
       setIsLoading(true);
 
       await resetPassword({
         newPassword: password,
       });
-
-      deleteCookie("accessToken");
-      deleteCookie("refreshToken");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
 
       // 🌟 alert 대체 (성공 시)
       setModal({
@@ -304,3 +284,4 @@ export default function NewPwForm() {
     </>
   );
 }
+
