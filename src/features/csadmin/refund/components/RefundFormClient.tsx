@@ -38,7 +38,9 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
     mode === "create"
       ? "환불 검토 요청이 완료되었습니다."
       : "환불 요청 처리가 완료되었습니다.";
-  const statusOptions = refundStatusOptions.filter((status) => status !== "ALL");
+  const statusOptions = refundStatusOptions.filter(
+    (status) => status !== "ALL" && status !== "취소 요청" && status !== "정산 검토중"
+  );
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -65,7 +67,7 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
     return (
       <AdminErrorBanner
         message={error || "환불 요청 정보를 찾을 수 없습니다."}
-        className=""
+        className="m-0"
       />
     );
   }

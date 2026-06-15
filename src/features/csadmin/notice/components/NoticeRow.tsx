@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { AdminNotice } from "../types";
 
@@ -26,7 +27,7 @@ export default function NoticeRow({ notice, onDelete }: NoticeRowProps) {
             aria-label={`수정: 공지사항 ${notice.noticeId}`}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] transition hover:bg-[#F2F4F7]"
           >
-            <img src="/images/edit.svg" alt="" aria-hidden="true" className="h-[18px] w-[18px]" />
+            <Image src="/images/edit.svg" alt="" aria-hidden="true" width={18} height={18} />
           </Link>
           <button
             type="button"
@@ -34,7 +35,7 @@ export default function NoticeRow({ notice, onDelete }: NoticeRowProps) {
             aria-label={`삭제: 공지사항 ${notice.noticeId}`}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] transition hover:bg-[#F2F4F7]"
           >
-            <img src="/images/delete.svg" alt="" aria-hidden="true" className="h-[18px] w-[18px]" />
+            <Image src="/images/delete.svg" alt="" aria-hidden="true" width={18} height={18} />
           </button>
         </div>
       </td>

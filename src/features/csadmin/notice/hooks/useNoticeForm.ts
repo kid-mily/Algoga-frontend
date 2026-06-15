@@ -28,6 +28,8 @@ export const useNoticeForm = (mode: NoticeFormMode, noticeId?: number) => {
 
 
   const fetchTags = useCallback(async (signal?: AbortSignal) => {
+    await Promise.resolve();
+
     try {
       const tags = await getNoticeTags(signal);
 
@@ -82,13 +84,13 @@ export const useNoticeForm = (mode: NoticeFormMode, noticeId?: number) => {
 
   useEffect(() => {
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => {
-      void fetchTags(controller.signal);
-      void fetchNotice(controller.signal);
-    }, 0);
+
+    void (async () => {
+      await fetchTags(controller.signal);
+      await fetchNotice(controller.signal);
+    })();
 
     return () => {
-      window.clearTimeout(timeoutId);
       controller.abort();
     };
   }, [fetchNotice, fetchTags]);
@@ -135,6 +137,7 @@ export const useNoticeForm = (mode: NoticeFormMode, noticeId?: number) => {
   };
 
   const saveNotice = async () => {
+    if (isSubmitting) return;
     if (!validateForm()) return;
 
     try {

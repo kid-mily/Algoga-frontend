@@ -25,7 +25,7 @@ const menus = [
   },
   {
     name: "배너 관리",
-    href: "/csadmin/banners",
+    href: "/csadmin/banner",
     icon: "/images/banner.svg",
     activeIcon: "/images/banner-active.svg",
   },

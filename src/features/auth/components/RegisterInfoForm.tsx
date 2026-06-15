@@ -7,6 +7,8 @@ import {
   verifySignupEmailCode,
 } from "@/features/services/signup.service";
 
+import FormLabel from "@/features/common/FormLabel";
+
 interface RegisterFormData {
   name: string;
   username: string;
@@ -310,7 +312,7 @@ export default function RegisterInfoForm({
       <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-4">
         {/* 이름 */}
         <div>
-          <label className="text-[16px] font-semibold text-[#111827]">성명 *</label>
+          <FormLabel required>성명</FormLabel>
           <input
             type="text"
             value={formData.name}
@@ -324,7 +326,7 @@ export default function RegisterInfoForm({
 
         {/* 🌟 아이디 */}
         <div>
-          <label className="text-[16px] font-semibold text-[#111827]">아이디 *</label>
+         <FormLabel required>아이디</FormLabel>
           <div className="mt-3 flex gap-2">
             <input
               type="text"
@@ -362,7 +364,7 @@ export default function RegisterInfoForm({
 
         {/* 비밀번호 */}
         <div>
-          <label className="text-[16px] font-semibold text-[#111827]">비밀번호 *</label>
+          <FormLabel required>비밀번호 확인</FormLabel>
           <input
             type="password"
             value={formData.password}
@@ -380,7 +382,7 @@ export default function RegisterInfoForm({
 
         {/* 비밀번호 확인 */}
         <div>
-          <label className="text-[16px] font-semibold text-[#111827]">비밀번호 확인 *</label>
+          <FormLabel required>비밀번호 확인</FormLabel>
           <input
             type="password"
             value={formData.passwordConfirm}
@@ -394,7 +396,7 @@ export default function RegisterInfoForm({
 
         {/* 닉네임 */}
         <div className="col-span-2">
-          <label className="text-[16px] font-semibold text-[#111827]">닉네임 *</label>
+          <FormLabel required>닉네임</FormLabel>
           <input
             type="text"
             value={formData.nickname}
@@ -408,7 +410,7 @@ export default function RegisterInfoForm({
 
         {/* 🌟 이메일 */}
         <div className="col-span-2">
-          <label className="text-[16px] font-semibold text-[#111827]">이메일 *</label>
+          <FormLabel required>이메일</FormLabel>
           <div className="mt-3 flex gap-2">
             <input
               type="email"
@@ -492,7 +494,7 @@ export default function RegisterInfoForm({
 
         {/* 전화번호 */}
         <div className="col-span-2">
-          <label className="text-[16px] font-semibold text-[#111827]">전화번호 *</label>
+          <FormLabel required>생년월일</FormLabel>
           <input
             type="text"
             value={formData.phone}
@@ -517,7 +519,7 @@ export default function RegisterInfoForm({
 
         {/* 생년월일 */}
         <div>
-          <label className="text-[16px] font-semibold text-[#111827]">생년월일 *</label>
+          <FormLabel required>생년월일</FormLabel>
           <input
             type="date"
             value={formData.birthDate}
@@ -530,7 +532,7 @@ export default function RegisterInfoForm({
 
         {/* 성별 */}
         <div>
-          <label className="text-[16px] font-semibold text-[#111827]">성별 *</label>
+          <FormLabel required>성별</FormLabel>
           <select
             value={formData.gender}
             onChange={(e) => onChange("gender", e.target.value)}

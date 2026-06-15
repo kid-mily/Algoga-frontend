@@ -1,7 +1,6 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Banner } from "./Types";
 
@@ -15,12 +14,10 @@ export default function BannerSlider({ banners }: BannerSliderProps) {
     const hasBanners = banners.length > 0;
     const hasMultipleBanners = banners.length > 1;
 
-    // 다음
    const nextBanner = useCallback(() => {
     setCurrentIndex((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
     }, [banners.length]);
 
-    // 이전
     const prevBanner = () => {
         setCurrentIndex((prev) => (prev === 0 ? banners.length - 1 : prev - 1));
     };
@@ -28,7 +25,7 @@ export default function BannerSlider({ banners }: BannerSliderProps) {
     useEffect(() => {
         if (!hasMultipleBanners) return;
 
-        const interval = window.setInterval(nextBanner, 3000);  // 3초
+        const interval = window.setInterval(nextBanner, 3000);
 
         return () => window.clearInterval(interval);
     }, [hasMultipleBanners, nextBanner]);
@@ -46,17 +43,26 @@ export default function BannerSlider({ banners }: BannerSliderProps) {
     return (
         <article
             className="relative w-full overflow-hidden rounded-3xl"
+            aria-label="메인 배너"
         >
         <Link href={currentBanner.linkUrl || "/"} className="block">
-            <Image
-            src={currentBanner.imageUrl}
-            alt={currentBanner.text || "메인 배너"}
-            width={896}
-            height={200}
-            priority
-            sizes="(max-width: 1024px) 100vw, 896px"
-            className="h-[200px] w-full object-cover"
-            />
+            {currentBanner.fileType === "VIDEO" ? (
+                <video
+                    src={currentBanner.imageUrl}
+                    className="h-[200px] w-full object-cover"
+                    muted
+                    autoPlay
+                    loop
+                    playsInline
+                    aria-label={currentBanner.text || "메인 배너 영상"}
+                />
+            ) : (
+                <img
+                    src={currentBanner.imageUrl}
+                    alt={currentBanner.text || "메인 배너"}
+                    className="h-[200px] w-full object-cover"
+                />
+            )}
         </Link>
 
         {hasMultipleBanners && (

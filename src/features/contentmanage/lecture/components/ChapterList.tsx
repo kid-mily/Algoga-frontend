@@ -96,7 +96,7 @@ export default function ChapterList({
         챕터 목록
       </h2>
 
-      <AdminErrorBanner message={errorMessage} className="" />
+      <AdminErrorBanner message={errorMessage} className="m-0" />
 
       {chapters.length === 0 ? (
         <p className="rounded-[18px] border border-[#E4E7EC] bg-white p-8 text-center text-[14px] text-[#98A2B3]">

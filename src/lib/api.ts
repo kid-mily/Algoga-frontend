@@ -1,4 +1,4 @@
-import { getCookie } from "./cookie";
+﻿import { getCookie } from "./cookie";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
@@ -28,6 +28,7 @@ export type ApiRequestOptions = RequestInit & {
   skipAuth?: boolean;
   suppressGlobalError?: boolean;
   timeoutMs?: number;
+  next?: { revalidate?: number | false; tags?: string[] };
 };
 
 const buildUrl = (
@@ -67,8 +68,18 @@ async function request<T>(
 
   const isFormData = fetchOptions.body instanceof FormData;
   const hasBody = fetchOptions.body !== undefined && fetchOptions.body !== null;
-  const contentHeaders =
-    hasBody && !isFormData ? { "Content-Type": "application/json" } : {};
+  const headers = new Headers(fetchOptions.headers);
+
+  headers.set("Accept", "application/json");
+
+  if (hasBody && !isFormData && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
   const controller = new AbortController();
   let didTimeout = false;
   const timeoutId =
@@ -88,12 +99,7 @@ async function request<T>(
     response = await fetch(buildUrl(path, params), {
       ...fetchOptions,
       signal: controller.signal,
-      headers: {
-        Accept: "application/json",
-        ...contentHeaders,
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(fetchOptions.headers || {}),
-      },
+      headers,
     });
   } catch (error: unknown) {
     if (didTimeout) {
@@ -172,3 +178,7 @@ const createApi = (tokenKey: TokenKey) => ({
 
 export const api = createApi("accessToken");
 export const adminApi = createApi("adminAccessToken");
+
+
+
+

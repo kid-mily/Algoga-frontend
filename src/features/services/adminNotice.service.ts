@@ -4,6 +4,8 @@ import {
   AdminNoticeApiRecord,
   getNoticeTagLabel,
   NoticeFormData,
+  isNoticeTag,
+  NoticeApiTag,
   NoticeTag,
   NoticeTagOption,
   noticeTagOptions,
@@ -74,7 +76,9 @@ const unwrapTagList = (data: unknown): unknown[] => {
 
 const normalizeNoticeTagOption = (item: unknown): NoticeTagOption | null => {
   if (typeof item === "string") {
-    return { value: item, label: getNoticeTagLabel(item) };
+    return isNoticeTag(item) && item !== "ALL"
+      ? { value: item, label: getNoticeTagLabel(item) }
+      : null;
   }
 
   if (!item || typeof item !== "object") return null;
@@ -82,7 +86,9 @@ const normalizeNoticeTagOption = (item: unknown): NoticeTagOption | null => {
   const record = item as Record<string, unknown>;
   const value = record.code ?? record.value ?? record.type ?? record.tag ?? record.name;
 
-  if (typeof value !== "string" || !value.trim()) return null;
+  if (typeof value !== "string" || !value.trim() || !isNoticeTag(value) || value === "ALL") {
+    return null;
+  }
 
   const label = record.description ?? record.label ?? record.title;
 
@@ -104,7 +110,7 @@ export const normalizeNotice = (item: AdminNoticeApiRecord): AdminNotice | null 
     return null;
   }
 
-  const tag = item.tag ?? item.type ?? "NOTICE";
+  const tag: NoticeApiTag = item.tag ?? item.type ?? "NOTICE";
 
   return {
     noticeId,
@@ -142,6 +148,7 @@ export const getAdminNotices = async ({
     `/api/v1/public/notices/${tag}/${index}`,
     {
       suppressGlobalError: true,
+      timeoutMs: 15000,
       signal,
     }
   );

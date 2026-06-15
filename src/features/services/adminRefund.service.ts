@@ -123,6 +123,10 @@ export const downloadRefundExcel = async (signal?: AbortSignal) => {
     throw new Error("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
   }
 
+  if (signal?.aborted) {
+    throw new DOMException("?? ?? ?? ????? ???????.", "AbortError");
+  }
+
   const token = getCookie("adminAccessToken");
   const controller = new AbortController();
   const abortRequest = () => controller.abort();
