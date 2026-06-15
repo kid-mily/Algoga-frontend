@@ -4,7 +4,7 @@ export interface CreateLecturePaymentPayload {
     amount: number;
     usedMileage: number;
     usedCouponId: number | null;
-    portonePaymentId: string;
+    portonePaymentId: string | null;
 }
 
 // 내 쿠폰

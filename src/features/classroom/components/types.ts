@@ -149,3 +149,23 @@ export interface ProgressData {
   progressRate: number;     // 0 ~ 100
   completed: boolean;
 }
+
+export interface StudyChapter {
+  chapterId: number;
+  title: string;
+  videoUrl: string;
+  durationSeconds: number;
+  chapterOrder: number;
+  progressRate?: number;
+  completed?: boolean;
+  watchedSeconds?: number;
+}
+
+export interface StudyCourseDetail {
+  courseId: number;
+  title: string;
+  description?: string;
+  isEnrolled: boolean;
+  isPaid: boolean;
+  chapters: StudyChapter[];
+}
