@@ -1,8 +1,5 @@
-import Link from "next/link";
-
-import Timer from "@/features/classroom/evaluation/Timer";
-
 import type { EvaluationFormQuestion } from "./types";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 
 interface EvaluationHeaderProps {
   continentCode: string;
@@ -10,9 +7,6 @@ interface EvaluationHeaderProps {
   questions: EvaluationFormQuestion[];
   currentStep: number;
   progress: number;
-
-  // 시간이 종료됐을 때 실행할 함수
-  onTimeEnd: () => void;
 }
 
 export default function EvaluationHeader({
@@ -21,19 +15,18 @@ export default function EvaluationHeader({
   questions,
   currentStep,
   progress,
-  onTimeEnd,
 }: EvaluationHeaderProps) {
   return (
     <header>
       {/* 강의실로 돌아가기 */}
-      <Link
-        href={`/classroom/${continentCode}/${countryId}`}
-        className="text-sm font-semibold text-[#667085] transition hover:text-[#111827]"
-      >
-        {"<"} 돌아가기
-      </Link>
+      <SubHeader
+            backHref={`/classroom/${continentCode}/${countryId}`} 
+            backText="강의 목록으로 돌아가기"
+            title=""
+            description=""
+          />
 
-      <article className="mt-8 rounded-3xl bg-white p-8 shadow-sm">
+      <article className="mt-3 rounded-3xl bg-white p-8 shadow-sm">
         <div className="flex items-start justify-between gap-6">
           {/* 진단평가 제목 */}
           <div>
@@ -45,15 +38,6 @@ export default function EvaluationHeader({
               나에게 맞는 강의를 추천받아보세요.
             </p>
           </div>
-
-          {/* 남은 시간 */}
-          <div className="flex items-center gap-3 rounded-3xl bg-[#FFF3E0] px-6 py-4">
-            <span className="text-sm font-bold text-[#E65100]">
-              남은 시간
-            </span>
-
-            <Timer onTimeEnd={onTimeEnd} />
-          </div>
         </div>
 
         {/* 진행률 영역 */}
@@ -63,7 +47,6 @@ export default function EvaluationHeader({
         >
           <div className="flex items-center justify-between">
             <h2
-              id="evaluation-progress"
               className="text-2xl font-bold text-[#0A1628]"
             >
               문제 {currentStep + 1} / {questions.length}
@@ -80,7 +63,7 @@ export default function EvaluationHeader({
             aria-hidden="true"
           >
             <div
-              className="h-full rounded-full bg-[#439A97] transition-all duration-300"
+              className="h-full rounded-full bg-[#439A97]"
               style={{ width: `${progress}%` }}
             />
           </div>
