@@ -1,7 +1,13 @@
 import { api, ApiResponse } from "@/lib/api";
 import { Notice } from "@/features/main/components/Types";
-import { NoticeAll, NoticeDetail, NoticeNavigationResult, NoticeType } from "../notice/components/types";
-
+import {
+  emptyNoticePageResult,
+  NoticeAll,
+  NoticeDetail,
+  NoticeNavigationResult,
+  NoticePageResult,
+  NoticeType,
+} from "../notice/components/types";
 
 const NOTICE_REVALIDATE_SECONDS = 1800;
 
@@ -19,9 +25,9 @@ export const getMainNotices = async (): Promise<Notice[]> => {
 export const getNoticeList = async (
   tag: NoticeType = "ALL",
   page = 1
-): Promise<NoticeAll[]> => {
+): Promise<NoticePageResult> => {
   try {
-    const response = await api.get<ApiResponse<NoticeAll[]>>(
+    const response = await api.get<ApiResponse<NoticePageResult>>(
       `/api/v1/public/notices/${tag}/${page}`,
       {
         next: { revalidate: NOTICE_REVALIDATE_SECONDS },
@@ -31,7 +37,7 @@ export const getNoticeList = async (
     return response.data;
   } catch (error) {
     console.error("공지사항 목록을 불러오는데 실패했습니다:", error);
-    return [];
+    return emptyNoticePageResult;
   }
 };
 
@@ -56,7 +62,8 @@ export const getNoticeDetail = async (
 export const getNoticeNavigation = async (
   noticeId: number
 ): Promise<NoticeNavigationResult> => {
-  const notices = await getNoticeList("ALL", 1);
+  const noticePage = await getNoticeList("ALL", 1);
+  const notices: NoticeAll[] = noticePage.content;
 
   const currentIndex = notices.findIndex(
     (notice) => notice.noticeId === noticeId

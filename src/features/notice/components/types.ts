@@ -1,16 +1,7 @@
-// 공지사항 필터 유형
-export type NoticeType =
-  | "ALL"
-  | "NOTICE"
-  | "EVENT"
-  | "MAINTENANCE";
+export type NoticeType = "ALL" | "NOTICE" | "EVENT" | "MAINTENANCE";
 
-// 실제 공지 데이터에 들어오는 유형
-// ALL은 목록 필터에서만 사용하므로 제외
 export type NoticeCategory = Exclude<NoticeType, "ALL">;
 
-// 공지사항 목록 조회 데이터
-// 목록 API에서는 공지 유형이 type으로 내려옴
 export interface NoticeAll {
   noticeId: number;
   type: NoticeCategory;
@@ -18,8 +9,16 @@ export interface NoticeAll {
   date: string;
 }
 
-// 공지사항 상세 조회 데이터
-// 상세 API에서는 공지 유형이 tag로 내려옴
+export interface NoticePageResult {
+  content: NoticeAll[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
 export interface NoticeDetail {
   noticeId: number;
   managerId: number;
@@ -29,19 +28,16 @@ export interface NoticeDetail {
   createdAt: string;
 }
 
-// 이전 글과 다음 글에 사용하는 데이터
 export interface NoticeNavigation {
   noticeId: number;
   title: string;
 }
 
-// 이전 글과 다음 글 조회 결과
 export interface NoticeNavigationResult {
   previousNotice: NoticeNavigation | null;
   nextNotice: NoticeNavigation | null;
 }
 
-// 공지사항 필터 목록
 export const noticeTypes: NoticeType[] = [
   "ALL",
   "NOTICE",
@@ -49,7 +45,6 @@ export const noticeTypes: NoticeType[] = [
   "MAINTENANCE",
 ];
 
-// 공지 유형별 화면 표시 설정
 export const noticeTypeConfig: Record<
   NoticeType,
   {
@@ -80,9 +75,16 @@ export const noticeTypeConfig: Record<
   },
 };
 
-// URL에서 받은 값이 올바른 공지 유형인지 확인
-export const isNoticeType = (
-  value?: string
-): value is NoticeType => {
+export const isNoticeType = (value?: string): value is NoticeType => {
   return noticeTypes.includes(value as NoticeType);
+};
+
+export const emptyNoticePageResult: NoticePageResult = {
+  content: [],
+  page: 0,
+  size: 10,
+  totalElements: 0,
+  totalPages: 0,
+  first: true,
+  last: true,
 };
