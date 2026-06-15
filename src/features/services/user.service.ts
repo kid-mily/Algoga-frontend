@@ -1,4 +1,4 @@
-import { api, ApiResponse } from "@/lib/api";
+﻿import { api, ApiResponse } from "@/lib/api";
 
 type UserProfileResponse = {
   username: string;
@@ -22,7 +22,10 @@ const unwrapData = <T>(response: ApiResponse<T> | T): T => {
 };
 
 export const getMe = async (): Promise<UserProfileResponse> => {
-  const response = await api.get<UserMeResponse>("/api/v1/users/me");
+  const response = await api.get<UserMeResponse>("/api/v1/users/me", {
+    suppressGlobalError: true,
+  });
 
   return unwrapData<UserProfileResponse>(response);
 };
+

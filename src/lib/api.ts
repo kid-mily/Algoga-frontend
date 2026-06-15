@@ -1,9 +1,5 @@
-﻿import { getCookie } from "./cookie";
-
-const BASE_URL =
+﻿const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
-
-type TokenKey = "accessToken" | "adminAccessToken";
 
 export type ApiResponse<T> = {
   timestamp?: string;
@@ -50,21 +46,15 @@ const buildUrl = (
 
 async function request<T>(
   path: string,
-  options: ApiRequestOptions = {},
-  tokenKey: TokenKey = "accessToken"
+  options: ApiRequestOptions = {}
 ): Promise<T> {
   const {
     params,
-    skipAuth,
     suppressGlobalError,
     timeoutMs = 15000,
     signal,
     ...fetchOptions
   } = options;
-  const token =
-  !skipAuth && typeof window !== "undefined"
-    ? getCookie(tokenKey)
-    : null;
 
   const isFormData = fetchOptions.body instanceof FormData;
   const hasBody = fetchOptions.body !== undefined && fetchOptions.body !== null;
@@ -74,10 +64,6 @@ async function request<T>(
 
   if (hasBody && !isFormData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
-  }
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
   }
 
   const controller = new AbortController();
@@ -98,6 +84,7 @@ async function request<T>(
   try {
     response = await fetch(buildUrl(path, params), {
       ...fetchOptions,
+      credentials: fetchOptions.credentials ?? "include",
       signal: controller.signal,
       headers,
     });
@@ -135,50 +122,34 @@ async function request<T>(
   return result as T;
 }
 
-const createApi = (tokenKey: TokenKey) => ({
+const createApi = () => ({
   get: <T>(path: string, options?: ApiRequestOptions) =>
-    request<T>(path, { ...options, method: "GET" }, tokenKey),
+    request<T>(path, { ...options, method: "GET" }),
 
   post: <T>(path: string, data?: unknown, options?: ApiRequestOptions) =>
-    request<T>(
-      path,
-      {
-        ...options,
-        method: "POST",
-        body: data instanceof FormData ? data : JSON.stringify(data),
-      },
-      tokenKey
-    ),
+    request<T>(path, {
+      ...options,
+      method: "POST",
+      body: data instanceof FormData ? data : JSON.stringify(data),
+    }),
 
   put: <T>(path: string, data?: unknown, options?: ApiRequestOptions) =>
-    request<T>(
-      path,
-      {
-        ...options,
-        method: "PUT",
-        body: data instanceof FormData ? data : JSON.stringify(data),
-      },
-      tokenKey
-    ),
+    request<T>(path, {
+      ...options,
+      method: "PUT",
+      body: data instanceof FormData ? data : JSON.stringify(data),
+    }),
 
   patch: <T>(path: string, data?: unknown, options?: ApiRequestOptions) =>
-    request<T>(
-      path,
-      {
-        ...options,
-        method: "PATCH",
-        body: data instanceof FormData ? data : JSON.stringify(data),
-      },
-      tokenKey
-    ),
+    request<T>(path, {
+      ...options,
+      method: "PATCH",
+      body: data instanceof FormData ? data : JSON.stringify(data),
+    }),
 
   delete: <T>(path: string, options?: ApiRequestOptions) =>
-    request<T>(path, { ...options, method: "DELETE" }, tokenKey),
+    request<T>(path, { ...options, method: "DELETE" }),
 });
 
-export const api = createApi("accessToken");
-export const adminApi = createApi("adminAccessToken");
-
-
-
-
+export const api = createApi();
+export const adminApi = createApi();

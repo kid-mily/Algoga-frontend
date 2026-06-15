@@ -1,5 +1,4 @@
-import { getCookie } from "@/lib/cookie";
-import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+﻿import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import {
   CsRefund,
   RefundRequestApiRecord,
@@ -127,7 +126,6 @@ export const downloadRefundExcel = async (signal?: AbortSignal) => {
     throw new DOMException("?? ?? ?? ????? ???????.", "AbortError");
   }
 
-  const token = getCookie("adminAccessToken");
   const controller = new AbortController();
   const abortRequest = () => controller.abort();
   let didTimeout = false;
@@ -140,7 +138,7 @@ export const downloadRefundExcel = async (signal?: AbortSignal) => {
 
   try {
     const response = await fetch(`${BASE_URL}/api/v1/admin/refund-requests/excel`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      credentials: "include",
       signal: controller.signal,
     });
 
@@ -173,3 +171,4 @@ export const downloadRefundExcel = async (signal?: AbortSignal) => {
     signal?.removeEventListener("abort", abortRequest);
   }
 };
+

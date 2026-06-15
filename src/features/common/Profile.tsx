@@ -1,10 +1,9 @@
-'use client'
+﻿'use client'
 
 import Link from "next/link";
 import { useState } from "react";
 import { logout } from "@/features/services/auth.service";
 import CompleteModal from "./CompleteModal";
-import { deleteCookie } from "@/lib/cookie";
 import Image from "next/image";
 
 type Props = {
@@ -25,10 +24,6 @@ export default function Profile({ user }: Props) {
         } catch (error) {
             console.error("로그아웃 API 호출 실패:", error);
         } finally {
-            deleteCookie("accessToken");
-            deleteCookie("refreshToken");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
             window.dispatchEvent(new Event("auth-state-changed"));
             // 모달 오픈
             setLogoutModal({ open: true });
@@ -116,3 +111,4 @@ export default function Profile({ user }: Props) {
         </div>
     );
 }
+

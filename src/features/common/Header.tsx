@@ -1,11 +1,10 @@
-'use client'
+﻿'use client'
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Navbar from "./Navbar";
 import Profile from "./Profile";
 import { getMe } from "@/features/services/user.service"; // 경로 유지
-import { getCookie } from "@/lib/cookie";
 
 // 유저 데이터 타입 정의 (필요에 따라 수정하세요)
 interface UserProfile {
@@ -27,17 +26,8 @@ export default function Header() {
     useEffect(() => {
         const fetchUser = async () => {
             setIsLoading(true);
-            // 브라우저 환경에서만 쿠키로 접근
-            const token = getCookie("accessToken");
-            
-            if (!token) {
-                setUser(null);
-                setIsLoading(false);
-                return; // 토큰이 없으면 API 호출 건너뜀 (비로그인 상태)
-            }
 
             try {
-                // 토큰이 있을 때만 API 호출 (Axios 인터셉터가 헤더에 토큰을 실어줌)
                 const userData = await getMe();
                 setUser(userData);
             } catch (error) {
@@ -71,3 +61,6 @@ export default function Header() {
         </header>
     );
 }
+
+
+

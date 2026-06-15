@@ -1,135 +1,19 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { deleteCookie, getCookie } from "@/lib/cookie";
-
-interface AdminTokenPayload {
-  sub?: string; // loginId
-  role?: string;
-  type?: string;
-  id?: number;
-  exp?: number;
-}
-
-const getAdminAccessToken = () => {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  return getCookie("adminAccessToken");
-};
-
-const decodeJwtPayload = (token: string): AdminTokenPayload | null => {
-  try {
-    const payload = token.split(".")[1];
-
-    if (!payload) {
-      return null;
-    }
-
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const json = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((char) => {
-          return `%${`00${char.charCodeAt(0).toString(16)}`.slice(-2)}`;
-        })
-        .join("")
-    );
-
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-};
-
-const formatRole = (role?: string) => {
-  if (!role) return "";
-
-  return role
-    .replace("ROLE_", "")
-    .replaceAll("_", " ");
-};
-
-const isTokenExpired = (payload: AdminTokenPayload) => {
-  if (!payload.exp) {
-    return false;
-  }
-
-  return payload.exp <= Math.floor(Date.now() / 1000);
-};
-
-const clearAdminToken = () => {
-  deleteCookie("adminAccessToken");
-  deleteCookie("adminRefreshToken");
-  localStorage.removeItem("adminAccessToken");
-  localStorage.removeItem("adminRefreshToken");
-};
-
-const subscribeAdminToken = (onStoreChange: () => void) => {
-  if (typeof window === "undefined") {
-    return () => {};
-  }
-
-  window.addEventListener("auth-state-changed", onStoreChange);
-  window.addEventListener("storage", onStoreChange);
-
-  return () => {
-    window.removeEventListener("auth-state-changed", onStoreChange);
-    window.removeEventListener("storage", onStoreChange);
-  };
-};
-
-const getAdminTokenSnapshot = () => getAdminAccessToken() || "";
-const getServerAdminTokenSnapshot = () => "";
 
 export default function ContentSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const adminAccessToken = useSyncExternalStore(
-    subscribeAdminToken,
-    getAdminTokenSnapshot,
-    getServerAdminTokenSnapshot
-  );
-  const adminPayload = useMemo(() => {
-    if (!adminAccessToken) {
-      return null;
-    }
-
-    const payload = decodeJwtPayload(adminAccessToken);
-
-    if (!payload || payload.type !== "ADMIN" || isTokenExpired(payload)) {
-      return null;
-    }
-
-    return payload;
-  }, [adminAccessToken]);
   const adminInfo = {
-    loginId: adminPayload?.sub || "",
-    role: adminPayload?.role || "",
+    loginId: "관리자",
+    role: "",
   };
 
-  useEffect(() => {
-    const adminAccessToken = getCookie("adminAccessToken");
-
-    if (!adminAccessToken) {
-      router.replace("/auth/adminlogin");
-      return;
-    }
-
-    const payload = decodeJwtPayload(adminAccessToken);
-
-    if (!payload || payload.type !== "ADMIN" || isTokenExpired(payload)) {
-      clearAdminToken();
-      router.replace("/auth/adminlogin");
-      return;
-    }
-  }, [router]);
-
   const handleAdminLogout = () => {
-    clearAdminToken();
+    localStorage.removeItem("adminAccessToken");
+    localStorage.removeItem("adminRefreshToken");
 
     router.push("/auth/adminlogin");
     router.refresh();
@@ -327,7 +211,7 @@ export default function ContentSidebar() {
             </p>
 
             <p className="truncate text-[13px] text-[#98A2B3]">
-              {formatRole(adminInfo.role)}
+              {adminInfo.role || "관리자"}
             </p>
           </div>
         </div>
@@ -335,3 +219,5 @@ export default function ContentSidebar() {
     </aside>
   );
 }
+
+

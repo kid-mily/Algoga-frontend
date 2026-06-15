@@ -1,4 +1,4 @@
-// src/features/auth/types.ts
+﻿// src/features/auth/types.ts
 
 export interface User {
   id: number;
@@ -19,9 +19,7 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken?: string;
-  requiresPasswordChange: boolean;
+  requiresPasswordChange?: boolean;
 }
 
 export interface SignupRequest {
@@ -75,3 +73,4 @@ export interface UpdatePasswordRequest {
   currentPassword: string;
   newPassword: string;
 }
+
