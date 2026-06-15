@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 
-import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import SubHeader from "@/features/contentmanage/common/SubHeader";
 import CompleteModal from "@/features/common/CompleteModal";
+import Modal from "@/features/common/Modal";
 import {
   answerAdminInquiry,
   getAdminInquiryById,
@@ -23,6 +24,7 @@ export default function CsInquiryDetailClient({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [completeOpen, setCompleteOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const fetchInquiry = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -67,7 +69,7 @@ export default function CsInquiryDetailClient({
     return () => controller.abort();
   }, [fetchInquiry]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!answer.trim()) {
@@ -75,8 +77,16 @@ export default function CsInquiryDetailClient({
       return;
     }
 
+    setError("");
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!answer.trim() || isSubmitting) return;
+
     try {
       setIsSubmitting(true);
+      setConfirmOpen(false);
       setError("");
       await answerAdminInquiry(inquiryId, answer.trim());
       setCompleteOpen(true);
@@ -102,27 +112,12 @@ export default function CsInquiryDetailClient({
 
   return (
     <main aria-labelledby="cs-inquiry-detail-title">
-      <header className="mb-6">
-        <Link
-          href="/csadmin/inquiry"
-          className="mb-3 inline-flex items-center gap-2 text-[14px] font-semibold text-[#439A97]"
-        >
-          <span aria-hidden="true">←</span>
-          문의 목록으로 돌아가기
-        </Link>
-
-        <h1
-          id="cs-inquiry-detail-title"
-          className="text-[26px] font-bold text-[#111827]"
-        >
-          {inquiry?.title ?? "고객 문의 상세"}
-        </h1>
-        {inquiry && (
-          <p className="mt-2 text-[14px] text-[#667085]">
-            {inquiry.id} | {inquiry.writer} | {inquiry.date}
-          </p>
-        )}
-      </header>
+      <SubHeader
+        backHref="/csadmin/inquiry"
+        backText="문의 목록으로 돌아가기"
+        title={inquiry?.title ?? "고객 문의 상세"}
+        description={inquiry ? `${inquiry.id} | ${inquiry.writer} | ${inquiry.date}` : undefined}
+      />
 
       <AdminErrorBanner message={error} className="mb-4" />
 
@@ -190,6 +185,16 @@ export default function CsInquiryDetailClient({
         </div>
       )}
 
+      <Modal
+        open={confirmOpen}
+        title="답변 전송"
+        description="답변을 전송하시겠습니까?"
+        confirmText={isSubmitting ? "전송 중..." : "전송"}
+        cancelText="취소"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSubmit}
+      />
+
       <CompleteModal
         open={completeOpen}
         title="답변 완료"
@@ -200,3 +205,7 @@ export default function CsInquiryDetailClient({
     </main>
   );
 }
+
+
+
+

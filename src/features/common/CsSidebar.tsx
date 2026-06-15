@@ -30,7 +30,7 @@ const menus = [
   },
   {
     name: "유저 활동 관리",
-    href: "/csadmin/users",
+    href: "/csadmin/user",
     icon: "/images/users.svg",
     activeIcon: "/images/users-active.svg",
   },
@@ -134,4 +134,5 @@ export default function CsSidebar() {
     </aside>
   );
 }
+
 
