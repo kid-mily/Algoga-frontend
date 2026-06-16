@@ -27,6 +27,34 @@ export type ApiRequestOptions = RequestInit & {
   next?: { revalidate?: number | false; tags?: string[] };
 };
 
+export class ApiRequestError extends Error {
+  status?: number;
+  code?: string;
+  url?: string;
+  body?: unknown;
+
+  constructor({
+    message,
+    status,
+    code,
+    url,
+    body,
+  }: {
+    message: string;
+    status?: number;
+    code?: string;
+    url?: string;
+    body?: unknown;
+  }) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.code = code;
+    this.url = url;
+    this.body = body;
+  }
+}
+
 const buildUrl = (
   path: string,
   params?: ApiRequestOptions["params"]
@@ -80,9 +108,10 @@ async function request<T>(
   signal?.addEventListener("abort", abortRequest, { once: true });
 
   let response: Response;
+  const requestUrl = buildUrl(path, params);
 
   try {
-    response = await fetch(buildUrl(path, params), {
+    response = await fetch(requestUrl, {
       ...fetchOptions,
       credentials: fetchOptions.credentials ?? "include",
       signal: controller.signal,
@@ -90,7 +119,10 @@ async function request<T>(
     });
   } catch (error: unknown) {
     if (didTimeout) {
-      throw new Error("API 요청 시간이 초과되었습니다.");
+      throw new ApiRequestError({
+        message: "API 요청 시간이 초과되었습니다.",
+        url: requestUrl,
+      });
     }
 
     throw error;
@@ -116,7 +148,13 @@ async function request<T>(
       }
     }
 
-    throw new Error(result?.message || "API 요청 실패");
+    throw new ApiRequestError({
+      message: result?.message || "API 요청 실패",
+      status: response.status,
+      code: result?.code,
+      url: requestUrl,
+      body: result,
+    });
   }
 
   return result as T;

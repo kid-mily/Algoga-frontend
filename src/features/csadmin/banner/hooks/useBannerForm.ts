@@ -15,6 +15,9 @@ const initialFormData: BannerFormData = {
   isVisible: true,
 };
 
+const BANNER_IMAGE_WIDTH = 896;
+const BANNER_IMAGE_HEIGHT = 200;
+
 export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
   const [formData, setFormData] = useState<BannerFormData>(initialFormData);
   const [currentMediaUrl, setCurrentMediaUrl] = useState("");
@@ -23,6 +26,7 @@ export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
   const [isLoading, setIsLoading] = useState(mode === "edit");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fileError, setFileError] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
 
@@ -37,6 +41,7 @@ export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
     const selectedFile = event.target.files?.[0] ?? null;
 
     setFile(selectedFile);
+    setFileError("");
 
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
@@ -52,7 +57,29 @@ export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
       : "IMAGE";
 
     setFormData((prev) => ({ ...prev, fileType: nextFileType }));
-    setPreviewUrl(URL.createObjectURL(selectedFile));
+    const nextPreviewUrl = URL.createObjectURL(selectedFile);
+    setPreviewUrl(nextPreviewUrl);
+
+    if (nextFileType === "IMAGE") {
+      const image = new Image();
+
+      image.onload = () => {
+        if (
+          image.naturalWidth !== BANNER_IMAGE_WIDTH ||
+          image.naturalHeight !== BANNER_IMAGE_HEIGHT
+        ) {
+          setFileError(
+            `배너 이미지의 해상도는 ${BANNER_IMAGE_WIDTH}x${BANNER_IMAGE_HEIGHT} 이어야 합니다. (현재: ${image.naturalWidth}x${image.naturalHeight})`
+          );
+        }
+      };
+
+      image.onerror = () => {
+        setFileError("이미지 해상도를 확인하지 못했습니다.");
+      };
+
+      image.src = nextPreviewUrl;
+    }
   };
 
   const validateForm = () => {
@@ -68,6 +95,10 @@ export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
 
     if (mode === "create" && !file) {
       setError("배너 이미지 또는 영상을 선택해주세요.");
+      return false;
+    }
+
+    if (fileError) {
       return false;
     }
 
@@ -149,11 +180,16 @@ export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
 
       setCompleteOpen(true);
     } catch (submitError: unknown) {
-      setError(
+      const message =
         submitError instanceof Error
           ? submitError.message
-          : "배너 저장에 실패했습니다."
-      );
+          : "배너 저장에 실패했습니다.";
+
+      if (/해상도|image|이미지/.test(message)) {
+        setFileError(message);
+      } else {
+        setError(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -171,6 +207,7 @@ export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
     isLoading,
     isSubmitting,
     error,
+    fileError,
     confirmOpen,
     completeOpen,
     setConfirmOpen,

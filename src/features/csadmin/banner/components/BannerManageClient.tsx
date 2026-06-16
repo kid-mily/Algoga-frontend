@@ -35,7 +35,7 @@ export default function BannerManageClient({ initialBanners = [] }: BannerManage
 
   return (
     <main aria-labelledby="banner-management-title">
-      <header className="mb-6 flex items-start justify-between gap-4">
+      <header className="mb-3 flex items-start justify-between gap-4">
         <div>
           <SimpleSubHeader
             title="배너 관리"
@@ -48,7 +48,8 @@ export default function BannerManageClient({ initialBanners = [] }: BannerManage
 
         <Link
           href="/csadmin/banner/new"
-          className="flex h-[40px] shrink-0 items-center rounded-[10px] bg-[#639E9B] px-4 text-[14px] font-semibold text-white transition hover:bg-[#4E8784]"
+          style={{ width: 136, minWidth: 136, height: 46, boxSizing: "border-box" }}
+          className="mt-10 inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[12px] bg-[#639E9B] text-[15px] font-semibold text-white"
         >
           배너 등록
         </Link>
@@ -68,7 +69,10 @@ export default function BannerManageClient({ initialBanners = [] }: BannerManage
           배너 목록을 불러오는 중입니다...
         </section>
       ) : filteredBanners.length > 0 ? (
-        <section aria-label="배너 목록" className="grid grid-cols-1 gap-5 lg:grid-cols-2 2xl:grid-cols-3">
+        <section
+          aria-label="배너 목록"
+          className="grid grid-cols-[repeat(auto-fill,minmax(220px,260px))] gap-4"
+        >
           {filteredBanners.map((banner) => (
             <BannerCard
               key={banner.bannerId}
