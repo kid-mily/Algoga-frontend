@@ -101,13 +101,13 @@ interface InfoRowProps {
 
 function InfoRow({ label, value }: InfoRowProps) {
   return (
-    <div className="grid grid-cols-[120px_minmax(0,1fr)] py-4 text-sm">
-      <dt className="font-medium text-[#9AA8B7]">
+    <div className="flex items-center justify-between py-3 text-sm">
+      <dt className="font-medium text-gray-400">
         {label}
       </dt>
 
-      <dd className="break-words text-right font-semibold text-[#0A1628]">
-        {value}
+      <dd className="font-semibold text-gray-900">
+        {value || "-"}
       </dd>
     </div>
   );
