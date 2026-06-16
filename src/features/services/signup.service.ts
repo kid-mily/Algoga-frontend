@@ -1,4 +1,4 @@
-import { SignupRequest } from "@/features/auth/types";
+import { SignupRequest, SocialSignupRequest } from "@/features/auth/types";
 import { api, ApiResult, unwrapData } from "@/lib/api";
 
 type UsernameCheckResponse = {
@@ -10,6 +10,10 @@ type UsernameCheckResponse = {
 
 export const signup = async (data: SignupRequest) => {
   return api.post("/api/v1/auth/signup", data);
+};
+
+export const socialSignup = async (data: SocialSignupRequest) => {
+  return api.post("/api/v1/auth/social/signup", data, { skipAuth: true });
 };
 
 export const sendSignupEmailCode = async (
