@@ -34,7 +34,7 @@ export default function NoticeManageClient({ initialNotices }: NoticeManageClien
 
   return (
     <main aria-labelledby="notice-management-title">
-      <header className="mb-6 flex items-start justify-between gap-4">
+      <header className="mb-3 flex items-start justify-between gap-4">
         <div>
           <SimpleSubHeader
             title="공지사항 관리"
@@ -47,9 +47,10 @@ export default function NoticeManageClient({ initialNotices }: NoticeManageClien
 
         <Link
           href="/csadmin/notice/new"
-          className="flex h-[40px] shrink-0 items-center rounded-[10px] bg-[#639E9B] px-4 text-[14px] font-semibold text-white"
+          style={{ width: 136, minWidth: 136, height: 46, boxSizing: "border-box" }}
+          className="mt-10 inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[12px] bg-[#639E9B] text-[15px] font-semibold text-white"
         >
-          공지 등록
+          공지사항 등록
         </Link>
       </header>
 

@@ -20,6 +20,7 @@ export default function AdminErrorBanner({
       role="alert"
       className={cn(
         "rounded-[12px] border border-[#DC2626] bg-[#FEF2F2] p-4 text-[14px] font-medium text-[#DC2626]",
+        "whitespace-pre-wrap",
         className
       )}
     >
