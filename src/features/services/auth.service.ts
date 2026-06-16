@@ -1,71 +1,46 @@
-// src/features/services/auth.service.ts
-
-import {
+﻿import {
   FindIdRequest,
+  FindIdResponse,
   FindPasswordRequest,
   LoginRequest,
   LoginResponse,
   ResetPasswordRequest,
 } from "@/features/auth/types";
-import { api } from "@/lib/api";
-import { AxiosError } from "axios";
-
-const getErrorMessage = (error: unknown, fallbackMessage: string) => {
-  if (error instanceof AxiosError) {
-    return error.response?.data?.message || fallbackMessage;
-  }
-
-  if (error instanceof Error) {
-    return error.message || fallbackMessage;
-  }
-
-  return fallbackMessage;
-};
+import { api, ApiResult, unwrapData } from "@/lib/api";
 
 export const login = async (user: LoginRequest): Promise<LoginResponse> => {
-  try {
-    const response = await api.post("/api/v1/auth/login", user);
-    return response.data.data;
-  } catch (error: unknown) {
-    throw new Error(getErrorMessage(error, "로그인에 실패했습니다."));
-  }
+  const response = await api.post<ApiResult<LoginResponse | null>>(
+    "/api/v1/auth/login",
+    user,
+    { skipAuth: true, suppressGlobalError: true }
+  );
+
+  return unwrapData<LoginResponse | null>(response) ?? {};
 };
 
-export const findId = async (payload: FindIdRequest) => {
-  try {
-    const response = await api.post("/api/v1/auth/find-id", payload);
-    return response.data;
-  } catch (error: unknown) {
-    throw new Error(getErrorMessage(error, "아이디 찾기에 실패했습니다."));
-  }
+export const findId = async (
+  payload: FindIdRequest
+): Promise<FindIdResponse> => {
+  const response = await api.post<ApiResult<FindIdResponse>>(
+    "/api/v1/auth/find-id",
+    payload,
+    { skipAuth: true, suppressGlobalError: true }
+  );
+
+  return unwrapData<FindIdResponse>(response);
 };
 
 export const findPassword = async (payload: FindPasswordRequest) => {
-  try {
-    const response = await api.post("/api/v1/auth/find-password", payload);
-    return response.data;
-  } catch (error: unknown) {
-    throw new Error(
-      getErrorMessage(error, "임시 비밀번호 발급에 실패했습니다.")
-    );
-  }
+  return api.post("/api/v1/auth/find-password", payload, {
+    skipAuth: true,
+    suppressGlobalError: true,
+  });
 };
 
 export const resetPassword = async (payload: ResetPasswordRequest) => {
-  try {
-    const response = await api.patch("/api/v1/auth/reset-password", payload);
-    return response.data;
-  } catch (error: unknown) {
-    throw new Error(getErrorMessage(error, "비밀번호 변경에 실패했습니다."));
-  }
+  return api.patch("/api/v1/auth/reset-password", payload);
 };
 
-// src/features/services/auth.service.ts 에 추가
 export const logout = async () => {
-  try {
-    // 백엔드의 컨트롤러 주소가 /api/v1/auth/logout 이니까 이걸 호출합니다.
-    await api.post("/api/v1/auth/logout");
-  } catch (error: unknown) {
-    throw new Error(getErrorMessage(error, "로그아웃 처리에 실패했습니다."));
-  }
+  return api.post("/api/v1/auth/logout");
 };

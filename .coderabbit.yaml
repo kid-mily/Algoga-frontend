@@ -1,0 +1,178 @@
+language: "ko-KR"
+
+tone_instructions: >
+  간결하고 단호하게 리뷰한다. 운영 장애, 성능 병목, 데이터 정합성,
+  보안 리스크를 우선 지적하고 사유와 대안을 함께 제시한다.
+
+reviews:
+  profile: "assertive"
+  high_level_summary: true
+  poem: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_title_keywords:
+      - "WIP"
+      - "draft"
+
+  path_filters:
+    - "!node_modules/**"
+    - "!.next/**"
+    - "!out/**"
+    - "!dist/**"
+    - "!coverage/**"
+    - "!storybook-static/**"
+    - "!**/generated/**"
+    - "!**/*.lock"
+    - "!package-lock.json"
+    - "!pnpm-lock.yaml"
+    - "!yarn.lock"
+    - "src/**"
+    - "app/**"
+    - "pages/**"
+    - "components/**"
+    - "features/**"
+    - "lib/**"
+    - "hooks/**"
+    - "services/**"
+    - "stores/**"
+    - "middleware.ts"
+    - "next.config.*"
+    - "package.json"
+    - "tsconfig.json"
+
+  path_instructions:
+    - path: "app/**"
+      instructions: |
+        - Next.js App Router 구조 위반을 우선 확인한다.
+        - Server Component 와 Client Component 경계가 적절한지 확인한다.
+        - 불필요한 "use client" 사용을 지적한다.
+        - 서버에서 처리해야 할 데이터 패칭, 인증, 권한 검사가 클라이언트로 새지 않았는지 확인한다.
+        - loading.tsx, error.tsx, not-found.tsx 등 라우트 단위 예외/로딩 처리가 누락되지 않았는지 확인한다.
+        - metadata, generateMetadata, canonical, Open Graph 등 SEO 설정 누락을 확인한다.
+        - 동적 라우트에서 params, searchParams 검증이 충분한지 확인한다.
+
+    - path: "pages/**"
+      instructions: |
+        - Pages Router 사용 시 getServerSideProps, getStaticProps, ISR 사용 목적이 명확한지 확인한다.
+        - SSR 이 필요한 페이지와 SSG/ISR 로 충분한 페이지가 구분되어 있는지 확인한다.
+        - 클라이언트에서 민감한 데이터 패칭이 발생하지 않는지 확인한다.
+        - API Routes 에 인증/인가, 입력 검증, rate limit 이 있는지 확인한다.
+
+    - path: "src/**/components/**"
+      instructions: |
+        - 컴포넌트가 비즈니스 로직, API 호출, 상태 관리 책임을 과도하게 갖지 않는지 확인한다.
+        - 재렌더링 비용이 큰 컴포넌트에서 memo, useMemo, useCallback 사용 필요성을 검토한다.
+        - props drilling 이 심하거나 전역 상태 사용이 과한 경우 지적한다.
+        - 접근성 누락을 확인한다. button, label, alt, aria 속성을 우선 본다.
+        - Image 사용 시 next/image 적용, width/height, priority, sizes 설정을 확인한다.
+
+    - path: "src/**/features/**"
+      instructions: |
+        - feature 단위 응집도가 유지되는지 확인한다.
+        - UI, hook, service, type, util 책임이 섞이지 않았는지 확인한다.
+        - 다른 feature 내부 구현을 직접 참조하는 구조 위반을 지적한다.
+        - API 응답 타입과 화면 상태 타입이 무분별하게 결합되지 않았는지 확인한다.
+
+    - path: "src/**/hooks/**"
+      instructions: |
+        - hook 이 렌더링마다 불필요한 side effect 를 만들지 않는지 확인한다.
+        - useEffect dependency 누락, stale closure, 무한 렌더링 가능성을 확인한다.
+        - 서버 상태와 클라이언트 상태를 혼동하지 않았는지 확인한다.
+        - data fetching hook 은 캐싱, 에러, 로딩, 취소 처리가 있는지 확인한다.
+
+    - path: "src/**/services/**"
+      instructions: |
+        - API 호출 레이어가 컴포넌트와 강하게 결합되지 않았는지 확인한다.
+        - fetch/axios 호출에 timeout, 에러 매핑, 인증 헤더 처리, 재시도 정책이 적절한지 확인한다.
+        - 서버 전용 secret 이 클라이언트 번들로 노출되지 않는지 확인한다.
+        - HTTP status 별 예외 처리가 일관적인지 확인한다.
+        - 동일 요청 중복, race condition, abort 처리 누락을 확인한다.
+
+    - path: "src/**/lib/**"
+      instructions: |
+        - 공통 유틸 변경이 전체 앱에 미치는 영향을 확인한다.
+        - 브라우저 전용 API 와 서버 전용 API 사용 위치가 섞이지 않았는지 확인한다.
+        - 날짜, 금액, 권한, 토큰 처리 로직의 데이터 정합성을 확인한다.
+        - 공통 fetcher, auth, logger, error handler 변경이 기존 호출부를 깨지 않는지 확인한다.
+
+    - path: "src/**/stores/**"
+      instructions: |
+        - 전역 상태에 서버 상태, 민감정보, 일회성 UI 상태가 과도하게 저장되지 않았는지 확인한다.
+        - Zustand, Redux 등 store 업데이트가 불변성과 동시성 문제를 만들지 않는지 확인한다.
+        - persist 사용 시 token, email, userId 등 민감정보 저장 여부를 지적한다.
+        - 상태 초기화, 로그아웃 시 데이터 제거가 보장되는지 확인한다.
+
+    - path: "src/**/types/**"
+      instructions: |
+        - any, unknown 남용을 지적한다.
+        - API 응답 타입과 도메인/UI 타입이 분리되어 있는지 확인한다.
+        - nullable 필드 처리가 명확한지 확인한다.
+        - 타입 단언 as 남용으로 런타임 오류가 가려지지 않는지 확인한다.
+
+    - path: "src/**/utils/**"
+      instructions: |
+        - 순수 함수로 유지되는지 확인한다.
+        - 입력값 검증, null/undefined 처리, 경계값 처리가 충분한지 확인한다.
+        - 날짜, 정렬, 필터링, pagination 계산 로직의 데이터 정합성을 확인한다.
+        - 성능 비용이 큰 반복, 정렬, deep clone 사용을 지적한다.
+
+    - path: "middleware.ts"
+      instructions: |
+        - 인증/인가 우회 가능성을 최우선으로 확인한다.
+        - matcher 범위가 너무 넓거나 좁지 않은지 확인한다.
+        - redirect loop 가능성을 확인한다.
+        - 쿠키, 토큰, 헤더 처리에서 민감정보 노출이 없는지 확인한다.
+        - Edge Runtime 제약을 위반하는 Node.js API 사용을 지적한다.
+
+    - path: "**/route.ts"
+      instructions: |
+        - Route Handler 의 인증/인가 누락을 최우선으로 확인한다.
+        - request body, query string, params validation 누락을 확인한다.
+        - 외부 입력이 DB query, URL, header 에 직접 들어가는지 확인한다.
+        - rate limit, idempotency, CSRF 필요성을 검토한다.
+        - 응답 status code 와 에러 형식이 일관적인지 확인한다.
+        - secret, token, stack trace, 내부 에러 메시지가 응답으로 노출되지 않는지 확인한다.
+
+    - path: "**/*.{ts,tsx}"
+      instructions: |
+        - TypeScript strict 기준에서 null safety, 타입 단언, any 사용을 우선 확인한다.
+        - async/await 에서 예외 처리 누락을 확인한다.
+        - Promise race, 중복 요청, stale data 가능성을 확인한다.
+        - 불필요한 클라이언트 번들 증가를 유발하는 import 를 지적한다.
+        - 서버 전용 코드가 클라이언트 컴포넌트에 import 되지 않았는지 확인한다.
+
+    - path: "**/*.{test,spec}.{ts,tsx}"
+      instructions: |
+        - happy path 외 실패 케이스, 권한 실패, 경계값 테스트가 있는지 확인한다.
+        - React Testing Library 사용 시 구현 세부사항보다 사용자 행위 중심으로 검증하는지 확인한다.
+        - API mocking 이 실제 에러, timeout, empty response 를 반영하는지 확인한다.
+        - 비동기 UI 에 waitFor/findBy 사용이 적절한지 확인한다.
+        - snapshot 남용을 지적한다.
+
+    - path: "**/*.stories.{ts,tsx}"
+      instructions: |
+        - 핵심 variant, loading, error, empty state 가 story 로 존재하는지 확인한다.
+        - 접근성 테스트가 가능한 구조인지 확인한다.
+        - 실제 API 호출이나 외부 상태에 의존하지 않는지 확인한다.
+
+    - path: "next.config.*"
+      instructions: |
+        - images.domains 또는 remotePatterns 설정이 과도하게 열려 있지 않은지 확인한다.
+        - redirects, rewrites 설정이 인증 우회나 open redirect 를 만들지 않는지 확인한다.
+        - experimental 옵션 사용 시 운영 안정성 리스크를 지적한다.
+        - headers 설정에서 CSP, X-Frame-Options, Referrer-Policy 등 보안 헤더 누락을 확인한다.
+
+    - path: "package.json"
+      instructions: |
+        - 의존성 추가 시 보안 취약점, 번들 크기, 유지보수성, 라이선스 리스크를 확인한다.
+        - React, Next.js, TypeScript, ESLint 관련 버전 호환성을 확인한다.
+        - scripts 에 운영/개발 환경이 혼동될 위험이 없는지 확인한다.
+        - 불필요하게 무거운 라이브러리 추가를 지적한다.
+
+    - path: "**/.env*"
+      instructions: |
+        - 실제 credentials, API key, token 이 커밋되지 않았는지 즉시 확인한다.
+        - NEXT_PUBLIC_ prefix 로 민감정보가 노출되지 않는지 확인한다.
+        - .env 파일이 .gitignore 에 포함되어 있는지 확인한다.

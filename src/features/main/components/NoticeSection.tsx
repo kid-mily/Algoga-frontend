@@ -1,64 +1,56 @@
-'use client'
-
-import { useState, useEffect } from 'react'
+import Link from 'next/link';
 import NoticeItem from './NoticeItem'
-import { Notice } from './types' 
-import { api } from '@/lib/api' 
+import { getMainNotices } from '@/features/services/notice.service'
 
-const colorMap: Record<string, string> = {
-  EVENT: 'blue',
-  NOTICE: 'gray',
-  UPDATE: 'indigo',
-}
+const noticeTagConfig = {
+  EVENT: {
+    label: "이벤트",
+    color: "blue",
+  },
+  NOTICE: {
+    label: "공지",
+    color: "gray",
+  },
+  MAINTENANCE: {
+    label: "점검",
+    color: "indigo",
+  },
+} as const;
 
-export default function NoticeSection() {
-  const [notices, setNotices] = useState<Notice[]>([])
-
-  useEffect(() => {
-    const fetchNotices = async () => {
-      try {
-        // 🌟 fetch 대신 커스텀 api(axios) 사용
-        const response = await api.get('/api/v1/public/notices/main')
-        
-        // axios는 응답 객체의 `data` 프로퍼티 안에 실제 서버 응답을 담아줍니다.
-        // 서버 응답 구조가 { status, code, message, data: [...] } 이므로 
-        // response.data (전체 JSON) -> response.data.data (공지사항 배열) 로 접근합니다.
-        const result = response.data
-
-        if (result.status === 200 && result.data) {
-          setNotices(result.data)
-        }
-      } catch (error) {
-        console.error('공지사항 데이터를 가져오는데 실패했습니다:', error)
-      }
-    }
-    
-    fetchNotices()
-  }, [])
+export default async function NoticeSection() {
+  const notices = await getMainNotices();
 
   return (
-    <div className="w-1/2 h-full bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+    <section className="h-full rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-[#0A1628]">
           공지사항
         </h2>
 
-        <button className="text-sm text-gray-400 hover:text-gray-600 transition">
+        <Link href="/notice" 
+        className="text-sm text-gray-400 hover:text-gray-600 transition">
           더보기
-        </button>
+        </Link>
       </div>
 
-      <ul className='divide-y divide-gray-100'>
-        {notices.map((notice) => (
-          <NoticeItem
-            key={notice.noticeId}
-            category={notice.tag}
-            title={notice.title}
-            date={notice.date}
-            color={colorMap[notice.tag] || 'gray'}
-          />
-        ))}
+      <ul className="divide-y divide-gray-100">
+        {notices.map((notice) => {
+          const config = noticeTagConfig[notice.tag];
+
+          if (!config) return null;
+
+          return (
+            <NoticeItem
+              key={notice.noticeId}
+              noticeId={notice.noticeId}
+              category={config.label}
+              title={notice.title}
+              date={notice.date}
+              color={config.color}
+            />
+          );
+        })}
       </ul>
-    </div>
+    </section>
   )
 }

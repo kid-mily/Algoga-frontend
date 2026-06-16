@@ -1,80 +1,129 @@
-// src/features/services/adminChapter.service.ts
+import { adminApi, ApiResponse } from "@/lib/api";
+import {
+  AdminChapter,
+  AdminChapterRecord,
+  CreateAdminChapterPayload,
+  UpdateChapterPayload,
+} from "../contentmanage/lecture/types";
 
-import { adminApi } from "@/lib/api";
-import { AdminChapter , CreateAdminChapterPayload} from "../contentmanage/types";
+const normalizeChapter = (
+  chapter: AdminChapterRecord,
+  courseId: number
+): AdminChapter => ({
+  chapterId: chapter.chapterId ?? chapter.id ?? chapter.chapter_id ?? 0,
+  courseId: chapter.courseId ?? chapter.course_id ?? courseId,
+  title: chapter.title ?? chapter.chapterTitle ?? chapter.chapter_title ?? "",
+  description:
+    chapter.description ??
+    chapter.chapterDescription ??
+    chapter.chapter_description ??
+    chapter.chapterContent ??
+    chapter.chapter_content ??
+    chapter.content ??
+    chapter.contents ??
+    chapter.summary ??
+    chapter.detail ??
+    chapter.details ??
+    chapter.intro ??
+    chapter.introduction ??
+    "",
+  durationSeconds: chapter.durationSeconds ?? chapter.duration_seconds ?? 0,
+  chapterOrder: chapter.chapterOrder ?? chapter.chapter_order ?? 1,
+  videoUrl: chapter.videoUrl ?? chapter.video_url ?? "",
+});
 
-// 1. 챕터 목록 조회
-export const getAdminChapters = async (courseId: number): Promise<AdminChapter[]> => {
-  try {
-    const response = await adminApi.get(`/api/v1/admin/courses/${courseId}/chapters`);
-    return response.data.data || response.data;
-  } catch (error: any) {
-    console.error("챕터 목록 조회 API 에러 상세:", error.response?.data || error);
-    throw new Error(error.response?.data?.message || "챕터 목록 조회에 실패했습니다.");
-  }
+export const getAdminChapters = async (
+  courseId: number
+): Promise<AdminChapter[]> => {
+  const response = await adminApi.get<ApiResponse<AdminChapterRecord[]>>(
+    `/api/v1/admin/courses/${courseId}/chapters`
+  );
+
+  return Array.isArray(response.data)
+    ? response.data.map((chapter) => normalizeChapter(chapter, courseId))
+    : [];
 };
 
-// 2. 챕터 등록
-export const createAdminChapter = async (payload: CreateAdminChapterPayload) => {
-  try {
-    const formData = new FormData();
-    const requestData = {
-      title: payload.title,
-      durationSeconds: payload.durationSeconds,
-      chapterOrder: payload.chapterOrder,
-    };
+export const getAdminChapter = async (
+  courseId: number,
+  chapterId: number
+): Promise<AdminChapter> => {
+  const response = await adminApi.get<ApiResponse<AdminChapterRecord>>(
+    `/api/v1/admin/courses/${courseId}/chapters/${chapterId}`
+  );
 
-    formData.append("request", new Blob([JSON.stringify(requestData)], { type: "application/json" }));
-    formData.append("video", payload.video);
-
-    const response = await adminApi.post(`/api/v1/admin/courses/${payload.courseId}/chapters`, formData);
-    return response.data;
-  } catch (error: any) {
-    console.error("챕터 등록 API 에러 상세:", error.response?.data || error);
-    throw new Error(error.response?.data?.message || "챕터 등록에 실패했습니다.");
-  }
+  return normalizeChapter(response.data, courseId);
 };
 
-// 3. 챕터 수정 (updateAdminChapter)
+export const createAdminChapter = async (
+  payload: CreateAdminChapterPayload
+) => {
+  const formData = new FormData();
+
+  formData.append(
+    "request",
+    new Blob(
+      [
+        JSON.stringify({
+          title: payload.title,
+          description: payload.description,
+          durationSeconds: payload.durationSeconds,
+          chapterOrder: payload.chapterOrder,
+        }),
+      ],
+      { type: "application/json" }
+    )
+  );
+
+  formData.append("video", payload.video);
+
+  const response = await adminApi.post<ApiResponse<AdminChapterRecord>>(
+    `/api/v1/admin/courses/${payload.courseId}/chapters`,
+    formData
+  );
+
+  return normalizeChapter(response.data, payload.courseId);
+};
+
 export const updateAdminChapter = async (
   courseId: number,
   chapterId: number,
-  payload: {
-    title: string;
-    durationSeconds: number;
-    chapterOrder: number;
-    video?: File | null;
-  }
+  payload: UpdateChapterPayload
 ) => {
-  try {
-    const formData = new FormData();
-    const requestData = {
-      title: payload.title,
-      durationSeconds: payload.durationSeconds,
-      chapterOrder: payload.chapterOrder,
-    };
+  const formData = new FormData();
 
-    formData.append("request", new Blob([JSON.stringify(requestData)], { type: "application/json" }));
-    
-    if (payload.video) {
-      formData.append("video", payload.video);
-    }
+  formData.append(
+    "request",
+    new Blob(
+      [
+        JSON.stringify({
+          title: payload.title,
+          description: payload.description,
+          durationSeconds: payload.durationSeconds,
+          chapterOrder: payload.chapterOrder,
+        }),
+      ],
+      { type: "application/json" }
+    )
+  );
 
-    const response = await adminApi.put(`/api/v1/admin/courses/${courseId}/chapters/${chapterId}`, formData);
-    return response.data;
-  } catch (error: any) {
-    console.error("🔥 챕터 수정 백엔드 에러 상세:", error.response?.data || error.message);
-    throw new Error(error.response?.data?.message || "챕터 수정에 실패했습니다.");
+  if (payload.video) {
+    formData.append("video", payload.video);
   }
+
+  const response = await adminApi.put<ApiResponse<AdminChapterRecord>>(
+    `/api/v1/admin/courses/${courseId}/chapters/${chapterId}`,
+    formData
+  );
+
+  return normalizeChapter(response.data, courseId);
 };
 
-// 4. 챕터 삭제
-export const deleteAdminChapter = async (courseId: number, chapterId: number) => {
-  try {
-    const response = await adminApi.delete(`/api/v1/admin/courses/${courseId}/chapters/${chapterId}`);
-    return response.data;
-  } catch (error: any) {
-    console.error("챕터 삭제 API 에러 상세:", error.response?.data || error);
-    throw new Error(error.response?.data?.message || "챕터 삭제에 실패했습니다.");
-  }
+export const deleteAdminChapter = async (
+  courseId: number,
+  chapterId: number
+) => {
+  return adminApi.delete(
+    `/api/v1/admin/courses/${courseId}/chapters/${chapterId}`
+  );
 };

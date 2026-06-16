@@ -1,33 +1,63 @@
-// src/features/services/adminAuth.service.ts
+﻿import { api, ApiResult, unwrapData } from "@/lib/api";
+import {
+  AdminLoginRequest,
+  AdminLoginResponse,
+  AdminRole,
+} from "../contentmanage/auth/types";
 
-import { api } from "@/lib/api";
-import { AxiosError } from "axios";
-import { AdminLoginRequest , AdminLoginResponse, CreateAdminCoursePayload } from "../contentmanage/types";
+const normalizeRole = (role: AdminRole | undefined) => {
+  return role?.replace(/^ROLE_/, "").toUpperCase() ?? "";
+};
 
-const getErrorMessage = (error: unknown, fallbackMessage: string) => {
-  if (error instanceof AxiosError) {
-    return error.response?.data?.message || fallbackMessage;
+const firstRole = (roles: AdminLoginResponse["roles"]) => {
+  if (Array.isArray(roles)) {
+    return roles[0];
   }
 
-  if (error instanceof Error) {
-    return error.message || fallbackMessage;
+  return roles;
+};
+
+export const getAdminLoginRole = (admin: AdminLoginResponse) => {
+  return normalizeRole(
+    admin.role ??
+      admin.managerRole ??
+      admin.authority ??
+      firstRole(admin.authorities) ??
+      firstRole(admin.roles) ??
+      admin.type
+  );
+};
+
+export const getAdminRedirectPathByRole = (role: string) => {
+  if (role === "SUPER_ADMIN") {
+    return "/superadmin/manage";
   }
 
-  return fallbackMessage;
+  if (role === "CS_MANAGER") {
+    return "/csadmin/inquiry";
+  }
+
+  if (role === "SETTLEMENT_MANAGER") {
+    return "/csadmin/refund";
+  }
+
+  return "/contentadmin/lecture";
 };
 
 export const adminLogin = async (
   payload: AdminLoginRequest
 ): Promise<AdminLoginResponse> => {
-  try {
-    const response = await api.post("/api/v1/auth/admin/login", payload);
-    return response.data.data;
-  } catch (error: unknown) {
-    throw new Error(getErrorMessage(error, "관리자 로그인에 실패했습니다."));
-  }
+  const response = await api.post<ApiResult<AdminLoginResponse | null>>(
+    "/api/v1/auth/admin/login",
+    payload,
+    { skipAuth: true, suppressGlobalError: true }
+  );
+
+  return unwrapData<AdminLoginResponse | null>(response) ?? {};
 };
 
 export const adminLogout = () => {
   localStorage.removeItem("adminAccessToken");
   localStorage.removeItem("adminRefreshToken");
 };
+

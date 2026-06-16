@@ -1,37 +1,37 @@
-// 메인 페이지
-
 import LearnMethod from "@/features/main/components/LearningMethod";
 import NoticeSection from "@/features/main/components/NoticeSection";
 import AiSchedule from "@/features/main/components/AiSchedule";
 import Banner from "@/features/main/components/Banner";
-import Calender from "@/features/main/components/ScheduleCalendar";
 import MapSection from "./main/MapSection";
+import ScheduleCalendar from "@/features/main/components/ScheduleCalendar";
+import { getMainNotices } from "@/features/services/notice.service";
 
-export default function Home() {
+export default async function Home() {
+  // 메인 공지사항 데이터 조회
+  const notices = await getMainNotices();
+
   return (
-    <div className="p-10 w-full min-h-screen bg-[#f5f6f8]">
-        
-        {/* 베너 */}
-        <div className="max-w-4xl mx-auto mb-5">
-            <Banner/>
-        </div>
+    <main className="min-h-screen w-full bg-[#f5f6f8] px-10 py-10">
+      <h1 className="sr-only">메인 페이지</h1>
 
-      {/* 지도 */}
-      <div className="max-w-5xl w-full h-[500px] border rounded-xl overflow-hidden shadow-lg bg-white mx-auto">
+      <section className="mx-auto mb-5 max-w-4xl">
+        <Banner />
+      </section>
+
+      <section className="mx-auto h-[500px] w-full max-w-5xl overflow-hidden rounded-xl border bg-white shadow-lg">
         <MapSection />
-      </div>
+      </section>
 
-      {/* 캘린더 */}
-      {/* 학습방법 */}
-      <div className="max-w-4xl w-full mx-auto mt-5">
-        <Calender/>
+      <section className="mx-auto mt-5 w-full max-w-4xl">
+        <ScheduleCalendar />
+
         <LearnMethod />
-        {/* 공지사항, ai 일정 추천 */}
-        <div className="mt-5 gap-5 flex justify-between">
+
+        <div className="mt-5 grid grid-cols-2 items-stretch gap-5">
           <NoticeSection />
           <AiSchedule />
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

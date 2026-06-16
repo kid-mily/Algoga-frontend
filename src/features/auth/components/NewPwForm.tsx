@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -88,29 +88,12 @@ export default function NewPwForm() {
     if (password !== confirmPassword) {
       return;
     }
-
-    const accessToken = localStorage.getItem("accessToken");
-
-    if (!accessToken) {
-      // 🌟 alert 대체
-      setModal({
-        open: true,
-        title: "알림",
-        description: "로그인 정보가 없습니다. 임시 비밀번호로 다시 로그인해주세요.",
-        redirect: "/auth/login",
-      });
-      return;
-    }
-
     try {
       setIsLoading(true);
 
       await resetPassword({
         newPassword: password,
       });
-
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
 
       // 🌟 alert 대체 (성공 시)
       setModal({
@@ -119,12 +102,17 @@ export default function NewPwForm() {
         description: "비밀번호가 변경되었습니다. 새 비밀번호로 다시 로그인해주세요.",
         redirect: "/auth/login",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "비밀번호 변경 중 오류가 발생했습니다.";
+
       // 🌟 alert 대체 (에러 시 - 페이지 이동 없음)
       setModal({
         open: true,
         title: "오류",
-        description: error.message || "비밀번호 변경 중 오류가 발생했습니다.",
+        description: message,
         redirect: "",
       });
     } finally {
@@ -296,3 +284,4 @@ export default function NewPwForm() {
     </>
   );
 }
+

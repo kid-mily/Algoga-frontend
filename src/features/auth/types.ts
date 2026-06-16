@@ -1,4 +1,4 @@
-// src/features/auth/types.ts
+﻿// src/features/auth/types.ts
 
 export interface User {
   id: number;
@@ -19,9 +19,7 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken?: string;
-  requiresPasswordChange: boolean;
+  requiresPasswordChange?: boolean;
 }
 
 export interface SignupRequest {
@@ -33,6 +31,23 @@ export interface SignupRequest {
   birthDate: string;
   gender: string;
   nickname: string;
+  referralCode?: string;
+  signupPath?: string;
+  termsServiceAgreed: boolean;
+  termsPrivacyAgreed: boolean;
+  termsMarketingAgreed: boolean;
+}
+
+export type SocialType = "GOOGLE" | "KAKAO" | "NAVER";
+
+export interface SocialSignupRequest {
+  email: string;
+  name: string;
+  phone: string;
+  birthDate: string;
+  gender: string;
+  nickname: string;
+  socialType: SocialType;
   referralCode?: string;
   signupPath?: string;
   termsServiceAgreed: boolean;
@@ -55,6 +70,10 @@ export interface FindIdRequest {
   email: string;
 }
 
+export interface FindIdResponse {
+  maskedId: string;
+}
+
 export interface ResetPasswordRequest {
   newPassword: string;
 }
@@ -75,3 +94,6 @@ export interface UpdatePasswordRequest {
   currentPassword: string;
   newPassword: string;
 }
+
+
+

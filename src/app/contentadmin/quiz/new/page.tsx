@@ -1,24 +1,21 @@
-"use client";
+import type { Metadata } from "next";
+import CreateQuizClient from "@/features/contentmanage/quiz/components/CreateQuizClient";
 
-import QuizForm from "@/features/contentmanage/quiz/QuizForm";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+export const metadata: Metadata = {
+  title: "퀴즈 등록 | 콘텐츠 관리자",
+  description: "강의에 연결할 새 퀴즈를 등록하는 콘텐츠 관리자 화면입니다.",
+};
 
-export default function CreateQuizPage() {
+type CreateQuizPageProps = {
+  searchParams: Promise<{
+    courseId?: string;
+  }>;
+};
 
-  return (
-    <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
+export default async function CreateQuizPage({
+  searchParams,
+}: CreateQuizPageProps) {
+  const { courseId } = await searchParams;
 
-      {/* 헤더 */}
-      <SubHeader
-        backHref="/contentadmin/quiz"
-        backText="퀴즈 목록으로 돌아가기"
-        title="퀴즈 등록"
-        description="새로운 퀴즈를 등록합니다"
-      />
-
-      {/* 폼 */}
-      <QuizForm mode="create"
-      />
-    </div>
-  );
+  return <CreateQuizClient defaultCourseId={Number(courseId) || undefined} />;
 }

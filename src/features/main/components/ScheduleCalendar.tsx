@@ -1,44 +1,119 @@
-// 캘린더
+"use client";
 
-'use client'
+import { useEffect, useMemo, useState } from "react";
+import CalendarHeader from "./CalendarHeader";
+import CalendarGrid from "./CalendarGrid";
+import ScheduleSidebar from "./ScheduleSidebar";
+import { Schedule } from "./Types";
+import { getMethodSchedules } from "@/features/services/schedule.service";
+import { getCookie } from "@/lib/cookie";
 
-import { useEffect, useState } from 'react'
-import CalendarHeader from './CalendarHeader'
-import CalendarGrid from './CalendarGrid'
-import ScheduleSidebar from './ScheduleSidebar'
-import { Schedule } from './types'
-import { getMethodSchedules } from '@/features/services/schedule.service'
-
+const formatDate = (year: number, month: number, date: number) => {
+  return `${year}-${String(month).padStart(2, "0")}-${String(date).padStart(
+    2,
+    "0"
+  )}`;
+};
 
 export default function ScheduleCalendar() {
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [schedules, setSchedules] = useState<Schedule[]>([])
+  const today = new Date();
 
-  const year = currentDate.getFullYear()
-  const month = currentDate.getMonth() + 1
+  const [currentDate, setCurrentDate] = useState(
+    () => new Date(today.getFullYear(), today.getMonth(), 1)
+  );
 
-  // 이전 달
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth() + 1;
+
+  const [selectedDate, setSelectedDate] = useState(() =>
+    formatDate(today.getFullYear(), today.getMonth() + 1, 1)
+  );
+
+  const selectedSchedules = useMemo(() => {
+    return schedules.filter((schedule) => schedule.eventDate === selectedDate);
+  }, [schedules, selectedDate]);
+
   const prevMonth = () => {
-    setCurrentDate(new Date(year, currentDate.getMonth() - 1))
-  }
+    setCurrentDate((prev) => {
+      const nextDate = new Date(prev.getFullYear(), prev.getMonth() - 1, 1);
 
-  // 다음 달
+      setSelectedDate(
+        formatDate(nextDate.getFullYear(), nextDate.getMonth() + 1, 1)
+      );
+
+      return nextDate;
+    });
+  };
+
   const nextMonth = () => {
-    setCurrentDate(new Date(year, currentDate.getMonth() + 1))
-  }
+    setCurrentDate((prev) => {
+      const nextDate = new Date(prev.getFullYear(), prev.getMonth() + 1, 1);
 
-  // year나 month가 바뀔 때마다 API 호출하여 데이터 갱신
+      setSelectedDate(
+        formatDate(nextDate.getFullYear(), nextDate.getMonth() + 1, 1)
+      );
+
+      return nextDate;
+    });
+  };
+
   useEffect(() => {
-    const schedulesApi = async () => {
-      const data = await getMethodSchedules(year, month);
-      setSchedules(data);
+    const token = getCookie("accessToken");
+
+    setIsLoggedIn(Boolean(token));
+    setIsAuthChecked(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthChecked) return;
+
+    if (!isLoggedIn) {
+      setSchedules([]);
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchSchedules = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const data = await getMethodSchedules(year, month, controller.signal);
+
+        setSchedules(data);
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+
+        console.error("일정 데이터를 불러오지 못했습니다:", error);
+
+        setSchedules([]);
+        setError("일정을 불러올 수 없습니다.");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    schedulesApi();
-  }, [year, month]);
+    fetchSchedules();
+
+    return () => {
+      controller.abort();
+    };
+  }, [isAuthChecked, isLoggedIn, year, month]);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#E9EEF5] bg-white">
+    <section
+      aria-labelledby="schedule-calendar-title"
+      className="overflow-hidden rounded-2xl border border-[#E3E8F0] bg-white shadow-sm"
+    >
       <CalendarHeader
         year={year}
         month={month}
@@ -46,15 +121,24 @@ export default function ScheduleCalendar() {
         nextMonth={nextMonth}
       />
 
-      <div className="grid grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-[1fr_320px]">
         <CalendarGrid
           year={year}
           month={month}
-          schedules={schedules}
+          schedules={isLoggedIn ? schedules : []}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
         />
 
-        <ScheduleSidebar schedules={schedules} />
+        <ScheduleSidebar
+          schedules={selectedSchedules}
+          selectedDate={selectedDate}
+          isLoggedIn={isLoggedIn}
+          isAuthChecked={isAuthChecked}
+          isLoading={isLoading}
+          error={error}
+        />
       </div>
     </section>
-  )
+  );
 }

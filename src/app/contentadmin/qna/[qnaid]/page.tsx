@@ -1,57 +1,32 @@
-// Q&Q 답변상세
+import type { Metadata } from "next";
+import AdminQnaAnswerClient from "@/features/contentmanage/qna/components/AdminQnaAnswerClient";
 
-"use client";
+interface AnswerQnaPageProps {
+  params: Promise<{
+    qnaid: string;
+  }>;
+  searchParams: Promise<{
+    courseId?: string;
+  }>;
+}
 
-import { useParams } from "next/navigation";
+export const metadata: Metadata = {
+  title: "Q&A 답변 작성 | 알고가 관리자",
+  description: "학생 Q&A에 답변을 작성합니다.",
+};
 
-import SubHeader from "@/features/contentmanage/common/SubHeader";
-
-import QnaCard from "@/features/contentmanage/qna/QnaCard";
-import QnaForm from "@/features/contentmanage/qna/QnaForm";
-
-import {
-  qnas,
-} from "@/features/contentmanage/MockData";
-
-export default function AnswerQnaPage() {
-
-  const params = useParams();
-
-  const qnaid =
-    Number(params.qnaid);
-
-  // 현재 질문
-  const qna =
-    qnas.find(
-      (item) =>
-        item.id === qnaid
-    );
-
-  if (!qna) {
-
-    return null;
-  }
+export default async function AnswerQnaPage({
+  params,
+  searchParams,
+}: AnswerQnaPageProps) {
+  const { qnaid } = await params;
+  const { courseId = "" } = await searchParams;
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] px-8 py-8">
-
-      {/* 헤더 */}
-      <SubHeader
-        backHref="/contentadmin/qna"
-        backText="Q&A 목록으로 돌아가기"
-        title="Q&A 답변 작성"
-        description={qna.lecture}
-      />
-
-      {/* 질문 카드 */}
-      <QnaCard
-        writer={qna.writer}
-        createdAt={qna.createdAt}
-        question={qna.question}
-      />
-
-      {/* 답변 폼 */}
-      <QnaForm />
-    </div>
+    <AdminQnaAnswerClient
+      courseId={courseId}
+      qnaId={qnaid}
+      mode="answer"
+    />
   );
 }

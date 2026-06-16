@@ -1,76 +1,15 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-
-interface AdminTokenPayload {
-  sub?: string; // loginId
-  role?: string;
-  type?: string;
-  id?: number;
-  exp?: number;
-}
-
-const decodeJwtPayload = (token: string): AdminTokenPayload | null => {
-  try {
-    const payload = token.split(".")[1];
-
-    if (!payload) {
-      return null;
-    }
-
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const json = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((char) => {
-          return `%${`00${char.charCodeAt(0).toString(16)}`.slice(-2)}`;
-        })
-        .join("")
-    );
-
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-};
-
-const formatRole = (role?: string) => {
-  if (!role) return "";
-
-  return role
-    .replace("ROLE_", "")
-    .replaceAll("_", " ");
-};
 
 export default function ContentSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-
-  const [adminLoginId, setAdminLoginId] = useState("");
-  const [adminRole, setAdminRole] = useState("");
-
-  useEffect(() => {
-    const adminAccessToken = localStorage.getItem("adminAccessToken");
-
-    if (!adminAccessToken) {
-      router.replace("/auth/admin-login");
-      return;
-    }
-
-    const payload = decodeJwtPayload(adminAccessToken);
-
-    if (!payload || payload.type !== "ADMIN") {
-      localStorage.removeItem("adminAccessToken");
-      localStorage.removeItem("adminRefreshToken");
-      router.replace("/auth/adminlogin");
-      return;
-    }
-
-    setAdminLoginId(payload.sub || "");
-    setAdminRole(payload.role || "");
-  }, [router]);
+  const adminInfo = {
+    loginId: "관리자",
+    role: "",
+  };
 
   const handleAdminLogout = () => {
     localStorage.removeItem("adminAccessToken");
@@ -80,7 +19,7 @@ export default function ContentSidebar() {
     router.refresh();
   };
 
-  const adminInitial = adminLoginId ? adminLoginId[0].toUpperCase() : "?";
+  const adminInitial = adminInfo.loginId ? adminInfo.loginId[0].toUpperCase() : "?";
 
   return (
     <aside className="flex w-[240px] flex-col border-r border-[#E4E7EC] bg-white">
@@ -91,7 +30,7 @@ export default function ContentSidebar() {
         </div>
 
         <span className="truncate text-[20px] font-semibold text-[#111827]">
-          {adminLoginId || "관리자"}
+          {adminInfo.loginId || "관리자"}
         </span>
       </div>
 
@@ -116,26 +55,6 @@ export default function ContentSidebar() {
               className="h-[20px] w-[20px]"
             />
             강의 관리
-          </Link>
-
-          <Link
-            href="/contentadmin/quiz"
-            className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
-              pathname === "/contentadmin/quiz"
-                ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
-                : "text-[#344054] hover:bg-[#F5F7FA]"
-            }`}
-          >
-            <img
-              src={
-                pathname === "/contentadmin/quiz"
-                  ? "/images/quiz-active.svg"
-                  : "/images/quiz.svg"
-              }
-              alt="퀴즈"
-              className="h-[20px] w-[20px]"
-            />
-            퀴즈 관리
           </Link>
 
           <Link
@@ -217,6 +136,46 @@ export default function ContentSidebar() {
             Q&A 관리
           </Link>
 
+          <Link
+            href="/contentadmin/review"
+            className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
+              pathname === "/contentadmin/review"
+                ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
+                : "text-[#344054] hover:bg-[#F5F7FA]"
+            }`}
+          >
+            <img
+              src={
+                pathname === "/contentadmin/review"
+                  ? "/images/review-active.svg"
+                  : "/images/review.svg"
+              }
+              alt="후기"
+              className="h-[20px] w-[20px]"
+            />
+            후기 관리
+          </Link>
+
+          <Link
+            href="/contentadmin/evalution"
+            className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
+              pathname === "/contentadmin/evalution"
+                ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
+                : "text-[#344054] hover:bg-[#F5F7FA]"
+            }`}
+          >
+            <img
+              src={
+                pathname === "/contentadmin/evalution"
+                  ? "/images/evalution-active.svg"
+                  : "/images/evaluation.svg"
+              }
+              alt="진단평가"
+              className="h-[20px] w-[20px]"
+            />
+            진단평가 관리
+          </Link>
+
           
         </div>
       </nav>
@@ -248,11 +207,11 @@ export default function ContentSidebar() {
 
           <div className="min-w-0">
             <p className="truncate text-[14px] font-semibold text-[#111827]">
-              {adminLoginId}
+              {adminInfo.loginId}
             </p>
 
             <p className="truncate text-[13px] text-[#98A2B3]">
-              {formatRole(adminRole)}
+              {adminInfo.role || "관리자"}
             </p>
           </div>
         </div>
@@ -260,3 +219,5 @@ export default function ContentSidebar() {
     </aside>
   );
 }
+
+

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { signup } from "@/features/services/signup.service"; 
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { signup, socialSignup } from "@/features/services/signup.service"; 
+import { SocialType } from "@/features/auth/types";
 
 import RegisterHeader from "@/features/auth/components/RegisterHeader";
 import RegisterStepHeader from "@/features/auth/components/RegisterStepHeader";
@@ -10,7 +12,18 @@ import RegisterAgreeForm from "@/features/auth/components/RegisterAgreeForm";
 import RegisterCompleteForm from "@/features/auth/components/RegisterCompleteForm";
 import CompleteModal from "@/features/common/CompleteModal";
 
-export default function RegisterPage() {
+function RegisterPageContent() {
+  const searchParams = useSearchParams();
+  const socialTypeParam = searchParams.get("socialType") ?? searchParams.get("provider");
+  const normalizedSocialType = socialTypeParam?.toUpperCase();
+  const socialType: SocialType | null =
+    normalizedSocialType === "GOOGLE" ||
+    normalizedSocialType === "KAKAO" ||
+    normalizedSocialType === "NAVER"
+      ? normalizedSocialType
+      : null;
+  const isSocialSignup = Boolean(socialType);
+
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [modal, setModal] = useState({ open: false, title: "", description: "" });
@@ -19,15 +32,16 @@ export default function RegisterPage() {
   const [serverError, setServerError] = useState({ field: "", message: "" });
 
   const [formData, setFormData] = useState({
-    name: "",
+    name: searchParams.get("name") ?? "",
     username: "",
     password: "",
     passwordConfirm: "",
-    email: "",
+    email: searchParams.get("email") ?? "",
     phone: "",
     birthDate: "",
     gender: "",
     nickname: "", 
+    socialType: socialType ?? "",
     referralCode: "",
     signupPath: "",
     termsServiceAgreed: false,
@@ -47,17 +61,40 @@ export default function RegisterPage() {
   const handleSignup = async () => {
     try {
       setIsLoading(true);
-      if (formData.password !== formData.passwordConfirm) {
+      if (!isSocialSignup && formData.password !== formData.passwordConfirm) {
         setModal({ open: true, title: "오류", description: "비밀번호가 일치하지 않습니다." });
         return;
       }
 
-      // 백엔드 회원가입 통신
-      await signup(formData);
+      if (isSocialSignup) {
+        if (!socialType) {
+          setModal({ open: true, title: "오류", description: "소셜 로그인 정보가 올바르지 않습니다." });
+          return;
+        }
+
+        await socialSignup({
+          email: formData.email,
+          name: formData.name,
+          phone: formData.phone,
+          birthDate: formData.birthDate,
+          gender: formData.gender,
+          nickname: formData.nickname,
+          socialType,
+          referralCode: formData.referralCode || undefined,
+          signupPath: formData.signupPath || undefined,
+          termsServiceAgreed: formData.termsServiceAgreed,
+          termsPrivacyAgreed: formData.termsPrivacyAgreed,
+          termsMarketingAgreed: formData.termsMarketingAgreed,
+        });
+      } else {
+        await signup(formData);
+      }
+
       setStep(3); // 성공 시 Step 3으로 넘어감
 
-    } catch (error: any) {
-      const errMsg = error.message || "서버 오류가 발생했습니다.";
+    } catch (error: unknown) {
+      const errMsg =
+        error instanceof Error ? error.message : "서버 오류가 발생했습니다.";
       
       // 🌟 [핵심] 에러 내용에 따라 어떤 필드의 에러인지 구분
       if (errMsg.includes("아이디")) {
@@ -92,6 +129,7 @@ export default function RegisterPage() {
               isLoading={isLoading}
               serverError={serverError}       
               setServerError={setServerError} 
+              isSocialSignup={isSocialSignup}
             />
           )}
 
@@ -123,5 +161,13 @@ export default function RegisterPage() {
         onConfirm={() => setModal({ open: false, title: "", description: "" })}
       />
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterPageContent />
+    </Suspense>
   );
 }

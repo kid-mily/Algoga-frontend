@@ -1,6 +1,3 @@
-
-import React from "react";
-
 interface ModalProps {
   open: boolean;
   title?: string;
@@ -42,6 +39,7 @@ export default function Modal({
           {/* Buttons */}
           <div className="mt-12 flex gap-4">
             <button
+              type="button"
               onClick={onCancel}
               className="h-[48px] w-[180px] rounded-[16px] border border-[#D1D5DB] bg-white text-[18px] font-semibold text-[#4B5563] transition hover:bg-gray-50"
             >
@@ -49,6 +47,7 @@ export default function Modal({
             </button>
 
           <button
+            type="button"
             onClick={onConfirm}
             className="h-[48px] w-[180px] rounded-[16px] bg-[#439A97] text-[18px] font-semibold text-white transition-colors duration-200 hover:bg-[#367c79]"
           >

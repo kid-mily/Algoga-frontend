@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -25,26 +25,25 @@ export default function Header() {
 
     useEffect(() => {
         const fetchUser = async () => {
-            // 브라우저 환경에서만 로컬 스토리지 접근
-            const token = localStorage.getItem("accessToken");
-            
-            if (!token) {
-                setIsLoading(false);
-                return; // 토큰이 없으면 API 호출 건너뜀 (비로그인 상태)
-            }
+            setIsLoading(true);
 
             try {
-                // 토큰이 있을 때만 API 호출 (Axios 인터셉터가 헤더에 토큰을 실어줌)
                 const userData = await getMe();
                 setUser(userData);
             } catch (error) {
                 console.error("유저 정보 로드 실패:", error);
+                setUser(null);
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchUser();
+        window.addEventListener("auth-state-changed", fetchUser);
+
+        return () => {
+            window.removeEventListener("auth-state-changed", fetchUser);
+        };
     }, []);
 
     // 데이터를 가져오는 동안 UI가 깨지거나 깜빡이는 것을 방지
@@ -52,7 +51,6 @@ export default function Header() {
         return <header className="bg-white w-full h-16 flex items-center justify-between px-5" />;
     }
 
-    // 🌟 요청하신 기존 UI/태그 구조 완벽 유지 🌟
     return (
         <header className="bg-white w-full h-16 flex items-center justify-between px-5">
             <Link href='/'> 
@@ -63,3 +61,6 @@ export default function Header() {
         </header>
     );
 }
+
+
+
