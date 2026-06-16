@@ -1,4 +1,4 @@
-"use client";
+import Link from "next/link";
 
 interface CourseHistoryItem {
   id: number;
@@ -6,7 +6,6 @@ interface CourseHistoryItem {
   title: string;
   progress: number;
   completed?: boolean;
-  showActions?: boolean;
 }
 
 const courseHistoryItems: CourseHistoryItem[] = [
@@ -16,7 +15,6 @@ const courseHistoryItems: CourseHistoryItem[] = [
     title: "일본 여행 완벽 가이드",
     progress: 100,
     completed: true,
-    showActions: true,
   },
   {
     id: 2,
@@ -35,72 +33,86 @@ const courseHistoryItems: CourseHistoryItem[] = [
 export default function CourseHistoryList() {
   return (
     <section aria-label="수강 내역 목록" className="space-y-4">
-      {courseHistoryItems.map((item) => (
-        <article
-          key={item.id}
-          className="rounded-2xl border border-[#E5EDF5] bg-white px-5 py-4 shadow-sm"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="text-base" aria-hidden="true">
-                  {item.flag}
-                </span>
+      {courseHistoryItems.map((course) => {
+        const progress = Math.min(Math.max(course.progress, 0), 100);
 
-                <h2 className="truncate text-sm font-bold text-[#0A1628]">
-                  {item.title}
-                </h2>
-              </div>
-
-              <div className="mt-5">
-                <div className="mb-1.5 flex items-center justify-between text-[11px] font-semibold">
-                  <span className="text-[#8A9BB0]">진도율</span>
-                  <span className="text-[#439A97]">
-                    {item.progress}%
+        return (
+          <article
+            key={course.id}
+            className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+          >
+            <div className="flex gap-5">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span aria-hidden="true">
+                    {course.flag}
                   </span>
+
+                  <h2 className="truncate text-sm font-bold text-gray-900">
+                    {course.title}
+                  </h2>
                 </div>
 
-                <div className="h-1.5 overflow-hidden rounded-full bg-[#CDEEFF]">
+                <div className="mt-5">
+                  <div className="mb-2 flex justify-between text-xs">
+                    <span className="text-gray-400">
+                      진도율
+                    </span>
+
+                    <span className="font-bold text-[#43A6A2]">
+                      {progress}%
+                    </span>
+                  </div>
+
                   <div
-                    className="h-full rounded-full bg-[#43A6A2]"
-                    style={{ width: `${item.progress}%` }}
-                  />
+                    className="h-2 overflow-hidden rounded-full bg-sky-100"
+                    role="progressbar"
+                    aria-label={`${course.title} 진도율`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={progress}
+                  >
+                    <div
+                      className="h-full rounded-full bg-[#43A6A2]"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
                 </div>
               </div>
+
+              {course.completed ? (
+                <div className="flex w-28 shrink-0 flex-col gap-2">
+                  <span className="self-end rounded-full bg-green-500 px-3 py-1 text-xs font-bold text-white">
+                    수료
+                  </span>
+
+                  <Link
+                    href={`/mypage/courses/${course.id}/certificate`}
+                    className="flex h-9 items-center justify-center rounded-xl bg-[#43A6A2] text-xs font-bold text-white hover:bg-[#357F7C]"
+                  >
+                    수료증 보기
+                  </Link>
+
+                  <Link
+                    href={`/mypage/reservations/new?courseId=${course.id}`}
+                    className="flex h-9 items-center justify-center rounded-xl bg-orange-600 text-xs font-bold text-white hover:bg-orange-700"
+                  >
+                    패키지 예약
+                  </Link>
+                </div>
+              ) : (
+                <Link
+                  href={`/mypage/courses/${course.id}`}
+                  aria-label={`${course.title} 상세 보기`}
+                  className="mt-1 shrink-0 text-xl text-gray-300 hover:text-[#43A6A2]"
+                >
+                  ›
+                </Link>
+              )}
             </div>
-
-            {item.showActions ? (
-              <div className="flex w-28 shrink-0 flex-col gap-2">
-                <span className="self-end rounded-full bg-[#62BF73] px-3 py-1 text-[11px] font-bold text-white">
-                  수료
-                </span>
-
-                <button
-                  type="button"
-                  className="h-9 rounded-xl bg-[#43A6A2] text-xs font-bold text-white transition hover:bg-[#357F7C]"
-                >
-                  수료증 보기
-                </button>
-
-                <button
-                  type="button"
-                  className="h-9 rounded-xl bg-[#E85D04] text-xs font-bold text-white transition hover:bg-[#C94F03]"
-                >
-                  패키지 예약
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                aria-label={`${item.title} 상세 보기`}
-                className="mt-1 shrink-0 text-xl leading-none text-[#B8C4D0] transition hover:text-[#439A97]"
-              >
-                ›
-              </button>
-            )}
-          </div>
-        </article>
-      ))}
+          </article>
+        );
+      })}
     </section>
   );
 }
