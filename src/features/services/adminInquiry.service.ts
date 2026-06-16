@@ -1,4 +1,4 @@
-import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+﻿import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import {
   CsInquiry,
   CsInquiryCategoryCode,
@@ -102,7 +102,7 @@ export const answerAdminInquiry = async (
   inquiryId: number,
   answer: string
 ): Promise<void> => {
-  await adminApi.post<ApiResult<null>>(
+  await adminApi.put<ApiResult<null>>(
     `/api/v1/admin/inquiries/${inquiryId}/answer`,
     { answer }
   );
@@ -129,3 +129,4 @@ export const getAdminInquiryById = async (
 
   return null;
 };
+
