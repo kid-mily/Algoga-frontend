@@ -8,6 +8,9 @@ import CompleteModal from "@/features/common/CompleteModal";
 
 export default function LoginForm() {
   const router = useRouter();
+  const apiBaseUrl = (
+    process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr"
+  ).replace(/\/$/, "");
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -83,6 +86,11 @@ export default function LoginForm() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const socialLoginUrls = {
+    kakao: `${apiBaseUrl}/oauth2/authorization/kakao`,
+    google: `${apiBaseUrl}/oauth2/authorization/google`,
   };
 
   return (
@@ -178,12 +186,18 @@ export default function LoginForm() {
             <div className="h-px flex-1 bg-[#E4E7EC]" />
           </div>
 
-          <button type="button" className="mt-5 flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#FEE500] text-[17px] font-semibold text-black">
+          <a
+            href={socialLoginUrls.kakao}
+            className="mt-5 flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#FEE500] text-[17px] font-semibold text-black"
+          >
             카카오로 계속하기
-          </button>
-          <button type="button" className="mt-4 flex h-[56px] w-full items-center justify-center rounded-[16px] border border-[#D0D5DD] bg-[#F2F4F7] text-[17px] font-semibold text-[#344054]">
+          </a>
+          <a
+            href={socialLoginUrls.google}
+            className="mt-4 flex h-[56px] w-full items-center justify-center rounded-[16px] border border-[#D0D5DD] bg-[#F2F4F7] text-[17px] font-semibold text-[#344054]"
+          >
             구글로 계속하기
-          </button>
+          </a>
 
           <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
             계정이 없으신가요?{" "}

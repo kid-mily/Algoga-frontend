@@ -38,6 +38,23 @@ export interface SignupRequest {
   termsMarketingAgreed: boolean;
 }
 
+export type SocialType = "GOOGLE" | "KAKAO" | "NAVER";
+
+export interface SocialSignupRequest {
+  email: string;
+  name: string;
+  phone: string;
+  birthDate: string;
+  gender: string;
+  nickname: string;
+  socialType: SocialType;
+  referralCode?: string;
+  signupPath?: string;
+  termsServiceAgreed: boolean;
+  termsPrivacyAgreed: boolean;
+  termsMarketingAgreed: boolean;
+}
+
 export interface SignupResponse {
   message?: string;
   user?: User;

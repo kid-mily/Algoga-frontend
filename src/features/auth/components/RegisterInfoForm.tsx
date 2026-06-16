@@ -19,6 +19,7 @@ interface RegisterFormData {
   birthDate: string;
   gender: string;
   nickname: string;
+  socialType?: string;
   referralCode: string;
   signupPath: string;
 }
@@ -30,6 +31,7 @@ interface RegisterInfoFormProps {
   isLoading?: boolean;
   serverError?: { field: string; message: string }; // 🌟 객체 형태로 변경
   setServerError?: (err: { field: string; message: string }) => void; // 🌟 객체 형태로 변경
+  isSocialSignup?: boolean;
 }
 
 export default function RegisterInfoForm({ 
@@ -38,7 +40,8 @@ export default function RegisterInfoForm({
   onNext, 
   isLoading, 
   serverError, 
-  setServerError 
+  setServerError,
+  isSocialSignup = false,
 }: RegisterInfoFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEtcRoute, setIsEtcRoute] = useState(formData.signupPath !== "" && !["search", "social", "friend", "ad"].includes(formData.signupPath));
@@ -72,16 +75,16 @@ export default function RegisterInfoForm({
 
     if (!formData.name.trim()) newErrors.name = "이름은 필수입니다.";
 
-    if (!formData.username || formData.username.length < 4 || formData.username.length > 20) {
+    if (!isSocialSignup && (!formData.username || formData.username.length < 4 || formData.username.length > 20)) {
       newErrors.username = "아이디는 4자 이상 20자 이하로 입력해주세요.";
     }
 
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    if (!formData.password || !passwordRegex.test(formData.password)) {
+    if (!isSocialSignup && (!formData.password || !passwordRegex.test(formData.password))) {
       newErrors.password = "비밀번호는 영문, 숫자 조합 8자 이상이어야 합니다.";
     }
 
-    if (formData.password !== formData.passwordConfirm) {
+    if (!isSocialSignup && formData.password !== formData.passwordConfirm) {
       newErrors.passwordConfirm = "비밀번호가 일치하지 않습니다.";
     }
 
@@ -89,11 +92,11 @@ export default function RegisterInfoForm({
       newErrors.email = "올바른 이메일 형식을 입력해주세요.";
     }
 
-    if (!newErrors.username && !isUsernameChecked) {
+    if (!isSocialSignup && !newErrors.username && !isUsernameChecked) {
       newErrors.username = "아이디 중복 확인을 완료해주세요.";
     }
 
-    if (!newErrors.email && !isEmailVerified) {
+    if (!isSocialSignup && !newErrors.email && !isEmailVerified) {
       newErrors.email = "이메일 인증을 완료해주세요.";
     }
 
@@ -311,7 +314,7 @@ export default function RegisterInfoForm({
 
       <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-4">
         {/* 이름 */}
-        <div>
+        <div className={isSocialSignup ? "col-span-2" : ""}>
           <FormLabel required>성명</FormLabel>
           <input
             type="text"
@@ -319,14 +322,14 @@ export default function RegisterInfoForm({
             onChange={(e) => onChange("name", e.target.value)}
             placeholder="홍길동"
             className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
-            disabled={isLoading}
+            disabled={isLoading || (isSocialSignup && Boolean(formData.name))}
           />
           {errors.name && <p className="mt-1 text-[13px] text-red-500">{errors.name}</p>}
         </div>
 
-        {/* 🌟 아이디 */}
-        <div>
-         <FormLabel required>아이디</FormLabel>
+        {!isSocialSignup && (
+          <div>
+          <FormLabel required>아이디</FormLabel>
           <div className="mt-3 flex gap-2">
             <input
               type="text"
@@ -360,11 +363,12 @@ export default function RegisterInfoForm({
           {serverError?.field === "username" && !errors.username && (
             <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
           )}
-        </div>
+          </div>
+        )}
 
-        {/* 비밀번호 */}
-        <div>
-          <FormLabel required>비밀번호 확인</FormLabel>
+        {!isSocialSignup && (
+          <div>
+            <FormLabel required>비밀번호</FormLabel>
           <input
             type="password"
             value={formData.password}
@@ -374,15 +378,16 @@ export default function RegisterInfoForm({
             disabled={isLoading}
           />
           {errors.password ? (
-             <p className="mt-1 text-[13px] text-red-500">{errors.password}</p>
+              <p className="mt-1 text-[13px] text-red-500">{errors.password}</p>
           ) : (
-             <p className="mt-3 text-[13px] text-[#98A2B3]">최소 8자 이상 / 영문, 숫자 포함</p>
+              <p className="mt-3 text-[13px] text-[#98A2B3]">최소 8자 이상 / 영문, 숫자 포함</p>
           )}
-        </div>
+          </div>
+        )}
 
-        {/* 비밀번호 확인 */}
-        <div>
-          <FormLabel required>비밀번호 확인</FormLabel>
+        {!isSocialSignup && (
+          <div>
+            <FormLabel required>비밀번호 확인</FormLabel>
           <input
             type="password"
             value={formData.passwordConfirm}
@@ -392,7 +397,8 @@ export default function RegisterInfoForm({
             disabled={isLoading}
           />
           {errors.passwordConfirm && <p className="mt-1 text-[13px] text-red-500">{errors.passwordConfirm}</p>}
-        </div>
+          </div>
+        )}
 
         {/* 닉네임 */}
         <div className="col-span-2">
@@ -423,27 +429,29 @@ export default function RegisterInfoForm({
                   ? "border-red-500 ring-1 ring-red-100"
                   : "border-[#D0D5DD]"
               }`}
-              disabled={isLoading || isEmailVerified}
+              disabled={isLoading || isEmailVerified || (isSocialSignup && Boolean(formData.email))}
             />
-            <button
-              type="button"
-              onClick={handleSendEmailCode}
-              disabled={
-                isLoading ||
-                isSendingEmailCode ||
-                isEmailDuplicated ||
-                isEmailVerified ||
-                !emailRegex.test(formData.email)
-              }
-              aria-label={
-                isSendingEmailCode
-                  ? "인증: 이메일 인증번호 발송 중"
-                  : "인증: 이메일 인증번호 발송"
-              }
-              className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
-            >
-              {isSendingEmailCode ? "발송 중" : isEmailCodeSent ? "재발송" : "인증"}
-            </button>
+            {!isSocialSignup && (
+              <button
+                type="button"
+                onClick={handleSendEmailCode}
+                disabled={
+                  isLoading ||
+                  isSendingEmailCode ||
+                  isEmailDuplicated ||
+                  isEmailVerified ||
+                  !emailRegex.test(formData.email)
+                }
+                aria-label={
+                  isSendingEmailCode
+                    ? "인증: 이메일 인증번호 발송 중"
+                    : "인증: 이메일 인증번호 발송"
+                }
+                className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+              >
+                {isSendingEmailCode ? "발송 중" : isEmailCodeSent ? "재발송" : "인증"}
+              </button>
+            )}
           </div>
           {/* 프론트엔드 자체 에러 (형식 등) */}
           {errors.email && <p className="mt-1 text-[13px] text-red-500">{errors.email}</p>}
@@ -461,7 +469,7 @@ export default function RegisterInfoForm({
             <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
           )}
 
-          {isEmailCodeSent && !isEmailVerified && (
+          {isEmailCodeSent && !isEmailVerified && !isSocialSignup && (
             <div className="mt-3 flex gap-2">
               <input
                 type="text"
