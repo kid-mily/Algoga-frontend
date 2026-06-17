@@ -8,7 +8,7 @@ import {
   VerifyPasswordRequest,
 } from "../mypage/types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://kidmily.kro.kr";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export class MyPageApiError extends Error {
   status: number;
