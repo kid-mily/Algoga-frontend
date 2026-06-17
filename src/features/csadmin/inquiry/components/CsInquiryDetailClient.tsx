@@ -1,8 +1,8 @@
 ﻿"use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/SubHeader";
 import CompleteModal from "@/features/common/CompleteModal";
 import Modal from "@/features/common/Modal";
 import {
@@ -25,6 +25,7 @@ export default function CsInquiryDetailClient({
   const [error, setError] = useState("");
   const [completeOpen, setCompleteOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const submitInFlightRef = useRef(false);
 
   const fetchInquiry = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -82,7 +83,8 @@ export default function CsInquiryDetailClient({
   };
 
   const handleConfirmSubmit = async () => {
-    if (!answer.trim() || isSubmitting) return;
+    if (!answer.trim() || submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
 
     try {
       setIsSubmitting(true);
@@ -98,6 +100,7 @@ export default function CsInquiryDetailClient({
           : "답변 등록에 실패했습니다."
       );
     } finally {
+      submitInFlightRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -191,6 +194,7 @@ export default function CsInquiryDetailClient({
         description="답변을 전송하시겠습니까?"
         confirmText={isSubmitting ? "전송 중..." : "전송"}
         cancelText="취소"
+        confirmDisabled={isSubmitting}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={handleConfirmSubmit}
       />

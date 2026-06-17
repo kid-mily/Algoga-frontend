@@ -44,6 +44,7 @@ export default function NoticeFormClient({ mode, noticeId }: NoticeFormClientPro
   const bannerError = validationMessages.includes(error) ? "" : error;
   const showTitleError = hasSubmitted && !formData.title.trim();
   const showContentError = hasSubmitted && !formData.content.trim();
+  const showTagError = hasSubmitted && !formData.tag;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -148,6 +149,11 @@ export default function NoticeFormClient({ mode, noticeId }: NoticeFormClientPro
                 );
               })}
             </div>
+            {showTagError && (
+              <p className="px-5 pb-5 text-[13px] font-semibold text-[#DC2626]">
+                공지사항 태그를 선택해주세요.
+              </p>
+            )}
           </section>
 
           <section className="rounded-[16px] border border-[#BBF7D0] bg-gradient-to-r from-[#DDF5DE] to-[#F3FBFB] p-5">

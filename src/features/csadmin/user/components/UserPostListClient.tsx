@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Image from "next/image";
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import AdminLoadingState from "@/features/common/AdminLoadingState";
 import UserActivityTabs from "@/features/csadmin/user/UserActivityTabs";
@@ -65,10 +66,10 @@ export default function UserPostListClient({ userId }: UserPostListClientProps) 
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-4">
                           <button type="button" onClick={() => void openPostDetail(post.postId)} aria-label={`게시글 상세 보기: ${post.displayId}`}>
-                            <img src="/images/eye.svg" alt="" aria-hidden="true" className="h-[17px] w-[17px]" />
+                            <Image src="/images/eye.svg" alt="" aria-hidden="true" width={17} height={17} sizes="17px" />
                           </button>
                           <button type="button" onClick={() => setDeleteTarget(post)} aria-label={`게시글 삭제: ${post.displayId}`}>
-                            <img src="/images/delete.svg" alt="" aria-hidden="true" className="h-[17px] w-[17px]" />
+                            <Image src="/images/delete.svg" alt="" aria-hidden="true" width={17} height={17} sizes="17px" />
                           </button>
                         </div>
                       </td>

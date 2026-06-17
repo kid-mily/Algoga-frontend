@@ -162,7 +162,7 @@ export default function BannerFormClient({ mode, bannerId }: BannerFormClientPro
               {file ? `선택한 파일: ${file.name}` : mode === "edit" ? "새 파일을 선택하지 않으면 기존 미디어를 유지합니다." : "이미지 또는 영상을 선택하세요."}
             </p>
             <p className="mt-1 text-[13px] text-[#667085]">
-              이미지 권장 해상도: 896x200
+              이미지 필수 해상도: 896x200
             </p>
             {visibleFileError && (
               <p className="mt-2 text-[13px] font-semibold text-[#DC2626]">

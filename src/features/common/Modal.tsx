@@ -4,6 +4,7 @@ interface ModalProps {
   description?: string;
   confirmText?: string;
   cancelText?: string;
+  confirmDisabled?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -14,6 +15,7 @@ export default function Modal({
   description = "정말 ~하시겠습니까?",
   confirmText = "확인",
   cancelText = "취소",
+  confirmDisabled = false,
   onConfirm,
   onCancel,
 }: ModalProps) {
@@ -48,8 +50,9 @@ export default function Modal({
 
           <button
             type="button"
+            disabled={confirmDisabled}
             onClick={onConfirm}
-            className="h-[48px] w-[180px] rounded-[16px] bg-[#439A97] text-[18px] font-semibold text-white transition-colors duration-200 hover:bg-[#367c79]"
+            className="h-[48px] w-[180px] rounded-[16px] bg-[#439A97] text-[18px] font-semibold text-white transition-colors duration-200 hover:bg-[#367c79] disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
           >
             {confirmText}
           </button>

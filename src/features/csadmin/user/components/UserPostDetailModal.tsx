@@ -1,16 +1,43 @@
-﻿import { AdminUserPost } from "@/features/csadmin/user/types";
+"use client";
+
+import { useEffect } from "react";
+import { AdminUserPost } from "@/features/csadmin/user/types";
 
 type UserPostDetailModalProps = {
   post: AdminUserPost | null;
   onClose: () => void;
 };
 
-export default function UserPostDetailModal({ post, onClose }: UserPostDetailModalProps) {
+export default function UserPostDetailModal({
+  post,
+  onClose,
+}: UserPostDetailModalProps) {
+  useEffect(() => {
+    if (!post) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [post, onClose]);
+
   if (!post) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <section className="w-full max-w-[620px] overflow-hidden rounded-[16px] bg-white shadow-xl" role="dialog" aria-modal="true" aria-labelledby="user-post-detail-title">
+      <section
+        className="w-full max-w-[620px] overflow-hidden rounded-[16px] bg-white shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-post-detail-title"
+      >
         <header className="flex items-center justify-between border-b border-[#E4E7EC] px-6 py-5">
           <h2 id="user-post-detail-title" className="text-[20px] font-bold text-[#111827]">
             게시글 상세
@@ -40,7 +67,15 @@ export default function UserPostDetailModal({ post, onClose }: UserPostDetailMod
   );
 }
 
-function InfoBlock({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+function InfoBlock({
+  label,
+  value,
+  strong = false,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+}) {
   return (
     <div>
       <p className="mb-1 text-[13px] font-semibold text-[#667085]">{label}</p>

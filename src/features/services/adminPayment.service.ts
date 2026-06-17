@@ -2,13 +2,14 @@ import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import {
   AdminPayment,
   AdminPaymentApiRecord,
+  PaymentStatus,
+  PaymentType,
   paymentStatusLabels,
   paymentTypeLabels,
 } from "@/features/moneyadmin/payment/types";
 import { formatDateTime } from "@/features/moneyadmin/payment/utils";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 const getRecord = (item: unknown): Record<string, unknown> =>
   item && typeof item === "object" ? (item as Record<string, unknown>) : {};
@@ -41,14 +42,81 @@ const toNullableNumber = (value: unknown) => {
 const toString = (value: unknown, fallback = "") =>
   typeof value === "string" && value.trim() ? value : fallback;
 
+const isNumberLike = (value: unknown) => {
+  return (
+    (typeof value === "number" && Number.isFinite(value)) ||
+    (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value)))
+  );
+};
+
+const isNonEmptyString = (value: unknown) => {
+  return typeof value === "string" && value.trim() !== "";
+};
+
+const isAdminPaymentApiRecord = (
+  record: Record<string, unknown>
+): record is AdminPaymentApiRecord => {
+  return (
+    isNumberLike(record.paymentId) &&
+    isNumberLike(record.userId) &&
+    isNumberLike(record.amount) &&
+    isNonEmptyString(record.paymentType) &&
+    isNonEmptyString(record.status) &&
+    isNonEmptyString(record.createdAt)
+  );
+};
+
+const paymentTypes: PaymentType[] = [
+  "DEPOSIT",
+  "BALANCE",
+  "FULL",
+  "LECTURE",
+  "LECTURE_ONLY",
+  "PACKAGE",
+  "PACKAGE_FULL",
+  "PACKAGE_DEPOSIT",
+  "PACKAGE_BALANCE",
+  "UNKNOWN",
+];
+
+const paymentStatuses: PaymentStatus[] = [
+  "SUCCESS",
+  "FAILED",
+  "CANCELLED",
+  "PENDING",
+  "REFUNDED",
+  "UNKNOWN",
+];
+
+const toPaymentType = (value: unknown): PaymentType => {
+  const text = toString(value, "UNKNOWN");
+
+  return paymentTypes.includes(text as PaymentType)
+    ? (text as PaymentType)
+    : "UNKNOWN";
+};
+
+const toPaymentStatus = (value: unknown): PaymentStatus => {
+  const text = toString(value, "UNKNOWN");
+
+  return paymentStatuses.includes(text as PaymentStatus)
+    ? (text as PaymentStatus)
+    : "UNKNOWN";
+};
+
 export const normalizeAdminPayment = (
   item: unknown,
   fallbackId = 0
 ): AdminPayment => {
-  const record = getRecord(item) as AdminPaymentApiRecord;
+  const record = getRecord(item);
+
+  if (!isAdminPaymentApiRecord(record)) {
+    throw new Error("결제 내역 응답 형식이 올바르지 않습니다.");
+  }
+
   const paymentId = toNumber(record.paymentId, fallbackId);
-  const paymentType = toString(record.paymentType, "UNKNOWN");
-  const status = toString(record.status, "UNKNOWN");
+  const paymentType = toPaymentType(record.paymentType);
+  const status = toPaymentStatus(record.status);
   const userId = toNumber(record.userId);
   const paymentTypeLabel =
     paymentType === "LECTURE_ONLY"
@@ -69,7 +137,7 @@ export const normalizeAdminPayment = (
     usedMileage: toNumber(record.usedMileage),
     usedCouponId: toNullableNumber(record.usedCouponId),
     status,
-    statusLabel: paymentStatusLabels[status] ?? status,
+    statusLabel: paymentStatusLabels[status],
     portonePaymentId: toString(record.portonePaymentId, "-"),
     createdAt: formatDateTime(toString(record.createdAt)),
     createdAtRaw: toString(record.createdAt),
@@ -101,7 +169,23 @@ export const getAdminPayments = async ({
   );
 };
 
-export const downloadAdminPaymentsExcel = async (signal?: AbortSignal) => {
+type DownloadAdminPaymentsExcelParams = {
+  from?: string;
+  to?: string;
+  keyword?: string;
+  status?: PaymentStatus | "ALL";
+  type?: PaymentType | "ALL";
+  signal?: AbortSignal;
+};
+
+export const downloadAdminPaymentsExcel = async ({
+  from,
+  to,
+  keyword,
+  status,
+  type,
+  signal,
+}: DownloadAdminPaymentsExcelParams = {}) => {
   if (typeof window === "undefined") return;
 
   if (signal?.aborted) {
@@ -119,7 +203,18 @@ export const downloadAdminPaymentsExcel = async (signal?: AbortSignal) => {
   signal?.addEventListener("abort", abortRequest, { once: true });
 
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/admin/payments/excel`, {
+    const requestUrl = new URL(
+      `${BASE_URL}/api/v1/admin/payments/excel`,
+      window.location.origin
+    );
+
+    if (from) requestUrl.searchParams.set("from", from);
+    if (to) requestUrl.searchParams.set("to", to);
+    if (keyword?.trim()) requestUrl.searchParams.set("keyword", keyword.trim());
+    if (status && status !== "ALL") requestUrl.searchParams.set("status", status);
+    if (type && type !== "ALL") requestUrl.searchParams.set("type", type);
+
+    const response = await fetch(requestUrl.toString(), {
       credentials: "include",
       signal: controller.signal,
     });
@@ -132,14 +227,14 @@ export const downloadAdminPaymentsExcel = async (signal?: AbortSignal) => {
     }
 
     const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
+    const objectUrl = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = url;
+    link.href = objectUrl;
     link.download = "admin-payments.xlsx";
     document.body.appendChild(link);
     link.click();
     link.remove();
-    window.URL.revokeObjectURL(url);
+    window.URL.revokeObjectURL(objectUrl);
   } catch (error: unknown) {
     if (didTimeout) {
       throw new Error("결제 내역 엑셀 다운로드 시간이 초과되었습니다.");
