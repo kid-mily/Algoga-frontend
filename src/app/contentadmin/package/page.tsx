@@ -3,7 +3,11 @@ import PackageManageClient from "@/features/contentmanage/package/components/Pac
 
 export const metadata: Metadata = {
   title: "패키지 관리 | 알고가 관리자",
-  description: "패키지 구성을 위한 숙소를 관리하고 항공편을 검색합니다.",
+  description: "등록된 패키지 상품을 조회, 검색, 등록, 수정, 삭제하는 콘텐츠 관리자 화면입니다.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function PackagePage() {

@@ -99,14 +99,16 @@ export default function ContentSidebar() {
           <Link
             href="/contentadmin/package"
             className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
-              pathname === "/contentadmin/package"
+              pathname === "/contentadmin/package" ||
+              pathname.startsWith("/contentadmin/package/")
                 ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
                 : "text-[#344054] hover:bg-[#F5F7FA]"
             }`}
           >
             <img
               src={
-                pathname === "/contentadmin/package"
+                pathname === "/contentadmin/package" ||
+                pathname.startsWith("/contentadmin/package/")
                   ? "/images/package-active.svg"
                   : "/images/package.svg"
               }

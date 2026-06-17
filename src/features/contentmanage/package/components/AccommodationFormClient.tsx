@@ -295,7 +295,7 @@ export default function AccommodationFormClient({
         <footer className="flex items-center justify-end gap-3 border-t border-[#E4E7EC] px-7 py-5">
           <button
             type="button"
-            onClick={() => router.push("/contentadmin/package")}
+            onClick={() => router.push("/contentadmin/accommodations")}
             className="h-[48px] rounded-[14px] border border-[#E4E7EC] px-7 text-[15px] font-semibold text-[#344054]"
           >
             취소
@@ -319,7 +319,7 @@ export default function AccommodationFormClient({
             : "숙소 수정이 완료되었습니다."
         }
         buttonText="확인"
-        onConfirm={() => router.push("/contentadmin/package")}
+        onConfirm={() => router.push("/contentadmin/accommodations")}
       />
     </>
   );

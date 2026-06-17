@@ -36,11 +36,57 @@ export interface Flight {
   flightId: string;
   airline: string;
   flightNumber: string;
+  departure: string;
+  arrival: string;
   origin: string;
   destination: string;
   departureTime: string;
   arrivalTime: string;
+  duration: string;
   price: number;
+}
+
+export interface TravelPackage {
+  packageId: number;
+  countryId: number;
+  countryName: string;
+  accommodationId: number;
+  accommodationName: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  price: number;
+  checkInDate: string;
+  checkOutDate: string;
+  flightNumber: string;
+  airline: string;
+  departure: string;
+  arrival: string;
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
+  flightPrice: number;
+}
+
+export interface PackagePayload {
+  countryId: number;
+  accommodationId: number;
+  name: string;
+  description: string;
+  price: number;
+  checkInDate: string;
+  checkOutDate: string;
+  flightInfo: {
+    flightNumber: string;
+    airline: string;
+    departure: string;
+    arrival: string;
+    departureTime: string;
+    arrivalTime: string;
+    duration: string;
+    price: number;
+  };
+  flightPrice: number;
 }
 
 export type RawPackageRecord = Record<string, unknown>;
@@ -161,10 +207,69 @@ export const normalizeFlight = (item: unknown, fallbackId: number): Flight => {
     flightId: getString(record, ["flightId", "id"], String(fallbackId)),
     airline: getString(record, ["airline", "airlineName", "carrier"], "항공사"),
     flightNumber: getString(record, ["flightNumber", "number"], "-"),
-    origin: getString(record, ["origin", "departureAirport", "from"], "-"),
-    destination: getString(record, ["destination", "arrivalAirport", "to"], "-"),
+    departure: getString(record, ["departure", "origin", "departureAirport", "from"], "-"),
+    arrival: getString(record, ["arrival", "destination", "arrivalAirport", "to"], "-"),
+    origin: getString(record, ["departure", "origin", "departureAirport", "from"], "-"),
+    destination: getString(record, ["arrival", "destination", "arrivalAirport", "to"], "-"),
     departureTime: getString(record, ["departureTime", "departureAt"], "-"),
     arrivalTime: getString(record, ["arrivalTime", "arrivalAt"], "-"),
+    duration: getString(record, ["duration"], "-"),
     price: getNumber(record, ["price", "amount", "fare"]),
+  };
+};
+
+export const normalizeTravelPackage = (
+  item: unknown,
+  fallbackId: number
+): TravelPackage => {
+  const responseRecord = getRecord(item);
+  const nestedRecord = getNestedRecord(responseRecord, [
+    "package",
+    "travelPackage",
+    "item",
+    "content",
+  ]);
+  const record =
+    Object.keys(nestedRecord).length > 0 ? nestedRecord : responseRecord;
+  const accommodation = getNestedRecord(record, ["accommodation", "hotel"]);
+  const country = getNestedRecord(record, ["country"]);
+  const flightInfo = getNestedRecord(record, ["flightInfo", "flight"]);
+  const packageId = getNumber(
+    record,
+    ["packageId", "travelPackageId", "id"],
+    fallbackId
+  );
+  const price = getNumber(record, ["price", "packagePrice", "amount"]);
+  const flightPrice = getNumber(record, ["flightPrice", "flightAmount"]) ||
+    getNumber(flightInfo, ["price"]);
+
+  return {
+    packageId,
+    countryId: getNestedNumber(record, ["countryId", "country_id"], ["country"]),
+    countryName:
+      getString(record, ["countryName"]) ||
+      getString(country, ["countryName", "name"], "-"),
+    accommodationId: getNestedNumber(
+      record,
+      ["accommodationId", "hotelId"],
+      ["accommodation", "hotel"]
+    ),
+    accommodationName:
+      getString(record, ["accommodationName", "hotelName"]) ||
+      getString(accommodation, ["name", "accommodationName", "hotelName"], "-"),
+    name: getString(record, ["name", "title", "packageName"], `패키지 #${packageId}`),
+    description: getString(record, ["description", "content", "summary"]),
+    imageUrl: getString(record, ["imageUrl", "image", "thumbnailUrl"]),
+    price,
+    checkInDate: getString(record, ["checkInDate", "startDate"]),
+    checkOutDate: getString(record, ["checkOutDate", "endDate"]),
+    flightNumber: getString(flightInfo, ["flightNumber"], "-"),
+    airline: getString(flightInfo, ["airline"], "-"),
+    departure: getString(flightInfo, ["departure", "origin", "from"], "-"),
+    arrival: getString(flightInfo, ["arrival", "destination", "to"], "-"),
+    departureTime: getString(flightInfo, ["departureTime", "departureAt"], "-"),
+    arrivalTime: getString(flightInfo, ["arrivalTime", "arrivalAt"], "-"),
+    duration: getString(flightInfo, ["duration"], "-"),
+    flightPrice,
   };
 };
