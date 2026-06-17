@@ -33,11 +33,18 @@ export default function ReportManageClient({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const abortControllerRef = useRef<AbortController | null>(null);
+  const pageParam = searchParams.get("page");
+  const parsedPage = Number(pageParam);
+  const parsedInitialPage = Number(initialPage);
+  const fallbackPage =
+    Number.isFinite(parsedInitialPage) && parsedInitialPage >= 1
+      ? Math.floor(parsedInitialPage)
+      : 1;
 
-  const currentPage = Math.max(
-    1,
-    Number(searchParams.get("page") || initialPage || 1)
-  );
+  const currentPage =
+    Number.isFinite(parsedPage) && parsedPage >= 1
+      ? Math.floor(parsedPage)
+      : fallbackPage;
 
   useEffect(() => {
     abortControllerRef.current?.abort();

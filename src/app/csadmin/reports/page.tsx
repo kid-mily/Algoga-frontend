@@ -19,7 +19,11 @@ type ReportsPageProps = {
 
 export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const params = await searchParams;
-  const initialPage = Math.max(1, Number(params?.page || 1));
+  const parsedPage = Number(params?.page);
+  const initialPage =
+    Number.isFinite(parsedPage) && parsedPage >= 1
+      ? Math.floor(parsedPage)
+      : 1;
 
   return (
     <Suspense

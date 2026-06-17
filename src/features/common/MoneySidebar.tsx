@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { getCurrentAdminPayload } from "@/lib/adminToken";
+import { adminLogout } from "@/features/services/adminAuth.service";
 
 const menus = [
   {
@@ -32,6 +35,15 @@ const menus = [
 
 export default function MoneySidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const adminPayload = getCurrentAdminPayload();
+  const adminName = adminPayload?.sub ?? "정산 관리자";
+  const adminEmail = adminPayload?.role ?? adminPayload?.authority ?? "SETTLEMENT_MANAGER";
+
+  const handleLogout = async () => {
+    await Promise.resolve(adminLogout());
+    router.push("/auth/login");
+  };
 
   return (
     <aside className="flex w-[240px] flex-col border-r border-[#E4E7EC] bg-white">
@@ -47,6 +59,7 @@ export default function MoneySidebar() {
       <nav className="flex-1 px-4 py-6" aria-label="정산 관리자 메뉴">
         <ul className="space-y-2">
           {menus.map((menu) => {
+            // Nested moneyadmin routes should keep their parent menu active.
             const active =
               pathname === menu.href || pathname.startsWith(`${menu.href}/`);
 
@@ -61,11 +74,13 @@ export default function MoneySidebar() {
                       : "text-[#344054] hover:bg-[#F5F7FA]"
                   }`}
                 >
-                  <img
+                  <Image
                     src={active ? menu.activeIcon : menu.icon}
                     alt=""
                     aria-hidden="true"
-                    className="h-[18px] w-[18px]"
+                    width={18}
+                    height={18}
+                    priority={false}
                   />
                   {menu.name}
                 </Link>
@@ -76,18 +91,22 @@ export default function MoneySidebar() {
       </nav>
 
       <div className="border-t border-[#E4E7EC] p-4">
-        <button className="flex w-full items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] text-[#344054] hover:bg-[#F5F7FA]">
-          <img src="/images/home.svg" alt="" className="h-[18px] w-[18px]" />
+        <button
+          type="button"
+          onClick={() => void handleLogout()}
+          className="flex w-full items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] text-[#344054] hover:bg-[#F5F7FA]"
+        >
+          <Image src="/images/home.svg" alt="" aria-hidden="true" width={18} height={18} />
           로그아웃
         </button>
 
         <div className="mt-6 flex items-center gap-3 px-4">
           <div className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#6FA8A5]">
-            <img src="/images/profile.svg" alt="" className="h-[18px] w-[18px]" />
+            <Image src="/images/profile.svg" alt="" aria-hidden="true" width={18} height={18} />
           </div>
           <div>
-            <p className="text-[14px] font-semibold text-[#111827]">김관리자</p>
-            <p className="text-[13px] text-[#98A2B3]">finance@algoga.kr</p>
+            <p className="text-[14px] font-semibold text-[#111827]">{adminName}</p>
+            <p className="text-[13px] text-[#98A2B3]">{adminEmail}</p>
           </div>
         </div>
       </div>

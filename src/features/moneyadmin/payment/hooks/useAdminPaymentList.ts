@@ -89,9 +89,10 @@ export const useAdminPaymentList = (initialPayments: AdminPayment[] = []) => {
     [filteredPayments]
   );
 
-  const successCount = payments.filter(
-    (payment) => payment.status === "SUCCESS"
-  ).length;
+  const successCount = useMemo(
+    () => payments.filter((payment) => payment.status === "SUCCESS").length,
+    [payments]
+  );
 
   return {
     payments,

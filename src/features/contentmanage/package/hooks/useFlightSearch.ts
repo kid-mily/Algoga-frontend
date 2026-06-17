@@ -2,15 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { searchFlights } from "@/features/services/adminPackage.service";
+import { getErrorMessage, isAbortError } from "@/features/services/error.service";
 import { Flight, FlightSearchParams } from "../types";
-
-const getErrorMessage = (error: unknown, fallback: string) => {
-  return error instanceof Error ? error.message : fallback;
-};
-
-const isAbortError = (error: unknown) => {
-  return error instanceof DOMException && error.name === "AbortError";
-};
 
 export const useFlightSearch = () => {
   const [flights, setFlights] = useState<Flight[]>([]);

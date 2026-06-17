@@ -18,6 +18,14 @@ type PaymentToolbarProps = {
   onSelectedTypeChange: (value: PaymentType | "ALL") => void;
 };
 
+const isPaymentTypeFilter = (value: string): value is PaymentType | "ALL" => {
+  return paymentTypeOptions.some((option) => option.value === value);
+};
+
+const isPaymentStatusFilter = (value: string): value is PaymentStatus | "ALL" => {
+  return paymentStatusOptions.some((option) => option.value === value);
+};
+
 export default function PaymentToolbar({
   searchKeyword,
   fromDate,
@@ -57,6 +65,7 @@ export default function PaymentToolbar({
           id="payment-from-date"
           type="date"
           value={fromDate}
+          max={toDate}
           onChange={(event) => onFromDateChange(event.target.value)}
           className="h-[44px] w-[142px] shrink-0 rounded-[10px] border border-[#E4E7EC] px-3 text-[14px] font-semibold text-[#344054] outline-none focus:border-[#639E9B]"
         />
@@ -79,9 +88,11 @@ export default function PaymentToolbar({
         <select
           id="payment-type-filter"
           value={selectedType}
-          onChange={(event) =>
-            onSelectedTypeChange(event.target.value as PaymentType | "ALL")
-          }
+          onChange={(event) => {
+            if (isPaymentTypeFilter(event.target.value)) {
+              onSelectedTypeChange(event.target.value);
+            }
+          }}
           className="h-[44px] w-[132px] shrink-0 rounded-[10px] border border-[#E4E7EC] bg-white px-3 text-[14px] font-semibold text-[#344054] outline-none focus:border-[#639E9B]"
         >
           {paymentTypeOptions.map((option) => (
@@ -97,9 +108,11 @@ export default function PaymentToolbar({
         <select
           id="payment-status-filter"
           value={selectedStatus}
-          onChange={(event) =>
-            onSelectedStatusChange(event.target.value as PaymentStatus | "ALL")
-          }
+          onChange={(event) => {
+            if (isPaymentStatusFilter(event.target.value)) {
+              onSelectedStatusChange(event.target.value);
+            }
+          }}
           className="h-[44px] w-[132px] shrink-0 rounded-[10px] border border-[#E4E7EC] bg-white px-3 text-[14px] font-semibold text-[#344054] outline-none focus:border-[#639E9B]"
         >
           {paymentStatusOptions.map((option) => (

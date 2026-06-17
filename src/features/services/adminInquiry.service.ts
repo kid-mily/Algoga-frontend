@@ -1,4 +1,4 @@
-﻿import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import {
   CsInquiry,
   CsInquiryCategoryCode,

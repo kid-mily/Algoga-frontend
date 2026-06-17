@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 const users = [
   {
@@ -68,11 +69,12 @@ export default function UserActivityListClient() {
 
           <label className="flex h-[44px] flex-1 items-center gap-3 rounded-[10px] border border-[#E4E7EC] px-4">
             <span className="sr-only">유저 검색</span>
-            <img
+            <Image
               src="/images/search.svg"
               alt=""
               aria-hidden="true"
-              className="h-[18px] w-[18px]"
+              width={18}
+              height={18}
             />
 
             <input

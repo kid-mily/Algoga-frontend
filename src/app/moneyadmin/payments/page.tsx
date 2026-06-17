@@ -15,7 +15,11 @@ export default function MoneyAdminPaymentsPage() {
   return (
     <Suspense
       fallback={
-        <section className="rounded-[16px] border border-[#E4E7EC] bg-white p-8 text-center text-[14px] text-[#667085]">
+        <section
+          role="status"
+          aria-live="polite"
+          className="rounded-[16px] border border-[#E4E7EC] bg-white p-8 text-center text-[14px] text-[#667085]"
+        >
           결제 내역을 불러오는 중입니다...
         </section>
       }

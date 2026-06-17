@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import ReportDetailClient from "@/features/csadmin/report/components/ReportDetailClient";
 
 export const metadata: Metadata = {
@@ -20,6 +21,11 @@ export default async function ReportDetailPage({
   params,
 }: ReportDetailPageProps) {
   const { reportid } = await params;
+  const reportId = Number(reportid);
 
-  return <ReportDetailClient reportId={Number(reportid)} />;
+  if (!reportid || !Number.isInteger(reportId) || reportId < 1) {
+    notFound();
+  }
+
+  return <ReportDetailClient reportId={reportId} />;
 }

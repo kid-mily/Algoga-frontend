@@ -17,7 +17,13 @@ const getNumber = (
 ) => {
   const value = keys.map((key) => record[key]).find((item) => item !== undefined);
 
-  return typeof value === "number" ? value : Number(value ?? fallback);
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : fallback;
+  }
+
+  const parsedValue = Number(value ?? fallback);
+
+  return Number.isFinite(parsedValue) ? parsedValue : fallback;
 };
 
 const getString = (
@@ -140,21 +146,29 @@ export const deleteReportedTarget = async (
   targetId: number
 ): Promise<void> => {
   if (targetType === "COMMENT") {
-    await adminApi.delete<ApiResult<null>>(`/api/v1/comments/admin/${targetId}`);
+    await adminApi.delete<ApiResult<null>>(`/api/v1/comments/admin/${targetId}`, {
+      suppressGlobalError: true,
+    });
     return;
   }
 
-  await adminApi.delete<ApiResult<null>>(`/api/v1/posts/admin/${targetId}`);
+  await adminApi.delete<ApiResult<null>>(`/api/v1/posts/admin/${targetId}`, {
+    suppressGlobalError: true,
+  });
 };
 
 export const rejectAdminReport = async (reportId: number): Promise<void> => {
   await adminApi.patch<ApiResult<null>>(
-    `/api/v1/reports/admin/${reportId}/reject`
+    `/api/v1/reports/admin/${reportId}/reject`,
+    undefined,
+    { suppressGlobalError: true }
   );
 };
 
 export const completeAdminReport = async (reportId: number): Promise<void> => {
   await adminApi.patch<ApiResult<null>>(
-    `/api/v1/reports/admin/${reportId}/complete`
+    `/api/v1/reports/admin/${reportId}/complete`,
+    undefined,
+    { suppressGlobalError: true }
   );
 };

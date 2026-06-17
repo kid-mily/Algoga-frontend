@@ -1,4 +1,4 @@
-﻿import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 type UserDetailPageProps = {
   params: Promise<{ userid: string }>;
@@ -14,7 +14,7 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
   const { userid } = await params;
 
   if (!isValidUserId(userid)) {
-    redirect("/csadmin/user");
+    notFound();
   }
 
   redirect(`/csadmin/user/${userid}/post`);
