@@ -110,11 +110,8 @@ export const searchFlights = async (
     "/api/v1/public/flights/search",
     {
       params: {
-        origin: params.origin,
         destination: params.destination,
         departureDate: params.departureDate,
-        returnDate: params.returnDate || undefined,
-        adults: params.adults || 1,
       },
       skipAuth: true,
       signal,

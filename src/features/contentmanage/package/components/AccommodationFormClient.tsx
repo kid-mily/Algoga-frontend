@@ -29,6 +29,7 @@ export default function AccommodationFormClient({
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
   const [pricePerNight, setPricePerNight] = useState(0);
+  const [nights, setNights] = useState(1);
   const [currentImageUrl, setCurrentImageUrl] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(mode === "edit");
@@ -64,6 +65,7 @@ export default function AccommodationFormClient({
           setAddress(accommodation.address);
           setDescription(accommodation.description);
           setPricePerNight(accommodation.pricePerNight);
+          setNights(accommodation.nights || 1);
           setCurrentImageUrl(accommodation.imageUrl || "");
         }
       } catch (fetchError: unknown) {
@@ -103,8 +105,8 @@ export default function AccommodationFormClient({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!countryId || !name.trim() || !address.trim() || pricePerNight <= 0) {
-      setError("국가, 숙소명, 주소, 1박 가격을 입력해주세요.");
+    if (!countryId || !name.trim() || !address.trim() || pricePerNight <= 0 || nights <= 0) {
+      setError("국가, 숙소명, 주소, 1박 가격, 숙박일수를 입력해주세요.");
       return;
     }
 
@@ -119,6 +121,7 @@ export default function AccommodationFormClient({
       address: address.trim(),
       description: description.trim(),
       pricePerNight,
+      nights,
       image: imageFile,
     };
 
@@ -219,7 +222,18 @@ export default function AccommodationFormClient({
             />
           </label>
 
-          <section>
+          <label>
+            <span className="text-[15px] font-semibold text-[#111827]">숙박일수 *</span>
+            <input
+              type="number"
+              min={1}
+              value={nights}
+              onChange={(event) => setNights(Number(event.target.value || 1))}
+              className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
+            />
+          </label>
+
+          <section className="col-span-2">
             <span
               id="accommodation-image-label"
               className="text-[15px] font-semibold text-[#111827]"
