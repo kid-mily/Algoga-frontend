@@ -27,6 +27,8 @@ export type ApiRequestOptions = RequestInit & {
   next?: { revalidate?: number | false; tags?: string[] };
 };
 
+let refreshPromise: Promise<boolean> | null = null;
+
 export class ApiRequestError extends Error {
   status?: number;
   code?: string;
@@ -72,6 +74,25 @@ const buildUrl = (
   return url.toString();
 };
 
+const refreshAccessToken = async () => {
+  if (typeof window === "undefined") return false;
+
+  refreshPromise ??= fetch(buildUrl("/api/v1/auth/refresh"), {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      Accept: "application/json",
+    },
+  })
+    .then((response) => response.ok)
+    .catch(() => false)
+    .finally(() => {
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
+};
+
 async function request<T>(
   path: string,
   options: ApiRequestOptions = {}
@@ -79,6 +100,7 @@ async function request<T>(
   const {
     params,
     suppressGlobalError,
+    skipAuth,
     timeoutMs = 15000,
     signal,
     ...fetchOptions
@@ -117,6 +139,24 @@ async function request<T>(
       signal: controller.signal,
       headers,
     });
+
+    if (
+      response.status === 401 &&
+      !skipAuth &&
+      path !== "/api/v1/auth/refresh" &&
+      typeof window !== "undefined"
+    ) {
+      const refreshed = await refreshAccessToken();
+
+      if (refreshed && !controller.signal.aborted) {
+        response = await fetch(requestUrl, {
+          ...fetchOptions,
+          credentials: fetchOptions.credentials ?? "include",
+          signal: controller.signal,
+          headers,
+        });
+      }
+    }
   } catch (error: unknown) {
     if (didTimeout) {
       throw new ApiRequestError({

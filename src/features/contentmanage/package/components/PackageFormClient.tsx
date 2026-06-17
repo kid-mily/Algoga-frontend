@@ -11,16 +11,15 @@ import {
   updateAdminPackage,
 } from "@/features/services/adminPackage.service";
 import { getCourseCountries } from "@/features/services/adminCourse.service";
+import { getErrorMessage } from "@/features/services/error.service";
 import { useFlightSearch } from "../hooks/useFlightSearch";
 import { Accommodation, CourseCountry, Flight } from "../types";
+import { getCountryAirportCode, isKoreaCountry } from "../utils/flightDestinations";
 
 type PackageFormClientProps = {
   mode: "create" | "edit";
   packageId?: string;
 };
-
-const getErrorMessage = (error: unknown, fallback: string) =>
-  error instanceof Error ? error.message : fallback;
 
 export default function PackageFormClient({
   mode,
@@ -35,13 +34,16 @@ export default function PackageFormClient({
   const [description, setDescription] = useState("");
   const [checkInDate, setCheckInDate] = useState("");
   const [checkOutDate, setCheckOutDate] = useState("");
-  const [price, setPrice] = useState(0);
+  const [discountRate, setDiscountRate] = useState(0);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [flightDestination, setFlightDestination] = useState("");
   const [flightDepartureDate, setFlightDepartureDate] = useState("");
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [isLoading, setIsLoading] = useState(mode === "edit");
   const [isLoadingAccommodations, setIsLoadingAccommodations] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [hasSearchedFlight, setHasSearchedFlight] = useState(false);
   const [error, setError] = useState("");
   const [completeOpen, setCompleteOpen] = useState(false);
   const submitControllerRef = useRef<AbortController | null>(null);
@@ -59,6 +61,62 @@ export default function PackageFormClient({
       ),
     [accommodations, accommodationId]
   );
+  const accommodationPrice = selectedAccommodation
+    ? selectedAccommodation.pricePerNight * selectedAccommodation.nights
+    : 0;
+  const flightPrice = selectedFlight?.price ?? 0;
+  const basePrice = accommodationPrice + flightPrice;
+  const finalPrice = Math.max(
+    0,
+    Math.round(basePrice * ((100 - discountRate) / 100))
+  );
+  const showFlightSearchErrors = hasSubmitted || hasSearchedFlight;
+  const countryError = hasSubmitted && !countryId ? "국가를 선택해주세요." : "";
+  const accommodationError =
+    hasSubmitted && !accommodationId ? "숙소를 선택해주세요." : "";
+  const nameError =
+    hasSubmitted && !name.trim() ? "패키지명을 입력해주세요." : "";
+  const checkInDateError =
+    hasSubmitted && !checkInDate ? "체크인 날짜를 선택해주세요." : "";
+  const checkOutDateError =
+    hasSubmitted && !checkOutDate ? "체크아웃 날짜를 선택해주세요." : "";
+  const imageError =
+    hasSubmitted && mode === "create" && !imageFile
+      ? "패키지 이미지를 선택해주세요."
+      : "";
+  const flightDestinationError =
+    showFlightSearchErrors && !flightDestination.trim()
+      ? "항공 도착지를 선택해주세요."
+      : "";
+  const flightDepartureDateError =
+    showFlightSearchErrors && !flightDepartureDate
+      ? "항공 출발일을 선택해주세요."
+      : "";
+  const selectedFlightError =
+    hasSubmitted && !selectedFlight ? "항공편을 검색한 뒤 선택해주세요." : "";
+  const priceError =
+    hasSubmitted && basePrice <= 0 ? "숙소와 항공 가격을 확인해주세요." : "";
+  const flightDestinationOptions = useMemo(
+    () =>
+      countries
+        .filter((country) => !isKoreaCountry(country))
+        .map((country) => ({
+          countryId: String(country.countryId),
+          countryName: country.countryName,
+          airportCode: getCountryAirportCode(country),
+        })),
+    [countries]
+  );
+
+  const handleCountryChange = (nextCountryId: string) => {
+    setCountryId(nextCountryId);
+    setSelectedFlight(null);
+
+    const nextAirportCode =
+      flightDestinationOptions.find((option) => option.countryId === nextCountryId)
+        ?.airportCode ?? "";
+    setFlightDestination(nextAirportCode);
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -80,32 +138,29 @@ export default function PackageFormClient({
           setDescription(packageData.description);
           setCheckInDate(packageData.checkInDate);
           setCheckOutDate(packageData.checkOutDate);
-          setPrice(packageData.price || 0);
+          setDiscountRate(0);
           setFlightDestination(packageData.arrival !== "-" ? packageData.arrival : "");
           setFlightDepartureDate(
             packageData.departureTime.includes("T")
               ? packageData.departureTime.slice(0, 10)
               : ""
           );
-          if (packageData.flightNumber !== "-") {
+          if (packageData.flightInfo) {
             setSelectedFlight({
-              flightId: packageData.flightNumber,
-              flightNumber: packageData.flightNumber,
-              airline: packageData.airline,
-              departure: packageData.departure,
-              arrival: packageData.arrival,
-              origin: packageData.departure,
-              destination: packageData.arrival,
-              departureTime: packageData.departureTime,
-              arrivalTime: packageData.arrivalTime,
-              duration: packageData.duration,
-              price: packageData.flightPrice,
+              ...packageData.flightInfo,
+              price: packageData.flightPrice || packageData.flightInfo.price,
             });
           }
           return;
         }
 
         setCountryId(String(countryData[0]?.countryId || ""));
+        const firstDestinationCountry = countryData.find(
+          (country) => !isKoreaCountry(country)
+        );
+        setFlightDestination(
+          firstDestinationCountry ? getCountryAirportCode(firstDestinationCountry) : ""
+        );
       } catch (fetchError: unknown) {
         if (controller.signal.aborted) return;
         setError(getErrorMessage(fetchError, "패키지 정보를 불러오지 못했습니다."));
@@ -171,6 +226,7 @@ export default function PackageFormClient({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setHasSubmitted(true);
 
     if (
       !countryId ||
@@ -178,10 +234,10 @@ export default function PackageFormClient({
       !name.trim() ||
       !checkInDate ||
       !checkOutDate ||
-      price <= 0 ||
+      basePrice <= 0 ||
+      (mode === "create" && !imageFile) ||
       !selectedFlight
     ) {
-      setError("국가, 숙소, 패키지명, 체크인/체크아웃 날짜, 가격, 항공편을 입력해주세요.");
       return;
     }
 
@@ -190,20 +246,11 @@ export default function PackageFormClient({
       accommodationId: Number(accommodationId),
       name: name.trim(),
       description: description.trim(),
-      price,
+      price: finalPrice,
+      flightDestination: selectedFlight.arrival,
       checkInDate,
       checkOutDate,
-      flightInfo: {
-        flightNumber: selectedFlight.flightNumber,
-        airline: selectedFlight.airline,
-        departure: selectedFlight.departure,
-        arrival: selectedFlight.arrival,
-        departureTime: selectedFlight.departureTime,
-        arrivalTime: selectedFlight.arrivalTime,
-        duration: selectedFlight.duration,
-        price: selectedFlight.price,
-      },
-      flightPrice: selectedFlight.price,
+      image: imageFile,
     };
 
     submitControllerRef.current?.abort();
@@ -233,8 +280,9 @@ export default function PackageFormClient({
   };
 
   const handleFlightSearch = () => {
+    setHasSearchedFlight(true);
+
     if (!flightDestination.trim() || !flightDepartureDate) {
-      setError("항공편 도착지와 출발일을 입력해주세요.");
       return;
     }
 
@@ -267,7 +315,7 @@ export default function PackageFormClient({
             <span className="text-[15px] font-semibold text-[#111827]">국가 *</span>
             <select
               value={countryId}
-              onChange={(event) => setCountryId(event.target.value)}
+              onChange={(event) => handleCountryChange(event.target.value)}
               className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
             >
               {countries.map((country) => (
@@ -276,6 +324,11 @@ export default function PackageFormClient({
                 </option>
               ))}
             </select>
+            {countryError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {countryError}
+              </p>
+            )}
           </label>
 
           <label>
@@ -299,6 +352,11 @@ export default function PackageFormClient({
                 ))
               )}
             </select>
+            {accommodationError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {accommodationError}
+              </p>
+            )}
           </label>
 
           <label className="col-span-2">
@@ -309,6 +367,11 @@ export default function PackageFormClient({
               placeholder="일본 도쿄 3박 4일 패키지"
               className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
             />
+            {nameError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {nameError}
+              </p>
+            )}
           </label>
 
           <label>
@@ -319,6 +382,11 @@ export default function PackageFormClient({
               onChange={(event) => setCheckInDate(event.target.value)}
               className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
             />
+            {checkInDateError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {checkInDateError}
+              </p>
+            )}
           </label>
 
           <label>
@@ -330,17 +398,50 @@ export default function PackageFormClient({
               onChange={(event) => setCheckOutDate(event.target.value)}
               className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
             />
+            {checkOutDateError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {checkOutDateError}
+              </p>
+            )}
           </label>
 
           <label>
-            <span className="text-[15px] font-semibold text-[#111827]">패키지 가격 *</span>
+            <span className="text-[15px] font-semibold text-[#111827]">할인율 *</span>
             <input
               type="number"
               min={0}
-              value={price}
-              onChange={(event) => setPrice(Number(event.target.value))}
+              max={100}
+              value={discountRate}
+              onChange={(event) =>
+                setDiscountRate(Math.min(100, Math.max(0, Number(event.target.value))))
+              }
               className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
             />
+            <p className="mt-2 text-[12px] text-[#98A2B3]">
+              숙소와 항공 가격을 합산한 뒤 할인율을 적용합니다.
+            </p>
+          </label>
+
+          <label>
+            <span className="text-[15px] font-semibold text-[#111827]">
+              패키지 이미지 {mode === "create" ? "*" : ""}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
+              className="mt-3 flex h-[52px] w-full items-center rounded-[16px] border border-[#E4E7EC] px-4 py-3 text-[14px] text-[#344054] file:mr-4 file:rounded-[10px] file:border-0 file:bg-[#E7F4EC] file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-[#439A97]"
+            />
+            {mode === "edit" && (
+              <p className="mt-2 text-[12px] text-[#98A2B3]">
+                새 이미지를 선택하지 않으면 기존 이미지가 유지됩니다.
+              </p>
+            )}
+            {imageError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {imageError}
+              </p>
+            )}
           </label>
 
           <section className="rounded-[16px] border border-[#E4E7EC] bg-[#F9FAFB] p-4">
@@ -350,6 +451,33 @@ export default function PackageFormClient({
                 ? `${selectedAccommodation.name} | ${selectedAccommodation.nights}박 | ${selectedAccommodation.pricePerNight.toLocaleString()}원/박`
                 : "숙소를 선택해주세요."}
             </p>
+          </section>
+
+          <section className="rounded-[16px] border border-[#E4E7EC] bg-[#F9FAFB] p-4">
+            <h2 className="text-[15px] font-bold text-[#111827]">최종 가격</h2>
+            <dl className="mt-2 space-y-1 text-[13px] text-[#667085]">
+              <div className="flex justify-between">
+                <dt>숙소</dt>
+                <dd>{accommodationPrice.toLocaleString()}원</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt>항공</dt>
+                <dd>{flightPrice.toLocaleString()}원</dd>
+              </div>
+              <div className="flex justify-between font-semibold text-[#344054]">
+                <dt>할인 적용</dt>
+                <dd>{discountRate}%</dd>
+              </div>
+              <div className="flex justify-between pt-1 text-[15px] font-bold text-[#111827]">
+                <dt>최종</dt>
+                <dd>{finalPrice.toLocaleString()}원</dd>
+              </div>
+            </dl>
+            {priceError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {priceError}
+              </p>
+            )}
           </section>
 
           <label className="col-span-2">
@@ -377,15 +505,33 @@ export default function PackageFormClient({
             >
               <label>
                 <span className="mb-2 block text-[13px] font-semibold text-[#344054]">
-                  도착지 IATA 코드
+                  항공 도착지
                 </span>
-                <input
+                <select
                   value={flightDestination}
-                  onChange={(event) => setFlightDestination(event.target.value.toUpperCase())}
-                  placeholder="NRT"
-                  maxLength={3}
+                  onChange={(event) => {
+                    setFlightDestination(event.target.value);
+                    setSelectedFlight(null);
+                  }}
                   className="h-[44px] w-full rounded-[12px] border border-[#E4E7EC] px-3 text-[14px] outline-none"
-                />
+                >
+                  <option value="">도착 국가를 선택해주세요</option>
+                  {flightDestinationOptions.map((option) => (
+                    <option
+                      key={option.countryId}
+                      value={option.airportCode}
+                      disabled={!option.airportCode}
+                    >
+                      {option.countryName}
+                      {option.airportCode ? ` (${option.airportCode})` : " (공항 코드 없음)"}
+                    </option>
+                  ))}
+                </select>
+                {flightDestinationError && (
+                  <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                    {flightDestinationError}
+                  </p>
+                )}
               </label>
 
               <label>
@@ -398,6 +544,11 @@ export default function PackageFormClient({
                   onChange={(event) => setFlightDepartureDate(event.target.value)}
                   className="h-[44px] w-full rounded-[12px] border border-[#E4E7EC] px-3 text-[14px] outline-none"
                 />
+                {flightDepartureDateError && (
+                  <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                    {flightDepartureDateError}
+                  </p>
+                )}
               </label>
 
               <button
@@ -411,6 +562,11 @@ export default function PackageFormClient({
             </section>
 
             <section className="mt-4">
+              {selectedFlightError && (
+                <p className="mb-3 text-[13px] font-medium text-[#DC2626]">
+                  {selectedFlightError}
+                </p>
+              )}
               {isSearching ? (
                 <p className="rounded-[14px] bg-white p-5 text-center text-[14px] text-[#667085]">
                   항공편을 검색하는 중입니다...

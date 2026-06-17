@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { TravelPackage } from "../types";
 
 type PackageTableProps = {
@@ -64,12 +65,25 @@ export default function PackageTable({
                   <p className="line-clamp-1">{item.accommodationName}</p>
                 </td>
                 <td className="px-5 py-4">
-                  <p className="font-semibold">
-                    {item.departure} → {item.arrival}
-                  </p>
-                  <p className="mt-1 text-[12px] text-[#98A2B3]">
-                    {item.airline} {item.flightNumber}
-                  </p>
+                  {item.hasFlightInfo ? (
+                    <>
+                      <p className="font-semibold">
+                        {item.departure} → {item.arrival}
+                      </p>
+                      <p className="mt-1 text-[12px] text-[#98A2B3]">
+                        {item.airline} {item.flightNumber}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-[#98A2B3]">
+                        항공편 조회 불가
+                      </p>
+                      <p className="mt-1 text-[12px] text-[#98A2B3]">
+                        외부 API 상태를 확인해주세요.
+                      </p>
+                    </>
+                  )}
                 </td>
                 <td className="px-5 py-4 font-bold text-[#111827]">
                   {formatWon(item.price)}
@@ -81,7 +95,7 @@ export default function PackageTable({
                       className="flex h-8 w-8 items-center justify-center rounded-[8px] transition hover:bg-[#F2F4F7]"
                       aria-label={`${item.name} 수정`}
                     >
-                      <img src="/images/edit.svg" alt="" className="h-4 w-4" />
+                      <Image src="/images/edit.svg" alt="" width={16} height={16} />
                     </Link>
                     <button
                       type="button"
@@ -89,7 +103,7 @@ export default function PackageTable({
                       className="flex h-8 w-8 items-center justify-center rounded-[8px] transition hover:bg-[#FEF2F2]"
                       aria-label={`${item.name} 삭제`}
                     >
-                      <img src="/images/delete.svg" alt="" className="h-4 w-4" />
+                      <Image src="/images/delete.svg" alt="" width={16} height={16} />
                     </button>
                   </div>
                 </td>
