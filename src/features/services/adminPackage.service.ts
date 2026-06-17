@@ -42,6 +42,22 @@ const buildAccommodationFormData = (payload: AccommodationPayload) => {
   return formData;
 };
 
+const buildPackageFormData = (payload: PackagePayload) => {
+  const formData = new FormData();
+  const { image, ...data } = payload;
+
+  formData.append(
+    "data",
+    new Blob([JSON.stringify(data)], { type: "application/json" })
+  );
+
+  if (image) {
+    formData.append("image", image);
+  }
+
+  return formData;
+};
+
 export const getCountryAccommodations = async (
   countryId: string | number,
   signal?: AbortSignal
@@ -161,7 +177,7 @@ export const createAdminPackage = async (
 ) => {
   const response = await adminApi.post<ApiResult<unknown>>(
     "/api/v1/admin/packages",
-    payload,
+    buildPackageFormData(payload),
     {
       signal,
       suppressGlobalError: true,
@@ -178,7 +194,7 @@ export const updateAdminPackage = async (
 ) => {
   const response = await adminApi.put<ApiResult<unknown>>(
     `/api/v1/admin/packages/${packageId}`,
-    payload,
+    buildPackageFormData(payload),
     {
       signal,
       suppressGlobalError: true,

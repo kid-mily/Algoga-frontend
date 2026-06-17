@@ -6,11 +6,8 @@ import {
   getCountryAccommodations,
 } from "@/features/services/adminPackage.service";
 import { getCourseCountries } from "@/features/services/adminCourse.service";
+import { getErrorMessage } from "@/features/services/error.service";
 import { Accommodation, CourseCountry } from "../types";
-
-const getErrorMessage = (error: unknown, fallback: string) => {
-  return error instanceof Error ? error.message : fallback;
-};
 
 export const useAdminAccommodationList = () => {
   const [countries, setCountries] = useState<CourseCountry[]>([]);

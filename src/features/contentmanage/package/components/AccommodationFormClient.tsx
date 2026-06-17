@@ -1,6 +1,7 @@
 "use client";
 
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import Image from "next/image";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/CompleteModal";
@@ -10,6 +11,7 @@ import {
   updateAccommodation,
 } from "@/features/services/adminPackage.service";
 import { getCourseCountries } from "@/features/services/adminCourse.service";
+import { getErrorMessage } from "@/features/services/error.service";
 import { CourseCountry } from "../types";
 
 interface AccommodationFormClientProps {
@@ -28,12 +30,13 @@ export default function AccommodationFormClient({
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
-  const [pricePerNight, setPricePerNight] = useState(0);
-  const [nights, setNights] = useState(1);
+  const [pricePerNight, setPricePerNight] = useState("");
+  const [nights, setNights] = useState("");
   const [currentImageUrl, setCurrentImageUrl] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(mode === "edit");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [completeOpen, setCompleteOpen] = useState(false);
   const submitControllerRef = useRef<AbortController | null>(null);
@@ -64,17 +67,13 @@ export default function AccommodationFormClient({
           setName(accommodation.name);
           setAddress(accommodation.address);
           setDescription(accommodation.description);
-          setPricePerNight(accommodation.pricePerNight);
-          setNights(accommodation.nights || 1);
+          setPricePerNight(String(accommodation.pricePerNight || ""));
+          setNights(String(accommodation.nights || ""));
           setCurrentImageUrl(accommodation.imageUrl || "");
         }
       } catch (fetchError: unknown) {
         if (controller.signal.aborted) return;
-        setError(
-          fetchError instanceof Error
-            ? fetchError.message
-            : "숙소 정보를 불러오지 못했습니다."
-        );
+        setError(getErrorMessage(fetchError, "숙소 정보를 불러오지 못했습니다."));
       } finally {
         if (controller.signal.aborted) return;
         setIsLoading(false);
@@ -104,14 +103,19 @@ export default function AccommodationFormClient({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setHasSubmitted(true);
 
-    if (!countryId || !name.trim() || !address.trim() || pricePerNight <= 0 || nights <= 0) {
-      setError("국가, 숙소명, 주소, 1박 가격, 숙박일수를 입력해주세요.");
-      return;
-    }
+    const numericPricePerNight = Number(pricePerNight);
+    const numericNights = Number(nights);
 
-    if (mode === "create" && !imageFile) {
-      setError("숙소 이미지를 선택해주세요.");
+    if (
+      !countryId ||
+      !name.trim() ||
+      !address.trim() ||
+      numericPricePerNight <= 0 ||
+      numericNights <= 0 ||
+      (mode === "create" && !imageFile)
+    ) {
       return;
     }
 
@@ -120,8 +124,8 @@ export default function AccommodationFormClient({
       name: name.trim(),
       address: address.trim(),
       description: description.trim(),
-      pricePerNight,
-      nights,
+      pricePerNight: numericPricePerNight,
+      nights: numericNights,
       image: imageFile,
     };
 
@@ -147,17 +151,28 @@ export default function AccommodationFormClient({
       setCompleteOpen(true);
     } catch (submitError: unknown) {
       if (submitController.signal.aborted) return;
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "숙소 저장에 실패했습니다."
-      );
+      setError(getErrorMessage(submitError, "숙소 저장에 실패했습니다."));
     } finally {
       if (!submitController.signal.aborted) {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
       }
     }
   };
+
+  const countryError = hasSubmitted && !countryId ? "국가를 선택해주세요." : "";
+  const nameError = hasSubmitted && !name.trim() ? "숙소명을 입력해주세요." : "";
+  const addressError =
+    hasSubmitted && !address.trim() ? "주소를 입력해주세요." : "";
+  const priceError =
+    hasSubmitted && Number(pricePerNight) <= 0
+      ? "1박 가격을 입력해주세요."
+      : "";
+  const nightsError =
+    hasSubmitted && Number(nights) <= 0 ? "숙박일수를 입력해주세요." : "";
+  const imageError =
+    hasSubmitted && mode === "create" && !imageFile
+      ? "숙소 이미지를 선택해주세요."
+      : "";
 
   if (isLoading) {
     return (
@@ -189,6 +204,11 @@ export default function AccommodationFormClient({
                 </option>
               ))}
             </select>
+            {countryError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {countryError}
+              </p>
+            )}
           </label>
 
           <label>
@@ -199,6 +219,11 @@ export default function AccommodationFormClient({
               placeholder="도쿄 신주쿠 그랜드 호텔"
               className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
             />
+            {nameError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {nameError}
+              </p>
+            )}
           </label>
 
           <label className="col-span-2">
@@ -209,6 +234,11 @@ export default function AccommodationFormClient({
               placeholder="숙소 주소를 입력하세요"
               className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
             />
+            {addressError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {addressError}
+              </p>
+            )}
           </label>
 
           <label>
@@ -217,9 +247,14 @@ export default function AccommodationFormClient({
               type="number"
               min={0}
               value={pricePerNight}
-              onChange={(event) => setPricePerNight(Number(event.target.value))}
+              onChange={(event) => setPricePerNight(event.target.value)}
               className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
             />
+            {priceError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {priceError}
+              </p>
+            )}
           </label>
 
           <label>
@@ -228,9 +263,14 @@ export default function AccommodationFormClient({
               type="number"
               min={1}
               value={nights}
-              onChange={(event) => setNights(Number(event.target.value || 1))}
+              onChange={(event) => setNights(event.target.value)}
               className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
             />
+            {nightsError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {nightsError}
+              </p>
+            )}
           </label>
 
           <section className="col-span-2">
@@ -266,14 +306,22 @@ export default function AccommodationFormClient({
                 새 이미지를 선택하지 않으면 기존 이미지가 유지됩니다.
               </p>
             )}
+            {imageError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {imageError}
+              </p>
+            )}
           </section>
 
           {(imagePreviewUrl || currentImageUrl) && (
             <figure className="col-span-2 rounded-[16px] border border-[#E4E7EC] bg-[#F9FAFB] p-4">
-              <img
+              <Image
                 src={imagePreviewUrl || currentImageUrl}
                 alt="숙소 이미지 미리보기"
+                width={960}
+                height={220}
                 className="h-[220px] w-full rounded-[12px] object-cover"
+                unoptimized
               />
               <figcaption className="mt-2 text-[13px] text-[#667085]">
                 {imagePreviewUrl ? "새로 선택한 이미지" : "현재 등록된 이미지"}
