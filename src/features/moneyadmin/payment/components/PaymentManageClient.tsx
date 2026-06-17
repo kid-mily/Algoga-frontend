@@ -42,6 +42,7 @@ export default function PaymentManageClient({
   } = useAdminPaymentList(initialPayments);
   const [currentPage, setCurrentPage] = useState(1);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [dateRangeNotice, setDateRangeNotice] = useState("");
   const totalPages = Math.max(1, Math.ceil(filteredPayments.length / PAGE_SIZE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
 
@@ -60,12 +61,21 @@ export default function PaymentManageClient({
     setFromDate(value);
     if (toDate && value > toDate) {
       setToDate(value);
+      setDateRangeNotice("종료일이 시작일과 같도록 자동 조정되었습니다.");
+    } else {
+      setDateRangeNotice("");
     }
     setCurrentPage(1);
   };
 
   const handleToDateChange = (value: string) => {
     setToDate(value);
+    if (fromDate && value < fromDate) {
+      setFromDate(value);
+      setDateRangeNotice("시작일이 종료일과 같도록 자동 조정되었습니다.");
+    } else {
+      setDateRangeNotice("");
+    }
     setCurrentPage(1);
   };
 
@@ -89,7 +99,13 @@ export default function PaymentManageClient({
     try {
       setIsDownloading(true);
       setError("");
-      await downloadAdminPaymentsExcel();
+      await downloadAdminPaymentsExcel({
+        from: fromDate,
+        to: toDate,
+        keyword: searchKeyword,
+        status: selectedStatus,
+        type: selectedType,
+      });
     } catch (downloadError: unknown) {
       setError(
         formatPaymentError(downloadError, "결제 내역 엑셀 다운로드에 실패했습니다.")
@@ -100,16 +116,13 @@ export default function PaymentManageClient({
   };
 
   return (
-    <main aria-labelledby="payment-management-title">
+    <main aria-label="결제 내역 조회">
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
           <SimpleSubHeader
             title="결제 내역 조회"
             description={`총 ${totalCount}건 | 성공 ${successCount}건 | 조회 금액 ${formatWon(totalAmount)}`}
           />
-          <span id="payment-management-title" className="sr-only">
-            결제 내역 조회
-          </span>
         </div>
 
         <button
@@ -136,6 +149,11 @@ export default function PaymentManageClient({
         onSelectedStatusChange={handleSelectedStatusChange}
         onSelectedTypeChange={handleSelectedTypeChange}
       />
+      {dateRangeNotice && (
+        <p role="status" aria-live="polite" className="-mt-3 mb-4 text-[13px] font-medium text-[#B54708]">
+          {dateRangeNotice}
+        </p>
+      )}
 
       <PaymentTable payments={pagedPayments} isLoading={isLoading} />
       <PaymentPagination

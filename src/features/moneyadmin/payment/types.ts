@@ -1,4 +1,14 @@
-export type PaymentType = "DEPOSIT" | "BALANCE" | "FULL" | "LECTURE" | string;
+export type PaymentType =
+  | "DEPOSIT"
+  | "BALANCE"
+  | "FULL"
+  | "LECTURE"
+  | "LECTURE_ONLY"
+  | "PACKAGE"
+  | "PACKAGE_FULL"
+  | "PACKAGE_DEPOSIT"
+  | "PACKAGE_BALANCE"
+  | "UNKNOWN";
 
 export type PaymentStatus =
   | "SUCCESS"
@@ -6,7 +16,7 @@ export type PaymentStatus =
   | "CANCELLED"
   | "PENDING"
   | "REFUNDED"
-  | string;
+  | "UNKNOWN";
 
 export type AdminPaymentApiRecord = {
   paymentId: number;
@@ -46,7 +56,7 @@ export type AdminPayment = {
   paymentMethod: string;
 };
 
-export const paymentTypeLabels: Record<string, string> = {
+export const paymentTypeLabels: Record<PaymentType, string> = {
   LECTURE_ONLY: "단과결제",
   DEPOSIT: "예약금",
   BALANCE: "잔금",
@@ -56,14 +66,16 @@ export const paymentTypeLabels: Record<string, string> = {
   PACKAGE_FULL: "패키지 결제",
   PACKAGE_DEPOSIT: "패키지 결제",
   PACKAGE_BALANCE: "패키지 결제",
+  UNKNOWN: "알 수 없음",
 };
 
-export const paymentStatusLabels: Record<string, string> = {
+export const paymentStatusLabels: Record<PaymentStatus, string> = {
   SUCCESS: "결제 성공",
   FAILED: "결제 실패",
   CANCELLED: "결제 취소",
   PENDING: "결제 대기",
   REFUNDED: "환불 완료",
+  UNKNOWN: "알 수 없음",
 };
 
 export const paymentStatusOptions = [

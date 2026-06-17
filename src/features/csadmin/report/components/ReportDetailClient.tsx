@@ -46,22 +46,27 @@ export default function ReportDetailClient({ reportId }: ReportDetailClientProps
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    getAdminReportById(reportId, controller.signal)
-      .then((data) => {
-        if (controller.signal.aborted) return;
-        setError("");
-        setReport(data);
-      })
-      .catch((fetchError: unknown) => {
-        if (controller.signal.aborted) return;
-        setError(formatReportError(fetchError, "신고 상세 정보를 불러오지 못했습니다."));
-        setReport(null);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      });
+    void Promise.resolve().then(() => {
+      if (controller.signal.aborted) return;
+      setIsLoading(true);
+
+      getAdminReportById(reportId, controller.signal)
+        .then((data) => {
+          if (controller.signal.aborted) return;
+          setError("");
+          setReport(data);
+        })
+        .catch((fetchError: unknown) => {
+          if (controller.signal.aborted) return;
+          setError(formatReportError(fetchError, "신고 상세 정보를 불러오지 못했습니다."));
+          setReport(null);
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) {
+            setIsLoading(false);
+          }
+        });
+    });
 
     return () => {
       controller.abort();
@@ -69,6 +74,7 @@ export default function ReportDetailClient({ reportId }: ReportDetailClientProps
   }, [reportId]);
 
   const handleConfirmAction = async () => {
+    if (isSubmitting) return;
     if (!report || !confirmAction) return;
 
     try {
@@ -188,6 +194,7 @@ export default function ReportDetailClient({ reportId }: ReportDetailClientProps
         description={`${confirmAction ? actionLabel[confirmAction] : "선택한 작업"}을 진행하시겠습니까?`}
         confirmText="확인"
         cancelText="취소"
+        confirmDisabled={isSubmitting}
         onConfirm={handleConfirmAction}
         onCancel={() => setConfirmAction(null)}
       />

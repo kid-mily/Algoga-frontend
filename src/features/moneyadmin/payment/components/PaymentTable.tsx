@@ -31,6 +31,8 @@ export default function PaymentTable({
             <tr>
               <td
                 colSpan={8}
+                role="status"
+                aria-live="polite"
                 className="px-6 py-12 text-center text-[14px] text-[#667085]"
               >
                 결제 내역을 불러오는 중입니다...
@@ -44,6 +46,8 @@ export default function PaymentTable({
             <tr>
               <td
                 colSpan={8}
+                role="status"
+                aria-live="polite"
                 className="px-6 py-12 text-center text-[14px] text-[#667085]"
               >
                 조건에 맞는 결제 내역이 없습니다.

@@ -1,5 +1,5 @@
 import ContentHeader from "@/features/common/Contentheader";
-import FinanceSidebar from "@/features/common/MoneySidebar";
+import MoneySidebar from "@/features/common/MoneySidebar";
 
 export default function MoneyAdminLayout({
   children,
@@ -8,7 +8,7 @@ export default function MoneyAdminLayout({
 }) {
   return (
     <div className="flex h-screen bg-[#F8F8F8]">
-      <FinanceSidebar />
+      <MoneySidebar />
 
       <div className="flex flex-1 flex-col">
         <ContentHeader />

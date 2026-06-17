@@ -33,6 +33,7 @@ export default function ReportRow({ report }: { report: AdminReport }) {
       <td className="px-4 py-4">
         <Link
           href={`/csadmin/reports/${report.reportId}`}
+          aria-label={`신고 #${report.reportId} 상세 보기`}
           className="inline-flex h-[34px] items-center rounded-[8px] border border-[#D0D5DD] px-3 text-[13px] font-semibold text-[#344054]"
         >
           상세 보기

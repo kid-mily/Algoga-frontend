@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getAdminBannerById,
   modifyAdminBanner,
@@ -29,6 +29,7 @@ export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
   const [fileError, setFileError] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
+  const latestPreviewUrlRef = useRef("");
 
   const updateField = <K extends keyof BannerFormData>(
     field: K,
@@ -48,6 +49,7 @@ export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
     }
 
     if (!selectedFile) {
+      latestPreviewUrlRef.current = "";
       setPreviewUrl("");
       return;
     }
@@ -58,12 +60,21 @@ export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
 
     setFormData((prev) => ({ ...prev, fileType: nextFileType }));
     const nextPreviewUrl = URL.createObjectURL(selectedFile);
+    latestPreviewUrlRef.current = nextPreviewUrl;
     setPreviewUrl(nextPreviewUrl);
 
     if (nextFileType === "IMAGE") {
       const image = new Image();
+      const validationPreviewUrl = nextPreviewUrl;
 
       image.onload = () => {
+        if (
+          image.src !== validationPreviewUrl ||
+          latestPreviewUrlRef.current !== validationPreviewUrl
+        ) {
+          return;
+        }
+
         if (
           image.naturalWidth !== BANNER_IMAGE_WIDTH ||
           image.naturalHeight !== BANNER_IMAGE_HEIGHT
@@ -75,6 +86,13 @@ export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
       };
 
       image.onerror = () => {
+        if (
+          image.src !== validationPreviewUrl ||
+          latestPreviewUrlRef.current !== validationPreviewUrl
+        ) {
+          return;
+        }
+
         setFileError("이미지 해상도를 확인하지 못했습니다.");
       };
 

@@ -44,11 +44,13 @@ export const formatPaymentError = (
   fallbackMessage: string
 ) => {
   if (error instanceof ApiRequestError) {
+    const shouldShowUrl = process.env.NODE_ENV === "development";
+
     return [
       fallbackMessage,
       error.status ? `상태: ${error.status}` : "",
       error.code ? `코드: ${error.code}` : "",
-      error.url ? `요청: ${error.url}` : "",
+      shouldShowUrl && error.url ? `요청: ${error.url}` : "",
       error.message ? `메시지: ${error.message}` : "",
     ]
       .filter(Boolean)
