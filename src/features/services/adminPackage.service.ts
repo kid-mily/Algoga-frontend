@@ -3,8 +3,11 @@ import {
   AccommodationPayload,
   Flight,
   FlightSearchParams,
+  PackagePayload,
+  TravelPackage,
   normalizeAccommodation,
   normalizeFlight,
+  normalizeTravelPackage,
 } from "@/features/contentmanage/package/types";
 import { adminApi, api, ApiResult, unwrapData } from "@/lib/api";
 
@@ -120,4 +123,78 @@ export const searchFlights = async (
   const data = unwrapData(response);
 
   return unwrapList(data).map((item, index) => normalizeFlight(item, index + 1));
+};
+
+export const getAdminPackages = async (
+  signal?: AbortSignal
+): Promise<TravelPackage[]> => {
+  const response = await api.get<ApiResult<unknown>>("/api/v1/packages", {
+    signal,
+    suppressGlobalError: true,
+  });
+  const data = unwrapData(response);
+
+  return unwrapList(data).map((item, index) =>
+    normalizeTravelPackage(item, index + 1)
+  );
+};
+
+export const getAdminPackage = async (
+  packageId: string | number,
+  signal?: AbortSignal
+): Promise<TravelPackage> => {
+  const response = await api.get<ApiResult<unknown>>(
+    `/api/v1/packages/${packageId}`,
+    {
+      signal,
+      suppressGlobalError: true,
+    }
+  );
+  const data = unwrapData(response);
+
+  return normalizeTravelPackage(data, Number(packageId));
+};
+
+export const createAdminPackage = async (
+  payload: PackagePayload,
+  signal?: AbortSignal
+) => {
+  const response = await adminApi.post<ApiResult<unknown>>(
+    "/api/v1/admin/packages",
+    payload,
+    {
+      signal,
+      suppressGlobalError: true,
+    }
+  );
+
+  return unwrapData(response);
+};
+
+export const updateAdminPackage = async (
+  packageId: string | number,
+  payload: PackagePayload,
+  signal?: AbortSignal
+) => {
+  const response = await adminApi.put<ApiResult<unknown>>(
+    `/api/v1/admin/packages/${packageId}`,
+    payload,
+    {
+      signal,
+      suppressGlobalError: true,
+    }
+  );
+
+  return unwrapData(response);
+};
+
+export const deleteAdminPackage = async (packageId: string | number) => {
+  const response = await adminApi.delete<ApiResult<unknown>>(
+    `/api/v1/admin/packages/${packageId}`,
+    {
+      suppressGlobalError: true,
+    }
+  );
+
+  return unwrapData(response);
 };
