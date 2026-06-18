@@ -22,10 +22,14 @@ export default function PasswordVerifyModal({
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
 
   const handleClose = () => {
-    if (isSubmitting) return;
+    if (isSubmitting) {
+      return;
+    }
 
     setPassword("");
     setShowPassword(false);
@@ -43,22 +47,24 @@ export default function PasswordVerifyModal({
       setIsSubmitting(true);
       setErrorMessage("");
 
-      await verifyMyPassword({
-        password,
-      });
+      await verifyMyPassword({ password });
 
       setPassword("");
       setShowPassword(false);
       onSuccess();
     } catch (error) {
-      console.error("비밀번호 확인 실패:", error);
+      console.error("비밀번호 확인 실패", error);
 
       if (error instanceof MyPageApiError) {
-        setErrorMessage(
-          error.traceId
-            ? `${error.message} traceId: ${error.traceId}`
-            : error.message
-        );
+
+        console.error("비밀번호 확인 API 오류 상세", {
+          status: error.status,
+          code: error.code,
+          traceId: error.traceId,
+          responseData: error.responseData,
+        });
+
+        setErrorMessage(error.message);
         return;
       }
 
@@ -73,99 +79,103 @@ export default function PasswordVerifyModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4"
+      onClick={handleClose}
+    >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="password-verify-title"
-        className="w-[470px] overflow-hidden rounded-2xl bg-white shadow-xl"
+        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+        onClick={(event) => event.stopPropagation()}
       >
-        <header className="flex items-center justify-between border-b border-[#E8EEF5] px-6 py-5">
-          <h2
-            id="password-verify-title"
-            className="text-xl font-bold text-[#0A1628]"
-          >
-            비밀번호 확인
-          </h2>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2
+              id="password-verify-title"
+              className="text-lg font-bold text-[#0A1628]"
+            >
+              비밀번호 확인
+            </h2>
+
+            <p className="mt-1 text-xs font-medium text-[#8A9BB0]">
+              정보 수정을 위해 비밀번호를 입력해 주세요.
+            </p>
+          </div>
 
           <button
             type="button"
             onClick={handleClose}
             disabled={isSubmitting}
             aria-label="닫기"
-            className="text-2xl leading-none text-[#8A9BB0] transition hover:text-[#0A1628] disabled:cursor-not-allowed"
+            className="shrink-0 text-xl leading-none text-[#8A9BB0] hover:text-[#0A1628] disabled:cursor-not-allowed"
           >
             ×
           </button>
-        </header>
+        </div>
 
-        <div className="px-6 py-7">
-          <p className="text-sm font-medium text-[#8A9BB0]">
-            정보 수정을 위해 현재 비밀번호를 입력해 주세요.
-          </p>
+        <label
+          htmlFor="current-password"
+          className="mt-5 block text-xs font-bold text-[#0A1628]"
+        >
+          현재 비밀번호
+        </label>
 
-          <label
-            htmlFor="current-password"
-            className="mt-6 block text-sm font-semibold text-[#0A1628]"
+        <div className="relative mt-2">
+          <input
+            id="current-password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              setErrorMessage("");
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                handleSubmit();
+              }
+            }}
+            disabled={isSubmitting}
+            placeholder="비밀번호 입력"
+            className="h-11 w-full rounded-xl border border-[#D9E2EC] px-4 pr-16 text-sm text-[#0A1628] outline-none focus:border-[#43A6A2] disabled:bg-[#F8FAFC]"
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            disabled={isSubmitting}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#43A6A2] disabled:cursor-not-allowed"
           >
-            현재 비밀번호
-          </label>
+            {showPassword ? "숨김" : "보기"}
+          </button>
+        </div>
 
-          <div className="relative mt-2">
-            <input
-              id="current-password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                setErrorMessage("");
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              disabled={isSubmitting}
-              placeholder="비밀번호를 입력하세요"
-              className="h-12 w-full rounded-2xl border border-[#D9E2EC] px-4 pr-12 text-sm outline-none transition focus:border-[#43A6A2] disabled:bg-[#F8FAFC]"
-            />
+        {errorMessage && (
+          <p className="mt-3 break-words rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-500">
+            {errorMessage}
+          </p>
+        )}
 
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              disabled={isSubmitting}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#8A9BB0] disabled:cursor-not-allowed"
-            >
-              {showPassword ? "숨김" : "보기"}
-            </button>
-          </div>
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={isSubmitting}
+            className="h-11 rounded-xl border border-[#E4EAF2] bg-white text-sm font-bold text-[#8A9BB0] hover:bg-[#F8FAFC] disabled:cursor-not-allowed"
+          >
+            취소
+          </button>
 
-          {errorMessage && (
-            <p className="mt-3 text-sm font-semibold text-red-500">
-              {errorMessage}
-            </p>
-          )}
-
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={isSubmitting}
-              className="h-12 rounded-2xl border border-[#E4EAF2] text-sm font-bold text-[#8A9BB0] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed"
-            >
-              취소
-            </button>
-
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="h-12 rounded-2xl bg-[#43A6A2] text-sm font-bold text-white transition hover:bg-[#357F7C] disabled:cursor-not-allowed disabled:bg-[#B7D8D6]"
-            >
-              {isSubmitting ? "확인 중..." : "확인"}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="h-11 rounded-xl bg-[#43A6A2] text-sm font-bold text-white hover:bg-[#357F7C] disabled:cursor-not-allowed disabled:bg-[#B7D8D6]"
+          >
+            {isSubmitting ? "확인 중..." : "확인"}
+          </button>
         </div>
       </section>
     </div>

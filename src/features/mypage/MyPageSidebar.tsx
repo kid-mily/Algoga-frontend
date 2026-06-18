@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,49 +11,12 @@ interface MyPageSidebarProps {
 }
 
 const menuItems = [
-  {
-    label: "내 정보",
-    href: "/mypage",
-    icon: "내",
-    match: (pathname: string) =>
-      pathname === "/mypage" || pathname === "/mypage/edit",
-  },
-  {
-    label: "알림 설정",
-    href: "/mypage/notifications",
-    icon: "알",
-    match: (pathname: string) => pathname.startsWith("/mypage/notifications"),
-  },
-  {
-    label: "수강 내역",
-    href: "/mypage/courses",
-    icon: "수",
-    match: (pathname: string) => pathname.startsWith("/mypage/courses"),
-  },
-  {
-    label: "예약 내역",
-    href: "/mypage/reservations",
-    icon: "예",
-    match: (pathname: string) => pathname.startsWith("/mypage/reservations"),
-  },
-  {
-    label: "쿠폰함",
-    href: "/mypage/coupons",
-    icon: "쿠",
-    match: (pathname: string) => pathname.startsWith("/mypage/coupons"),
-  },
-  {
-    label: "디데이 설정",
-    href: "/mypage/dday",
-    icon: "D",
-    match: (pathname: string) => pathname.startsWith("/mypage/dday"),
-  },
-  {
-    label: "친구 관리",
-    href: "/mypage/friends",
-    icon: "친",
-    match: (pathname: string) => pathname.startsWith("/mypage/friends"),
-  },
+  { label: "내 정보", href: "/mypage", icon: "내" },
+  { label: "알림 설정", href: "/mypage/notifications", icon: "알" },
+  { label: "수강 내역", href: "/mypage/coursedetails", icon: "수" },
+  { label: "예약 내역", href: "/mypage/reservations", icon: "예" },
+  { label: "쿠폰함", href: "/mypage/benefits", icon: "쿠" },
+  { label: "친구 관리", href: "/mypage/friends", icon: "친" },
 ];
 
 export default function MyPageSidebar({
@@ -62,65 +26,72 @@ export default function MyPageSidebar({
 }: MyPageSidebarProps) {
   const pathname = usePathname();
 
-  return (
-    <aside className="w-[240px] shrink-0 rounded-2xl bg-white shadow-sm">
-      <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-6">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#5f9c98] text-lg font-bold text-white">
-          {profileImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={profileImageUrl}
-              alt={`${name} 프로필 이미지`}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            initial
-          )}
-        </div>
+  const isActiveMenu = (href: string) => {
+    if (href === "/mypage") {
+      return pathname === "/mypage" || pathname === "/mypage/edit";
+    }
 
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-slate-900">{name}</p>
-          <p className="mt-1 text-xs text-slate-400">마이페이지</p>
+    return pathname.startsWith(href);
+  };
+
+  return (
+    <aside className="min-h-[calc(100vh-64px)] w-[240px] shrink-0 bg-white shadow-sm">
+      <div className="bg-[#EAF3FF] px-5 py-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#43A6A2] text-lg font-bold text-white">
+            {profileImageUrl ? (
+              <Image
+                src={profileImageUrl}
+                alt={`${name} 프로필 이미지`}
+                width={48}
+                height={48}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              initial
+            )}
+          </div>
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-[#0A1628]">
+              {name}
+            </p>
+            <p className="mt-1 text-xs text-[#8A9BB0]">
+              마이페이지
+            </p>
+          </div>
         </div>
       </div>
 
-      <nav className="space-y-1 p-3">
+      <nav aria-label="마이페이지 메뉴" className="space-y-2 px-3 py-5">
         {menuItems.map((item) => {
-          const isActive = item.match(pathname);
+          const isActive = isActiveMenu(item.href);
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={[
-                "flex h-12 items-center justify-between rounded-xl px-4 text-sm font-medium transition",
+              aria-current={isActive ? "page" : undefined}
+              className={`flex h-12 items-center justify-between rounded-xl px-4 text-sm font-semibold transition ${
                 isActive
-                  ? "bg-[#5f9c98] text-white"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
-              ].join(" ")}
+                  ? "bg-[#43A6A2] text-white shadow-sm"
+                  : "text-[#536579] hover:bg-[#F4F8FB] hover:text-[#0A1628]"
+              }`}
             >
-              <span className="flex min-w-0 items-center gap-3">
+              <span className="flex items-center gap-3">
                 <span
-                  className={[
-                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                  className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
                     isActive
                       ? "bg-white/20 text-white"
-                      : "bg-slate-100 text-slate-500",
-                  ].join(" ")}
+                      : "bg-[#F1F5F9] text-[#7B8A9A]"
+                  }`}
                 >
                   {item.icon}
                 </span>
-
-                <span className="truncate">{item.label}</span>
+                {item.label}
               </span>
 
-              <span
-                className={[
-                  "text-lg leading-none",
-                  isActive ? "text-white/80" : "text-slate-300",
-                ].join(" ")}
-                aria-hidden="true"
-              >
+              <span aria-hidden="true" className={isActive ? "text-white/80" : "text-[#B8C4D0]"}>
                 ›
               </span>
             </Link>
