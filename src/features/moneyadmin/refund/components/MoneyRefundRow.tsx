@@ -5,6 +5,7 @@ import MoneyRefundStatusBadge from "./MoneyRefundStatusBadge";
 type MoneyRefundRowProps = {
   refund: MoneyRefund;
   processingId: number | null;
+  actionsDisabled: boolean;
   onAction: (refund: MoneyRefund, action: MoneyRefundAction) => void;
 };
 
@@ -16,9 +17,11 @@ const canComplete = (refund: MoneyRefund) => refund.status === "환불 승인";
 export default function MoneyRefundRow({
   refund,
   processingId,
+  actionsDisabled,
   onAction,
 }: MoneyRefundRowProps) {
   const isProcessing = processingId === refund.refundId;
+  const isActionDisabled = actionsDisabled || isProcessing;
 
   return (
     <tr className="border-b border-[#EEF0F3] text-[14px] text-[#344054] last:border-b-0">
@@ -40,7 +43,7 @@ export default function MoneyRefundRow({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            disabled={isProcessing || !canApproveOrReject(refund)}
+            disabled={isActionDisabled || !canApproveOrReject(refund)}
             onClick={() => onAction(refund, "approve")}
             className="h-[32px] rounded-[8px] bg-[#439A97] px-3 text-[12px] font-bold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
           >
@@ -48,7 +51,7 @@ export default function MoneyRefundRow({
           </button>
           <button
             type="button"
-            disabled={isProcessing || !canApproveOrReject(refund)}
+            disabled={isActionDisabled || !canApproveOrReject(refund)}
             onClick={() => onAction(refund, "reject")}
             className="h-[32px] rounded-[8px] border border-[#E4E7EC] px-3 text-[12px] font-bold text-[#344054] disabled:cursor-not-allowed disabled:text-[#98A2B3]"
           >
@@ -56,7 +59,7 @@ export default function MoneyRefundRow({
           </button>
           <button
             type="button"
-            disabled={isProcessing || !canComplete(refund)}
+            disabled={isActionDisabled || !canComplete(refund)}
             onClick={() => onAction(refund, "complete")}
             className="h-[32px] rounded-[8px] bg-[#111827] px-3 text-[12px] font-bold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
           >

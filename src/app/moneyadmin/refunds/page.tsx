@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import { cookies } from "next/headers";
 import MoneyRefundManageClient from "@/features/moneyadmin/refund/components/MoneyRefundManageClient";
+import type { MoneyRefund } from "@/features/moneyadmin/refund/types";
+import { getAdminRefunds } from "@/features/services/adminRefund.service";
 
 export const metadata: Metadata = {
   title: "환불 승인 관리 | 알고가 정산 관리자",
@@ -11,20 +13,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default function MoneyAdminRefundsPage() {
+export default async function MoneyAdminRefundsPage() {
+  const cookieStore = await cookies();
+  let initialRefunds: MoneyRefund[] = [];
+  let hasInitialData = false;
+
+  try {
+    initialRefunds = await getAdminRefunds({
+      headers: { Cookie: cookieStore.toString() },
+    });
+    hasInitialData = true;
+  } catch {
+    initialRefunds = [];
+  }
+
   return (
-    <Suspense
-      fallback={
-        <section
-          role="status"
-          aria-live="polite"
-          className="rounded-[16px] border border-[#E4E7EC] bg-white p-8 text-center text-[14px] text-[#667085]"
-        >
-          환불 요청을 불러오는 중입니다...
-        </section>
-      }
-    >
-      <MoneyRefundManageClient />
-    </Suspense>
+    <MoneyRefundManageClient
+      initialRefunds={initialRefunds}
+      hasInitialData={hasInitialData}
+    />
   );
 }

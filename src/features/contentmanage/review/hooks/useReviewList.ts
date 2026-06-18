@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AdminCourse } from "@/features/contentmanage/lecture/types";
+import type { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { getAdminCourses } from "@/features/services/adminCourse.service";
 import {
   deleteAdminCourseReview,
@@ -105,7 +105,7 @@ export const useReviewList = () => {
   }, [reviews, searchKeyword, selectedScore]);
 
   const deleteReview = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || isProcessing) return;
 
     try {
       setIsProcessing(true);
@@ -124,7 +124,7 @@ export const useReviewList = () => {
   };
 
   const updateVisibility = async () => {
-    if (!visibilityTarget) return;
+    if (!visibilityTarget || isProcessing) return;
 
     try {
       setIsProcessing(true);

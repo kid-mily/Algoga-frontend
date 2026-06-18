@@ -6,10 +6,17 @@ type DailyRevenueChartProps = {
 };
 
 export default function DailyRevenueChart({ data }: DailyRevenueChartProps) {
+  const values = data.flatMap((item) => [
+    item.salesAmount,
+    item.refundAmount,
+    item.netAmount,
+  ]);
+  const minValue = Math.min(0, ...values);
   const maxValue = Math.max(
     1,
-    ...data.flatMap((item) => [item.salesAmount, item.refundAmount, item.netAmount])
+    ...values
   );
+  const valueRange = Math.max(1, maxValue - minValue);
   const width = 980;
   const height = 300;
   const padding = {
@@ -21,13 +28,13 @@ export default function DailyRevenueChart({ data }: DailyRevenueChartProps) {
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((ratio) =>
-    Math.round(maxValue * ratio)
+    Math.round(minValue + valueRange * ratio)
   );
   const getX = (index: number) =>
     padding.left +
     (data.length > 1 ? (chartWidth / (data.length - 1)) * index : chartWidth / 2);
   const getY = (value: number) =>
-    padding.top + chartHeight - (value / maxValue) * chartHeight;
+    padding.top + chartHeight - ((value - minValue) / valueRange) * chartHeight;
   const makePath = (key: keyof Pick<DailyRevenueStat, "salesAmount" | "refundAmount" | "netAmount">) =>
     data
       .map((item, index) => {
@@ -60,11 +67,11 @@ export default function DailyRevenueChart({ data }: DailyRevenueChartProps) {
               role="img"
               aria-label="일별 매출, 환불, 순수익 선 그래프"
             >
-              {yTicks.map((tick) => {
+              {yTicks.map((tick, index) => {
                 const y = getY(tick);
 
                 return (
-                  <g key={tick}>
+                  <g key={`${tick}-${index}`}>
                     <line
                       x1={padding.left}
                       y1={y}

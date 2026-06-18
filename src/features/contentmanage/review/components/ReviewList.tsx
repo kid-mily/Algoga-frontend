@@ -1,4 +1,4 @@
-import { AdminReview } from "../types";
+import type { AdminReview } from "../types";
 import ReviewCard from "./ReviewCard";
 
 type ReviewListProps = {
@@ -24,7 +24,7 @@ export default function ReviewList({
       </h2>
 
       <header className="border-b border-[#EEF0F3] px-6 py-5 text-[15px] font-semibold text-[#344054]">
-        총 {reviews.length}개 후기
+        {isLoading ? "후기 목록을 불러오는 중입니다." : `총 ${reviews.length}개 후기`}
       </header>
 
       {isLoading ? (

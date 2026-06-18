@@ -5,13 +5,17 @@ type MoneyRefundTableProps = {
   refunds: MoneyRefund[];
   isLoading: boolean;
   processingId: number | null;
+  actionsDisabled: boolean;
   onAction: (refund: MoneyRefund, action: MoneyRefundAction) => void;
 };
+
+const MONEY_REFUND_TABLE_COLUMN_COUNT = 8;
 
 export default function MoneyRefundTable({
   refunds,
   isLoading,
   processingId,
+  actionsDisabled,
   onAction,
 }: MoneyRefundTableProps) {
   return (
@@ -38,6 +42,7 @@ export default function MoneyRefundTable({
                 key={refund.refundId}
                 refund={refund}
                 processingId={processingId}
+                actionsDisabled={actionsDisabled}
                 onAction={onAction}
               />
             ))
@@ -54,7 +59,7 @@ function EmptyRow({ text }: { text: string }) {
   return (
     <tr>
       <td
-        colSpan={8}
+        colSpan={MONEY_REFUND_TABLE_COLUMN_COUNT}
         role="status"
         aria-live="polite"
         className="px-6 py-12 text-center text-[14px] text-[#667085]"

@@ -1,4 +1,4 @@
-import { CourseCountry } from "@/features/contentmanage/lecture/types";
+import type { CourseCountry } from "@/features/contentmanage/lecture/types";
 
 type EvalutionFilterBarProps = {
   countries: CourseCountry[];
@@ -43,20 +43,25 @@ export default function EvalutionFilterBar({
 
         {countries.length === 0 ? (
           <span className="text-[13px] text-[#98A2B3]">등록된 국가가 없습니다.</span>
-        ) : countries.map((country) => (
-          <button
-            key={country.countryId}
-            type="button"
-            onClick={() => onSelectedCountryChange(country.countryId)}
-            className={`rounded-full border px-3 py-1.5 text-[12px] ${
-              country.countryId === selectedCountryId
-                ? "border-[#439A97] bg-[#439A97] text-white"
-                : "border-[#E4E7EC] bg-white text-[#344054]"
-            }`}
-          >
-            {country.countryName}
-          </button>
-        ))}
+        ) : countries.map((country) => {
+          const isSelected = country.countryId === selectedCountryId;
+
+          return (
+            <button
+              key={country.countryId}
+              type="button"
+              aria-pressed={isSelected}
+              onClick={() => onSelectedCountryChange(country.countryId)}
+              className={`rounded-full border px-3 py-1.5 text-[12px] ${
+                isSelected
+                  ? "border-[#439A97] bg-[#439A97] text-white"
+                  : "border-[#E4E7EC] bg-white text-[#344054]"
+              }`}
+            >
+              {country.countryName}
+            </button>
+          );
+        })}
       </div>
     </section>
   );

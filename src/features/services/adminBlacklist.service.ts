@@ -35,6 +35,13 @@ const getNumber = (record: UnknownRecord, keys: string[], fallback = 0) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const getValidUserId = (item: unknown) => {
+  const record = getRecord(item);
+  const userId = getNumber(record, ["userId", "memberId", "id"], 0);
+
+  return Number.isSafeInteger(userId) && userId > 0 ? userId : null;
+};
+
 const formatDate = (value: string) => {
   if (!value || value === "-") return "-";
 
@@ -192,9 +199,9 @@ export const getBlacklistCandidates = async ({
     }
   );
   const data = unwrapData(response);
-  const items = getItems(data).map((item, itemIndex) =>
-    normalizeBlacklistUser(item, itemIndex + 1)
-  );
+  const items = getItems(data)
+    .filter((item) => getValidUserId(item) !== null)
+    .map((item) => normalizeBlacklistUser(item));
 
   return getPageMeta(data, items, index);
 };
@@ -240,9 +247,9 @@ export const getBlacklistedUsers = async ({
     }
   );
   const data = unwrapData(response);
-  const items = getItems(data).map((item, itemIndex) =>
-    normalizeBlacklistUser(item, itemIndex + 1)
-  );
+  const items = getItems(data)
+    .filter((item) => getValidUserId(item) !== null)
+    .map((item) => normalizeBlacklistUser(item));
 
   return getPageMeta(data, items, index);
 };
@@ -269,7 +276,7 @@ export const getReportedUserReports = async ({
   const response = await adminApi.get<ApiResult<unknown>>(
     "/api/v1/reports/admin",
     {
-      params: { reportedUserId: userId, index, size },
+      params: { reportedUserId: userId, page: Math.max(0, index - 1), size },
       suppressGlobalError: true,
       signal,
     }

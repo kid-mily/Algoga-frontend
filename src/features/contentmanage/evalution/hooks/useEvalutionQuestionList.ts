@@ -5,7 +5,7 @@ import {
   getEvalutionResults,
 } from "@/features/services/adminEvalution.service";
 import { getCourseCountries } from "@/features/services/adminCourse.service";
-import { CourseCountry } from "@/features/contentmanage/lecture/types";
+import type { CourseCountry } from "@/features/contentmanage/lecture/types";
 import { getErrorMessage } from "@/features/services/error.service";
 import {
   EvalutionQuestion,
@@ -40,6 +40,10 @@ export const useEvalutionQuestionList = () => {
 
         if (controller.signal.aborted) return;
         setCountries(data);
+        if (data.length === 0) {
+          setIsLoadingQuestions(false);
+          return;
+        }
         setSelectedCountryId((prev) => prev ?? data[0]?.countryId ?? null);
         setSelectedCountry((prev) => prev === "전체" ? data[0]?.countryName ?? "전체" : prev);
       } catch (fetchError: unknown) {
@@ -134,7 +138,6 @@ export const useEvalutionQuestionList = () => {
     return Object.values(grouped).map((group) => {
       const sortedQuestions = [...group]
         .sort((a, b) => a.questionOrder - b.questionOrder || a.id - b.id)
-        .slice(0, 5)
         .map((question, index) => ({
           ...question,
           questionOrder: index + 1,
@@ -167,21 +170,31 @@ export const useEvalutionQuestionList = () => {
     try {
       setIsProcessing(true);
       setError("");
-      await Promise.all(
-        deleteTarget.questions.map((question) => deleteEvalutionQuestion(question.id))
+      const deleteResults = await Promise.allSettled(
+        deleteTarget.questions.map(async (question) => {
+          await deleteEvalutionQuestion(question.id);
+          return question.id;
+        })
       );
+      const deletedQuestionIds = deleteResults.flatMap((result) =>
+        result.status === "fulfilled" ? [result.value] : []
+      );
+
+      if (deletedQuestionIds.length === 0) {
+        throw new Error("진단평가 세트 삭제에 실패했습니다.");
+      }
+
       setQuestions((prev) =>
-        prev.filter(
-          (question) =>
-            !deleteTarget.questions.some(
-              (targetQuestion) => targetQuestion.id === question.id
-            )
-        )
+        prev.filter((question) => !deletedQuestionIds.includes(question.id))
       );
       setDeleteTarget(null);
       setDeleteCompleteOpen(true);
+
+      if (deletedQuestionIds.length < deleteTarget.questions.length) {
+        setError("일부 문항만 삭제되었습니다. 목록을 확인해주세요.");
+      }
     } catch (deleteError: unknown) {
-      setError(getErrorMessage(deleteError, "진단평가 문제 삭제에 실패했습니다."));
+      setError(getErrorMessage(deleteError, "진단평가 세트 삭제에 실패했습니다."));
     } finally {
       setIsProcessing(false);
     }

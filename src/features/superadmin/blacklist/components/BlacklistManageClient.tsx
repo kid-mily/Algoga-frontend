@@ -97,18 +97,28 @@ export default function BlacklistManageClient() {
   const handleRegister = async () => {
     if (!registerTarget || isProcessing) return;
 
+    const targetUserId = registerTarget.userId;
+
     try {
       setIsProcessing(true);
       setError("");
-      await registerBlacklistUser(registerTarget.userId);
+      await registerBlacklistUser(targetUserId);
+    } catch (actionError: unknown) {
+      setError(getErrorMessage(actionError, "블랙리스트 등록에 실패했습니다."));
+      setIsProcessing(false);
+      return;
+    }
+
+    setRegisterTarget(null);
+    setCompleteMessage("블랙리스트 등록이 완료되었습니다.");
+
+    try {
       await Promise.all([
         loadCandidates(candidatePage),
         loadBlacklists(blacklistPage),
       ]);
-      setRegisterTarget(null);
-      setCompleteMessage("블랙리스트 등록이 완료되었습니다.");
-    } catch (actionError: unknown) {
-      setError(getErrorMessage(actionError, "블랙리스트 등록에 실패했습니다."));
+    } catch (reloadError: unknown) {
+      setError(getErrorMessage(reloadError, "등록은 완료됐지만 목록을 새로고침하지 못했습니다."));
     } finally {
       setIsProcessing(false);
     }

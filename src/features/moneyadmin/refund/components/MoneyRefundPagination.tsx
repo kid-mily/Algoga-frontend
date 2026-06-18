@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 type MoneyRefundPaginationProps = {
   currentPage: number;
   totalCount: number;
@@ -11,7 +13,10 @@ export default function MoneyRefundPagination({
   totalPages,
   onPageChange,
 }: MoneyRefundPaginationProps) {
-  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  const pages = useMemo(
+    () => Array.from({ length: totalPages }, (_, index) => index + 1),
+    [totalPages]
+  );
 
   return (
     <nav

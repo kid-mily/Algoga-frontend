@@ -1,3 +1,5 @@
+import type { CouponDiscountType } from "@/types/coupon";
+
 // 결제 요청
 export interface CreateLecturePaymentPayload {
     courseId: number;
@@ -14,7 +16,7 @@ export interface MyCoupon {
     courseTitle?: string;
     couponPolicyId: number;
     couponName: string;
-    discountType: "RATE" | "AMOUNT" | string;
+    discountType: CouponDiscountType;
     discountValue: number;
     status: string;
     usable: boolean;
@@ -28,7 +30,7 @@ export interface MyCoupon {
     totalMileage: number;
     totalEarnedMileage?: number;
     totalUsedMileage?: number;
-    histories?: any[];
+    histories?: unknown[];
 }
 
 // 내 강의

@@ -4,6 +4,7 @@ import {
   CouponStatisticsData,
   CouponStatisticsSummary,
 } from "@/features/moneyadmin/coupon/types";
+import type { CouponDiscountType } from "@/types/coupon";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -25,7 +26,14 @@ const getItems = (data: unknown) => {
 };
 
 const getString = (record: UnknownRecord, keys: string[], fallback = "-") => {
-  const value = keys.map((key) => record[key]).find((item) => item !== undefined);
+  const value = keys
+    .map((key) => record[key])
+    .find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        !(typeof item === "string" && !item.trim())
+    );
 
   if (typeof value === "string" && value.trim()) return value;
   if (typeof value === "number") return String(value);
@@ -34,13 +42,21 @@ const getString = (record: UnknownRecord, keys: string[], fallback = "-") => {
 };
 
 const getNumber = (record: UnknownRecord, keys: string[], fallback = 0) => {
-  const value = keys.map((key) => record[key]).find((item) => item !== undefined);
+  const value = keys
+    .map((key) => record[key])
+    .find((item) => item !== null && item !== undefined);
 
   if (typeof value === "number" && Number.isFinite(value)) return value;
 
   const parsed = Number(value);
 
   return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const normalizeDiscountType = (value: string): CouponDiscountType => {
+  const discountType = value.toUpperCase();
+
+  return discountType === "AMOUNT" ? "AMOUNT" : "RATE";
 };
 
 export const normalizeCouponStatistic = (
@@ -56,7 +72,7 @@ export const normalizeCouponStatistic = (
   return {
     couponPolicyId: getNumber(record, ["couponPolicyId", "couponId", "id"], fallbackId),
     couponName: getString(record, ["couponName", "name", "title"], "-"),
-    discountType: getString(record, ["discountType"], "-"),
+    discountType: normalizeDiscountType(getString(record, ["discountType"], "RATE")),
     discountValue: getNumber(record, ["discountValue"]),
     courseId: getNumber(record, ["courseId"]),
     courseName: getString(record, ["courseTitle", "courseName", "lectureName"], "-"),
@@ -130,9 +146,9 @@ export const getAdminCouponStatistics = async (
   );
   const data = unwrapData(response);
   const items = getItems(data);
-  const statistics = items.map((item, index) =>
-    normalizeCouponStatistic(item, index + 1)
-  );
+  const statistics = items
+    .map((item) => normalizeCouponStatistic(item))
+    .filter((statistic) => statistic.couponPolicyId > 0);
 
   return {
     summary: buildSummary(data, statistics),
