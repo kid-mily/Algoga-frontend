@@ -2,31 +2,35 @@
 
 import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 import { useReviewList } from "../hooks/useReviewList";
-import { AdminReview } from "../types";
 import ReviewDeleteModals from "./ReviewDeleteModals";
 import ReviewList from "./ReviewList";
 import ReviewPagination from "./ReviewPagination";
 import ReviewToolbar from "./ReviewToolbar";
 
-type ReviewManageClientProps = {
-  initialReviews: AdminReview[];
-};
-
-export default function ReviewManageClient({
-  initialReviews,
-}: ReviewManageClientProps) {
+export default function ReviewManageClient() {
   const {
+    courses,
+    selectedCourseId,
     searchKeyword,
     selectedScore,
     filteredReviews,
     deleteTarget,
     deleteCompleteOpen,
+    visibilityTarget,
+    visibilityCompleteOpen,
+    isLoading,
+    isProcessing,
+    error,
+    setSelectedCourseId,
     setSearchKeyword,
     setSelectedScore,
     setDeleteTarget,
     setDeleteCompleteOpen,
+    setVisibilityTarget,
+    setVisibilityCompleteOpen,
     deleteReview,
-  } = useReviewList(initialReviews);
+    updateVisibility,
+  } = useReviewList();
 
   return (
     <main aria-labelledby="review-management-title">
@@ -35,22 +39,42 @@ export default function ReviewManageClient({
         description="강의 수료 학생의 후기를 조회하고 관리합니다"
       />
 
+      {error && (
+        <p className="mb-4 rounded-[10px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] font-semibold text-[#DC2626]">
+          {error}
+        </p>
+      )}
+
       <ReviewToolbar
+        courses={courses}
+        selectedCourseId={selectedCourseId}
         searchKeyword={searchKeyword}
         selectedScore={selectedScore}
+        onSelectedCourseChange={setSelectedCourseId}
         onSearchKeywordChange={setSearchKeyword}
         onSelectedScoreChange={setSelectedScore}
       />
 
-      <ReviewList reviews={filteredReviews} onDelete={setDeleteTarget} />
+      <ReviewList
+        reviews={filteredReviews}
+        isLoading={isLoading}
+        onVisibilityChange={setVisibilityTarget}
+        onDelete={setDeleteTarget}
+      />
       <ReviewPagination />
 
       <ReviewDeleteModals
         deleteTarget={deleteTarget}
         deleteCompleteOpen={deleteCompleteOpen}
+        visibilityTarget={visibilityTarget}
+        visibilityCompleteOpen={visibilityCompleteOpen}
+        isProcessing={isProcessing}
         onConfirmDelete={deleteReview}
         onCancelDelete={() => setDeleteTarget(null)}
         onCloseComplete={() => setDeleteCompleteOpen(false)}
+        onConfirmVisibility={updateVisibility}
+        onCancelVisibility={() => setVisibilityTarget(null)}
+        onCloseVisibilityComplete={() => setVisibilityCompleteOpen(false)}
       />
     </main>
   );

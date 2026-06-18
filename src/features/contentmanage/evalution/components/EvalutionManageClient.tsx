@@ -2,35 +2,34 @@
 
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { useRouter } from "next/navigation";
-import { EvalutionQuestion } from "../types";
 import EvalutionDeleteModals from "./EvalutionDeleteModals";
 import EvalutionFilterBar from "./EvalutionFilterBar";
 import EvalutionQuestionList from "./EvalutionQuestionList";
+import EvalutionResultTable from "./EvalutionResultTable";
 import { useEvalutionQuestionList } from "../hooks/useEvalutionQuestionList";
 
-type EvalutionManageClientProps = {
-  initialQuestions: EvalutionQuestion[];
-};
-
-export default function EvalutionManageClient({
-  initialQuestions,
-}: EvalutionManageClientProps) {
+export default function EvalutionManageClient() {
   const router = useRouter();
   const {
-    selectedLevel,
-    selectedCountry,
+    activeTab,
+    results,
+    countries,
+    selectedCountryId,
     expandedId,
-    filteredQuestions,
+    filteredQuestionSets,
     deleteTarget,
     deleteCompleteOpen,
+    isLoadingQuestions,
+    isLoadingResults,
+    isProcessing,
     error,
-    setSelectedLevel,
-    setSelectedCountry,
+    setActiveTab,
+    setSelectedCountryId,
     setDeleteTarget,
     setDeleteCompleteOpen,
-    toggleQuestion,
+    toggleQuestionSet,
     deleteQuestion,
-  } = useEvalutionQuestionList(initialQuestions);
+  } = useEvalutionQuestionList();
 
   return (
     <main aria-labelledby="evalution-management-title">
@@ -62,41 +61,62 @@ export default function EvalutionManageClient({
         >
           <button
             type="button"
-            aria-current="page"
-            className="border-b-2 border-[#439A97] px-6 py-4 text-[14px] font-semibold text-[#439A97]"
+            aria-current={activeTab === "questions" ? "page" : undefined}
+            onClick={() => setActiveTab("questions")}
+            className={`px-6 py-4 text-[14px] font-semibold ${
+              activeTab === "questions"
+                ? "border-b-2 border-[#439A97] text-[#439A97]"
+                : "text-[#667085]"
+            }`}
           >
             문제 관리
           </button>
           <button
             type="button"
-            className="px-6 py-4 text-[14px] font-semibold text-[#667085]"
+            aria-current={activeTab === "results" ? "page" : undefined}
+            onClick={() => setActiveTab("results")}
+            className={`px-6 py-4 text-[14px] font-semibold ${
+              activeTab === "results"
+                ? "border-b-2 border-[#439A97] text-[#439A97]"
+                : "text-[#667085]"
+            }`}
           >
-            등급별 추천 강의 미리보기
+            응답 결과
           </button>
         </nav>
 
-        <EvalutionFilterBar
-          selectedLevel={selectedLevel}
-          selectedCountry={selectedCountry}
-          onSelectedLevelChange={setSelectedLevel}
-          onSelectedCountryChange={setSelectedCountry}
-          onCreateClick={() => router.push("/contentadmin/evalution/new")}
-        />
+        {activeTab === "questions" ? (
+          <>
+            <EvalutionFilterBar
+              countries={countries}
+              selectedCountryId={selectedCountryId}
+              onSelectedCountryChange={setSelectedCountryId}
+              onCreateClick={() => router.push("/contentadmin/evalution/new")}
+            />
 
-        <EvalutionQuestionList
-          questions={filteredQuestions}
-          expandedId={expandedId}
-          onToggle={toggleQuestion}
-          onEdit={(questionId) =>
-            router.push(`/contentadmin/evalution/${questionId}/edit`)
-          }
-          onDelete={setDeleteTarget}
-        />
+            <EvalutionQuestionList
+              questionSets={filteredQuestionSets}
+              isLoading={isLoadingQuestions}
+              expandedId={expandedId}
+              onToggle={toggleQuestionSet}
+              onEdit={(questionId) =>
+                router.push(`/contentadmin/evalution/${questionId}/edit`)
+              }
+              onDelete={setDeleteTarget}
+            />
+          </>
+        ) : (
+          <EvalutionResultTable
+            results={results}
+            isLoading={isLoadingResults}
+          />
+        )}
       </section>
 
       <EvalutionDeleteModals
         deleteTarget={deleteTarget}
         deleteCompleteOpen={deleteCompleteOpen}
+        isProcessing={isProcessing}
         onConfirmDelete={deleteQuestion}
         onCancelDelete={() => setDeleteTarget(null)}
         onCloseComplete={() => setDeleteCompleteOpen(false)}
