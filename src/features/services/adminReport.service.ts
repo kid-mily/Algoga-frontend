@@ -36,6 +36,15 @@ const getString = (
   return typeof value === "string" ? value : fallback;
 };
 
+const getNestedRecord = (
+  record: RawReportRecord,
+  keys: string[]
+): RawReportRecord => {
+  const value = keys.map((key) => record[key]).find((item) => item !== undefined);
+
+  return getRecord(value);
+};
+
 const getPageItems = (data: unknown) => {
   if (Array.isArray(data)) return data;
 
@@ -66,18 +75,38 @@ const formatDateTime = (value: string | undefined) => {
   return `${year}.${month}.${day} ${hour}:${minute}`;
 };
 
+const reportReasonLabel: Record<string, string> = {
+  SPAM: "스팸/광고",
+  ABUSE: "욕설/비방",
+  FALSE_INFO: "허위 정보",
+  INAPPROPRIATE: "부적절한 콘텐츠",
+  COPYRIGHT: "저작권 침해",
+  ETC: "기타",
+};
+
+const formatReportReason = (value: string) => {
+  const reason = value.trim();
+
+  if (!reason || reason === "-") return "-";
+
+  return reportReasonLabel[reason.toUpperCase()] ?? reason;
+};
+
 export const normalizeReport = (item: unknown, fallbackId = 0): AdminReport => {
   const record = getRecord(item);
+  const reporter = getNestedRecord(record, ["reporter", "reporterUser", "reportingUser", "user"]);
   const targetType = getString(record, ["targetType", "type"], "POST").toUpperCase();
   const status = getString(record, ["status", "reportStatus"], "PENDING").toUpperCase();
 
   return {
     reportId: getNumber(record, ["reportId", "id"], fallbackId),
-    reporterId: getNumber(record, ["reporterId", "userId", "memberId"]),
-    reporterName: getString(record, ["reporterName", "userName", "nickname"], "-"),
+    reporterId: getNumber(record, ["reporterId", "reporterUserId", "reportingUserId"], getNumber(reporter, ["userId", "memberId", "id"])),
+    reporterName: getString(record, ["reporterName", "reporterNickname", "reportingUserName", "userName", "nickname"], getString(reporter, ["name", "userName", "nickname", "email"], "-")),
     targetType: targetType === "COMMENT" ? "COMMENT" : "POST",
     targetId: getNumber(record, ["targetId", "postId", "commentId"]),
-    reason: getString(record, ["reason", "reportReason"], "-"),
+    reason: formatReportReason(
+      getString(record, ["reasonType", "reason", "reportReason", "reportReasonType"], "-")
+    ),
     content: getString(record, ["content", "targetContent", "description"], "-"),
     status:
       status === "REJECTED" || status === "COMPLETED"
