@@ -15,8 +15,8 @@ const initialFormData: BannerFormData = {
   isVisible: true,
 };
 
-const BANNER_IMAGE_WIDTH = 896;
-const BANNER_IMAGE_HEIGHT = 200;
+const BANNER_IMAGE_WIDTH = 2928;
+const BANNER_IMAGE_HEIGHT = 352;
 
 export const useBannerForm = (mode: "create" | "edit", bannerId?: number) => {
   const [formData, setFormData] = useState<BannerFormData>(initialFormData);
