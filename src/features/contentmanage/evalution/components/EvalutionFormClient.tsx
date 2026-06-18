@@ -6,7 +6,7 @@ import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import CompleteModal from "@/features/common/CompleteModal";
 import Modal from "@/features/common/Modal";
 import SubHeader from "@/features/contentmanage/common/SubHeader";
-import { CourseCountry } from "@/features/contentmanage/lecture/types";
+import type { CourseCountry } from "@/features/contentmanage/lecture/types";
 import { getCourseCountries } from "@/features/services/adminCourse.service";
 import {
   createEvalutionQuestion,
@@ -160,6 +160,7 @@ export default function EvalutionFormClient({
     setQuestions((prev) =>
       prev.map((question) => ({
         ...question,
+        id: undefined,
         countryId,
         country: country?.countryName ?? "",
       }))
@@ -251,17 +252,23 @@ export default function EvalutionFormClient({
           existingByOrder.set(question.questionOrder, question.id);
         });
 
+      const savedQuestionIds = new Set<number>();
       await Promise.all(
-        payloads.map((payload) => {
+        payloads.map(async (payload) => {
           const existingId = payload.id ?? existingByOrder.get(payload.questionOrder);
 
-          return existingId
-            ? updateEvalutionQuestion(existingId, payload)
-            : createEvalutionQuestion(payload);
+          const savedQuestion = existingId
+            ? await updateEvalutionQuestion(existingId, payload)
+            : await createEvalutionQuestion(payload);
+
+          savedQuestionIds.add(savedQuestion.id);
+          if (existingId) savedQuestionIds.add(existingId);
         })
       );
       await Promise.all(
-        duplicatedQuestionIds.map((questionId) => deleteEvalutionQuestion(questionId))
+        duplicatedQuestionIds
+          .filter((questionId) => !savedQuestionIds.has(questionId))
+          .map((questionId) => deleteEvalutionQuestion(questionId))
       );
 
       setCompleteOpen(true);

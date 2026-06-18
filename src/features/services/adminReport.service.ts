@@ -40,7 +40,9 @@ const getNestedRecord = (
   record: RawReportRecord,
   keys: string[]
 ): RawReportRecord => {
-  const value = keys.map((key) => record[key]).find((item) => item !== undefined);
+  const value = keys
+    .map((key) => record[key])
+    .find((item) => item !== null && item !== undefined);
 
   return getRecord(value);
 };

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/CompleteModal";
-import { CouponFormProps } from "../types";
+import type { CouponFormData, CouponFormProps } from "../types";
 
 export default function CouponForm({
   courses,
@@ -13,7 +13,7 @@ export default function CouponForm({
 }: CouponFormProps) {
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CouponFormData>({
     courseId: initialData?.courseId || "",
     couponName: initialData?.couponName || "",
     discountType: initialData?.discountType || "RATE",

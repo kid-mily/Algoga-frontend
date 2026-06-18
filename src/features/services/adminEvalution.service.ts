@@ -46,6 +46,14 @@ const getNumber = (record: UnknownRecord, keys: string[], fallback = 0) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const normalizeAnswerIndex = (record: UnknownRecord) => {
+  if (record.answerIndex !== undefined || record.correctAnswerIndex !== undefined) {
+    return Math.max(0, getNumber(record, ["answerIndex", "correctAnswerIndex"], 0));
+  }
+
+  return Math.max(0, getNumber(record, ["correctOption"], 1) - 1);
+};
+
 const formatDate = (value: string) => {
   if (!value || value === "-") return "-";
 
@@ -97,10 +105,7 @@ export const normalizeEvalutionQuestion = (
     country: getString(record, ["country", "countryName"], countryName),
     title: getString(record, ["title", "question", "questionText", "content"], "-"),
     options: normalizeOptions(record),
-    answerIndex: Math.max(
-      0,
-      getNumber(record, ["answerIndex", "correctAnswerIndex", "correctOption"], 1) - 1
-    ),
+    answerIndex: normalizeAnswerIndex(record),
     explanation: getString(record, ["explanation"], ""),
   };
 };
@@ -149,7 +154,7 @@ export const getEvalutionQuestion = async (
   const countries = await getCourseCountries(signal);
   const questionGroups = await Promise.all(
     countries.map((country) =>
-      getEvalutionQuestions(country.countryId, country.countryName, signal).catch(() => [])
+      getEvalutionQuestions(country.countryId, country.countryName, signal)
     )
   );
   const questions = questionGroups.flat();

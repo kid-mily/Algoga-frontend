@@ -25,7 +25,7 @@ export const useCsRefundList = (initialRefunds: CsRefund[]) => {
     try {
       setIsLoading(true);
       setError("");
-      const data = await getAdminRefunds(signal);
+      const data = await getAdminRefunds({ signal });
 
       if (signal?.aborted) return;
 

@@ -22,7 +22,7 @@ export default function CouponStatisticsToolbar({
           value={searchKeyword}
           onChange={(event) => onSearchKeywordChange(event.target.value)}
           placeholder="쿠폰명, 강의명, 쿠폰 ID 검색"
-          className="w-full text-[14px] outline-none placeholder:text-[#98A2B3]"
+          className="w-full rounded-[6px] text-[14px] outline-none placeholder:text-[#98A2B3] focus:ring-2 focus:ring-[#639E9B]"
         />
       </label>
     </section>

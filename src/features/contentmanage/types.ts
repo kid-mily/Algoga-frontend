@@ -1,3 +1,5 @@
+import type { CouponDiscountType } from "@/types/coupon";
+
 //adminAuth.service.ts
 
 export interface AdminCourse {
@@ -109,7 +111,7 @@ export interface AdminCoupon {
   courseId: number;
   managerId?: number;
   couponName: string;
-  discountType: "RATE" | "AMOUNT" | string; // RATE(비율/퍼센트) 또는 AMOUNT(정액/원)
+  discountType: CouponDiscountType; // RATE(비율/퍼센트) 또는 AMOUNT(정액/원)
   discountValue: number;
   validDays: number;
   active: boolean;
@@ -121,7 +123,7 @@ export interface AdminCoupon {
 export interface AdminCouponPayload {
   courseId: number;
   couponName: string;
-  discountType: string;
+  discountType: CouponDiscountType;
   discountValue: number;
   validDays: number;
   active: boolean;

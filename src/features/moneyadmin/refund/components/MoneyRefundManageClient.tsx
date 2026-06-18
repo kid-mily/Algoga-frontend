@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import CompleteModal from "@/features/common/CompleteModal";
 import Modal from "@/features/common/Modal";
@@ -24,12 +24,14 @@ import MoneyRefundToolbar from "./MoneyRefundToolbar";
 
 type MoneyRefundManageClientProps = {
   initialRefunds?: MoneyRefund[];
+  hasInitialData?: boolean;
 };
 
 const PAGE_SIZE = 10;
 
 export default function MoneyRefundManageClient({
   initialRefunds = [],
+  hasInitialData = false,
 }: MoneyRefundManageClientProps) {
   const {
     filteredRefunds,
@@ -45,7 +47,7 @@ export default function MoneyRefundManageClient({
     setSelectedStatus,
     setError,
     loadRefunds,
-  } = useMoneyRefundList(initialRefunds);
+  } = useMoneyRefundList(initialRefunds, hasInitialData);
   const [currentPage, setCurrentPage] = useState(1);
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<{
@@ -62,19 +64,25 @@ export default function MoneyRefundManageClient({
     return filteredRefunds.slice(start, start + PAGE_SIZE);
   }, [filteredRefunds, safeCurrentPage]);
 
-  const handleSearchKeywordChange = (value: string) => {
+  const handleSearchKeywordChange = useCallback((value: string) => {
     setSearchKeyword(value);
     setCurrentPage(1);
-  };
+  }, [setSearchKeyword]);
 
-  const handleSelectedStatusChange = (value: MoneyRefundStatus | "ALL") => {
+  const handleSelectedStatusChange = useCallback((value: MoneyRefundStatus | "ALL") => {
     setSelectedStatus(value);
     setCurrentPage(1);
-  };
+  }, [setSelectedStatus]);
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(Math.min(Math.max(page, 1), totalPages));
-  };
+  }, [totalPages]);
+
+  const handleAction = useCallback((refund: MoneyRefund, action: MoneyRefundAction) => {
+    if (confirmTarget) return;
+
+    setConfirmTarget({ refund, action });
+  }, [confirmTarget]);
 
   const handleConfirmAction = async () => {
     if (!confirmTarget || processingId) return;
@@ -120,7 +128,8 @@ export default function MoneyRefundManageClient({
         refunds={pagedRefunds}
         isLoading={isLoading}
         processingId={processingId}
-        onAction={(refund, action) => setConfirmTarget({ refund, action })}
+        actionsDisabled={Boolean(confirmTarget)}
+        onAction={handleAction}
       />
       <MoneyRefundPagination
         currentPage={safeCurrentPage}

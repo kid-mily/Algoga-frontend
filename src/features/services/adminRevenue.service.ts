@@ -94,9 +94,9 @@ export const getMonthlyRevenueStats = async (
   );
   const data = unwrapData(response);
 
-  return getItems(data).map((item, index) =>
-    normalizeMonthlyRevenue(item, index + 1)
-  );
+  return getItems(data)
+    .map((item) => normalizeMonthlyRevenue(item))
+    .filter((stat) => stat.month >= 1 && stat.month <= 12);
 };
 
 export const getMonthlyRevenueDetail = async (

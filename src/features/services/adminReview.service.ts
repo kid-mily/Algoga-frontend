@@ -1,5 +1,5 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
-import { AdminCourse } from "@/features/contentmanage/lecture/types";
+import type { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { AdminReview, ReviewLevel } from "@/features/contentmanage/review/types";
 
 type UnknownRecord = Record<string, unknown>;
@@ -114,9 +114,9 @@ export const getAdminCourseReviews = async (
   );
   const data = unwrapData(response);
 
-  return getItems(data).map((item, index) =>
-    normalizeAdminReview(item, course, index + 1)
-  );
+  return getItems(data)
+    .filter((item) => getNumber(getRecord(item), ["reviewId", "id"]) > 0)
+    .map((item) => normalizeAdminReview(item, course));
 };
 
 export const deleteAdminCourseReview = async (

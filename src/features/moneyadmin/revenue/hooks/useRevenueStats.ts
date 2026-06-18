@@ -36,7 +36,18 @@ export const useRevenueStats = () => {
     };
   }, []);
 
-  const latestStat = stats[0];
+  const latestStat = useMemo(
+    () =>
+      stats.reduce<MonthlyRevenueStat | undefined>((latest, stat) => {
+        if (!latest) return stat;
+
+        const latestValue = latest.year * 12 + latest.month;
+        const statValue = stat.year * 12 + stat.month;
+
+        return statValue > latestValue ? stat : latest;
+      }, undefined),
+    [stats]
+  );
   const totalNetAmount = useMemo(
     () => stats.reduce((sum, stat) => sum + stat.netAmount, 0),
     [stats]

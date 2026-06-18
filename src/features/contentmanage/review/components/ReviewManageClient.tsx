@@ -40,7 +40,11 @@ export default function ReviewManageClient() {
       />
 
       {error && (
-        <p className="mb-4 rounded-[10px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] font-semibold text-[#DC2626]">
+        <p
+          role="alert"
+          aria-live="polite"
+          className="mb-4 rounded-[10px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] font-semibold text-[#DC2626]"
+        >
           {error}
         </p>
       )}

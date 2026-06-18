@@ -4,6 +4,7 @@ import {
   RefundRequestApiRecord,
   refundStatusLabel,
 } from "@/features/csadmin/refund/types";
+import type { ApiRequestOptions } from "@/lib/api";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -62,13 +63,13 @@ export const normalizeRefund = (item: RefundRequestApiRecord): CsRefund => {
 };
 
 export const getAdminRefunds = async (
-  signal?: AbortSignal
+  options: Pick<ApiRequestOptions, "headers" | "signal"> = {}
 ): Promise<CsRefund[]> => {
   const response = await adminApi.get<ApiResult<RefundRequestApiRecord[]>>(
     "/api/v1/admin/refund-requests",
     {
       suppressGlobalError: true,
-      signal,
+      ...options,
     }
   );
   const data = unwrapData(response);

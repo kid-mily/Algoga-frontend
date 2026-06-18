@@ -56,12 +56,16 @@ export default function EvalutionManageClient() {
         </h2>
 
         <nav
+          role="tablist"
           className="flex border-b border-[#E4E7EC]"
           aria-label="진단평가 관리 탭"
         >
           <button
+            id="evalution-questions-tab"
             type="button"
-            aria-current={activeTab === "questions" ? "page" : undefined}
+            role="tab"
+            aria-selected={activeTab === "questions"}
+            aria-controls="evalution-questions-panel"
             onClick={() => setActiveTab("questions")}
             className={`px-6 py-4 text-[14px] font-semibold ${
               activeTab === "questions"
@@ -72,8 +76,11 @@ export default function EvalutionManageClient() {
             문제 관리
           </button>
           <button
+            id="evalution-results-tab"
             type="button"
-            aria-current={activeTab === "results" ? "page" : undefined}
+            role="tab"
+            aria-selected={activeTab === "results"}
+            aria-controls="evalution-results-panel"
             onClick={() => setActiveTab("results")}
             className={`px-6 py-4 text-[14px] font-semibold ${
               activeTab === "results"
@@ -86,7 +93,11 @@ export default function EvalutionManageClient() {
         </nav>
 
         {activeTab === "questions" ? (
-          <>
+          <div
+            id="evalution-questions-panel"
+            role="tabpanel"
+            aria-labelledby="evalution-questions-tab"
+          >
             <EvalutionFilterBar
               countries={countries}
               selectedCountryId={selectedCountryId}
@@ -104,12 +115,18 @@ export default function EvalutionManageClient() {
               }
               onDelete={setDeleteTarget}
             />
-          </>
+          </div>
         ) : (
-          <EvalutionResultTable
-            results={results}
-            isLoading={isLoadingResults}
-          />
+          <div
+            id="evalution-results-panel"
+            role="tabpanel"
+            aria-labelledby="evalution-results-tab"
+          >
+            <EvalutionResultTable
+              results={results}
+              isLoading={isLoadingResults}
+            />
+          </div>
         )}
       </section>
 

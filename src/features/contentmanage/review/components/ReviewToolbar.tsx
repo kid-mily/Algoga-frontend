@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { AdminCourse } from "@/features/contentmanage/lecture/types";
+import type { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { reviewScoreFilters } from "../types";
 
 type ReviewToolbarProps = {

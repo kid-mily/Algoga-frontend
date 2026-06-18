@@ -1,7 +1,9 @@
+import type { CouponDiscountType } from "@/types/coupon";
+
 export type CouponStatistic = {
   couponPolicyId: number;
   couponName: string;
-  discountType: "RATE" | "AMOUNT" | string;
+  discountType: CouponDiscountType;
   discountValue: number;
   courseId: number;
   courseName: string;

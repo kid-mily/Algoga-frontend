@@ -1,17 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { getAdminRefunds } from "@/features/services/adminRefund.service";
 import { MoneyRefund, MoneyRefundStatus } from "../types";
 import { formatRefundError } from "../utils";
 
-export const useMoneyRefundList = (initialRefunds: MoneyRefund[] = []) => {
+export const useMoneyRefundList = (
+  initialRefunds: MoneyRefund[] = [],
+  hasInitialData = false
+) => {
   const [refunds, setRefunds] = useState<MoneyRefund[]>(initialRefunds);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<MoneyRefundStatus | "ALL">("ALL");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const deferredSearchKeyword = useDeferredValue(searchKeyword);
 
   const loadRefunds = useCallback(async (signal?: AbortSignal) => {
-    const data = await getAdminRefunds(signal);
+    const data = await getAdminRefunds({ signal });
 
     if (signal?.aborted) return;
     setRefunds(data);
@@ -21,6 +25,8 @@ export const useMoneyRefundList = (initialRefunds: MoneyRefund[] = []) => {
     const controller = new AbortController();
 
     const load = async () => {
+      if (hasInitialData) return;
+
       try {
         setIsLoading(true);
         setError("");
@@ -40,10 +46,10 @@ export const useMoneyRefundList = (initialRefunds: MoneyRefund[] = []) => {
     return () => {
       controller.abort();
     };
-  }, [loadRefunds]);
+  }, [hasInitialData, loadRefunds]);
 
   const filteredRefunds = useMemo(() => {
-    const keyword = searchKeyword.trim().toLowerCase();
+    const keyword = deferredSearchKeyword.trim().toLowerCase();
 
     return refunds.filter((refund) => {
       const matchesStatus =
@@ -63,7 +69,7 @@ export const useMoneyRefundList = (initialRefunds: MoneyRefund[] = []) => {
 
       return matchesStatus && matchesKeyword;
     });
-  }, [refunds, searchKeyword, selectedStatus]);
+  }, [deferredSearchKeyword, refunds, selectedStatus]);
 
   const waitingCount = useMemo(
     () =>
