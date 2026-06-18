@@ -30,7 +30,7 @@ export default function PaymentRow({ payment }: PaymentRowProps) {
       <td className="px-5 py-4 font-bold text-[#111827]">
         {formatWon(payment.amount)}
       </td>
-      <td className="px-5 py-4">{payment.paymentMethod}</td>
+      <td className="px-5 py-4">토스페이</td>
       <td className="px-5 py-4">
         <PaymentStatusBadge status={payment.status} label={payment.statusLabel} />
       </td>
