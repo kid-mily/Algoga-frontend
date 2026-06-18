@@ -14,12 +14,12 @@ export default async function Home() {
     <main className="min-h-screen w-full bg-[#f5f6f8] px-10 py-10">
       <h1 className="sr-only">메인 페이지</h1>
 
-      <section className="mx-auto mb-5 max-w-4xl">
-        <Banner />
-      </section>
-
       <section className="mx-auto h-[500px] w-full max-w-5xl overflow-hidden rounded-xl border bg-white shadow-lg">
         <MapSection />
+      </section>
+
+      <section className="mx-auto mb-5 mt-5 max-w-4xl">
+        <Banner />
       </section>
 
       <section className="mx-auto mt-5 w-full max-w-4xl">

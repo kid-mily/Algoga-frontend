@@ -7,17 +7,16 @@ import MyPageInfoCard from "@/features/mypage/MyPageInfoCard";
 import MyPageSummaryCard from "@/features/mypage/MyPageSummaryCard";
 import PasswordVerifyModal from "@/features/mypage/PasswordVerifyModal";
 import { useMyPage } from "@/features/mypage/hooks/userMyPage";
+import LoadingSpinner from "@/features/common/LoadingSpinner";
 
 export default function MyPage() {
   const router = useRouter();
 
-  const { user, summary, isLoading, errorMessage } = useMyPage();
+  const { user, summary, errorMessage } = useMyPage();
 
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
-  if (isLoading) {
-    return <MyPageLoading />;
-  }
+  <LoadingSpinner/>
 
   if (errorMessage || !user) {
     return (
@@ -76,8 +75,8 @@ export default function MyPage() {
 
                 <MyPageSummaryCard
                   count={summary.couponCount}
-                  label="보유 쿠폰"
-                  href="/mypage/mycoupons"
+                  label="쿠폰/마일리지"
+                  href="/mypage/benefits"
                 />
               </section>
 
@@ -100,16 +99,6 @@ export default function MyPage() {
         onSuccess={handleEditSuccess}
       />
     </>
-  );
-}
-
-function MyPageLoading() {
-  return (
-    <main className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-[#F5F7FA]">
-      <p className="text-sm font-medium text-[#8A9BB0]">
-        마이페이지 정보를 불러오는 중입니다.
-      </p>
-    </main>
   );
 }
 

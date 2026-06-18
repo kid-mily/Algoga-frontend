@@ -16,7 +16,7 @@ export default function MyPageLayout({
 
   if (isLoading) {
     return (
-      <main className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-[#F5F7FA]">
+      <main className="flex items-center justify-center bg-[#F5F7FA]">
         <p className="text-sm font-medium text-[#8A9BB0]">
           마이페이지 정보를 불러오는 중입니다.
         </p>
@@ -26,7 +26,7 @@ export default function MyPageLayout({
 
   if (errorMessage || !user) {
     return (
-      <main className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-[#F5F7FA] px-4">
+      <main className="flex items-center justify-center bg-[#F5F7FA] px-4">
         <section className="rounded-2xl bg-white p-8 text-center shadow-sm">
           <h1 className="text-lg font-bold text-[#0A1628]">
             정보를 불러올 수 없습니다
@@ -43,7 +43,7 @@ export default function MyPageLayout({
   const userInitial = user.name[0] ?? "?";
 
   return (
-    <main className="min-h-[calc(100vh-64px)] bg-[#F5F7FA]">
+    <main className=" bg-[#F5F7FA]">
       <div className="flex w-full">
         <MyPageSidebar
           name={user.name}

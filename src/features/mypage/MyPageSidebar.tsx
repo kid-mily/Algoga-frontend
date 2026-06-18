@@ -15,7 +15,7 @@ const menuItems = [
   { label: "알림 설정", href: "/mypage/notifications", icon: "알" },
   { label: "수강 내역", href: "/mypage/coursedetails", icon: "수" },
   { label: "예약 내역", href: "/mypage/reservations", icon: "예" },
-  { label: "쿠폰함", href: "/mypage/mycoupons", icon: "쿠" },
+  { label: "쿠폰함", href: "/mypage/benefits", icon: "쿠" },
   { label: "친구 관리", href: "/mypage/friends", icon: "친" },
 ];
 

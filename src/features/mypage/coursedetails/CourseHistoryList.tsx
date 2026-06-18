@@ -87,7 +87,7 @@ export default function CourseHistoryList() {
                   </span>
 
                   <Link
-                    href={`/mypage/courses/${course.id}/certificate`}
+                    href={`/mypage/coursedetails/${course.id}/certificate`}
                     className="flex h-9 items-center justify-center rounded-xl bg-[#43A6A2] text-xs font-bold text-white hover:bg-[#357F7C]"
                   >
                     수료증 보기

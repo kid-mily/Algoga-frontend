@@ -54,3 +54,12 @@ export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
 }
+
+export interface CertificatePdfFile {
+  blob: Blob;
+  fileName: string;
+}
+
+export interface CertificatePdfData extends CertificatePdfFile {
+  url: string;
+}

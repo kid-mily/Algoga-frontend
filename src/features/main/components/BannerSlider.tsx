@@ -60,7 +60,7 @@ export default function BannerSlider({ banners }: BannerSliderProps) {
                 <img
                     src={currentBanner.imageUrl}
                     alt={currentBanner.text || "메인 배너"}
-                    className="h-[200px] w-full object-cover"
+                    className="h-[100px] w-full object-cover"
                 />
             )}
         </Link>
