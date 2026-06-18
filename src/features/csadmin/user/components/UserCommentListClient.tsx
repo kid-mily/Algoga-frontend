@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Image from "next/image";
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import AdminLoadingState from "@/features/common/AdminLoadingState";
 import UserActivityTabs from "@/features/csadmin/user/UserActivityTabs";
@@ -63,10 +64,10 @@ export default function UserCommentListClient({ userId }: UserCommentListClientP
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-4">
                           <button type="button" onClick={() => void openCommentDetail(comment.commentId)} aria-label={`댓글 상세 보기: ${comment.displayId}`}>
-                            <img src="/images/eye.svg" alt="" aria-hidden="true" className="h-[17px] w-[17px]" />
+                            <Image src="/images/eye.svg" alt="" aria-hidden="true" width={17} height={17} sizes="17px" />
                           </button>
                           <button type="button" onClick={() => setDeleteTarget(comment)} aria-label={`댓글 삭제: ${comment.displayId}`}>
-                            <img src="/images/delete.svg" alt="" aria-hidden="true" className="h-[17px] w-[17px]" />
+                            <Image src="/images/delete.svg" alt="" aria-hidden="true" width={17} height={17} sizes="17px" />
                           </button>
                         </div>
                       </td>

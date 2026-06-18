@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import CompleteModal from "@/features/common/CompleteModal";
@@ -16,9 +16,11 @@ type BannerFormClientProps = {
 
 export default function BannerFormClient({ mode, bannerId }: BannerFormClientProps) {
   const router = useRouter();
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const {
     formData,
     file,
+    fileError,
     mediaPreviewUrl,
     isLoading,
     isSubmitting,
@@ -37,9 +39,20 @@ export default function BannerFormClient({ mode, bannerId }: BannerFormClientPro
   const completeTitle = mode === "create" ? "등록 완료" : "수정 완료";
   const completeDescription =
     mode === "create" ? "배너가 등록되었습니다." : "배너가 수정되었습니다.";
+  const validationMessages = [
+    "배너 문구를 입력해주세요.",
+    "연결 URL을 입력해주세요.",
+    "배너 이미지 또는 영상을 선택해주세요.",
+  ];
+  const bannerError = validationMessages.includes(error) ? "" : error;
+  const showTextError = hasSubmitted && !formData.text.trim();
+  const showLinkUrlError = hasSubmitted && !formData.linkUrl.trim();
+  const showFileError = hasSubmitted && mode === "create" && !file;
+  const visibleFileError = fileError || (showFileError ? "배너 이미지 또는 영상을 선택해주세요." : "");
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setHasSubmitted(true);
 
     if (!validateForm()) return;
 
@@ -73,7 +86,7 @@ export default function BannerFormClient({ mode, bannerId }: BannerFormClientPro
         </span>
       </header>
 
-      <AdminErrorBanner message={error} className="mb-4" />
+      <AdminErrorBanner message={bannerError} className="mb-4" />
 
       <form onSubmit={handleSubmit} className="grid grid-cols-[minmax(0,1fr)_360px] gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="space-y-6">
@@ -88,6 +101,11 @@ export default function BannerFormClient({ mode, bannerId }: BannerFormClientPro
               placeholder="예: 여름 맞이 특가 이벤트 배너"
               className="h-[44px] w-full rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] outline-none placeholder:text-[#98A2B3] focus:border-[#639E9B]"
             />
+            {showTextError && (
+              <p className="mt-2 text-[13px] font-semibold text-[#DC2626]">
+                배너 문구를 입력해주세요.
+              </p>
+            )}
           </section>
 
           <section className="rounded-[16px] border border-[#E4E7EC] bg-white p-6">
@@ -102,6 +120,11 @@ export default function BannerFormClient({ mode, bannerId }: BannerFormClientPro
               placeholder="https://algoga.com/event"
               className="h-[44px] w-full rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] outline-none placeholder:text-[#98A2B3] focus:border-[#639E9B]"
             />
+            {showLinkUrlError && (
+              <p className="mt-2 text-[13px] font-semibold text-[#DC2626]">
+                연결 URL을 입력해주세요.
+              </p>
+            )}
           </section>
 
           <section className="rounded-[16px] border border-[#E4E7EC] bg-white p-6">
@@ -113,11 +136,39 @@ export default function BannerFormClient({ mode, bannerId }: BannerFormClientPro
               type="file"
               accept="image/*,video/*"
               onChange={handleFileChange}
-              className="block w-full text-[14px] text-[#344054] file:mr-4 file:rounded-[10px] file:border-0 file:bg-[#E7F4EC] file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-[#439A97]"
+              className="sr-only"
             />
+            <label
+              htmlFor="banner-file"
+              className="inline-flex h-[38px] min-w-[116px] cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#E7F4EC] px-4 text-[13px] font-semibold text-[#439A97] transition hover:bg-[#DDF0E6]"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="h-[18px] w-[18px] shrink-0 text-[#439A97]"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <path d="M17 8 12 3 7 8" />
+                <path d="M12 3v12" />
+              </svg>
+              파일 선택
+            </label>
             <p className="mt-2 text-[13px] text-[#98A2B3]">
               {file ? `선택한 파일: ${file.name}` : mode === "edit" ? "새 파일을 선택하지 않으면 기존 미디어를 유지합니다." : "이미지 또는 영상을 선택하세요."}
             </p>
+            <p className="mt-1 text-[13px] text-[#667085]">
+              이미지 필수 해상도: 896x200
+            </p>
+            {visibleFileError && (
+              <p className="mt-2 text-[13px] font-semibold text-[#DC2626]">
+                {visibleFileError}
+              </p>
+            )}
           </section>
         </div>
 

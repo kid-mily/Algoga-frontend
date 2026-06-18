@@ -94,5 +94,9 @@ export const getAdminRedirectPath = (token: string) => {
     return "/csadmin/inquiry";
   }
 
+  if (hasAdminRole(payload, ["SETTLEMENT_MANAGER"])) {
+    return "/moneyadmin/payments";
+  }
+
   return "/contentadmin/lecture";
 };

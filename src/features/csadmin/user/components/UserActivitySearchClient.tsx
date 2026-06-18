@@ -9,7 +9,12 @@ export default function UserActivitySearchClient() {
   const [error, setError] = useState("");
 
   const normalizedUserId = userId.trim();
-  const canSearch = /^\d+$/.test(normalizedUserId) && Number(normalizedUserId) > 0;
+  const normalizedUserIdNumber = Number(normalizedUserId);
+  const canSearch =
+    /^\d+$/.test(normalizedUserId) &&
+    Number.isSafeInteger(normalizedUserIdNumber) &&
+    normalizedUserIdNumber > 0;
+  const errorId = "cs-user-id-error";
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -40,6 +45,8 @@ export default function UserActivitySearchClient() {
             }}
             inputMode="numeric"
             placeholder="예: 1"
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? errorId : undefined}
             className="h-[44px] flex-1 rounded-[10px] border border-[#D0D5DD] px-4 text-[14px] outline-none focus:border-[#439A97]"
           />
 
@@ -52,7 +59,11 @@ export default function UserActivitySearchClient() {
           </button>
         </div>
 
-        {error && <p className="mt-2 text-[13px] font-medium text-[#DC2626]">{error}</p>}
+        {error && (
+          <p id={errorId} className="mt-2 text-[13px] font-medium text-[#DC2626]">
+            {error}
+          </p>
+        )}
       </form>
 
       <div className="mt-6 grid gap-3 text-[14px] text-[#667085] md:grid-cols-3">

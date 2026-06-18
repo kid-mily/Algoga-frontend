@@ -1,157 +1,134 @@
-import { ApiResponse } from "@/lib/api";
-import {
+import { api, ApiResponse, unwrapData } from "@/lib/api";
+import type {
   ApiErrorResponse,
   ChangePasswordRequest,
+  MyPageData,
   MyPageUser,
   UpdateProfileRequest,
   UpdateProfileResponse,
   VerifyPasswordRequest,
-} from "../mypage/types";
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://kidmily.kro.kr";
+} from "@/features/mypage/types";
+import { getMyCoupons } from "@/features/services/myBenefit.service";
+import { getMyPayments } from "@/features/services/SinglePayment.service";
+import { getMe } from "@/features/services/user.service";
 
 export class MyPageApiError extends Error {
-  status: number;
+  status?: number;
   code?: string;
   traceId?: string;
-  responseData?: unknown;
+  responseData?: ApiErrorResponse;
 
-  constructor(
-    message: string,
-    status: number,
-    options?: {
-      code?: string;
-      traceId?: string;
-      responseData?: unknown;
-    }
-  ) {
-    super(message);
+  constructor(responseData: ApiErrorResponse) {
+    super(responseData.message || "마이페이지 요청에 실패했습니다.");
 
     this.name = "MyPageApiError";
-    this.status = status;
-    this.code = options?.code;
-    this.traceId = options?.traceId;
-    this.responseData = options?.responseData;
+    this.status = responseData.status;
+    this.code = responseData.errorCode || responseData.code;
+    this.traceId = responseData.traceId;
+    this.responseData = responseData;
   }
 }
 
-const parseResponse = (responseText: string): unknown => {
-  if (!responseText) {
-    return null;
-  }
+const toMyPageUser = (user: Partial<MyPageUser>): MyPageUser => ({
+  username: user.username ?? "",
+  password: user.password ?? "",
+  name: user.name ?? "",
+  nickname: user.nickname ?? user.name ?? "",
+  email: user.email ?? "",
+  profileImageUrl: user.profileImageUrl ?? null,
+  phone: user.phone ?? "",
+  gender: user.gender ?? "",
+  birthDate: user.birthDate ?? "",
+  personalCode: user.personalCode ?? "",
+});
 
-  try {
-    return JSON.parse(responseText);
-  } catch {
-    return responseText;
-  }
-};
+export async function getMyPageUser(): Promise<MyPageUser> {
+  const user = await getMe();
 
-const requestMyPageApi = async <T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> => {
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      Accept: "application/json",
-      ...options.headers,
+  return toMyPageUser(user);
+}
+
+export async function getMyPageData(): Promise<MyPageData> {
+  const [user, coupons, payments] = await Promise.all([
+    getMyPageUser(),
+
+    // 쿠폰 API가 실패해도 마이페이지 전체는 표시
+    getMyCoupons().catch((error) => {
+      console.error("쿠폰 조회 실패:", error);
+      return [];
+    }),
+
+    // 결제 내역 API가 실패해도 마이페이지 전체는 표시
+    getMyPayments().catch((error) => {
+      console.error("결제 내역 조회 실패:", error);
+      return [];
+    }),
+  ]);
+
+  return {
+    user,
+
+    summary: {
+      // TODO: 수강 내역 API 연결 후 실제 개수로 변경
+      courseCount: 0,
+
+      reservationCount: Array.isArray(payments) ? payments.length : 0,
+
+      couponCount: Array.isArray(coupons) ? coupons.length : 0,
     },
-    cache: "no-store",
-  });
+  };
+}
 
-  const responseText = await response.text();
-  const responseData = parseResponse(responseText);
-
-  console.log("마이페이지 API 응답:", {
-    path,
-    status: response.status,
-    data: responseData,
-  });
-
-  if (!response.ok) {
-    const errorData =
-      typeof responseData === "object" && responseData !== null
-        ? (responseData as ApiErrorResponse)
-        : null;
-
-    throw new MyPageApiError(
-      errorData?.message ??
-        `마이페이지 요청에 실패했습니다. (${response.status})`,
-      response.status,
+export async function verifyMyPassword(
+  payload: VerifyPasswordRequest
+): Promise<void> {
+  try {
+    await api.post<ApiResponse<unknown>>(
+      "/api/v1/users/me/verify-password",
+      payload,
       {
-        code: errorData?.errorCode ?? errorData?.code,
-        traceId: errorData?.traceId,
-        responseData,
+        suppressGlobalError: true,
       }
     );
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error("비밀번호 확인에 실패했습니다.");
   }
+}
 
-  if (
-    typeof responseData === "object" &&
-    responseData !== null &&
-    "data" in responseData
-  ) {
-    return (responseData as ApiResponse<T>).data;
-  }
-
-  return responseData as T;
-};
-
-export const getMyPageUser = async (): Promise<MyPageUser> => {
-  return requestMyPageApi<MyPageUser>("/api/v1/users/me", {
-    method: "GET",
-  });
-};
-
-export const updateMyProfile = async (
-  profileData: UpdateProfileRequest
-): Promise<UpdateProfileResponse> => {
+export async function updateMyProfile(
+  payload: UpdateProfileRequest
+): Promise<UpdateProfileResponse> {
   const formData = new FormData();
 
-  formData.append("nickname", profileData.nickname);
-  formData.append("phone", profileData.phone);
-  formData.append("email", profileData.email);
+  formData.append("nickname", payload.nickname);
+  formData.append("phone", payload.phone);
+  formData.append("email", payload.email);
 
-  if (profileData.profileImage instanceof File) {
-    formData.append("profileImage", profileData.profileImage);
+  if (payload.profileImage) {
+    formData.append("profileImage", payload.profileImage);
   }
 
-  console.log("프로필 수정 요청 FormData:", {
-    nickname: formData.get("nickname"),
-    phone: formData.get("phone"),
-    email: formData.get("email"),
-    hasProfileImage: formData.has("profileImage"),
-    profileImage: formData.get("profileImage"),
-  });
+  const response = await api.patch<ApiResponse<UpdateProfileResponse>>(
+    "/api/v1/users/me",
+    formData,
+    {
+      suppressGlobalError: true,
+    }
+  );
 
-  return requestMyPageApi<UpdateProfileResponse>("/api/v1/users/me", {
-    method: "PATCH",
-    body: formData,
-  });
-};
+  return unwrapData(response);
+}
 
-export const verifyMyPassword = async (
-  requestData: VerifyPasswordRequest
-): Promise<string> => {
-  return requestMyPageApi<string>("/api/v1/users/me/verify-password", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(requestData),
-  });
-};
-
-export const changeMyPassword = async (
-  requestData: ChangePasswordRequest
-): Promise<string> => {
-  return requestMyPageApi<string>("/api/v1/users/me/password", {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(requestData),
-  });
-};
+export async function changeMyPassword(
+  payload: ChangePasswordRequest
+): Promise<void> {
+  await api.patch<ApiResponse<unknown>>(
+    "/api/v1/users/me/password",
+    payload,
+    {
+      suppressGlobalError: true,
+    }
+  );
+}

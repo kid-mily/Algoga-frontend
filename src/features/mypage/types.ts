@@ -1,10 +1,17 @@
-// 사용자 성별
+export interface ApiErrorResponse {
+  timestamp?: string;
+  status?: number;
+  code?: string;
+  errorCode?: string;
+  message?: string;
+  traceId?: string;
+}
+
 export type UserGender = "MALE" | "FEMALE" | string;
 
-// 로그인한 사용자 전체 정보
 export interface MyPageUser {
   username: string;
-  password: string;
+  password?: string;
   name: string;
   nickname: string;
   email: string;
@@ -15,49 +22,15 @@ export interface MyPageUser {
   personalCode: string;
 }
 
-// 프로필 수정 요청 데이터
-export interface UpdateProfileRequest {
-  nickname: string;
-  phone: string;
-  email: string;
-  profileImage: File | null;
+export interface MyPageSummary {
+  courseCount: number;
+  reservationCount: number;
+  couponCount: number;
 }
 
-// 프로필 수정 성공 응답
-export interface UpdateProfileResponse {
-  accessToken: string;
-  refreshToken: string;
-  requiresPasswordChange: boolean;
-}
-
-// 비밀번호 확인 요청
-export interface VerifyPasswordRequest {
-  password: string;
-}
-
-// 비밀번호 변경 요청
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
-
-// 백엔드 공통 응답
-export interface ApiResponse<T> {
-  timestamp: string;
-  status: number;
-  code: string;
-  message: string;
-  data: T;
-}
-
-// 백엔드 오류 응답
-export interface ApiErrorResponse {
-  timestamp?: string;
-  status?: number;
-  code?: string;
-  errorCode?: string;
-  message?: string;
-  traceId?: string;
+export interface MyPageData {
+  user: MyPageUser;
+  summary: MyPageSummary;
 }
 
 export interface UpdateProfileRequest {
@@ -68,9 +41,9 @@ export interface UpdateProfileRequest {
 }
 
 export interface UpdateProfileResponse {
-  accessToken: string;
-  refreshToken: string;
-  requiresPasswordChange: boolean;
+  accessToken?: string;
+  refreshToken?: string;
+  requiresPasswordChange?: boolean;
 }
 
 export interface VerifyPasswordRequest {
@@ -80,4 +53,13 @@ export interface VerifyPasswordRequest {
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
+}
+
+export interface CertificatePdfFile {
+  blob: Blob;
+  fileName: string;
+}
+
+export interface CertificatePdfData extends CertificatePdfFile {
+  url: string;
 }

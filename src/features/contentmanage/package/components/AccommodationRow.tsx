@@ -26,6 +26,7 @@ export default function AccommodationRow({
   onDelete,
 }: AccommodationRowProps) {
   const canRenderAccommodationImage = isAllowedImageUrl(accommodation.imageUrl);
+  const accommodationPrice = accommodation.pricePerNight * accommodation.nights;
 
   return (
     <tr className="border-b border-[#E4E7EC]">
@@ -67,6 +68,12 @@ export default function AccommodationRow({
       </td>
       <td className="px-5 py-5 text-[16px] font-bold text-[#111827]">
         {accommodation.pricePerNight.toLocaleString()}원
+      </td>
+      <td className="px-5 py-5 text-[14px] font-semibold text-[#344054]">
+        {accommodation.nights.toLocaleString()}박
+      </td>
+      <td className="px-5 py-5 text-[16px] font-bold text-[#439A97]">
+        {accommodationPrice.toLocaleString()}원
       </td>
       <td className="px-5 py-5">
         <menu className="flex items-center justify-center gap-3">

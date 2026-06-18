@@ -38,7 +38,7 @@ export const getAdminRedirectPathByRole = (role: string) => {
   }
 
   if (role === "SETTLEMENT_MANAGER") {
-    return "/csadmin/refund";
+    return "/moneyadmin/payments";
   }
 
   return "/contentadmin/lecture";

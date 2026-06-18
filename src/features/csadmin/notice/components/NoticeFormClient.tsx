@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import CompleteModal from "@/features/common/CompleteModal";
@@ -15,6 +15,7 @@ type NoticeFormClientProps = {
 
 export default function NoticeFormClient({ mode, noticeId }: NoticeFormClientProps) {
   const router = useRouter();
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const {
     formData,
     tagOptions,
@@ -35,9 +36,19 @@ export default function NoticeFormClient({ mode, noticeId }: NoticeFormClientPro
     mode === "create"
       ? "공지사항이 등록되었습니다."
       : "공지사항이 수정되었습니다.";
+  const validationMessages = [
+    "공지사항 제목을 입력해주세요.",
+    "공지사항 내용을 입력해주세요.",
+    "공지사항 태그를 선택해주세요.",
+  ];
+  const bannerError = validationMessages.includes(error) ? "" : error;
+  const showTitleError = hasSubmitted && !formData.title.trim();
+  const showContentError = hasSubmitted && !formData.content.trim();
+  const showTagError = hasSubmitted && !formData.tag;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setHasSubmitted(true);
 
     if (!validateForm()) return;
 
@@ -71,7 +82,7 @@ export default function NoticeFormClient({ mode, noticeId }: NoticeFormClientPro
         </span>
       </header>
 
-      <AdminErrorBanner message={error} className="mb-4" />
+      <AdminErrorBanner message={bannerError} className="mb-4" />
 
       <form onSubmit={handleSubmit} className="grid grid-cols-[minmax(0,1fr)_360px] gap-6 xl:grid-cols-[minmax(0,1fr)_440px]">
         <div className="space-y-6">
@@ -86,6 +97,11 @@ export default function NoticeFormClient({ mode, noticeId }: NoticeFormClientPro
               placeholder="공지사항 제목을 입력하세요"
               className="h-[44px] w-full rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] outline-none placeholder:text-[#98A2B3] focus:border-[#639E9B]"
             />
+            {showTitleError && (
+              <p className="mt-2 text-[13px] font-semibold text-[#DC2626]">
+                공지사항 제목을 입력해주세요.
+              </p>
+            )}
           </section>
 
           <section className="rounded-[16px] border border-[#E4E7EC] bg-white p-6">
@@ -99,6 +115,11 @@ export default function NoticeFormClient({ mode, noticeId }: NoticeFormClientPro
               placeholder="공지사항 내용을 입력하세요..."
               className="h-[360px] w-full resize-none rounded-[10px] border border-[#E4E7EC] px-4 py-4 text-[14px] outline-none placeholder:text-[#98A2B3] focus:border-[#639E9B]"
             />
+            {showContentError && (
+              <p className="mt-2 text-[13px] font-semibold text-[#DC2626]">
+                공지사항 내용을 입력해주세요.
+              </p>
+            )}
           </section>
         </div>
 
@@ -128,6 +149,11 @@ export default function NoticeFormClient({ mode, noticeId }: NoticeFormClientPro
                 );
               })}
             </div>
+            {showTagError && (
+              <p className="px-5 pb-5 text-[13px] font-semibold text-[#DC2626]">
+                공지사항 태그를 선택해주세요.
+              </p>
+            )}
           </section>
 
           <section className="rounded-[16px] border border-[#BBF7D0] bg-gradient-to-r from-[#DDF5DE] to-[#F3FBFB] p-5">

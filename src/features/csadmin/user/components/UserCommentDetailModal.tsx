@@ -1,16 +1,43 @@
-﻿import { AdminUserComment } from "@/features/csadmin/user/types";
+"use client";
+
+import { useEffect } from "react";
+import { AdminUserComment } from "@/features/csadmin/user/types";
 
 type UserCommentDetailModalProps = {
   comment: AdminUserComment | null;
   onClose: () => void;
 };
 
-export default function UserCommentDetailModal({ comment, onClose }: UserCommentDetailModalProps) {
+export default function UserCommentDetailModal({
+  comment,
+  onClose,
+}: UserCommentDetailModalProps) {
+  useEffect(() => {
+    if (!comment) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [comment, onClose]);
+
   if (!comment) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <section className="w-full max-w-[560px] overflow-hidden rounded-[16px] bg-white shadow-xl" role="dialog" aria-modal="true" aria-labelledby="user-comment-detail-title">
+      <section
+        className="w-full max-w-[560px] overflow-hidden rounded-[16px] bg-white shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-comment-detail-title"
+      >
         <header className="flex items-center justify-between border-b border-[#E4E7EC] px-6 py-5">
           <h2 id="user-comment-detail-title" className="text-[20px] font-bold text-[#111827]">
             댓글 상세

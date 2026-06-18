@@ -23,19 +23,17 @@ export default function BannerToolbar({
         value={searchKeyword}
         onChange={(event) => onSearchKeywordChange(event.target.value)}
         placeholder="배너 문구 또는 URL 검색"
-        className="h-[42px] min-w-[260px] flex-1 rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] outline-none placeholder:text-[#98A2B3] focus:border-[#639E9B]"
+        className="h-[42px] min-w-0 flex-1 rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] outline-none placeholder:text-[#98A2B3] focus:border-[#639E9B]"
       />
 
-      <label htmlFor="banner-visibility-filter" className="sr-only">
-        노출 상태 필터
-      </label>
+      
       <select
         id="banner-visibility-filter"
         value={visibilityFilter}
         onChange={(event) =>
           onVisibilityFilterChange(event.target.value as "ALL" | "VISIBLE" | "HIDDEN")
         }
-        className="h-[42px] rounded-[10px] border border-[#E4E7EC] bg-white px-4 text-[14px] font-semibold text-[#344054] outline-none focus:border-[#639E9B]"
+        className="h-[42px] min-w-0 flex-1 rounded-[10px] border border-[#E4E7EC] bg-white px-4 text-[14px] font-semibold text-[#344054] outline-none focus:border-[#639E9B] sm:max-w-[140px]"
       >
         <option value="ALL">전체</option>
         <option value="VISIBLE">노출</option>
