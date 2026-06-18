@@ -1,8 +1,10 @@
+import Image from "next/image";
 import { AdminReview, ReviewLevel } from "../types";
 import RatingStars from "./RatingStars";
 
 type ReviewCardProps = {
   review: AdminReview;
+  onVisibilityChange: (review: AdminReview) => void;
   onDelete: (review: AdminReview) => void;
 };
 
@@ -12,7 +14,11 @@ const levelStyle: Record<ReviewLevel, string> = {
   고급: "bg-[#F3E8FF] text-[#7E22CE]",
 };
 
-export default function ReviewCard({ review, onDelete }: ReviewCardProps) {
+export default function ReviewCard({
+  review,
+  onVisibilityChange,
+  onDelete,
+}: ReviewCardProps) {
   return (
     <article className="flex items-start justify-between border-b border-[#EEF0F3] px-6 py-6 last:border-b-0">
       <div className="min-w-0 flex-1 pr-5">
@@ -26,6 +32,11 @@ export default function ReviewCard({ review, onDelete }: ReviewCardProps) {
           <h2 className="truncate text-[15px] font-bold text-[#111827]">
             {review.packageName}
           </h2>
+          {review.hidden && (
+            <span className="rounded-full bg-[#FEE2E2] px-2.5 py-1 text-[12px] font-bold text-[#DC2626]">
+              숨김
+            </span>
+          )}
         </div>
 
         <div className="mb-3 flex items-center gap-3">
@@ -55,19 +66,30 @@ export default function ReviewCard({ review, onDelete }: ReviewCardProps) {
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onDelete(review)}
-        aria-label={`${review.packageName} ${review.user} 후기 삭제`}
-        className="mt-1 shrink-0 text-[#EF4444]"
-      >
-        <img
-          src="/images/delete.svg"
-          alt=""
-          aria-hidden="true"
-          className="h-[17px] w-[17px]"
-        />
-      </button>
+      <div className="mt-1 flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onVisibilityChange(review)}
+          aria-label={`${review.packageName} ${review.user} 후기 숨김 상태 변경`}
+          className="h-[32px] rounded-[8px] border border-[#E4E7EC] px-3 text-[12px] font-bold text-[#344054]"
+        >
+          {review.hidden ? "노출" : "숨김"}
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(review)}
+          aria-label={`${review.packageName} ${review.user} 후기 삭제`}
+          className="flex h-[32px] w-[32px] items-center justify-center rounded-[8px] hover:bg-[#FEF2F2]"
+        >
+          <Image
+            src="/images/delete.svg"
+            alt=""
+            aria-hidden="true"
+            width={17}
+            height={17}
+          />
+        </button>
+      </div>
     </article>
   );
 }

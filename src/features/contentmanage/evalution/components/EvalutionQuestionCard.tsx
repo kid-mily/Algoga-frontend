@@ -1,28 +1,25 @@
-import { EvalutionLevel, EvalutionQuestion } from "../types";
+import Image from "next/image";
+import { EvalutionQuestionSet } from "../types";
 
 type EvalutionQuestionCardProps = {
-  question: EvalutionQuestion;
+  questionSet: EvalutionQuestionSet;
   order: number;
   isExpanded: boolean;
-  onToggle: (questionId: number) => void;
+  onToggle: (questionSetId: number) => void;
   onEdit: (questionId: number) => void;
-  onDelete: (question: EvalutionQuestion) => void;
-};
-
-const levelStyle: Record<EvalutionLevel, string> = {
-  초급: "bg-[#E7F4EC] text-[#16A34A]",
-  중급: "bg-[#EEF4FF] text-[#4F46E5]",
-  고급: "bg-[#F3E8FF] text-[#7E22CE]",
+  onDelete: (questionSet: EvalutionQuestionSet) => void;
 };
 
 export default function EvalutionQuestionCard({
-  question,
+  questionSet,
   order,
   isExpanded,
   onToggle,
   onEdit,
   onDelete,
 }: EvalutionQuestionCardProps) {
+  const editTargetId = questionSet.questions[0]?.id ?? questionSet.id;
+
   return (
     <article className="border-b border-[#EEF0F3] px-6 py-5 last:border-b-0">
       <div className="flex items-center">
@@ -32,81 +29,80 @@ export default function EvalutionQuestionCard({
 
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center gap-2">
-            <span
-              className={`rounded-full px-2.5 py-1 text-[12px] font-semibold ${levelStyle[question.level]}`}
-            >
-              {question.level}
-            </span>
-
             <span className="rounded-full bg-[#F2F4F7] px-2.5 py-1 text-[12px] font-semibold text-[#667085]">
-              {question.country}
+              {questionSet.country}
             </span>
           </div>
 
           <h3 className="truncate text-[15px] font-semibold text-[#111827]">
-            {question.title}
+            {questionSet.country} 진단평가 {questionSet.questions.length}문항 세트
           </h3>
         </div>
 
         <div className="flex items-center gap-5">
           <button
             type="button"
-            onClick={() => onToggle(question.id)}
-            aria-label={`${question.title} 상세 보기`}
+            onClick={() => onToggle(questionSet.id)}
+            aria-label={`${questionSet.country} 진단평가 세트 상세 보기`}
             aria-expanded={isExpanded}
           >
-            <img
+            <Image
               src="/images/arrow.svg"
               alt=""
               aria-hidden="true"
-              className={`h-[18px] w-[18px] transition ${
+              width={18}
+              height={18}
+              className={`transition ${
                 isExpanded ? "rotate-90" : "-rotate-90"
               }`}
             />
           </button>
           <button
             type="button"
-            onClick={() => onEdit(question.id)}
-            aria-label={`${question.title} 수정`}
+            onClick={() => onEdit(editTargetId)}
+            aria-label={`${questionSet.country} 진단평가 세트 수정`}
           >
-            <img
+            <Image
               src="/images/edit.svg"
               alt=""
               aria-hidden="true"
-              className="h-[17px] w-[17px]"
+              width={17}
+              height={17}
             />
           </button>
           <button
             type="button"
-            onClick={() => onDelete(question)}
-            aria-label={`${question.title} 삭제`}
+            onClick={() => onDelete(questionSet)}
+            aria-label={`${questionSet.country} 진단평가 세트 삭제`}
           >
-            <img
+            <Image
               src="/images/delete.svg"
               alt=""
               aria-hidden="true"
-              className="h-[17px] w-[17px]"
+              width={17}
+              height={17}
             />
           </button>
         </div>
       </div>
 
       {isExpanded && (
-        <ol className="mt-4 space-y-2 pl-[42px]" aria-label="선택지">
-          {question.options.map((option, optionIndex) => (
+        <ol className="mt-4 space-y-3 pl-[42px]" aria-label="진단평가 세트 문항">
+          {questionSet.questions.map((question) => (
             <li
-              key={`${question.id}-${optionIndex}`}
-              className={`rounded-[10px] border px-4 py-3 text-[14px] ${
-                question.answerIndex === optionIndex
-                  ? "border-[#439A97] bg-[#E7F4EC] text-[#111827]"
-                  : "border-[#E4E7EC] bg-[#F9FAFB] text-[#344054]"
-              }`}
+              key={question.id}
+              className="rounded-[10px] border border-[#E4E7EC] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#344054]"
             >
-              {optionIndex + 1}. {option}
-              {question.answerIndex === optionIndex && (
-                <span className="ml-2 text-[12px] font-semibold text-[#439A97]">
-                  정답
-                </span>
+              <p className="font-semibold text-[#111827]">
+                {question.questionOrder}. {question.title}
+              </p>
+              <p className="mt-2 text-[13px] text-[#667085]">
+                정답: {question.options[question.answerIndex] ?? "-"}
+              </p>
+              {question.explanation && (
+                <p className="mt-1 text-[13px] text-[#667085]">
+                  해설: {question.explanation}
+                </p>
               )}
             </li>
           ))}

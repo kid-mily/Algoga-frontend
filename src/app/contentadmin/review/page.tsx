@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import ReviewManageClient from "@/features/contentmanage/review/components/ReviewManageClient";
-import { mockReviews } from "@/features/contentmanage/review/types";
 
 export const metadata: Metadata = {
   title: "후기 관리 | 알고가 관리자",
@@ -13,5 +12,5 @@ export const metadata: Metadata = {
 };
 
 export default function ReviewPage() {
-  return <ReviewManageClient initialReviews={mockReviews} />;
+  return <ReviewManageClient />;
 }
