@@ -27,7 +27,7 @@ export default function ReservationConversionManageClient() {
     <main aria-label="예약 전환율 분석">
       <SimpleSubHeader
         title="예약 전환율 분석"
-        description={`예약 시도 ${formatNumber(summary.attemptCount)}건 | 완료 ${formatNumber(summary.completedCount)}건 | 전환율 ${formatPercent(summary.conversionRate)}`}
+        description={`결제 페이지 진입 ${formatNumber(summary.attemptCount)}건 | 예약 완료 ${formatNumber(summary.completedCount)}건 | 전환율 ${formatPercent(summary.conversionRate)}`}
       />
 
       <AdminErrorBanner message={error} className="mb-4" />

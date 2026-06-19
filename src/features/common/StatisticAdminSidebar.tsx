@@ -19,6 +19,12 @@ const menus = [
     icon: "/images/gift.svg",
     activeIcon: "/images/gift-active.svg",
   },
+  {
+    name: "나라별 인기도",
+    href: "/statisticadmin/country-popular",
+    icon: "/images/global.svg",
+    activeIcon: "/images/global.svg",
+  },
 ];
 
 export default function StatisticAdminSidebar() {
