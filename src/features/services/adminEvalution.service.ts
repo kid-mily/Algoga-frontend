@@ -1,74 +1,227 @@
+import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { getCourseCountries } from "@/features/services/adminCourse.service";
 import {
-  defaultEvalutionQuestions,
+  EvalutionLevel,
   EvalutionQuestion,
   EvalutionQuestionFormData,
+  EvalutionResult,
 } from "@/features/contentmanage/evalution/types";
 
-const STORAGE_KEY = "adminEvalutionQuestions:v2";
+type UnknownRecord = Record<string, unknown>;
 
-const getStoredQuestions = (): EvalutionQuestion[] => {
-  if (typeof window === "undefined") {
-    return defaultEvalutionQuestions;
-  }
+const getRecord = (value: unknown): UnknownRecord =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as UnknownRecord)
+    : {};
 
-  const stored = window.localStorage.getItem(STORAGE_KEY);
+const getItems = (data: unknown) => {
+  if (Array.isArray(data)) return data;
 
-  if (!stored) {
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(defaultEvalutionQuestions)
-    );
-    return defaultEvalutionQuestions;
-  }
+  const record = getRecord(data);
 
-  try {
-    const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed : defaultEvalutionQuestions;
-  } catch {
-    return defaultEvalutionQuestions;
-  }
+  if (Array.isArray(record.content)) return record.content;
+  if (Array.isArray(record.items)) return record.items;
+  if (Array.isArray(record.questions)) return record.questions;
+  if (Array.isArray(record.results)) return record.results;
+
+  return [];
 };
 
-const saveQuestions = (questions: EvalutionQuestion[]) => {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(questions));
+const getString = (record: UnknownRecord, keys: string[], fallback = "-") => {
+  const value = keys.map((key) => record[key]).find((item) => item !== undefined);
+
+  if (typeof value === "string" && value.trim()) return value;
+  if (typeof value === "number") return String(value);
+
+  return fallback;
 };
 
-export const getEvalutionQuestions = async () => {
-  return getStoredQuestions();
+const getNumber = (record: UnknownRecord, keys: string[], fallback = 0) => {
+  const value = keys.map((key) => record[key]).find((item) => item !== undefined);
+
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-export const getEvalutionQuestion = async (id: number) => {
-  return getStoredQuestions().find((question) => question.id === id) ?? null;
+const normalizeAnswerIndex = (record: UnknownRecord) => {
+  if (record.answerIndex !== undefined || record.correctAnswerIndex !== undefined) {
+    return Math.max(0, getNumber(record, ["answerIndex", "correctAnswerIndex"], 0));
+  }
+
+  return Math.max(0, getNumber(record, ["correctOption"], 1) - 1);
+};
+
+const formatDate = (value: string) => {
+  if (!value || value === "-") return "-";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return value;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}.${month}.${day}`;
+};
+
+const normalizeResultLevel = (value: string): EvalutionLevel => {
+  if (value === "초급" || value === "BEGINNER") return "초급";
+  if (value === "고급" || value === "ADVANCED") return "고급";
+
+  return "중급";
+};
+
+const normalizeOptions = (record: UnknownRecord) => {
+  const options = record.options ?? record.choices ?? record.answers;
+
+  if (Array.isArray(options)) {
+    return options.map((option) => String(option));
+  }
+
+  return [
+    getString(record, ["option1", "choice1"], ""),
+    getString(record, ["option2", "choice2"], ""),
+    getString(record, ["option3", "choice3"], ""),
+    getString(record, ["option4", "choice4"], ""),
+  ].filter(Boolean);
+};
+
+export const normalizeEvalutionQuestion = (
+  item: unknown,
+  countryName = "-",
+  fallbackId = 0
+): EvalutionQuestion => {
+  const record = getRecord(item);
+  const questionOrder = getNumber(record, ["questionOrder", "order"], fallbackId);
+
+  return {
+    id: getNumber(record, ["questionId", "id"], fallbackId),
+    countryId: getNumber(record, ["countryId", "country_id"]),
+    questionOrder: questionOrder >= 1 ? questionOrder : fallbackId,
+    country: getString(record, ["country", "countryName"], countryName),
+    title: getString(record, ["title", "question", "questionText", "content"], "-"),
+    options: normalizeOptions(record),
+    answerIndex: normalizeAnswerIndex(record),
+    explanation: getString(record, ["explanation"], ""),
+  };
+};
+
+export const normalizeEvalutionResult = (
+  item: unknown,
+  fallbackId = 0
+): EvalutionResult => {
+  const record = getRecord(item);
+  const userId = getNumber(record, ["userId", "memberId"]);
+
+  return {
+    resultId: getNumber(record, ["resultId", "id"], fallbackId),
+    userName: getString(record, ["userName", "nickname", "name"], "-"),
+    userId: userId ? `U${String(userId).padStart(4, "0")}` : "-",
+    level: normalizeResultLevel(getString(record, ["level", "resultLevel"], "중급")),
+    score: getNumber(record, ["score", "totalScore", "correctCount"], 0),
+    submittedAt: formatDate(getString(record, ["submittedAt", "createdAt"], "")),
+  };
+};
+
+export const getEvalutionQuestions = async (
+  countryId: number,
+  countryName = "-",
+  signal?: AbortSignal
+): Promise<EvalutionQuestion[]> => {
+  const response = await adminApi.get<ApiResult<unknown>>(
+    "/api/v1/admin/diagnosis/questions",
+    {
+      params: { countryId },
+      suppressGlobalError: true,
+      signal,
+    }
+  );
+  const data = unwrapData(response);
+
+  return getItems(data).map((item, index) =>
+    normalizeEvalutionQuestion(item, countryName, index + 1)
+  );
+};
+
+export const getEvalutionQuestion = async (
+  id: number,
+  signal?: AbortSignal
+): Promise<EvalutionQuestion | null> => {
+  const countries = await getCourseCountries(signal);
+  const questionGroups = await Promise.all(
+    countries.map((country) =>
+      getEvalutionQuestions(country.countryId, country.countryName, signal)
+    )
+  );
+  const questions = questionGroups.flat();
+
+  return questions.find((question) => question.id === id) ?? null;
+};
+
+export const getEvalutionResults = async (
+  signal?: AbortSignal
+): Promise<EvalutionResult[]> => {
+  const response = await adminApi.get<ApiResult<unknown>>(
+    "/api/v1/admin/diagnosis/results",
+    {
+      suppressGlobalError: true,
+      signal,
+    }
+  );
+  const data = unwrapData(response);
+
+  return getItems(data).map((item, index) =>
+    normalizeEvalutionResult(item, index + 1)
+  );
 };
 
 export const createEvalutionQuestion = async (
   payload: EvalutionQuestionFormData
 ) => {
-  const questions = getStoredQuestions();
-  const nextId = Math.max(0, ...questions.map((question) => question.id)) + 1;
-  const nextQuestion: EvalutionQuestion = {
-    id: nextId,
-    ...payload,
-  };
+  const request = toDiagnosisQuestionRequest(payload);
+  const response = await adminApi.post<ApiResult<unknown>>(
+    "/api/v1/admin/diagnosis/questions",
+    request,
+    { suppressGlobalError: true }
+  );
 
-  saveQuestions([nextQuestion, ...questions]);
-  return nextQuestion;
+  return normalizeEvalutionQuestion(unwrapData(response), payload.country);
 };
 
 export const updateEvalutionQuestion = async (
   id: number,
   payload: EvalutionQuestionFormData
 ) => {
-  const questions = getStoredQuestions();
-  const nextQuestions = questions.map((question) =>
-    question.id === id ? { id, ...payload } : question
+  const request = toDiagnosisQuestionRequest(payload);
+  const response = await adminApi.put<ApiResult<unknown>>(
+    `/api/v1/admin/diagnosis/questions/${id}`,
+    request,
+    { suppressGlobalError: true }
   );
 
-  saveQuestions(nextQuestions);
-  return nextQuestions.find((question) => question.id === id) ?? null;
+  return normalizeEvalutionQuestion(unwrapData(response), payload.country, id);
 };
 
 export const deleteEvalutionQuestion = async (id: number) => {
-  const questions = getStoredQuestions();
-  saveQuestions(questions.filter((question) => question.id !== id));
+  await adminApi.delete<ApiResult<null>>(
+    `/api/v1/admin/diagnosis/questions/${id}`,
+    { suppressGlobalError: true }
+  );
 };
+
+const toDiagnosisQuestionRequest = (payload: EvalutionQuestionFormData) => ({
+  countryId: payload.countryId,
+  questionText: payload.title,
+  option1: payload.options[0] ?? "",
+  option2: payload.options[1] ?? "",
+  option3: payload.options[2] ?? "",
+  option4: payload.options[3] ?? "",
+  correctOption: payload.answerIndex + 1,
+  explanation: payload.explanation,
+  questionOrder: payload.questionOrder,
+  active: true,
+});

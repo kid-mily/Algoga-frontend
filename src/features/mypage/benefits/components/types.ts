@@ -1,3 +1,5 @@
+import type { CouponDiscountType } from "@/types/coupon";
+
 export interface ApiResponse<T> {
   status: number;
   code: string;
@@ -7,8 +9,6 @@ export interface ApiResponse<T> {
 /* =========================
    쿠폰
 ========================= */
-
-export type CouponDiscountType = "RATE" | "AMOUNT";
 
 export type CouponStatus =
   | "ISSUED"

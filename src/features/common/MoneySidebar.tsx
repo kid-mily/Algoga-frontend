@@ -25,12 +25,6 @@ const menus = [
     icon: "/images/mchart.svg",
     activeIcon: "/images/mchart-active.svg",
   },
-  {
-    name: "쿠폰 사용 현황 조회",
-    href: "/moneyadmin/coupons",
-    icon: "/images/gift.svg",
-    activeIcon: "/images/gift-active.svg",
-  },
 ];
 
 export default function MoneySidebar() {
@@ -42,7 +36,7 @@ export default function MoneySidebar() {
 
   const handleLogout = async () => {
     await Promise.resolve(adminLogout());
-    router.push("/auth/login");
+    router.push("/auth/adminlogin");
   };
 
   return (

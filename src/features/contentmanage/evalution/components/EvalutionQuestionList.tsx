@@ -1,16 +1,18 @@
-import { EvalutionQuestion } from "../types";
+import { EvalutionQuestionSet } from "../types";
 import EvalutionQuestionCard from "./EvalutionQuestionCard";
 
 type EvalutionQuestionListProps = {
-  questions: EvalutionQuestion[];
+  questionSets: EvalutionQuestionSet[];
+  isLoading: boolean;
   expandedId: number | null;
-  onToggle: (questionId: number) => void;
+  onToggle: (questionSetId: number) => void;
   onEdit: (questionId: number) => void;
-  onDelete: (question: EvalutionQuestion) => void;
+  onDelete: (questionSet: EvalutionQuestionSet) => void;
 };
 
 export default function EvalutionQuestionList({
-  questions,
+  questionSets,
+  isLoading,
   expandedId,
   onToggle,
   onEdit,
@@ -22,17 +24,25 @@ export default function EvalutionQuestionList({
         진단평가 문제 목록
       </h2>
 
-      {questions.length === 0 ? (
+      {isLoading ? (
+        <p
+          role="status"
+          aria-live="polite"
+          className="px-6 py-12 text-center text-[14px] text-[#667085]"
+        >
+          진단평가 문제를 불러오는 중입니다...
+        </p>
+      ) : questionSets.length === 0 ? (
         <p className="px-6 py-12 text-center text-[14px] text-[#667085]">
-          등록된 문제가 없습니다.
+          등록된 진단평가 세트가 없습니다.
         </p>
       ) : (
-        questions.map((question, index) => (
+        questionSets.map((questionSet, index) => (
           <EvalutionQuestionCard
-            key={question.id}
-            question={question}
+            key={questionSet.countryId}
+            questionSet={questionSet}
             order={index + 1}
-            isExpanded={expandedId === question.id}
+            isExpanded={expandedId === questionSet.id}
             onToggle={onToggle}
             onEdit={onEdit}
             onDelete={onDelete}
