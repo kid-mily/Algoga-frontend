@@ -1,4 +1,4 @@
-import type { CouponDiscountType } from "@/types/coupon";
+import type { CouponDiscountType } from "@/features/common/types/coupon";
 
 export interface ApiResponse<T> {
   status: number;

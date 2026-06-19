@@ -1,4 +1,4 @@
-import type { CouponDiscountType } from "@/types/coupon";
+import type { CouponDiscountType } from "@/features/common/types/coupon";
 
 // 결제 요청
 export interface CreateLecturePaymentPayload {

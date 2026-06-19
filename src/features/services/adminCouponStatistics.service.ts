@@ -4,7 +4,7 @@ import {
   CouponStatisticsData,
   CouponStatisticsSummary,
 } from "@/features/statisticadmin/coupon/types";
-import type { CouponDiscountType } from "@/types/coupon";
+import type { CouponDiscountType } from "@/features/common/types/coupon";
 
 type UnknownRecord = Record<string, unknown>;
 
