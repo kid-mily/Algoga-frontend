@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 
@@ -70,7 +70,7 @@ export default function CreateChapterClient({
   };
 
   return (
-    <main className="min-h-screen bg-[#F8F8F8] px-10 py-10">
+    <main className="bg-[#F8F8F8] px-10 py-10">
       <section aria-labelledby="chapter-management-title">
         <SubHeader
           backHref="/contentadmin/lecture"
@@ -96,3 +96,4 @@ export default function CreateChapterClient({
     </main>
   );
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { getLectureListAction } from "@/features/contentmanage/lecture/actions";
@@ -34,16 +34,6 @@ export function useAdminCouponList() {
               lectureName: course.title || "강의명 없음",
             }));
 
-            console.log("[coupon:list] course coupons", {
-              requestCourseId: courseId,
-              lectureTitle: course.title,
-              coupons: mappedCoupons.map((coupon) => ({
-                couponPolicyId: coupon.couponPolicyId,
-                courseId: coupon.courseId,
-                couponName: coupon.couponName,
-              })),
-            });
-
             return mappedCoupons;
           } catch {
             return [];
@@ -54,15 +44,6 @@ export function useAdminCouponList() {
       const nextCoupons = couponGroups
         .flat()
         .sort((a, b) => getCouponId(b) - getCouponId(a));
-
-      console.log("[coupon:list] merged coupons", {
-        coupons: nextCoupons.map((coupon) => ({
-          couponPolicyId: getCouponId(coupon),
-          courseId: coupon.courseId,
-          couponName: coupon.couponName,
-          lectureName: coupon.lectureName,
-        })),
-      });
 
       setCoupons(nextCoupons);
     } catch (error: unknown) {
@@ -89,3 +70,4 @@ export function useAdminCouponList() {
     setCoupons,
   };
 }
+
