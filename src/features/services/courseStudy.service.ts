@@ -2,7 +2,9 @@ import { api, ApiResponse } from "@/lib/api";
 
 export interface CourseStudyChapter {
   chapterId: number;
+  courseId?: number;
   title: string;
+  description?: string;
   videoUrl: string;
   durationSeconds: number;
   chapterOrder: number;
