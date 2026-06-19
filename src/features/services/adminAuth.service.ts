@@ -60,7 +60,13 @@ export const adminLogin = async (
   return unwrapData<AdminLoginResponse | null>(response) ?? {};
 };
 
-export const adminLogout = () => {
+export const adminLogout = async () => {
+  await api.post(
+    "/api/v1/auth/admin/logout",
+    undefined,
+    { suppressGlobalError: true }
+  );
+
   localStorage.removeItem("adminAccessToken");
   localStorage.removeItem("adminRefreshToken");
 };
