@@ -1,123 +1,152 @@
-'use client';
+"use client";
 
 import { useParams } from "next/navigation";
 import SubHeader from "../../contentmanage/common/SubHeader";
 import { ChapterItem, VideoItem } from "./types";
 
 interface LectureSideBarProps {
-    chapters: ChapterItem[];
-    currentVideoId?: number;
-    onVideoSelect: (video: VideoItem) => void;
-    courseTitle?: string;
-    courseDescription?: string;
+  chapters: ChapterItem[];
+  currentVideoId?: number;
+  onVideoSelect: (video: VideoItem) => void;
+  courseTitle?: string;
+  courseDescription?: string;
+  backHref?: string;
+  backText?: string;
 }
 
+const getParam = (value: string | string[] | undefined) => {
+  if (!value) return "";
+  return decodeURIComponent(Array.isArray(value) ? value[0] : value);
+};
+
 export default function LectureSideBar({
-    chapters,
-    currentVideoId,
-    onVideoSelect,
-    courseTitle = "강의실",
-    courseDescription = "여행 전 필요한 지식을 수강하세요"
+  chapters,
+  currentVideoId,
+  onVideoSelect,
+  courseTitle = "강의",
+  courseDescription = "여행에 필요한 지식을 수강하세요.",
+  backHref,
+  backText = "클래스룸으로",
 }: LectureSideBarProps) {
-    const { continentCode, countryid } = useParams();
+  const params = useParams();
 
-    //  백엔드가 준 챕터별 progressRate 목록으로 전체 평균 진도율 계산
-    const totalChapters = chapters.length;
-    const averageProgress = totalChapters > 0
-        ? Math.round(chapters.reduce((acc, ch) => acc + (ch.progressRate || 0), 0) / totalChapters)
-        : 0;
+  const continentCode = getParam(params.continentCode);
+  const countryId = getParam(params.countryid);
+  const courseId = getParam(params.courseId);
 
-    // 총 강의 수 계산
-    const totalVideosCount = chapters.reduce((acc, ch) => acc + (ch.videos?.length || 0), 0);
+  const resolvedBackHref =
+    backHref || `/classroom/${continentCode}/${countryId}/lecture/${courseId}`;
 
-    return (
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col justify-between z-10 min-h-screen">         
-            
-            {/* 상단 타이틀 및 진도율 영역 */}
-            <div className="bg-[#EEF5FF] p-5">          
-                <div>
-                    {/* 상단 타이틀 */}
-                    <SubHeader
-                        backHref={`/classroom/${continentCode}/${countryid}/lecture`}
-                        backText="돌아가기"
-                        title={courseTitle}
-                        description={courseDescription}
-                    />
-                    <p className="text-sm text-gray-400 mt-1 font-medium mb-5">
-                        📂 {totalVideosCount}개 강의 · ⭐ 실시간 수강 중
-                    </p>
-                </div>
+  const totalChapters = chapters.length;
 
-                {/* 진도율 게이지 */}
-                <div className="mt-1">
-                    <div className="flex justify-between text-xs font-bold">
-                        <span className="text-gray-500 mb-1">전체 진도율</span>
-                        <span className="text-[#439A97]">{averageProgress}%</span>
-                    </div>
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div 
-                            className="h-full bg-[#439A97] rounded-full transition-all duration-500 ease-out" 
-                            style={{ width: `${averageProgress}%` }}
-                        />
-                    </div>
-                </div>
-            </div>
-                
-            {/* 챕터 리스트 */}
-            <div className="flex-1 p-5 pt-3 overflow-y-auto max-h-[calc(100vh-280px)]">
-                <p className="text-xs font-bold text-gray-400 mb-3 pl-1">강의 목차</p>
-                
-                {chapters.map((ch, chIdx) => {
-                    // 챕터 내부의 비디오 목록을 순회하여 출력
-                    return (ch.videos || []).map((video) => {
-                        const isActive = video.videoId === currentVideoId;
-                        
-                        return (
-                            <button
-                                key={video.videoId}
-                                onClick={() => onVideoSelect(video)}
-                                className={`w-full text-left p-3 rounded-xl cursor-pointer flex flex-col gap-1 text-xs mb-3 transition-colors  
-                                    ${isActive 
-                                    ? 'bg-[#EBF5F5] text-[#439A97] border border-cyan-800' 
-                                    : 'bg-white text-[#4A5568] hover:bg-gray-50 border border-transparent'
-                                    }`}
-                            >
-                                {/* 장 번호 표기  */}
-                                <div className="flex justify-between items-center w-full">
-                                    <span className={`font-bold text-xs ${isActive ? 'text-[#439A97]' : 'text-gray-400'}`}>
-                                        {ch.chapterNumber || `${String(chIdx + 1).padStart(2, '0')}장`}
-                                    </span>
-                                    {/* 챕터별 진도 현황 표기 */}
-                                    {ch.completed && (
-                                        <span className="text-[10px] bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded font-bold">✓ 완료</span>
-                                    )}
-                                </div>
-                                
-                                {/* 강의 제목과 재생 시간 */}
-                                <div className="flex justify-between items-start gap-2 w-full mt-0.5">
-                                    <span className={`font-semibold leading-relaxed flex-1 text-left
-                                        ${isActive ? 'text-[#357A78]' : 'text-gray-700'}`}
-                                    >
-                                        {video.title}
-                                    </span>
-                                    <span className="text-[10px] text-gray-400 font-medium pt-0.5 whitespace-nowrap">
-                                        {video.duration || "재생 불가능"}
-                                    </span>
-                                </div>
-                            </button>
-                        );
-                    });
-                })}
-            </div>
-                
-            {/* 퀴즈 버튼 */}
-            <div className="p-5 pt-4 border-t border-gray-100 bg-white">
-                <button
-                    className="w-full h-12 rounded-xl bg-[#439A97] text-white text-sm font-bold hover:bg-[#357A78] cursor-pointer flex items-center justify-center gap-2 transition-colors"
-                >
-                    📝 퀴즈 풀기
-                </button>
-            </div>
+  const averageProgress =
+    totalChapters > 0
+      ? Math.round(
+          chapters.reduce(
+            (acc, chapter) => acc + (chapter.progressRate || 0),
+            0
+          ) / totalChapters
+        )
+      : 0;
+
+  const totalVideosCount = chapters.reduce(
+    (acc, chapter) => acc + (chapter.videos?.length || 0),
+    0
+  );
+
+  return (
+    <div className="z-10 flex min-h-screen w-80 flex-col justify-between border-r border-gray-200 bg-white">
+      <div className="bg-[#EEF5FF] p-5">
+        <div>
+          <SubHeader
+            backHref={resolvedBackHref}
+            backText={backText}
+            title={courseTitle}
+            description={courseDescription}
+          />
+
+          <p className="mb-5 mt-1 text-sm font-medium text-gray-400">
+            총 {totalVideosCount}개 강의
+          </p>
         </div>
-    );
+
+        <div className="mt-1">
+          <div className="flex justify-between text-xs font-bold">
+            <span className="mb-1 text-gray-500">전체 진도</span>
+            <span className="text-[#439A97]">{averageProgress}%</span>
+          </div>
+
+          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+            <div
+              className="h-full rounded-full bg-[#439A97] transition-all duration-500 ease-out"
+              style={{ width: `${averageProgress}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="max-h-[calc(100vh-280px)] flex-1 overflow-y-auto p-5 pt-3">
+        <p className="mb-3 pl-1 text-xs font-bold text-gray-400">강의 목차</p>
+
+        {chapters.map((chapter, chapterIndex) => {
+          return (chapter.videos || []).map((video) => {
+            const isActive = video.videoId === currentVideoId;
+
+            return (
+              <button
+                key={video.videoId}
+                type="button"
+                onClick={() => onVideoSelect(video)}
+                className={`mb-3 flex w-full cursor-pointer flex-col gap-1 rounded-xl border p-3 text-left text-xs transition-colors ${
+                  isActive
+                    ? "border-cyan-800 bg-[#EBF5F5] text-[#439A97]"
+                    : "border-transparent bg-white text-[#4A5568] hover:bg-gray-50"
+                }`}
+              >
+                <div className="flex w-full items-center justify-between">
+                  <span
+                    className={`text-xs font-bold ${
+                      isActive ? "text-[#439A97]" : "text-gray-400"
+                    }`}
+                  >
+                    {chapter.chapterNumber ||
+                      `챕터 ${String(chapterIndex + 1).padStart(2, "0")}`}
+                  </span>
+
+                  {chapter.completed && (
+                    <span className="rounded bg-teal-50 px-1.5 py-0.5 text-[10px] font-bold text-teal-600">
+                      완료
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-0.5 flex w-full items-start justify-between gap-2">
+                  <span
+                    className={`flex-1 text-left font-semibold leading-relaxed ${
+                      isActive ? "text-[#357A78]" : "text-gray-700"
+                    }`}
+                  >
+                    {video.title}
+                  </span>
+
+                  <span className="whitespace-nowrap pt-0.5 text-[10px] font-medium text-gray-400">
+                    {video.duration || "재생 시간 없음"}
+                  </span>
+                </div>
+              </button>
+            );
+          });
+        })}
+      </div>
+
+      <div className="border-t border-gray-100 bg-white p-5 pt-4">
+        <button
+          type="button"
+          className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#439A97] text-sm font-bold text-white transition-colors hover:bg-[#357A78]"
+        >
+          퀴즈 풀기
+        </button>
+      </div>
+    </div>
+  );
 }
