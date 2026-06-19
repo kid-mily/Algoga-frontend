@@ -74,10 +74,10 @@ const buildUrl = (
   return url.toString();
 };
 
-const refreshAccessToken = async () => {
+const refreshAccessToken = async (refreshPath: string) => {
   if (typeof window === "undefined") return false;
 
-  refreshPromise ??= fetch(buildUrl("/api/v1/auth/refresh"), {
+  refreshPromise ??= fetch(buildUrl(refreshPath), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -93,10 +93,11 @@ const refreshAccessToken = async () => {
   return refreshPromise;
 };
 
-async function request<T>(
-  path: string,
-  options: ApiRequestOptions = {}
-): Promise<T> {
+  async function request<T>(
+    path: string,
+    options: ApiRequestOptions = {},
+    refreshPath = "/api/v1/auth/refresh"
+  ): Promise<T> {
   const {
     params,
     suppressGlobalError,
@@ -140,23 +141,24 @@ async function request<T>(
       headers,
     });
 
-    if (
-      response.status === 401 &&
-      !skipAuth &&
-      path !== "/api/v1/auth/refresh" &&
-      typeof window !== "undefined"
-    ) {
-      const refreshed = await refreshAccessToken();
+    const shouldRefresh =
+    (response.status === 401 || response.status === 403) &&
+    !skipAuth &&
+    path !== refreshPath &&
+    typeof window !== "undefined";
 
-      if (refreshed && !controller.signal.aborted) {
-        response = await fetch(requestUrl, {
-          ...fetchOptions,
-          credentials: fetchOptions.credentials ?? "include",
-          signal: controller.signal,
-          headers,
-        });
-      }
+  if (shouldRefresh) {
+    const refreshed = await refreshAccessToken(refreshPath);
+
+    if (refreshed && !controller.signal.aborted) {
+      response = await fetch(requestUrl, {
+        ...fetchOptions,
+        credentials: fetchOptions.credentials ?? "include",
+        signal: controller.signal,
+        headers,
+      });
     }
+  }
   } catch (error: unknown) {
     if (didTimeout) {
       throw new ApiRequestError({
@@ -200,34 +202,46 @@ async function request<T>(
   return result as T;
 }
 
-const createApi = () => ({
+const createApi = (refreshPath = "/api/v1/auth/refresh") => ({
   get: <T>(path: string, options?: ApiRequestOptions) =>
-    request<T>(path, { ...options, method: "GET" }),
+    request<T>(path, { ...options, method: "GET" }, refreshPath),
 
   post: <T>(path: string, data?: unknown, options?: ApiRequestOptions) =>
-    request<T>(path, {
-      ...options,
-      method: "POST",
-      body: data instanceof FormData ? data : JSON.stringify(data),
-    }),
+    request<T>(
+      path,
+      {
+        ...options,
+        method: "POST",
+        body: data instanceof FormData ? data : JSON.stringify(data),
+      },
+      refreshPath
+    ),
 
   put: <T>(path: string, data?: unknown, options?: ApiRequestOptions) =>
-    request<T>(path, {
-      ...options,
-      method: "PUT",
-      body: data instanceof FormData ? data : JSON.stringify(data),
-    }),
+    request<T>(
+      path,
+      {
+        ...options,
+        method: "PUT",
+        body: data instanceof FormData ? data : JSON.stringify(data),
+      },
+      refreshPath
+    ),
 
   patch: <T>(path: string, data?: unknown, options?: ApiRequestOptions) =>
-    request<T>(path, {
-      ...options,
-      method: "PATCH",
-      body: data instanceof FormData ? data : JSON.stringify(data),
-    }),
+    request<T>(
+      path,
+      {
+        ...options,
+        method: "PATCH",
+        body: data instanceof FormData ? data : JSON.stringify(data),
+      },
+      refreshPath
+    ),
 
   delete: <T>(path: string, options?: ApiRequestOptions) =>
-    request<T>(path, { ...options, method: "DELETE" }),
+    request<T>(path, { ...options, method: "DELETE" }, refreshPath),
 });
 
-export const api = createApi();
-export const adminApi = createApi();
+export const api = createApi("/api/v1/auth/refresh");
+export const adminApi = createApi("/api/v1/auth/admin/refresh");
