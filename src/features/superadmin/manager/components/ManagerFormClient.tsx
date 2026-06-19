@@ -50,6 +50,10 @@ export default function ManagerFormClient({
   managerId,
 }: ManagerFormClientProps) {
   const router = useRouter();
+  const visibleRoleOptions =
+    mode === "create"
+      ? managerRoleOptions.filter((role) => role.value !== "SUPER_ADMIN")
+      : managerRoleOptions;
   const [formData, setFormData] = useState<ManagerFormData>(emptyManagerForm);
   const [isLoading, setIsLoading] = useState(mode === "edit");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -137,6 +141,11 @@ export default function ManagerFormClient({
 
     if (!formData.email.trim()) {
       setError("이메일을 입력해주세요.");
+      return false;
+    }
+
+    if (mode === "create" && formData.role === "SUPER_ADMIN") {
+      setError("슈퍼 관리자 계정은 추가 생성할 수 없습니다.");
       return false;
     }
 
@@ -312,7 +321,7 @@ export default function ManagerFormClient({
           </legend>
 
           <div className="grid grid-cols-2 gap-3">
-            {managerRoleOptions.map((role) => (
+            {visibleRoleOptions.map((role) => (
               <label
                 key={role.value}
                 className="flex h-[46px] cursor-pointer items-center gap-3 rounded-[10px] border border-[#D0D5DD] px-4 text-[14px] font-semibold text-[#111827]"

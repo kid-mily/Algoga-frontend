@@ -3,7 +3,7 @@ import {
   CouponStatistic,
   CouponStatisticsData,
   CouponStatisticsSummary,
-} from "@/features/moneyadmin/coupon/types";
+} from "@/features/statisticadmin/coupon/types";
 import type { CouponDiscountType } from "@/types/coupon";
 
 type UnknownRecord = Record<string, unknown>;
