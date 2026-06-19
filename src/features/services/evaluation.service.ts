@@ -74,16 +74,12 @@ export const getDiagnosisQuestions = async (
 export const submitDiagnosisResult = async (
   payload: DiagnosisResultRequest
 ): Promise<DiagnosisResult> => {
-  const requestUrl = `${BASE_URL}/api/v1/diagnosis/result`;
-  const accessToken =
-    typeof window !== "undefined" ? getCookie("accessToken") : null;
-
-  const response = await fetch(requestUrl, {
+  const response = await fetch(`${BASE_URL}/api/v1/diagnosis/result`, {
     method: "POST",
+    credentials: "include",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
     body: JSON.stringify(payload),
   });
@@ -95,15 +91,6 @@ export const submitDiagnosisResult = async (
       status: response.status,
       message: response.statusText,
     };
-
-    console.error("진단평가 제출 API 오류:", {
-      url: requestUrl,
-      status: response.status,
-      errorCode: errorData.errorCode,
-      message: errorData.message,
-      traceId: errorData.traceId,
-      data: errorData,
-    });
 
     throw new DiagnosisSubmitError(errorData);
   }

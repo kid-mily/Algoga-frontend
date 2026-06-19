@@ -1,10 +1,9 @@
-// 나라 선택
 
 import CountrySelectHeader from "@/features/classroom/components/CountrySelectHeader";
 import CountrySelectSection from "@/features/classroom/components/CountrySelectSection";
 import { getCountries } from "@/features/services/countrySelect.service";
 
-export const revalidate = 1800;
+export const revalidate = 3;    // 300
 
 interface CountrySelectPageProps {
   params: Promise<{
