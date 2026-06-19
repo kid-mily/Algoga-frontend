@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import SubHeader from "@/features/contentmanage/common/SubHeader";
@@ -34,8 +34,15 @@ export default function EditCouponClient({
 
   const handleEdit = async (data: AdminCouponPayload) => {
     try {
+      const nextCourseId = data.courseId || courseId;
+
+      if (!Number.isSafeInteger(nextCourseId) || nextCourseId <= 0 || !Number.isSafeInteger(couponId) || couponId <= 0) {
+        setApiError("쿠폰 수정에 필요한 ID가 올바르지 않습니다.");
+        return false;
+      }
+
       setApiError("");
-      await updateCouponAction(courseId, couponId, data);
+      await updateCouponAction(nextCourseId, couponId, data);
       return true;
     } catch (error: unknown) {
       setApiError(error instanceof Error ? error.message : "쿠폰 수정에 실패했습니다.");
@@ -82,3 +89,4 @@ export default function EditCouponClient({
     </main>
   );
 }
+

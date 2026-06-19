@@ -1,4 +1,4 @@
-import { adminApi, ApiResponse } from "@/lib/api";
+﻿import { adminApi, ApiResponse } from "@/lib/api";
 import {
   AdminCoupon,
   AdminCouponPayload,
@@ -21,14 +21,16 @@ export const getAdminCoupon = async (
   courseId: number,
   couponPolicyId: number
 ): Promise<AdminCoupon> => {
-  const response = await adminApi.get<ApiResponse<AdminCoupon>>(
-    `/api/v1/admin/courses/${courseId}/coupon-policies/${couponPolicyId}`,
-    {
-      params: { t: Date.now() },
-    }
+  const coupons = await getAdminCoupons(courseId);
+  const coupon = coupons.find(
+    (item) => Number(item.couponPolicyId) === Number(couponPolicyId)
   );
 
-  return response.data;
+  if (!coupon) {
+    throw new Error("쿠폰 정보를 찾을 수 없습니다.");
+  }
+
+  return coupon;
 };
 
 export const createAdminCoupon = async (
@@ -50,13 +52,9 @@ export const updateAdminCoupon = async (
   const response = await adminApi.put<ApiResponse<AdminCoupon>>(
     `/api/v1/admin/courses/${courseId}/coupon-policies/${couponPolicyId}`,
     {
-      couponPolicyId,
-      courseId,
       couponName: payload.couponName,
       discountType: payload.discountType,
       discountValue: payload.discountValue,
-      validDays: payload.validDays,
-      active: payload.active,
     }
   );
 

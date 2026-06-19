@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 
@@ -52,7 +52,7 @@ export default function EditChapterClient({
   }
 
   return (
-    <main className="min-h-screen bg-[#F8F8F8] px-10 py-10" aria-labelledby="edit-chapter-title">
+    <main className="bg-[#F8F8F8] px-10 py-10" aria-labelledby="edit-chapter-title">
       <section aria-labelledby="edit-chapter-title">
         <SubHeader
           backHref={`/contentadmin/lecture/${lectureId}/chapter/new`}
@@ -85,3 +85,4 @@ export default function EditChapterClient({
     </main>
   );
 }
+

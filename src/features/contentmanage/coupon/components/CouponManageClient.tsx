@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -48,12 +48,6 @@ export default function CouponManageClient() {
     try {
       const deleteCourseId = getCouponCourseId(selectedCoupon);
       const deleteCouponPolicyId = getCouponId(selectedCoupon);
-
-      console.log("[coupon:delete] selected coupon", selectedCoupon);
-      console.log("[coupon:delete] request values", {
-        courseId: deleteCourseId,
-        couponPolicyId: deleteCouponPolicyId,
-      });
 
       setActionError("");
       await deleteCouponAction(
@@ -148,3 +142,4 @@ export default function CouponManageClient() {
     </main>
   );
 }
+
