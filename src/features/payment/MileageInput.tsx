@@ -13,7 +13,9 @@ export default function MileageInput({ mileageBalance, maxMileage, usedMileage, 
                     <img src="/images/point-active.svg" alt="마일리지" />
                     <h1 className="ml-2 font-bold">마일리지 사용</h1>
                 </div>
-                <p className="text-[#439A97] font-bold">보유: {mileageBalance.toLocaleString()}점</p>
+                <p className="text-[#439A97] font-bold">
+                    보유: {mileageBalance.toLocaleString()}원
+                </p>
             </div>
 
             <div className="mt-5 flex gap-3">

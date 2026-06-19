@@ -5,7 +5,7 @@ import ContinentSelectForm from "@/features/classroom/components/ContinentSelect
 import LearnMethod from "@/features/main/components/LearningMethod";
 import { getContinents } from "@/features/services/ContinentSelection.service";
 
-export const revalidate = 1800;
+export const revalidate = 3;   // 300
 
 export default async function ClassRoomMainPage() {
   const continents = await getContinents();

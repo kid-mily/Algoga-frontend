@@ -10,7 +10,7 @@ import {
   getCourseReviewSummary,
 } from "@/features/services/lectureDetail.service";
 
-export const revalidate = 1800;
+export const revalidate = 3;  // 300
 
 interface LectureDetailPageProps {
   params: Promise<{

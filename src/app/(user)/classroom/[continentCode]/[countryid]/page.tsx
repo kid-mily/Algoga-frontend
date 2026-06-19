@@ -5,7 +5,7 @@ import LecturePageHeader from "@/features/classroom/components/LecturePageHeader
 import EvaluationBanner from "@/features/classroom/components/EvaluationBanner";
 import { getCourses } from "@/features/services/lectureSelect.service";
 
-export const revalidate = 1800;
+export const revalidate = 3;    // 300
 
 interface LectureListPageProps {
   params: Promise<{

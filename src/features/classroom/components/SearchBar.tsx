@@ -1,20 +1,40 @@
-export default function SearchBar() {
-    return (
-      <div className="mt-8 flex items-center gap-4">
+"use client";
 
-        {/* 검색창 */}
-        <div className="flex-1 h-12 bg-white border border-[#8A9BB0] rounded-2xl px-6 flex items-center shadow-sm">
-          <input
-            type="text"
-            placeholder="여행지 검색..."
-            className="w-full bg-transparent outline-none text-[#0A1628] placeholder:text-[#9AA6B2]"
-          />
-        </div>
-        
-        {/* 버튼 */}
-        <button className="w-32 h-12 bg-[#439A97] rounded-2xl text-white font-semibold hover:bg-[#1f4644] cursor-pointer">
-          검색
-        </button>
+interface SearchBarProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSearch: () => void;
+}
+
+export default function SearchBar({
+  value,
+  onChange,
+  onSearch,
+}: SearchBarProps) {
+  return (
+    <div className="mt-8 flex items-center gap-4">
+      <div className="flex h-12 flex-1 items-center rounded-2xl border border-[#8A9BB0] bg-white px-6 shadow-sm">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              onSearch();
+            }
+          }}
+          placeholder="여행지 검색..."
+          className="w-full bg-transparent text-[#0A1628] outline-none placeholder:text-[#9AA6B2]"
+        />
       </div>
-    );
+
+      <button
+        type="button"
+        onClick={onSearch}
+        className="h-12 w-32 cursor-pointer rounded-2xl bg-[#439A97] font-semibold text-white hover:bg-[#1f4644]"
+      >
+        검색
+      </button>
+    </div>
+  );
 }

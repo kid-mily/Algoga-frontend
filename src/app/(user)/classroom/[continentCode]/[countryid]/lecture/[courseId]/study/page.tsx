@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { getCookie } from "@/lib/cookie";
+import { ApiRequestError } from "@/lib/api";
 import {
   CourseStudyChapter,
   CourseStudyDetail,
@@ -40,13 +40,6 @@ export default function LectureStudyPage() {
   }, [course]);
 
   useEffect(() => {
-    const token = getCookie("accessToken");
-
-    if (!token) {
-      router.replace("/auth/login");
-      return;
-    }
-
     if (!courseId) return;
 
     const controller = new AbortController();
@@ -57,10 +50,23 @@ export default function LectureStudyPage() {
         setErrorMessage("");
 
         const data = await getCourseStudyDetail(courseId, controller.signal);
+        const sortedChapters = [...(data.chapters ?? [])].sort(
+          (a, b) => a.chapterOrder - b.chapterOrder
+        );
 
         setCourse(data);
-        setSelectedChapter(data.chapters?.[0] ?? null);
+        setSelectedChapter(sortedChapters[0] ?? null);
+        lastReportedSecondsRef.current = sortedChapters[0]?.watchedSeconds ?? 0;
       } catch (error) {
+        if (controller.signal.aborted) return;
+
+        console.error("[study] 강의 학습 정보 조회 실패:", error);
+
+        if (error instanceof ApiRequestError && error.status === 401) {
+          router.replace("/auth/login");
+          return;
+        }
+
         const message =
           error instanceof Error
             ? error.message
@@ -68,7 +74,9 @@ export default function LectureStudyPage() {
 
         setErrorMessage(message);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -114,11 +122,19 @@ export default function LectureStudyPage() {
         };
       });
     } catch (error) {
-      console.error("진도율 업데이트 실패:", error);
+      console.error("[study] 진도율 업데이트 실패:", error);
     }
   };
 
-  const handleChapterSelect = (chapter: CourseStudyChapter) => {
+  const handleChapterSelect = async (chapter: CourseStudyChapter) => {
+    if (selectedChapter?.chapterId === chapter.chapterId) return;
+
+    const currentTime = videoRef.current?.currentTime;
+
+    if (typeof currentTime === "number" && Number.isFinite(currentTime)) {
+      await reportProgress(currentTime, true);
+    }
+
     setSelectedChapter(chapter);
     lastReportedSecondsRef.current = chapter.watchedSeconds ?? 0;
   };

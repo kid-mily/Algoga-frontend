@@ -9,16 +9,25 @@ export interface CourseStudyChapter {
   progressRate?: number;
   completed?: boolean;
   watchedSeconds?: number;
+  locked?: boolean;
 }
 
 export interface CourseStudyDetail {
   courseId: number;
   title: string;
   description?: string;
+  accessExpiresAt?: string;
+  quizAvailable?: boolean;
   isEnrolled: boolean;
   isPaid: boolean;
   chapters: CourseStudyChapter[];
 }
+
+type CourseStudyDetailResponse = CourseStudyDetail & {
+  enrolled?: boolean;
+  paid?: boolean;
+  purchased?: boolean;
+};
 
 export interface ChapterProgress {
   progressId: number;
@@ -35,7 +44,7 @@ export const getCourseStudyDetail = async (
   signal?: AbortSignal
 ): Promise<CourseStudyDetail> => {
   const response = await api.get<ApiResponse<CourseStudyDetail>>(
-    `/api/v1/courses/${courseId}`,
+    `/api/v1/my/courses/${courseId}`,
     {
       cache: "no-store",
       signal,
@@ -43,7 +52,14 @@ export const getCourseStudyDetail = async (
     }
   );
 
-  return response.data;
+  const data = response.data as CourseStudyDetailResponse;
+
+  return {
+    ...data,
+    isEnrolled: Boolean(data.isEnrolled ?? data.enrolled ?? true),
+    isPaid: Boolean(data.isPaid ?? data.paid ?? data.purchased ?? true),
+    chapters: data.chapters ?? [],
+  };
 };
 
 export const updateChapterProgress = async (

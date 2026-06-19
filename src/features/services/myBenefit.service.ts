@@ -120,3 +120,18 @@ export async function getMyMileages(): Promise<MyMileage> {
   const data = await requestBenefit<unknown>(MY_MILEAGES_ENDPOINT);
   return normalizeMileage(data);
 }
+
+export async function getMyMileage(): Promise<MyMileage> {
+  return getMyMileages();
+}
+
+export async function getUsableCouponsByCourse(courseId: number): Promise<MyCoupon[]> {
+  const coupons = await getMyCoupons();
+
+  return coupons.filter(
+    (coupon) =>
+      coupon.courseId === courseId &&
+      coupon.usable &&
+      coupon.status === "ISSUED"
+  );
+}

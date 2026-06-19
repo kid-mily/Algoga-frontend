@@ -1,14 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ApiRequestError } from "@/lib/api";
 import Modal from "@/features/common/Modal";
-import { CourseItem } from "./types";
+import { getCourseStudyDetail } from "@/features/services/courseStudy.service";
+import { getMe } from "@/features/services/user.service";
+import type { CourseItem } from "./types";
 
 interface LectureActionCardProps {
   course: CourseItem & {
     isPaid?: boolean;
     purchased?: boolean;
+    paid?: boolean;
+    enrolled?: boolean;
   };
   continentCode: string;
   countryId: string;
@@ -22,16 +27,82 @@ export default function LectureActionCard({
   courseId,
 }: LectureActionCardProps) {
   const router = useRouter();
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  const isPaid = Boolean(course.isPaid ?? course.purchased);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  const [requiresLogin, setRequiresLogin] = useState(false);
+  const [canStudy, setCanStudy] = useState(
+    Boolean(course.isPaid ?? course.purchased ?? course.paid)
+  );
 
   const studyHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}/study`;
   const paymentHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}/payment/single`;
 
+  useEffect(() => {
+    let isActive = true;
+
+    const checkAccess = async () => {
+      try {
+        setIsCheckingAccess(true);
+        setRequiresLogin(false);
+
+        await getMe();
+
+        if (!isActive) return;
+
+        try {
+          await getCourseStudyDetail(courseId);
+
+          if (!isActive) return;
+
+          setCanStudy(true);
+        } catch (error) {
+          if (!isActive) return;
+
+          if (error instanceof ApiRequestError) {
+            if (error.status === 403 || error.status === 404) {
+              setCanStudy(false);
+              return;
+            }
+          }
+
+          console.error("[lecture-action] 수강 권한 확인 실패:", error);
+          setCanStudy(Boolean(course.isPaid ?? course.purchased ?? course.paid));
+        }
+      } catch (error) {
+        if (!isActive) return;
+
+        if (error instanceof ApiRequestError && error.status === 401) {
+          setRequiresLogin(true);
+          setCanStudy(false);
+          return;
+        }
+
+        console.error("[lecture-action] 로그인 상태 확인 실패:", error);
+        setRequiresLogin(true);
+        setCanStudy(false);
+      } finally {
+        if (isActive) {
+          setIsCheckingAccess(false);
+        }
+      }
+    };
+
+    checkAccess();
+
+    return () => {
+      isActive = false;
+    };
+  }, [courseId, course.isPaid, course.purchased, course.paid]);
+
   const handleActionClick = () => {
-  router.push(isPaid ? studyHref : paymentHref);
-};
+    if (requiresLogin) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+
+    router.push(canStudy ? studyHref : paymentHref);
+  };
 
   const handleLoginConfirm = () => {
     setIsLoginModalOpen(false);
@@ -49,19 +120,18 @@ export default function LectureActionCard({
               <span className="font-semibold text-[#439A97]">
                 {course.levelName}
               </span>
-
               <span>|</span>
-
               <span>{course.price.toLocaleString()}원</span>
             </p>
           </div>
 
           <button
             type="button"
+            disabled={isCheckingAccess}
             onClick={handleActionClick}
-            className="rounded-2xl bg-[#439A97] px-6 py-3 font-semibold text-white transition hover:bg-[#357A78]"
+            className="rounded-2xl bg-[#439A97] px-6 py-3 font-semibold text-white transition hover:bg-[#357A78] disabled:opacity-50"
           >
-            {isPaid ? "강의 듣기" : "결제하기"}
+            {isCheckingAccess ? "확인 중..." : canStudy ? "강의 듣기" : "결제하기"}
           </button>
         </div>
       </section>

@@ -1,4 +1,4 @@
-import { MyCoupon } from "@/features/services/myBenefit.service";
+import { MyCoupon } from "../mypage/benefits/components/types";
 
 interface Props {
     coupons: MyCoupon[];
