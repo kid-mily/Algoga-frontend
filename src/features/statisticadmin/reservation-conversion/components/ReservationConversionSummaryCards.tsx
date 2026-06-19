@@ -8,7 +8,7 @@ type ReservationConversionSummaryCardsProps = {
 const cards = [
   {
     key: "attemptCount",
-    title: "예약 시도",
+    title: "결제 페이지 진입 수",
     tone: "text-[#344054]",
   },
   {

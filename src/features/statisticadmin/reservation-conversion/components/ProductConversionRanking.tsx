@@ -41,7 +41,7 @@ export default function ProductConversionRanking({
                   {product.productName}
                 </p>
                 <p className="mt-1 text-[12px] text-[#98A2B3]">
-                  {formatNumber(product.completedCount)} /{" "}
+                  예약 완료 {formatNumber(product.completedCount)}건 / 결제 페이지 진입{" "}
                   {formatNumber(product.attemptCount)}건
                 </p>
               </div>
