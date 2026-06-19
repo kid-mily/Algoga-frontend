@@ -1,4 +1,4 @@
-import type { CouponDiscountType } from "@/types/coupon";
+import type { CouponDiscountType } from "@/features/common/types/coupon";
 
 //adminAuth.service.ts
 

@@ -1,5 +1,5 @@
 import { AdminCourse } from "@/features/contentmanage/lecture/types";
-import type { CouponDiscountType } from "@/types/coupon";
+import type { CouponDiscountType } from "@/features/common/types/coupon";
 
 export interface AdminCoupon {
   couponPolicyId: number;
