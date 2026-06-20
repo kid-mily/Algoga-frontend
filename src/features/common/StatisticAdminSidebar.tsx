@@ -20,6 +20,12 @@ const menus = [
     activeIcon: "/images/gift-active.svg",
   },
   {
+    name: "수강률 분석",
+    href: "/statisticadmin/lecture-analysis",
+    icon: "/images/book.svg",
+    activeIcon: "/images/book-active.svg",
+  },
+  {
     name: "나라별 인기도",
     href: "/statisticadmin/country-popular",
     icon: "/images/global-inactive.svg",
