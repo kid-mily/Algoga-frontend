@@ -1,4 +1,21 @@
-﻿export type UserActivityTab = "friends" | "posts" | "comments";
+export type UserActivityTab = "friends" | "posts" | "comments";
+
+export type AdminUserSummary = {
+  userId: number;
+  displayId: string;
+  nickname: string;
+  email: string;
+  createdAt: string;
+  friendCount: number;
+  postCount: number;
+  commentCount: number;
+};
+
+export type AdminUserFriend = {
+  friendId: number;
+  friendNickname: string;
+  addedAt: string;
+};
 
 export type UserActivityPage<T> = {
   items: T[];

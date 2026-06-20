@@ -1,72 +1,80 @@
-﻿"use client";
+"use client";
 
-import Link from "next/link";
 import Image from "next/image";
-
-const users = [
-  {
-    userId: 1,
-    displayId: "U001",
-    nickname: "김여행",
-    email: "travel@algoga.kr",
-    joinedAt: "2024.01.15",
-    posts: 24,
-    comments: 156,
-    friends: 38,
-  },
-  {
-    userId: 2,
-    displayId: "U002",
-    nickname: "이투어",
-    email: "tour@algoga.kr",
-    joinedAt: "2024.02.20",
-    posts: 18,
-    comments: 92,
-    friends: 25,
-  },
-  {
-    userId: 3,
-    displayId: "U003",
-    nickname: "박트립",
-    email: "trip@algoga.kr",
-    joinedAt: "2024.03.10",
-    posts: 32,
-    comments: 204,
-    friends: 47,
-  },
-  {
-    userId: 4,
-    displayId: "U004",
-    nickname: "최여행",
-    email: "yeohaeng@algoga.kr",
-    joinedAt: "2024.04.05",
-    posts: 15,
-    comments: 78,
-    friends: 19,
-  },
-  {
-    userId: 5,
-    displayId: "U005",
-    nickname: "정트래블",
-    email: "traveler@algoga.kr",
-    joinedAt: "2024.05.12",
-    posts: 41,
-    comments: 287,
-    friends: 62,
-  },
-];
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import { getAdminUsers } from "@/features/services/adminUserActivity.service";
+import { AdminUserSummary } from "@/features/csadmin/user/types";
+import UserActivityPagination from "./UserActivityPagination";
 
 export default function UserActivityListClient() {
+  const [users, setUsers] = useState<AdminUserSummary[]>([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadUsers = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const data = await getAdminUsers(currentPage, 10, controller.signal);
+
+        if (controller.signal.aborted) return;
+
+        setUsers(data.items);
+        setCurrentPage(data.page);
+        setTotalPages(data.totalPages);
+        setTotalCount(data.totalElements);
+      } catch (fetchError: unknown) {
+        if (controller.signal.aborted) return;
+
+        setUsers([]);
+        setTotalPages(1);
+        setTotalCount(0);
+        setError(
+          fetchError instanceof Error
+            ? fetchError.message
+            : "유저 목록을 불러오지 못했습니다."
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadUsers();
+
+    return () => {
+      controller.abort();
+    };
+  }, [currentPage]);
+
+  const filteredUsers = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase();
+
+    if (!keyword) return users;
+
+    return users.filter((user) =>
+      [user.displayId, user.nickname, user.email, String(user.userId)]
+        .join(" ")
+        .toLowerCase()
+        .includes(keyword)
+    );
+  }, [searchKeyword, users]);
+
   return (
     <>
       <section className="mb-6 rounded-[16px] border border-[#E4E7EC] bg-white p-4">
         <form role="search" className="flex items-center gap-3">
-          <button
-            type="button"
-            aria-label="유저 필터"
-            className="h-[60px] w-[72px] rounded-[10px] border border-[#E4E7EC] bg-white"
-          />
-
           <label className="flex h-[44px] flex-1 items-center gap-3 rounded-[10px] border border-[#E4E7EC] px-4">
             <span className="sr-only">유저 검색</span>
             <Image
@@ -78,15 +86,26 @@ export default function UserActivityListClient() {
             />
 
             <input
-              type="text"
-              placeholder="검색..."
+              type="search"
+              value={searchKeyword}
+              onChange={(event) => setSearchKeyword(event.target.value)}
+              placeholder="회원 ID, 닉네임, 이메일 검색"
               className="w-full text-[14px] outline-none placeholder:text-[#98A2B3]"
             />
           </label>
         </form>
       </section>
 
+      <AdminErrorBanner message={error} className="mb-4" />
+
       <section className="overflow-hidden rounded-[16px] border border-[#E4E7EC] bg-white">
+        <div className="flex items-center justify-between border-b border-[#EEF0F3] px-6 py-4">
+          <h2 className="text-[18px] font-bold text-[#111827]">유저 목록</h2>
+          <p className="text-[14px] font-semibold text-[#667085]">
+            총 {totalCount.toLocaleString()}명
+          </p>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] table-fixed border-collapse">
             <caption className="sr-only">CS 관리자 유저 활동 목록</caption>
@@ -103,31 +122,52 @@ export default function UserActivityListClient() {
             </thead>
 
             <tbody>
-              {users.map((user) => (
-                <tr
-                  key={user.userId}
-                  className="border-b border-[#EEF0F3] text-[14px] text-[#344054] last:border-b-0"
-                >
-                  <td className="px-6 py-5 font-semibold">
-                    <Link href={`/csadmin/user/${user.userId}/post`} className="hover:text-[#439A97]">
-                      {user.displayId}
-                    </Link>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-[#667085]">
+                    유저 목록을 불러오는 중입니다...
                   </td>
-                  <td className="px-6 py-5 font-bold text-[#111827]">
-                    <Link href={`/csadmin/user/${user.userId}/post`} className="hover:text-[#439A97]">
-                      {user.nickname}
-                    </Link>
-                  </td>
-                  <td className="truncate px-6 py-5">{user.email}</td>
-                  <td className="px-6 py-5 text-[#667085]">{user.joinedAt}</td>
-                  <td className="px-6 py-5">{user.posts}</td>
-                  <td className="px-6 py-5">{user.comments}</td>
-                  <td className="px-6 py-5">{user.friends}</td>
                 </tr>
-              ))}
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-[#667085]">
+                    유저 목록이 없습니다.
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user) => (
+                  <tr
+                    key={user.userId}
+                    className="border-b border-[#EEF0F3] text-[14px] text-[#344054] last:border-b-0"
+                  >
+                    <td className="px-6 py-5 font-semibold">
+                      <Link href={`/csadmin/user/${user.userId}/post`} className="hover:text-[#439A97]">
+                        {user.displayId}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-5 font-bold text-[#111827]">
+                      <Link href={`/csadmin/user/${user.userId}/post`} className="hover:text-[#439A97]">
+                        {user.nickname}
+                      </Link>
+                    </td>
+                    <td className="truncate px-6 py-5">{user.email}</td>
+                    <td className="px-6 py-5 text-[#667085]">{user.createdAt}</td>
+                    <td className="px-6 py-5">{user.postCount.toLocaleString()}</td>
+                    <td className="px-6 py-5">{user.commentCount.toLocaleString()}</td>
+                    <td className="px-6 py-5">{user.friendCount.toLocaleString()}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
+
+        <UserActivityPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPageChange={setCurrentPage}
+        />
       </section>
     </>
   );
