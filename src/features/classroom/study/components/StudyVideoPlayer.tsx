@@ -22,8 +22,8 @@ export default function StudyVideoPlayer({
     handleVideoEnded,
 }: Props) {
     return (
-        <article className="overflow-hidden rounded-[24px] border border-[#6D9F9B] bg-black shadow-sm">
-            <div className="relative aspect-video w-full bg-black">
+        <article className="overflow-hidden rounded-lg border border-[#6D9F9B] bg-black shadow-sm">
+            <div className="relative mx-auto aspect-video max-h-[calc(100dvh-230px)] w-full bg-black">
                 {selectedChapter?.videoUrl ? (
                 <>
                     <video
@@ -54,9 +54,9 @@ export default function StudyVideoPlayer({
                         type="button"
                         aria-label="영상 재생"
                         onClick={() => videoRef.current?.play()}
-                        className="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#6D9F9B]/80 text-white shadow-lg backdrop-blur transition hover:bg-[#5E908D]"
-                    >
-                        <span className="ml-1 text-4xl leading-none">▶</span>
+                        className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#6D9F9B]/85 text-2xl text-white shadow-lg"
+                        >
+                        ▶
                     </button>
                     )}
                 </>
