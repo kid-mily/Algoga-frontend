@@ -94,8 +94,24 @@ export interface CreateAdminChapterPayload {
 export interface Student {
   userId: number;
   userName: string;
+  name?: string;
   email: string;
+  courseId?: number;
+  courseTitle?: string;
   enrolledAt: string;
+  progress?: number;
+  progressRate?: number;
+  completedChapterCount?: number;
+  totalChapterCount?: number;
+  quizComplete?: boolean;
+  quizCompleted?: boolean;
+  quizSubmitted?: boolean;
+  reviewWritten?: boolean;
+  reviewCreated?: boolean;
+  status?: string;
+  learningStatus?: string;
+  accessExpiresAt?: string;
+  completedAt?: string;
 }
 
 export type UpdateLecturePayload = {
