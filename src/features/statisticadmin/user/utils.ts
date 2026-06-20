@@ -75,6 +75,16 @@ export const getSignupPathSummary = (
     (sum, statistic) => sum + statistic.signupCount,
     0
   );
+
+  if (totalSignupCount <= 0) {
+    return {
+      totalSignupCount: 0,
+      pathCount: statistics.length,
+      topPathLabel: "-",
+      topPathRatio: 0,
+    };
+  }
+
   const topPath = statistics.reduce<SignupPathStatistic | null>(
     (currentTop, statistic) =>
       !currentTop || statistic.signupCount > currentTop.signupCount

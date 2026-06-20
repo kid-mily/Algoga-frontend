@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, ChangeEvent, useEffect, useState } from "react";
 import AdminErrorBanner from "@/features/common/AdminErrorBanner";
 import { getAdminUsers } from "@/features/services/adminUserActivity.service";
 import { AdminUserSummary } from "@/features/csadmin/user/types";
@@ -25,7 +25,12 @@ export default function UserActivityListClient() {
         setIsLoading(true);
         setError("");
 
-        const data = await getAdminUsers(currentPage, 10, controller.signal);
+        const data = await getAdminUsers(
+          currentPage,
+          10,
+          searchKeyword,
+          controller.signal
+        );
 
         if (controller.signal.aborted) return;
 
@@ -56,25 +61,25 @@ export default function UserActivityListClient() {
     return () => {
       controller.abort();
     };
-  }, [currentPage]);
+  }, [currentPage, searchKeyword]);
 
-  const filteredUsers = useMemo(() => {
-    const keyword = searchKeyword.trim().toLowerCase();
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+  };
 
-    if (!keyword) return users;
-
-    return users.filter((user) =>
-      [user.displayId, user.nickname, user.email, String(user.userId)]
-        .join(" ")
-        .toLowerCase()
-        .includes(keyword)
-    );
-  }, [searchKeyword, users]);
+  const handleSearchKeywordChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSearchKeyword(event.target.value);
+    setCurrentPage(1);
+  };
 
   return (
     <>
       <section className="mb-6 rounded-[16px] border border-[#E4E7EC] bg-white p-4">
-        <form role="search" className="flex items-center gap-3">
+        <form
+          role="search"
+          className="flex items-center gap-3"
+          onSubmit={handleSearchSubmit}
+        >
           <label className="flex h-[44px] flex-1 items-center gap-3 rounded-[10px] border border-[#E4E7EC] px-4">
             <span className="sr-only">유저 검색</span>
             <Image
@@ -88,7 +93,7 @@ export default function UserActivityListClient() {
             <input
               type="search"
               value={searchKeyword}
-              onChange={(event) => setSearchKeyword(event.target.value)}
+              onChange={handleSearchKeywordChange}
               placeholder="회원 ID, 닉네임, 이메일 검색"
               className="w-full text-[14px] outline-none placeholder:text-[#98A2B3]"
             />
@@ -128,14 +133,14 @@ export default function UserActivityListClient() {
                     유저 목록을 불러오는 중입니다...
                   </td>
                 </tr>
-              ) : filteredUsers.length === 0 ? (
+              ) : users.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-[#667085]">
                     유저 목록이 없습니다.
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((user) => (
+                users.map((user) => (
                   <tr
                     key={user.userId}
                     className="border-b border-[#EEF0F3] text-[14px] text-[#344054] last:border-b-0"
@@ -154,7 +159,15 @@ export default function UserActivityListClient() {
                     <td className="px-6 py-5 text-[#667085]">{user.createdAt}</td>
                     <td className="px-6 py-5">{user.postCount.toLocaleString()}</td>
                     <td className="px-6 py-5">{user.commentCount.toLocaleString()}</td>
-                    <td className="px-6 py-5">{user.friendCount.toLocaleString()}</td>
+                    <td className="px-6 py-5">
+                      <Link
+                        href={`/csadmin/user/${user.userId}/friend`}
+                        className="font-semibold hover:text-[#439A97]"
+                        aria-label={`${user.nickname} 친구 목록 보기`}
+                      >
+                        {user.friendCount.toLocaleString()}
+                      </Link>
+                    </td>
                   </tr>
                 ))
               )}

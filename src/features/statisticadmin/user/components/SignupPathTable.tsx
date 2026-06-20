@@ -77,7 +77,9 @@ export default function SignupPathTable({
                       <div
                         className="h-full rounded-full"
                         style={{
-                          width: `${Math.max(2, Math.min(100, statistic.ratio))}%`,
+                          width: statistic.ratio
+                            ? `${Math.max(2, Math.min(100, statistic.ratio))}%`
+                            : "0%",
                           backgroundColor: statistic.color,
                         }}
                       />

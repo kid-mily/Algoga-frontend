@@ -22,7 +22,7 @@ const menus = [
   {
     name: "나라별 인기도",
     href: "/statisticadmin/country-popular",
-    icon: "/images/global-.svg",
+    icon: "/images/global-inactive.svg",
     activeIcon: "/images/global.svg",
   },
   {

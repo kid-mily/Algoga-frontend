@@ -67,7 +67,17 @@ const getTotalElements = (data: unknown, fallback: number) => {
 
 const getCurrentPage = (data: unknown, fallback: number) => {
   if (!isRecord(data)) return fallback;
-  return toNumber(data.currentPage ?? data.page ?? data.number, fallback);
+
+  const currentPage = toNumber(data.currentPage, Number.NaN);
+  if (Number.isFinite(currentPage)) return Math.max(1, currentPage);
+
+  const page = toNumber(data.page, Number.NaN);
+  if (Number.isFinite(page)) return Math.max(1, page);
+
+  const number = toNumber(data.number, Number.NaN);
+  if (Number.isFinite(number)) return Math.max(1, number + 1);
+
+  return fallback;
 };
 
 const normalizeUserSummary = (item: unknown): AdminUserSummary | null => {
@@ -142,10 +152,15 @@ const normalizeFriend = (item: unknown): AdminUserFriend | null => {
 export const getAdminUsers = async (
   page = 1,
   size = 10,
+  keyword = "",
   signal?: AbortSignal
 ): Promise<UserActivityPage<AdminUserSummary>> => {
   const response = await adminApi.get<ApiResult<unknown>>("/api/v1/admin/users", {
-    params: { page: Math.max(0, page - 1), size },
+    params: {
+      page: Math.max(0, page - 1),
+      size,
+      keyword: keyword.trim() || undefined,
+    },
     signal,
     suppressGlobalError: true,
   });
@@ -156,19 +171,33 @@ export const getAdminUsers = async (
 
   return {
     items,
-    page: getCurrentPage(data, page - 1) + 1,
+    page: getCurrentPage(data, page),
     totalPages: getTotalPages(data, 1),
     totalElements: getTotalElements(data, items.length),
   };
 };
 
+type AdminUserDetailOptions = {
+  index?: number;
+  size?: number;
+  signal?: AbortSignal;
+};
+
 export const getAdminUserDetail = async (
   userId: number,
-  signal?: AbortSignal
+  options: AdminUserDetailOptions = {}
 ) => {
+  const { index, size, signal } = options;
   const response = await adminApi.get<ApiResult<unknown>>(
     `/api/v1/admin/users/${userId}`,
-    { signal, suppressGlobalError: true }
+    {
+      params:
+        index === undefined
+          ? undefined
+          : { index: Math.max(1, index), size: size ?? 10 },
+      signal,
+      suppressGlobalError: true,
+    }
   );
 
   return unwrapData<unknown>(response);
@@ -179,7 +208,7 @@ export const getAdminUserPosts = async (
   index = 1,
   signal?: AbortSignal
 ): Promise<UserActivityPage<AdminUserPost>> => {
-  const detail = await getAdminUserDetail(userId, signal);
+  const detail = await getAdminUserDetail(userId, { index, size: 10, signal });
   const postsData = isRecord(detail) ? detail.posts : {};
   const items = unwrapItems(postsData, ["content", "posts", "items", "data"])
     .map(normalizePost)
@@ -193,15 +222,6 @@ export const getAdminUserPosts = async (
   };
 };
 
-export const getAdminPostDetail = async (
-  postId: number,
-  signal?: AbortSignal
-): Promise<AdminUserPost | null> => {
-  void postId;
-  void signal;
-  return null;
-};
-
 export const deleteAdminPost = async (postId: number): Promise<void> => {
   await adminApi.delete<ApiResult<unknown>>(`/api/v1/posts/admin/${postId}`, {
     suppressGlobalError: true,
@@ -213,7 +233,7 @@ export const getAdminUserComments = async (
   index = 1,
   signal?: AbortSignal
 ): Promise<UserActivityPage<AdminUserComment>> => {
-  const detail = await getAdminUserDetail(userId, signal);
+  const detail = await getAdminUserDetail(userId, { index, size: 10, signal });
   const commentsData = isRecord(detail) ? detail.comments : {};
   const items = unwrapItems(commentsData, ["content", "comments", "items", "data"])
     .map(normalizeComment)
@@ -227,15 +247,6 @@ export const getAdminUserComments = async (
   };
 };
 
-export const getAdminCommentDetail = async (
-  commentId: number,
-  signal?: AbortSignal
-): Promise<AdminUserComment | null> => {
-  void commentId;
-  void signal;
-  return null;
-};
-
 export const deleteAdminComment = async (commentId: number): Promise<void> => {
   await adminApi.delete<ApiResult<unknown>>(`/api/v1/comments/admin/${commentId}`, {
     suppressGlobalError: true,
@@ -246,7 +257,7 @@ export const getAdminUserFriends = async (
   userId: number,
   signal?: AbortSignal
 ): Promise<AdminUserFriend[]> => {
-  const detail = await getAdminUserDetail(userId, signal);
+  const detail = await getAdminUserDetail(userId, { signal });
   const items = isRecord(detail) ? unwrapItems(detail.friends, ["friends"]) : [];
 
   return items
