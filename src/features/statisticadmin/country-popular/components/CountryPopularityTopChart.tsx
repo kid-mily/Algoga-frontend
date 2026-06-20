@@ -12,9 +12,7 @@ export default function CountryPopularityTopChart({
 }: CountryPopularityTopChartProps) {
   const maxScore = Math.max(
     1,
-    ...countries.map((country) =>
-      Math.max(country.popularityScore, country.viewCount, country.bookingCount)
-    )
+    ...countries.map((country) => country.popularityScore)
   );
 
   return (
@@ -43,12 +41,10 @@ export default function CountryPopularityTopChart({
         ) : (
           <ol className="space-y-4">
             {countries.slice(0, 10).map((country, index) => {
-              const metric = Math.max(
-                country.popularityScore,
-                country.viewCount,
-                country.bookingCount
-              );
-              const width = `${Math.max(3, (metric / maxScore) * 100)}%`;
+              const width = `${Math.max(
+                3,
+                (country.popularityScore / maxScore) * 100
+              )}%`;
 
               return (
                 <li key={`${country.countryId}-${country.countryName}-${index}`}>

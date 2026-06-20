@@ -55,6 +55,8 @@ export const updateAdminCoupon = async (
       couponName: payload.couponName,
       discountType: payload.discountType,
       discountValue: payload.discountValue,
+      validDays: payload.validDays,
+      active: payload.active,
     }
   );
 

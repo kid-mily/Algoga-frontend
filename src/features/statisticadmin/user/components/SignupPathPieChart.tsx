@@ -98,12 +98,18 @@ export default function SignupPathPieChart({
               aria-label="유입 경로별 회원가입 비율 원형 차트"
             >
               {chartSegments.map(({ item, startAngle, endAngle, labelPoint }) => {
+                const isFullCircle = endAngle - startAngle >= 359.999;
+
                 return (
                   <g key={`${item.signupPath}-${item.label}`}>
-                    <path
-                      d={makePath(startAngle, endAngle)}
-                      fill={item.color}
-                    />
+                    {isFullCircle ? (
+                      <circle cx="210" cy="145" r="84" fill={item.color} />
+                    ) : (
+                      <path
+                        d={makePath(startAngle, endAngle)}
+                        fill={item.color}
+                      />
+                    )}
                     <text
                       x={labelPoint.x}
                       y={labelPoint.y}

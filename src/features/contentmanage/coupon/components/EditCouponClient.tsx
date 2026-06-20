@@ -34,7 +34,7 @@ export default function EditCouponClient({
 
   const handleEdit = async (data: AdminCouponPayload) => {
     try {
-      const nextCourseId = data.courseId || courseId;
+      const nextCourseId = data.courseId ?? courseId;
 
       if (!Number.isSafeInteger(nextCourseId) || nextCourseId <= 0 || !Number.isSafeInteger(couponId) || couponId <= 0) {
         setApiError("쿠폰 수정에 필요한 ID가 올바르지 않습니다.");

@@ -176,13 +176,33 @@ export const downloadCountryStatisticsCsv = async ({
   to,
 }: Pick<CountryStatisticsQuery, "from" | "to">) => {
   const url = buildUrl("/api/v1/admin/stats/countries/csv", { from, to });
-  const response = await fetch(url, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      Accept: "text/csv, application/octet-stream, */*",
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 30000);
+
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        Accept: "text/csv, application/octet-stream, */*",
+      },
+      signal: controller.signal,
+    });
+  } catch (error: unknown) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiRequestError({
+        message: "CSV 다운로드 요청 시간이 초과되었습니다.",
+        status: 0,
+        url,
+      });
+    }
+
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const result = await response.json().catch(() => null);

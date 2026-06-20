@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import StudentItem from "./StudentItem";
 import { getCourseStudents } from "@/features/services/adminStudent.service";
 import LoadingSpinner from "@/features/common/LoadingSpinner";
-import { StudentFormProps, StudentRow } from "../types";
+import { Student, StudentFormProps, StudentRow } from "../types";
 
 const formatStudentDate = (value?: string) => {
   if (!value) return "-";
@@ -21,6 +21,35 @@ const formatStudentDate = (value?: string) => {
 
   return `${year}-${month}-${day}`;
 };
+
+const mapStudentToRow = (
+  student: Student,
+  fallbackCourseTitle: string
+): StudentRow => ({
+  id: student.userId,
+  name: student.userName || student.name || "이름 없음",
+  lecture: student.courseTitle || fallbackCourseTitle,
+  email: student.email,
+  status:
+    student.learningStatus === "COMPLETED" ||
+    student.status === "COMPLETED" ||
+    student.status === "complete" ||
+    student.progressRate === 100 ||
+    student.progress === 100
+      ? "complete"
+      : "progress",
+  progress: Math.min(
+    100,
+    Math.max(0, student.progressRate ?? student.progress ?? 0)
+  ),
+  quizComplete:
+    student.quizSubmitted ??
+    student.quizCompleted ??
+    student.quizComplete ??
+    false,
+  reviewWritten: student.reviewCreated ?? student.reviewWritten ?? false,
+  createdAt: formatStudentDate(student.completedAt),
+});
 
 export default function StudentForm({
   open,
@@ -44,28 +73,9 @@ export default function StudentForm({
         setApiError("");
         const data = await getCourseStudents(courseId, controller.signal);
         if (controller.signal.aborted) return;
-        const mappedData: StudentRow[] = data.map((student) => ({
-          id: student.userId,
-          name: student.userName || student.name || "이름 없음",
-          lecture: student.courseTitle || courseTitle,
-          email: student.email,
-          status:
-            student.learningStatus === "COMPLETED" ||
-            student.status === "COMPLETED" ||
-            student.status === "complete" ||
-            student.progressRate === 100 ||
-            student.progress === 100
-              ? "complete"
-              : "progress",
-          progress: Math.min(100, Math.max(0, student.progressRate ?? student.progress ?? 0)),
-          quizComplete:
-            student.quizSubmitted ??
-            student.quizCompleted ??
-            student.quizComplete ??
-            false,
-          reviewWritten: student.reviewCreated ?? student.reviewWritten ?? false,
-          createdAt: formatStudentDate(student.completedAt),
-        }));
+        const mappedData = data.map((student) =>
+          mapStudentToRow(student, courseTitle)
+        );
         setStudents(mappedData);
       } catch (error: unknown) {
         if (controller.signal.aborted) return;
@@ -112,7 +122,11 @@ export default function StudentForm({
   };
 
   const handleSelectAll = () => {
-    if (selectedIds.length === filteredStudents.length && filteredStudents.length > 0) {
+    const allFilteredSelected =
+      filteredStudents.length > 0 &&
+      filteredStudents.every((student) => selectedIds.includes(student.id));
+
+    if (allFilteredSelected) {
       setSelectedIds([]);
     } else {
       setSelectedIds(filteredStudents.map((student) => student.id));
@@ -202,7 +216,9 @@ export default function StudentForm({
                     type="checkbox"
                     checked={
                       filteredStudents.length > 0 &&
-                      selectedIds.length === filteredStudents.length
+                      filteredStudents.every((student) =>
+                        selectedIds.includes(student.id)
+                      )
                     }
                     onChange={handleSelectAll}
                     aria-label="전체 수강생 선택"

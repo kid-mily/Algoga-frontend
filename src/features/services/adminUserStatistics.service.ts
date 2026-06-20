@@ -8,7 +8,7 @@ import {
 
 type UnknownRecord = Record<string, unknown>;
 
-const defaultSignupPaths = ["search", "social", "friend", "ad", "etc"];
+const defaultSignupPaths = ["search", "social", "friend", "ad", "etc", ""];
 
 const getRecord = (value: unknown): UnknownRecord =>
   value && typeof value === "object" && !Array.isArray(value)

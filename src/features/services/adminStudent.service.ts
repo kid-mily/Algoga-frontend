@@ -76,11 +76,16 @@ const getItems = (data: unknown): unknown[] => {
   return [];
 };
 
-const normalizeStudent = (item: unknown): Student => {
+const normalizeStudent = (item: unknown): Student | null => {
   const record = getRecord(item);
+  const userId = getNumber(record, ["userId", "user_id", "id"], Number.NaN);
+
+  if (!Number.isSafeInteger(userId) || userId <= 0) {
+    return null;
+  }
 
   return {
-    userId: getNumber(record, ["userId", "user_id", "id"]),
+    userId,
     userName: getString(record, ["userName", "username", "name", "nickname"], "이름 없음"),
     email: getString(record, ["email", "userEmail"], "-"),
     courseId: getNumber(record, ["courseId", "course_id"]),
@@ -160,5 +165,7 @@ export const getCourseStudents = async (
     }
   );
 
-  return getItems(unwrapData(response)).map(normalizeStudent);
+  return getItems(unwrapData(response))
+    .map(normalizeStudent)
+    .filter((student): student is Student => student !== null);
 };

@@ -1,5 +1,4 @@
-"use client";
-
+import Image from "next/image";
 import SimpleSubHeader from "@/features/common/SimpleSubHeader";
 
 const courses = [
@@ -86,26 +85,32 @@ export default function CourseAnalysisPage() {
       <section className="mt-6 mb-6 rounded-[16px] border border-[#E4E7EC] bg-white p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-[42px] flex-1 items-center gap-3 rounded-[10px] border border-[#E4E7EC] px-4">
-            <img
+            <Image
               src="/images/search.svg"
               alt=""
               aria-hidden="true"
-              className="h-[17px] w-[17px]"
+              width={17}
+              height={17}
             />
 
             <input
               type="text"
+              aria-label="강의명 검색"
               placeholder="강의명 검색..."
               className="w-full text-[14px] outline-none placeholder:text-[#98A2B3]"
             />
           </div>
 
-          <button className="flex h-[42px] items-center gap-2 rounded-[10px] border border-[#E4E7EC] bg-white px-4 text-[13px] font-semibold text-[#344054]">
-            <img
+          <button
+            type="button"
+            className="flex h-[42px] items-center gap-2 rounded-[10px] border border-[#E4E7EC] bg-white px-4 text-[13px] font-semibold text-[#344054]"
+          >
+            <Image
               src="/images/download.svg"
               alt=""
               aria-hidden="true"
-              className="h-[15px] w-[15px]"
+              width={15}
+              height={15}
             />
             CSV 내보내기
           </button>
@@ -167,17 +172,35 @@ export default function CourseAnalysisPage() {
           </p>
 
           <div className="flex items-center gap-2">
-            <button className="text-[18px] text-[#98A2B3]">‹</button>
+            <button
+              type="button"
+              aria-label="이전 페이지로 이동"
+              className="text-[18px] text-[#98A2B3]"
+            >
+              ‹
+            </button>
 
-            <button className="h-[32px] w-[32px] rounded-[7px] bg-[#639E9B] text-[13px] font-bold text-white">
+            <button
+              type="button"
+              className="h-[32px] w-[32px] rounded-[7px] bg-[#639E9B] text-[13px] font-bold text-white"
+            >
               1
             </button>
 
-            <button className="h-[32px] w-[32px] rounded-[7px] text-[13px] font-bold text-[#344054] hover:bg-[#F5F7FA]">
+            <button
+              type="button"
+              className="h-[32px] w-[32px] rounded-[7px] text-[13px] font-bold text-[#344054] hover:bg-[#F5F7FA]"
+            >
               2
             </button>
 
-            <button className="text-[18px] text-[#344054]">›</button>
+            <button
+              type="button"
+              aria-label="다음 페이지로 이동"
+              className="text-[18px] text-[#344054]"
+            >
+              ›
+            </button>
           </div>
         </div>
       </section>
