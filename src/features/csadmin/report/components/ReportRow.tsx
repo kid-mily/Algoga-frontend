@@ -24,6 +24,12 @@ export default function ReportRow({ report }: { report: AdminReport }) {
         <p className="mt-1 text-[12px] text-[#98A2B3]">회원 #{report.reporterId}</p>
       </td>
       <td className="px-4 py-4">
+        <p className="font-semibold text-[#111827]">{report.reportedUserName}</p>
+        <p className="mt-1 text-[12px] text-[#98A2B3]">
+          {report.reportedUserId > 0 ? `회원 #${report.reportedUserId}` : "-"}
+        </p>
+      </td>
+      <td className="px-4 py-4">
         <p className="line-clamp-2">{report.reason}</p>
       </td>
       <td className="px-4 py-4">{report.createdAt}</td>

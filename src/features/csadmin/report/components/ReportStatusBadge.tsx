@@ -1,7 +1,7 @@
 import { reportStatusLabel, ReportStatus } from "../types";
 
 const statusClassName: Record<ReportStatus, string> = {
-  PENDING: "bg-[#FFF7E6] text-[#B54708]",
+  RECEIVED: "bg-[#FFF7E6] text-[#B54708]",
   REJECTED: "bg-[#FEE4E2] text-[#B42318]",
   COMPLETED: "bg-[#E7F6EC] text-[#027A48]",
 };
