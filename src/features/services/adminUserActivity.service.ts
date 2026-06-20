@@ -1,7 +1,9 @@
-﻿import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import {
   AdminUserComment,
+  AdminUserFriend,
   AdminUserPost,
+  AdminUserSummary,
   UserActivityPage,
 } from "@/features/csadmin/user/types";
 
@@ -22,7 +24,10 @@ const toNumber = (value: unknown, fallback = 0) => {
 };
 
 const toText = (value: unknown, fallback = "-") => {
-  if (typeof value === "string" && value.trim() !== "") return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    if (value === "null") return fallback;
+    return value;
+  }
   if (typeof value === "number") return String(value);
 
   return fallback;
@@ -60,6 +65,29 @@ const getTotalElements = (data: unknown, fallback: number) => {
   return toNumber(data.totalElements ?? data.totalCount ?? data.total, fallback);
 };
 
+const getCurrentPage = (data: unknown, fallback: number) => {
+  if (!isRecord(data)) return fallback;
+  return toNumber(data.currentPage ?? data.page ?? data.number, fallback);
+};
+
+const normalizeUserSummary = (item: unknown): AdminUserSummary | null => {
+  if (!isRecord(item)) return null;
+
+  const userId = toNumber(item.userId ?? item.id);
+  if (!Number.isSafeInteger(userId) || userId <= 0) return null;
+
+  return {
+    userId,
+    displayId: `U${String(userId).padStart(3, "0")}`,
+    nickname: toText(item.nickname ?? item.name ?? item.userName, "이름 없음"),
+    email: toText(item.email, "-"),
+    createdAt: formatDate(item.createdAt ?? item.joinedAt ?? item.registeredAt),
+    friendCount: toNumber(item.friendCount ?? item.friends),
+    postCount: toNumber(item.postCount ?? item.posts),
+    commentCount: toNumber(item.commentCount ?? item.comments),
+  };
+};
+
 const normalizePost = (item: unknown): AdminUserPost | null => {
   if (!isRecord(item)) return null;
 
@@ -95,29 +123,73 @@ const normalizeComment = (item: unknown): AdminUserComment | null => {
   };
 };
 
+const normalizeFriend = (item: unknown): AdminUserFriend | null => {
+  if (!isRecord(item)) return null;
+
+  const friendId = toNumber(item.friendId ?? item.userId ?? item.id);
+  if (!Number.isSafeInteger(friendId) || friendId <= 0) return null;
+
+  return {
+    friendId,
+    friendNickname: toText(
+      item.friendNickname ?? item.nickname ?? item.name,
+      "이름 없음"
+    ),
+    addedAt: formatDate(item.addedAt ?? item.createdAt ?? item.friendCreatedAt),
+  };
+};
+
+export const getAdminUsers = async (
+  page = 1,
+  size = 10,
+  signal?: AbortSignal
+): Promise<UserActivityPage<AdminUserSummary>> => {
+  const response = await adminApi.get<ApiResult<unknown>>("/api/v1/admin/users", {
+    params: { page: Math.max(0, page - 1), size },
+    signal,
+    suppressGlobalError: true,
+  });
+  const data = unwrapData<unknown>(response);
+  const items = unwrapItems(data, ["content", "users", "items", "data"])
+    .map(normalizeUserSummary)
+    .filter((user): user is AdminUserSummary => user !== null);
+
+  return {
+    items,
+    page: getCurrentPage(data, page - 1) + 1,
+    totalPages: getTotalPages(data, 1),
+    totalElements: getTotalElements(data, items.length),
+  };
+};
+
+export const getAdminUserDetail = async (
+  userId: number,
+  signal?: AbortSignal
+) => {
+  const response = await adminApi.get<ApiResult<unknown>>(
+    `/api/v1/admin/users/${userId}`,
+    { signal, suppressGlobalError: true }
+  );
+
+  return unwrapData<unknown>(response);
+};
+
 export const getAdminUserPosts = async (
   userId: number,
   index = 1,
   signal?: AbortSignal
 ): Promise<UserActivityPage<AdminUserPost>> => {
-  const response = await adminApi.get<ApiResult<unknown>>(
-    `/api/v1/posts/admin/users/${userId}`,
-    {
-      params: { index },
-      signal,
-      suppressGlobalError: true,
-    }
-  );
-  const data = unwrapData<unknown>(response);
-  const items = unwrapItems(data, ["content", "posts", "items", "data"])
+  const detail = await getAdminUserDetail(userId, signal);
+  const postsData = isRecord(detail) ? detail.posts : {};
+  const items = unwrapItems(postsData, ["content", "posts", "items", "data"])
     .map(normalizePost)
     .filter((post): post is AdminUserPost => post !== null);
 
   return {
     items,
-    page: index,
-    totalPages: getTotalPages(data, 1),
-    totalElements: getTotalElements(data, items.length),
+    page: getCurrentPage(postsData, index),
+    totalPages: getTotalPages(postsData, 1),
+    totalElements: getTotalElements(postsData, items.length),
   };
 };
 
@@ -125,11 +197,9 @@ export const getAdminPostDetail = async (
   postId: number,
   signal?: AbortSignal
 ): Promise<AdminUserPost | null> => {
-  const response = await adminApi.get<ApiResult<unknown>>(
-    `/api/v1/posts/admin/${postId}`,
-    { signal, suppressGlobalError: true }
-  );
-  return normalizePost(unwrapData<unknown>(response));
+  void postId;
+  void signal;
+  return null;
 };
 
 export const deleteAdminPost = async (postId: number): Promise<void> => {
@@ -143,24 +213,17 @@ export const getAdminUserComments = async (
   index = 1,
   signal?: AbortSignal
 ): Promise<UserActivityPage<AdminUserComment>> => {
-  const response = await adminApi.get<ApiResult<unknown>>(
-    `/api/v1/comments/admin/users/${userId}`,
-    {
-      params: { index },
-      signal,
-      suppressGlobalError: true,
-    }
-  );
-  const data = unwrapData<unknown>(response);
-  const items = unwrapItems(data, ["content", "comments", "items", "data"])
+  const detail = await getAdminUserDetail(userId, signal);
+  const commentsData = isRecord(detail) ? detail.comments : {};
+  const items = unwrapItems(commentsData, ["content", "comments", "items", "data"])
     .map(normalizeComment)
     .filter((comment): comment is AdminUserComment => comment !== null);
 
   return {
     items,
-    page: index,
-    totalPages: getTotalPages(data, 1),
-    totalElements: getTotalElements(data, items.length),
+    page: getCurrentPage(commentsData, index),
+    totalPages: getTotalPages(commentsData, 1),
+    totalElements: getTotalElements(commentsData, items.length),
   };
 };
 
@@ -168,15 +231,25 @@ export const getAdminCommentDetail = async (
   commentId: number,
   signal?: AbortSignal
 ): Promise<AdminUserComment | null> => {
-  const response = await adminApi.get<ApiResult<unknown>>(
-    `/api/v1/comments/admin/${commentId}`,
-    { signal, suppressGlobalError: true }
-  );
-  return normalizeComment(unwrapData<unknown>(response));
+  void commentId;
+  void signal;
+  return null;
 };
 
 export const deleteAdminComment = async (commentId: number): Promise<void> => {
   await adminApi.delete<ApiResult<unknown>>(`/api/v1/comments/admin/${commentId}`, {
     suppressGlobalError: true,
   });
+};
+
+export const getAdminUserFriends = async (
+  userId: number,
+  signal?: AbortSignal
+): Promise<AdminUserFriend[]> => {
+  const detail = await getAdminUserDetail(userId, signal);
+  const items = isRecord(detail) ? unwrapItems(detail.friends, ["friends"]) : [];
+
+  return items
+    .map(normalizeFriend)
+    .filter((friend): friend is AdminUserFriend => friend !== null);
 };

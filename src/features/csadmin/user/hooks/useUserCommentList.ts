@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   deleteAdminComment,
-  getAdminCommentDetail,
   getAdminUserComments,
 } from "@/features/services/adminUserActivity.service";
 import { AdminUserComment } from "@/features/csadmin/user/types";
@@ -24,7 +23,6 @@ export const useUserCommentList = (userId: number) => {
   const [totalCount, setTotalCount] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
   const requestIdRef = useRef(0);
-  const detailControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -60,26 +58,11 @@ export const useUserCommentList = (userId: number) => {
   }, [currentPage, reloadKey, userId]);
 
   const openCommentDetail = useCallback(async (commentId: number) => {
-    detailControllerRef.current?.abort();
-    const controller = new AbortController();
-    detailControllerRef.current = controller;
     setError("");
-
-    try {
-      const comment = await getAdminCommentDetail(commentId, controller.signal);
-      if (controller.signal.aborted) return;
-      setSelectedComment(comment);
-    } catch (detailError: unknown) {
-      if (controller.signal.aborted) return;
-      setError(getErrorMessage(detailError, "댓글 상세 정보를 불러오지 못했습니다."));
-    }
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      detailControllerRef.current?.abort();
-    };
-  }, []);
+    setSelectedComment(
+      comments.find((comment) => comment.commentId === commentId) ?? null
+    );
+  }, [comments]);
 
   const changePage = useCallback((page: number) => {
     setError("");
