@@ -1,12 +1,15 @@
 export type ReportTargetType = "POST" | "COMMENT";
-export type ReportStatus = "PENDING" | "REJECTED" | "COMPLETED";
+export type ReportStatus = "RECEIVED" | "REJECTED" | "COMPLETED";
 
 export interface AdminReport {
   reportId: number;
   reporterId: number;
   reporterName: string;
+  reportedUserId: number;
+  reportedUserName: string;
   targetType: ReportTargetType;
   targetId: number;
+  postTitle: string;
   reason: string;
   content: string;
   status: ReportStatus;
@@ -27,7 +30,7 @@ export interface AdminReportPage {
 export type RawReportRecord = Record<string, unknown>;
 
 export const reportStatusLabel: Record<ReportStatus, string> = {
-  PENDING: "처리 대기",
+  RECEIVED: "접수",
   REJECTED: "반려",
   COMPLETED: "처리 완료",
 };
