@@ -31,10 +31,12 @@ export default function PointManageClient() {
     mode: PointAdjustMode,
     student: StudentPointInfo
   ) => {
+    const studentName = student.userName?.trim() || `사용자 #${student.userId}`;
+
     setModalMode(mode);
     setSelectedStudent({
       userId: student.userId,
-      name: student.userName,
+      name: studentName,
       point: student.totalPoint,
     });
     setIsAdjustOpen(true);

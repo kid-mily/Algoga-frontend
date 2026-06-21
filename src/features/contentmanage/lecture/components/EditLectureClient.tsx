@@ -27,13 +27,15 @@ export default function EditLectureClient({
     try {
       const isPublicBool = String(data.isPublic) === "true";
       const targetStatus = data.status || (isPublicBool ? "PUBLISHED" : "DRAFT");
+      const maxRewardMileage = toNumberOrZero(data.mileage);
 
       await updateLectureAction(lectureId, {
         countryId: lecture.countryId,
         title: data.title,
         description: data.description,
         price: Number(data.price),
-        mileage: toNumberOrZero(data.mileage),
+        mileage: maxRewardMileage,
+        maxRewardMileage,
         level: lecture.level || "BEGINNER",
         status: targetStatus,
         thumbnail: thumbnailFile,
@@ -73,7 +75,7 @@ export default function EditLectureClient({
             title: lecture.title || "",
             description: lecture.description || "",
             price: String(lecture.price || ""),
-            mileage: String(lecture.mileage || ""),
+            mileage: String(lecture.maxRewardMileage ?? lecture.mileage ?? ""),
             isPublic: getIsPublic(lecture) ? "true" : "false",
           }}
           onSubmit={handleEdit}

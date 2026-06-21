@@ -8,6 +8,7 @@ export interface AdminCourse {
   description?: string;
   price?: number;
   mileage?: number;
+  maxRewardMileage?: number;
   thumbnailUrl?: string | null;
   fileUrls?: string[];
   level?: string;
@@ -44,6 +45,7 @@ export interface CreateAdminCoursePayload {
   description: string;
   price: number;
   mileage?: number;
+  maxRewardMileage?: number;
   level: string;
   status?: string;
   thumbnail: File;
@@ -120,6 +122,7 @@ export type UpdateLecturePayload = {
   description: string;
   price: number;
   mileage?: number;
+  maxRewardMileage?: number;
   level: string;
   status: string;
   thumbnail?: File;
@@ -234,6 +237,7 @@ export type EditLecturePayload = {
   description: string;
   price: string;
   mileage?: string;
+  maxRewardMileage?: string;
   isPublic: string;
   status?: string;
 };

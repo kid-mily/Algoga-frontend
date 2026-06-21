@@ -22,12 +22,20 @@ export const getStudentsPoints = async (
       ? data.users
       : data.content;
 
-  return users.map((item) => ({
-    userId: item.userId,
-    userName: item.userName,
-    email: item.email,
-    totalPoint: item.totalMileage ?? item.mileage ?? 0,
-  }));
+  return users.map((item) => {
+    const userName =
+      item.userName?.trim() ||
+      item.name?.trim() ||
+      item.nickname?.trim() ||
+      `사용자 #${item.userId}`;
+
+    return {
+      userId: item.userId,
+      userName,
+      email: item.email,
+      totalPoint: item.totalMileage ?? item.mileage ?? 0,
+    };
+  });
 };
 
 export const givePoints = async (

@@ -184,13 +184,15 @@ export const createAdminCourse = async (
 ): Promise<AdminCourse> => {
   try {
     const formData = new FormData();
+    const maxRewardMileage = payload.maxRewardMileage ?? payload.mileage ?? 0;
 
     const request = {
       countryId: payload.countryId,
       title: payload.title.trim(),
       description: payload.description.trim(),
       price: payload.price,
-      mileage: payload.mileage ?? 0,
+      mileage: maxRewardMileage,
+      maxRewardMileage,
       level: payload.level,
       status: payload.status,
       isPublic: payload.status === "PUBLISHED",
@@ -262,12 +264,15 @@ export const updateAdminCourse = async (
   try {
     const formData = new FormData();
 
+    const maxRewardMileage = payload.maxRewardMileage ?? payload.mileage ?? 0;
+
     const requestData = {
       countryId: payload.countryId,
       title: payload.title?.trim(),
       description: payload.description?.trim(),
       price: payload.price,
-      mileage: payload.mileage ?? 0,
+      mileage: maxRewardMileage,
+      maxRewardMileage,
       level: payload.level,
       status: payload.status,
       isPublic: payload.status === "PUBLISHED",

@@ -231,7 +231,7 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
 
             <div>
               <label htmlFor="lecture-edit-mileage" className="text-[14px] font-semibold text-[#111827]">
-                마일리지
+                최대 지급 마일리지
               </label>
               <div className="relative mt-2">
                 <input

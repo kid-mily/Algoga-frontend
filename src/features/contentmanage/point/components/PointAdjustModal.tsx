@@ -58,6 +58,7 @@ export default function PointAdjustModal({
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const modeText = getModeText(mode);
+  const displayName = studentName.trim() || "선택한 사용자";
 
   const amountValue = Number(amount || 0);
   const isRecallOverLimit = mode === "recall" && amountValue > currentPoint;
@@ -122,7 +123,7 @@ export default function PointAdjustModal({
               {modeText.title}
             </h2>
             <p className="mt-2 text-[15px] text-[#98A2B3]">
-              {studentName}님에게 {modeText.target}
+              {displayName}님에게 {modeText.target}
             </p>
           </section>
 
