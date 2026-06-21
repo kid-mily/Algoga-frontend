@@ -1,5 +1,7 @@
 export type DiagnosisLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 
+export type DiagnosisOption = 1 | 2 | 3 | 4;
+
 export interface DiagnosisQuestion {
   questionId: number;
   countryId: number;
@@ -11,13 +13,14 @@ export interface DiagnosisQuestion {
   questionOrder: number;
 }
 
-export interface EvaluationFormQuestion extends DiagnosisQuestion {
-  options: string[];
+export interface EvaluationFormQuestion
+  extends DiagnosisQuestion {
+  options: [string, string, string, string];
 }
 
 export interface EvaluationAnswer {
   questionId: number;
-  selectedOption: number;
+  selectedOption: DiagnosisOption;
 }
 
 export interface DiagnosisResultRequest {
@@ -27,16 +30,10 @@ export interface DiagnosisResultRequest {
 
 export interface DiagnosisResultAnswer {
   questionId: number;
-  selectedOption: number;
-  correctOption: number;
+  selectedOption: DiagnosisOption;
+  correctOption: DiagnosisOption;
   correct: boolean;
   explanation: string;
-}
-
-export interface DiagnosisRecommendedCourseFile {
-  fileUrl: string;
-  originalFileName: string;
-  fileOrder: number;
 }
 
 export interface DiagnosisRecommendedCourse {
@@ -46,11 +43,9 @@ export interface DiagnosisRecommendedCourse {
   description: string;
   price: number;
   thumbnailUrl: string;
-  fileUrls: string[];
-  files: DiagnosisRecommendedCourseFile[];
   level: DiagnosisLevel;
   levelName: string;
-  status: string;
+  status: "PUBLISHED";
   enrolled: boolean;
   paid: boolean;
 }
@@ -75,5 +70,4 @@ export interface PendingDiagnosisSubmit {
 }
 
 export const DIAGNOSIS_RESULT_STORAGE_KEY = "diagnosis-result";
-export const PENDING_DIAGNOSIS_SUBMIT_STORAGE_KEY =
-  "pending-diagnosis-submit";
+export const PENDING_DIAGNOSIS_SUBMIT_STORAGE_KEY = "pending-diagnosis-submit";

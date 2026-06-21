@@ -1,23 +1,51 @@
 import { DiagnosisResultRequest, EvaluationAnswer, EvaluationFormQuestion } from "./types";
 
-export const buildDiagnosisResultPayload = ({ countryId, questions, answers }: {
+interface BuildDiagnosisPayloadParams {
     countryId: string;
     questions: EvaluationFormQuestion[];
     answers: EvaluationAnswer[];
-    }): DiagnosisResultRequest | null => {
-        const sortedAnswers = questions.map((question) =>
-            answers.find((answer) => answer.questionId === question.questionId)
-        ).filter((answer): answer is EvaluationAnswer => Boolean(answer));
-        
-        if (sortedAnswers.length !== questions.length) {
-            return null;
-        }
-        
-        return {
-            countryId: Number(countryId),
-            answers: sortedAnswers.map((answer) => ({
-            questionId: answer.questionId,
-            selectedOption: answer.selectedOption,
-        })),
+}
+
+export const buildDiagnosisResultPayload = ({
+    countryId,
+    questions,
+    answers,
+}: BuildDiagnosisPayloadParams):
+    | DiagnosisResultRequest
+    | null => {
+    const numericCountryId = Number(countryId);
+
+    if (
+        !Number.isInteger(numericCountryId) ||
+        numericCountryId <= 0 ||
+        questions.length === 0
+    ) {
+        return null;
+    }
+
+    const orderedAnswers = questions.map(
+        (question) =>
+        answers.find(
+            (answer) =>
+            answer.questionId ===
+            question.questionId
+        )
+    );
+
+    if (
+        orderedAnswers.some(
+        (answer) =>
+            !answer ||
+            answer.selectedOption < 1 ||
+            answer.selectedOption > 4
+        )
+    ) {
+        return null;
+    }
+
+    return {
+        countryId: numericCountryId,
+        answers:
+        orderedAnswers as EvaluationAnswer[],
     };
 };

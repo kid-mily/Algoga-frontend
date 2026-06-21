@@ -1,38 +1,39 @@
 import EvaluationResultContent from "@/features/classroom/evaluation/EvaluationResultContent";
-import type { DiagnosisLevel } from "@/features/classroom/evaluation/types";
+import { getDiagnosisQuestions } from "@/features/services/evaluation.service";
+import type { EvaluationFormQuestion } from "@/features/classroom/evaluation/types";
+
+export const revalidate = 1800;
 
 interface EvaluationResultPageProps {
   params: Promise<{
     continentCode: string;
     countryid: string;
   }>;
-  searchParams: Promise<{
-    level?: string;
-  }>;
 }
-
-const isDiagnosisLevel = (level?: string): level is DiagnosisLevel => {
-  return (
-    level === "BEGINNER" ||
-    level === "INTERMEDIATE" ||
-    level === "ADVANCED"
-  );
-};
 
 export default async function EvaluationResultPage({
   params,
-  searchParams,
 }: EvaluationResultPageProps) {
-  const { continentCode, countryid } = await params;
-  const { level } = await searchParams;
+  const { continentCode, countryid } =
+    await params;
 
-  const fallbackLevel = isDiagnosisLevel(level) ? level : undefined;
+  let questions: EvaluationFormQuestion[] = [];
+
+  try {
+    questions =
+      await getDiagnosisQuestions(countryid);
+  } catch (error) {
+    console.error(
+      "문제 조회 실패:",
+      error
+    );
+  }
 
   return (
     <EvaluationResultContent
       continentCode={continentCode}
       countryId={countryid}
-      fallbackLevel={fallbackLevel}
+      questions={questions}
     />
   );
 }
