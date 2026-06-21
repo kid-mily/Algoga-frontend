@@ -125,12 +125,14 @@ export default function LectureForm({ onNext }: LectureFormProps) {
       setGlobalError("");
 
       const targetStatus = formData.isPublic === "true" ? "PUBLISHED" : "DRAFT";
+      const maxRewardMileage = toNumberOrZero(formData.mileage);
       const createdCourse = await createLectureAction({
         countryId: Number(formData.countryId),
         title: formData.title.trim(),
         description: formData.description.trim(),
         price: Number(formData.price),
-        mileage: toNumberOrZero(formData.mileage),
+        mileage: maxRewardMileage,
+        maxRewardMileage,
         level: formData.level,
         status: targetStatus,
         thumbnail: thumbnail as File,
@@ -289,7 +291,7 @@ export default function LectureForm({ onNext }: LectureFormProps) {
 
           <div>
             <label htmlFor="lecture-mileage" className="text-[14px] font-semibold text-[#111827]">
-              마일리지
+              최대 지급 마일리지
             </label>
             <div className="relative mt-2">
               <input
