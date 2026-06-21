@@ -5,145 +5,181 @@ import { useRouter } from "next/navigation";
 import { ApiRequestError } from "@/lib/api";
 import { submitDiagnosisResult } from "@/features/services/evaluation.service";
 import { buildDiagnosisResultPayload } from "../actions";
-import { DIAGNOSIS_RESULT_STORAGE_KEY, PENDING_DIAGNOSIS_SUBMIT_STORAGE_KEY } from "../types";
-import type { DiagnosisOption, EvaluationAnswer, EvaluationFormQuestion } from "../types";
+import { DIAGNOSIS_ATTEMPT_STORAGE_KEY, DIAGNOSIS_RESULT_STORAGE_KEY, PENDING_DIAGNOSIS_SUBMIT_STORAGE_KEY } from "../types";
+import { DiagnosisOption, EvaluationAnswer, EvaluationFormQuestion } from "../types";
 
 interface UseEvaluationFormParams {
-    continentCode: string;
-    countryId: string;
-    questions: EvaluationFormQuestion[];
+  continentCode: string;
+  countryId: string;
+  questions: EvaluationFormQuestion[];
 }
 
 export function useEvaluationForm({
-    continentCode,
-    countryId,
-    questions,
+  continentCode,
+  countryId,
+  questions,
 }: UseEvaluationFormParams) {
-    const router = useRouter();
+  const router = useRouter();
 
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<EvaluationAnswer[]>([]);
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitErrorMessage, setSubmitErrorMessage] = useState("");
 
-    const [step, setStep] = useState(0);
-    const [answers, setAnswers] = useState<EvaluationAnswer[]>([]);
-    const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitErrorMessage, setSubmitErrorMessage] = useState("");
+  const currentQuestion = questions[step] ?? null;
 
-    const currentQuestion = questions[step] ?? null;
+  // 현재 문항에서 선택한 답안
+  const selectedAnswer = currentQuestion
+    ? answers.find((ans) => ans.questionId === currentQuestion.questionId)
+        ?.selectedOption ?? null
+    : null;
 
-    // 현재 문항에 대해 사용자가 선택한 답안 조회
-    const selectedAnswer = currentQuestion
-        ? answers.find((ans) => ans.questionId === currentQuestion.questionId)?.selectedOption ?? null
-        : null;
+  const isLast = questions.length > 0 && step === questions.length - 1;
 
-    const isLast = questions.length > 0 && step === questions.length - 1;
-
-    // 모든 문항에 답변이 채워졌는지 여부 검증
-    const isAllAnswered = questions.length > 0 && questions.every((q) =>
-        answers.some((ans) => ans.questionId === q.questionId)
+  // 모든 문항 답변 여부
+  const isAllAnswered =
+    questions.length > 0 &&
+    questions.every((question) =>
+      answers.some((ans) => ans.questionId === question.questionId)
     );
 
-    // 상단 진행률 프로그레스 바 연산
-    const progress = questions.length > 0
-        ? Math.round(((step + 1) / questions.length) * 100)
-        : 0;
+  // 진행률
+  const progress =
+    questions.length > 0
+      ? Math.round(((step + 1) / questions.length) * 100)
+      : 0;
 
-    // 답안 선택 및 업데이트 핸들러
-    const handleSelectAnswer = (selectedOption: number) => {
-        if (!currentQuestion || selectedOption < 1 || selectedOption > 4) return;
+  // 답안 선택
+  const handleSelectAnswer = (selectedOption: number) => {
+    if (!currentQuestion || selectedOption < 1 || selectedOption > 4) return;
 
-        const validOption = selectedOption as DiagnosisOption;
+    const validOption = selectedOption as DiagnosisOption;
 
-        setAnswers((prev) => {
-        // 기존에 동일 문항에 대한 답변이 있었다면 제거 후 필터링
-        const remaining = prev.filter((ans) => ans.questionId !== currentQuestion.questionId);
-        return [
-            ...remaining,
-            { questionId: currentQuestion.questionId, selectedOption: validOption },
-        ];
-        });
+    setAnswers((prev) => {
+      const remaining = prev.filter(
+        (ans) => ans.questionId !== currentQuestion.questionId
+      );
 
-        setSubmitErrorMessage("");
-    };
+      return [
+        ...remaining,
+        {
+          questionId: currentQuestion.questionId,
+          selectedOption: validOption,
+        },
+      ];
+    });
 
-    // 이전 스텝 이동
-    const handlePrev = () => {
-        setStep((current) => Math.max(current - 1, 0));
-    };
+    setSubmitErrorMessage("");
+  };
 
-    // 다음 스텝 이동 또는 모달 활성화
-    const handleNext = () => {
-        if (selectedAnswer === null) return;
+  // 이전 문제
+  const handlePrev = () => {
+    setStep((current) => Math.max(current - 1, 0));
+  };
 
-        if (isLast) {
-        setIsCompleteModalOpen(true);
-        return;
-        }
+  // 다음 문제 또는 제출 모달 열기
+  const handleNext = () => {
+    if (selectedAnswer === null) return;
 
-        setStep((current) => Math.min(current + 1, questions.length - 1));
-    };
+    if (isLast) {
+      setIsCompleteModalOpen(true);
+      return;
+    }
 
-    // 최종 진단평가 결과 제출
-    const handleSubmitResult = async () => {
-        const payload = buildDiagnosisResultPayload({
-        countryId,
-        questions,
-        answers,
-        });
+    setStep((current) => Math.min(current + 1, questions.length - 1));
+  };
 
-        if (!payload) {
-        setIsCompleteModalOpen(false);
-        setSubmitErrorMessage("모든 문항에 답한 후 제출해 주세요.");
-        return;
-        }
+  // 진단평가 제출
+  const handleSubmitResult = async () => {
+    const payload = buildDiagnosisResultPayload({
+      countryId,
+      questions,
+      answers,
+    });
 
-        try {
-        setIsSubmitting(true);
-        setSubmitErrorMessage("");
+    if (!payload) {
+      setIsCompleteModalOpen(false);
+      setSubmitErrorMessage("모든 문항에 답한 후 제출해 주세요.");
+      return;
+    }
 
-        const result = await submitDiagnosisResult(payload);
+    try {
+      setIsSubmitting(true);
+      setSubmitErrorMessage("");
 
-        // 결과 보존 후 완료 페이지 랜드마크 이동
-        sessionStorage.setItem(DIAGNOSIS_RESULT_STORAGE_KEY, JSON.stringify(result));
-        setIsCompleteModalOpen(false);
+      const result = await submitDiagnosisResult(payload);
 
-        router.replace(`/classroom/${continentCode}/${countryId}/evaluation/result`);
-        } catch (error) {
-        console.error("[diagnosis] 진단평가 제출 실패:", error);
+      // 결과 페이지에서 문항 정보까지 함께 사용할 수 있도록 저장
+      sessionStorage.setItem(
+        DIAGNOSIS_ATTEMPT_STORAGE_KEY,
+        JSON.stringify({
+          result,
+          questions,
+        })
+      );
 
-        // 401 인증 만료 시: 현재까지 풀던 데이터 임시 백업 후 로그인 페이지 리다이렉트
-        if (error instanceof ApiRequestError && error.status === 401) {
-            sessionStorage.setItem(
-            PENDING_DIAGNOSIS_SUBMIT_STORAGE_KEY,
-            JSON.stringify({ continentCode, countryId, payload })
-            );
+      // 기존 데이터와의 호환성을 위해 유지
+      sessionStorage.setItem(
+        DIAGNOSIS_RESULT_STORAGE_KEY,
+        JSON.stringify(result)
+      );
 
-            const redirectUrl = `/classroom/${continentCode}/${countryId}/evaluation`;
-            router.push(`/auth/login?redirect=${encodeURIComponent(redirectUrl)}`);
-            return;
-        }
+      setIsCompleteModalOpen(false);
 
-        setSubmitErrorMessage(
-            error instanceof Error ? error.message : "진단평가 제출에 실패했습니다."
+      router.replace(
+        `/classroom/${continentCode}/${countryId}/evaluation/result`
+      );
+    } catch (error) {
+      console.error("[diagnosis] 진단평가 제출 실패:", error);
+
+      // 로그인 만료 시 현재 제출 데이터 임시 저장
+      if (error instanceof ApiRequestError && error.status === 401) {
+        sessionStorage.setItem(
+          PENDING_DIAGNOSIS_SUBMIT_STORAGE_KEY,
+          JSON.stringify({
+            continentCode,
+            countryId,
+            payload,
+          })
         );
-        } finally {
-        setIsSubmitting(false);
-        }
-    };
 
-    return {
-        step,
-        currentQuestion,
-        selectedAnswer,
-        isLast,
-        isAllAnswered,
-        progress,
-        isCompleteModalOpen,
-        isSubmitting,
-        submitErrorMessage,
-        handleSelectAnswer,
-        handlePrev,
-        handleNext,
-        handleSubmitResult,
-        closeCompleteModal: () => setIsCompleteModalOpen(false),
-    };
+        const redirectUrl = `/classroom/${continentCode}/${countryId}/evaluation`;
+
+        router.push(`/auth/login?redirect=${encodeURIComponent(redirectUrl)}`);
+        return;
+      }
+
+      setSubmitErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "진단평가 제출에 실패했습니다."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const closeCompleteModal = () => {
+    if (isSubmitting) return;
+
+    setIsCompleteModalOpen(false);
+  };
+
+  return {
+    step,
+    currentQuestion,
+    selectedAnswer,
+    isLast,
+    isAllAnswered,
+    progress,
+    isCompleteModalOpen,
+    isSubmitting,
+    submitErrorMessage,
+    handleSelectAnswer,
+    handlePrev,
+    handleNext,
+    handleSubmitResult,
+    closeCompleteModal,
+  };
 }

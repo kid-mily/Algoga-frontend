@@ -1,57 +1,69 @@
-import { api, ApiResponse } from "@/lib/api";
+import { api, ApiResult, ApiRequestError, unwrapData } from "@/lib/api";
+import { LatestDiagnosisResult, MyCourse } from "@/features/mypage/coursedetails/types";
 
-export interface MyCourseSummary {
-  courseId: number;
-  title?: string;
-  completed?: boolean;
-  courseCompleted?: boolean;
-  completionStatus?: string;
-  completedAt?: string;
-  certificateAvailable?: boolean;
-}
-
-const normalizeMyCourses = (
+const normalizeCourses = (
   data: unknown
-): MyCourseSummary[] => {
+): MyCourse[] => {
   if (Array.isArray(data)) {
-    return data as MyCourseSummary[];
+    return data as MyCourse[];
   }
 
   if (
     data &&
-    typeof data === "object" &&
-    "content" in data &&
-    Array.isArray(
+    typeof data === "object" && "content" in data && Array.isArray(
       (data as { content?: unknown }).content
     )
   ) {
     return (
-      data as { content: MyCourseSummary[] }
+      data as { content: MyCourse[] }
     ).content;
   }
 
   return [];
 };
 
-export const getMyCourses = async () => {
-  const response = await api.get<
-    ApiResponse<unknown>
-  >("/api/v1/my/courses", {
-    cache: "no-store",
-    suppressGlobalError: true,
-  });
+export const getMyCourses =
+  async (): Promise<MyCourse[]> => {
+    const response = await api.get<ApiResult<unknown>>("/api/v1/my/courses", {
+      cache: "no-store",
+      suppressGlobalError: true,
+    });
 
-  return normalizeMyCourses(response.data);
-};
+    return normalizeCourses(
+      unwrapData(response)
+    );
+  };
+
+export const getLatestDiagnosis =
+  async (): Promise<LatestDiagnosisResult | null> => {
+    try {
+      const response = await api.get<ApiResult<LatestDiagnosisResult>>("/api/v1/diagnosis/me/latest", {
+        cache: "no-store",
+        suppressGlobalError: true,
+      });
+
+      return unwrapData(response);
+    } catch (error) {
+      // 아직 진단평가를 응시하지 않은 경우
+      if (
+        error instanceof ApiRequestError &&
+        error.status === 404
+      ) {
+        return null;
+      }
+
+      throw error;
+    }
+  };
 
 export const isMyCourseCompleted = (
-  course?: MyCourseSummary
-) => {
+  course?: MyCourse
+): boolean => {
   if (!course) return false;
 
   return (
-    course.completed === true ||
-    course.courseCompleted === true ||
-    course.completionStatus === "COMPLETED"
+    course.learningStatus === "COMPLETED" ||
+    course.certificateAvailable === true ||
+    course.completedAt !== null
   );
 };

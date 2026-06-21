@@ -147,7 +147,7 @@ export const deleteAdminBanner = async (bannerId: number): Promise<void> => {
 
 export const getMainBanners = async (): Promise<AdminBanner[]> => {
   const response = await api.get<ApiResult<unknown>>("/api/v1/banner", {
-    next: { revalidate: 1800 },
+    // next: { revalidate: 1800 },
   });
   const data = unwrapData(response);
 

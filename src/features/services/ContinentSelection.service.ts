@@ -6,7 +6,7 @@ export const getContinents = async (): Promise<Continent[]> => {
     const response = await api.get<ApiResponse<Continent[]>>(
       "/api/v1/maps/continents",
       {
-        next: { revalidate: 1800 },
+        // next: { revalidate: 1800 },
       }
     );
 

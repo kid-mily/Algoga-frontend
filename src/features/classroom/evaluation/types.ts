@@ -63,6 +63,11 @@ export interface DiagnosisResult {
   recommendedCourses: DiagnosisRecommendedCourse[];
 }
 
+export interface DiagnosisAttempt {
+  result: DiagnosisResult;
+  questions: EvaluationFormQuestion[];
+}
+
 export interface PendingDiagnosisSubmit {
   continentCode: string;
   countryId: string;
@@ -71,3 +76,4 @@ export interface PendingDiagnosisSubmit {
 
 export const DIAGNOSIS_RESULT_STORAGE_KEY = "diagnosis-result";
 export const PENDING_DIAGNOSIS_SUBMIT_STORAGE_KEY = "pending-diagnosis-submit";
+export const DIAGNOSIS_ATTEMPT_STORAGE_KEY = "diagnosis-attempt";

@@ -33,12 +33,12 @@ export default function EvaluationForm({
     handlePrev,
     handleNext,
     handleSubmitResult,
+    closeCompleteModal,
   } = useEvaluationForm({
     continentCode,
     countryId,
     questions,
   });
-  
 
   if (questions.length === 0) {
     return (
@@ -55,7 +55,7 @@ export default function EvaluationForm({
             description=""
           />
 
-          <article className="mt-5 rounded-[24px] border border-[#E3EDF3] bg-white px-6 py-10 text-center shadow-sm">
+          <article className="mt-5 rounded-2xl border border-[#E3EDF3] bg-white px-6 py-10 text-center shadow-sm">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF5F5] text-xl">
               🧭
             </div>
@@ -90,9 +90,7 @@ export default function EvaluationForm({
 
         <form
           className="mt-3"
-          onSubmit={(event) =>
-            event.preventDefault()
-          }
+          onSubmit={(event) => event.preventDefault()}
         >
           <EvaluationQuestion
             question={currentQuestion}
@@ -105,9 +103,7 @@ export default function EvaluationForm({
             currentStep={step}
             isLast={isLast}
             hasSelectedAnswer={
-              isLast
-                ? isAllAnswered
-                : selectedAnswer !== null
+              isLast ? isAllAnswered : selectedAnswer !== null
             }
             onPrev={handlePrev}
             onNext={handleNext}
@@ -128,16 +124,12 @@ export default function EvaluationForm({
         open={isCompleteModalOpen}
         title="진단평가를 제출하시겠습니까?"
         description="제출하면 답안을 수정할 수 없습니다."
-        buttonText={
-          isSubmitting
-            ? "제출 중..."
-            : "제출하기"
-        }
+        buttonText={isSubmitting ? "제출 중..." : "제출하기"}
         cancelText="계속 풀기"
         isProcessing={isSubmitting}
-        onCancel={handleNext}
+        onCancel={closeCompleteModal}
         onConfirm={handleSubmitResult}
       />
     </main>
   );
-} 
+}
