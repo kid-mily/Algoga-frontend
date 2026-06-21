@@ -65,7 +65,7 @@ export default function EvaluationResultContent({
     if (isLoading) {
         return (
             <main className="min-h-screen w-full bg-[#F5F6F8] px-4 py-10">
-                <section className="mx-auto w-full max-w-4xl py-20">
+                <section className="mx-auto w-full max-w-3xl py-20">
                     <article className="rounded-3xl bg-white p-10 text-center shadow-sm">
                         <h1 className="text-2xl font-bold text-[#0A1628]">
                             진단평가 결과를 불러오고 있습니다.

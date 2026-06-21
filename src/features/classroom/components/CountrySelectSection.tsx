@@ -52,7 +52,7 @@ export default function CountrySelectSection({
           검색 결과가 없습니다.
         </p>
       ) : (
-        <ul className="mt-8 grid w-full grid-cols-4 gap-10">
+        <ul className="mt-8 grid w-full grid-cols-4 gap-3">
           {filteredCountries.map((country) => {
             const href =
               `/classroom/${country.continentCode}/${country.countryId}`.toLowerCase();
@@ -61,7 +61,7 @@ export default function CountrySelectSection({
               <li key={country.countryCode}>
                 <Link
                   href={href}
-                  className="flex h-48 w-52 flex-col justify-center rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                  className="flex h-48 w-auto flex-col justify-center rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                 >
                   <h3 className="text-xl font-bold text-[#0A1628]">
                     {country.countryName}

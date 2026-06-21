@@ -12,7 +12,7 @@ export default function SearchBar({
   onSearch,
 }: SearchBarProps) {
   return (
-    <div className="mt-8 flex items-center gap-4">
+    <div className="flex items-center gap-4">
       <div className="flex h-12 flex-1 items-center rounded-2xl border border-[#8A9BB0] bg-white px-6 shadow-sm">
         <input
           type="text"

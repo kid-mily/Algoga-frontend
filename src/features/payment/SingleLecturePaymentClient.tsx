@@ -7,7 +7,7 @@ import MileageInput from "@/features/payment/MileageInput";
 import PaymentSummary from "@/features/payment/PaymentSummary";
 import { PaymentButtons } from "@/features/payment/PaymentButton";
 import { useSingleLecturePayment } from "./hooks/useSingleLecturePayment";
-import type { SingleLecturePaymentClientProps } from "./types";
+import { SingleLecturePaymentClientProps } from "./types";
 
 export default function SingleLecturePaymentClient({
   continentCode,
@@ -40,7 +40,7 @@ export default function SingleLecturePaymentClient({
 
   return (
     <main className="min-h-screen bg-[#f5f6f8] px-4 py-12">
-      <section className="mx-auto max-w-4xl space-y-5">
+      <section className="mx-auto max-w-3xl space-y-5">
         <SubHeader
           backHref={`/classroom/${continentCode}/${countryId}/lecture/${courseId}`}
           backText="강의로 돌아가기"
