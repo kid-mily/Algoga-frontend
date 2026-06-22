@@ -2,11 +2,26 @@ import { AdminQnaItem } from "../types";
 
 interface AdminQnaRowProps {
   qna: AdminQnaItem;
-  onView: (qna: AdminQnaItem) => void;
   onAnswer: (qna: AdminQnaItem) => void;
 }
 
-export default function AdminQnaRow({ qna, onView, onAnswer }: AdminQnaRowProps) {
+const formatDate = (value: string) => {
+  if (!value) return "-";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value.slice(0, 10) || "-";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}.${month}.${day}`;
+};
+
+export default function AdminQnaRow({ qna, onAnswer }: AdminQnaRowProps) {
   return (
     <tr className="border-b border-[#E4E7EC]">
       <td className="px-5 py-5 text-[15px] font-semibold text-[#111827]">
@@ -29,12 +44,12 @@ export default function AdminQnaRow({ qna, onView, onAnswer }: AdminQnaRowProps)
             />
           </span>
           <span className="text-[14px] font-medium text-[#667085]">
-            {qna.writer}
+            {qna.userId > 0 ? qna.userId : "-"}
           </span>
         </span>
       </td>
       <td className="px-5 py-5 text-[14px] text-[#667085]">
-        {qna.createdAt || "-"}
+        {formatDate(qna.createdAt)}
       </td>
       <td className="px-5 py-5">
         <span
@@ -52,29 +67,14 @@ export default function AdminQnaRow({ qna, onView, onAnswer }: AdminQnaRowProps)
           {qna.isAnswered ? "답변 완료" : "답변 대기"}
         </span>
       </td>
-      <td className="px-5 py-5">
-        <menu className="flex items-center justify-center gap-4">
-          <li>
-            <button
-              type="button"
-              onClick={() => onView(qna)}
-              className="text-[13px] font-semibold text-[#439A97] transition hover:opacity-70"
-            >
-              보기
-            </button>
-          </li>
-          {!qna.isAnswered && (
-            <li>
-              <button
-                type="button"
-                onClick={() => onAnswer(qna)}
-                className="text-[13px] font-semibold text-[#439A97] transition hover:opacity-70"
-              >
-                답변
-              </button>
-            </li>
-          )}
-        </menu>
+      <td className="px-5 py-5 text-center">
+        <button
+          type="button"
+          onClick={() => onAnswer(qna)}
+          className="text-[13px] font-semibold text-[#439A97] transition hover:opacity-70"
+        >
+          답변
+        </button>
       </td>
     </tr>
   );

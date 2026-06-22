@@ -4,9 +4,13 @@ import {
   CreateCourseQnaPayload,
   normalizeCourseQna,
 } from "@/features/classroom/qna/types";
-import { api, ApiResponse } from "@/lib/api";
+import { adminApi, api, ApiResponse } from "@/lib/api";
 
 type CourseQnaApiResponse<T> = ApiResponse<T> | T;
+
+type CreateAdminCourseQnaAnswerPayload = {
+  answer: string;
+};
 
 const unwrapData = <T>(response: CourseQnaApiResponse<T>): T => {
   if (response && typeof response === "object" && "data" in response) {
@@ -70,6 +74,19 @@ export const createCourseQnaComment = async (
 ) => {
   const response = await api.post<CourseQnaApiResponse<unknown>>(
     `/api/v1/courses/${courseId}/qnas/${qnaId}`,
+    payload
+  );
+
+  return unwrapData(response);
+};
+
+export const createAdminCourseQnaAnswer = async (
+  courseId: string | number,
+  qnaId: string | number,
+  payload: CreateAdminCourseQnaAnswerPayload
+) => {
+  const response = await adminApi.post<CourseQnaApiResponse<unknown>>(
+    `/api/v1/admin/courses/${courseId}/qnas/${qnaId}/answer`,
     payload
   );
 

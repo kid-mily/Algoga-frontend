@@ -24,10 +24,6 @@ export default function AdminQnaManageClient() {
     setStatusFilter,
   } = useAdminQnaList();
 
-  const moveToDetail = (qna: AdminQnaItem) => {
-    router.push(`/contentadmin/qna/${qna.id}/edit?courseId=${qna.courseId}`);
-  };
-
   const moveToAnswer = (qna: AdminQnaItem) => {
     router.push(`/contentadmin/qna/${qna.id}?courseId=${qna.courseId}`);
   };
@@ -126,7 +122,6 @@ export default function AdminQnaManageClient() {
                   <AdminQnaRow
                     key={`${qna.courseId}-${qna.id}`}
                     qna={qna}
-                    onView={moveToDetail}
                     onAnswer={moveToAnswer}
                   />
                 ))
