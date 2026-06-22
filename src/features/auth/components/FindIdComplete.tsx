@@ -1,3 +1,5 @@
+// id 찾기 완료 
+
 import Link from "next/link";
 
 interface FindIdCompleteProps {

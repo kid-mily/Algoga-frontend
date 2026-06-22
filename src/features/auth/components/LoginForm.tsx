@@ -8,9 +8,7 @@ import CompleteModal from "@/features/common/components/CompleteModal";
 
 export default function LoginForm() {
   const router = useRouter();
-  const apiBaseUrl = (
-    process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr"
-  ).replace(/\/$/, "");
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -77,7 +75,6 @@ export default function LoginForm() {
           ? error.message
           : "아이디 또는 비밀번호를 확인해주세요.";
 
-      // 🌟 alert 제거 후 모달 호출로 변경
       setModal({
         open: true,
         title: "로그인 실패",
@@ -95,6 +92,7 @@ export default function LoginForm() {
 
   return (
     <>
+    {/* 로그인폼 */}
       <div className="w-[400px]">
         <h1 className="text-[32px] font-bold text-[#111827]">로그인</h1>
         <p className="mt-2 text-[15px] text-[#98A2B3]">계정에 로그인하세요</p>

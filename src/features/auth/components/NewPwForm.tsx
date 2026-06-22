@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { resetPassword } from "@/features/services/auth.service";
-import CompleteModal from "@/features/common/components/CompleteModal"; // 🌟 모달 임포트 (경로 확인 필요)
+import CompleteModal from "@/features/common/components/CompleteModal";
 
 export default function NewPwForm() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function NewPwForm() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // 🌟 모달 상태 관리 (redirect 경로를 추가해 확인 버튼 클릭 시 이동 처리)
+  // 모달 상태 관리 
   const [modal, setModal] = useState({
     open: false,
     title: "",
@@ -37,7 +37,6 @@ export default function NewPwForm() {
     if (!passwordRegex.test(value)) {
       return "영문 + 숫자 포함 8자 이상 입력해주세요.";
     }
-
     return "";
   };
 
@@ -95,7 +94,7 @@ export default function NewPwForm() {
         newPassword: password,
       });
 
-      // 🌟 alert 대체 (성공 시)
+      // 성공 시
       setModal({
         open: true,
         title: "변경 완료",
@@ -108,7 +107,7 @@ export default function NewPwForm() {
           ? error.message
           : "비밀번호 변경 중 오류가 발생했습니다.";
 
-      // 🌟 alert 대체 (에러 시 - 페이지 이동 없음)
+      // 에러 시 - 페이지 이동 없음
       setModal({
         open: true,
         title: "오류",
@@ -265,7 +264,7 @@ export default function NewPwForm() {
         </button>
       </div>
 
-      {/* 🌟 모달 렌더링 영역 */}
+      {/*  모달 렌더링 영역 */}
       <CompleteModal
         open={modal.open}
         title={modal.title}

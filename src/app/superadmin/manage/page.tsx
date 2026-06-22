@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import ManagerManageClient from "@/features/superadmin/manager/components/ManagerManageClient";
-import { mockManagers } from "@/features/superadmin/manager/types";
 
 export const metadata: Metadata = {
   title: "관리자 계정 관리 | 알고가 슈퍼 관리자",
@@ -13,5 +12,5 @@ export const metadata: Metadata = {
 };
 
 export default function SuperManagersPage() {
-  return <ManagerManageClient initialManagers={mockManagers} />;
+  return <ManagerManageClient />;
 }

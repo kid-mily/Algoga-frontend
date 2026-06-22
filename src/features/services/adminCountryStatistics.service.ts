@@ -5,7 +5,7 @@ import {
 } from "@/features/statisticadmin/country-popular/types";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
+  process.env.NEXT_PUBLIC_API_URL;
 
 type UnknownRecord = Record<string, unknown>;
 

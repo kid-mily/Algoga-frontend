@@ -1,36 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  checkUsernameDuplicate,
-  sendSignupEmailCode,
-  verifySignupEmailCode,
-} from "@/features/services/signup.service";
+import { checkUsernameDuplicate, sendSignupEmailCode, verifySignupEmailCode } from "@/features/services/signup.service";
 
 import FormLabel from "@/features/common/components/FormLabel";
 
-interface RegisterFormData {
-  name: string;
-  username: string;
-  password: string;
-  passwordConfirm: string;
-  email: string;
-  phone: string;
-  birthDate: string;
-  gender: string;
-  nickname: string;
-  socialType?: string;
-  referralCode: string;
-  signupPath: string;
-}
+import { RegisterFormData } from "../types";
 
 interface RegisterInfoFormProps {
   formData: RegisterFormData;
   onChange: (field: string, value: string) => void;
   onNext: () => void;
   isLoading?: boolean;
-  serverError?: { field: string; message: string }; // 🌟 객체 형태로 변경
-  setServerError?: (err: { field: string; message: string }) => void; // 🌟 객체 형태로 변경
+  serverError?: { field: string; message: string }; // 객체 형태로 변경
+  setServerError?: (err: { field: string; message: string }) => void; // 객체 형태로 변경
   isSocialSignup?: boolean;
 }
 
@@ -359,7 +342,8 @@ export default function RegisterInfoForm({
               {usernameMessage}
             </p>
           )}
-          {/* 🌟 아이디 중복 관련 백엔드 에러 표시 */}
+          
+          {/* 아이디 중복 관련 백엔드 에러 표시 */}
           {serverError?.field === "username" && !errors.username && (
             <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
           )}
@@ -414,7 +398,7 @@ export default function RegisterInfoForm({
           {errors.nickname && <p className="mt-1 text-[13px] text-red-500">{errors.nickname}</p>}
         </div>
 
-        {/* 🌟 이메일 */}
+        {/*  이메일 */}
         <div className="col-span-2">
           <FormLabel required>이메일</FormLabel>
           <div className="mt-3 flex gap-2">
@@ -431,6 +415,8 @@ export default function RegisterInfoForm({
               }`}
               disabled={isLoading || isEmailVerified || (isSocialSignup && Boolean(formData.email))}
             />
+
+            {/* 소셜로그인 */}
             {!isSocialSignup && (
               <button
                 type="button"
@@ -453,6 +439,7 @@ export default function RegisterInfoForm({
               </button>
             )}
           </div>
+
           {/* 프론트엔드 자체 에러 (형식 등) */}
           {errors.email && <p className="mt-1 text-[13px] text-red-500">{errors.email}</p>}
           {!errors.email && emailMessage && (
@@ -464,7 +451,7 @@ export default function RegisterInfoForm({
             </p>
           )}
           
-          {/* 🌟 이메일 중복 관련 백엔드 에러 표시 */}
+          {/*  이메일 중복 관련 백엔드 에러 표시 */}
           {serverError?.field === "email" && !errors.email && (
             <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
           )}
@@ -568,7 +555,7 @@ export default function RegisterInfoForm({
           />
         </div>
 
-        <div /> {/* 빈 공간 */}
+        <div />
 
         {/* 유입 경로 */}
         <div className="col-span-2">

@@ -2,19 +2,12 @@
 
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { useRouter } from "next/navigation";
-import { AdminManager } from "../types";
 import { useManagerList } from "../hooks/useManagerList";
 import ManagerDeleteModals from "./ManagerDeleteModals";
 import ManagerTable from "./ManagerTable";
 import ManagerToolbar from "./ManagerToolbar";
 
-type ManagerManageClientProps = {
-  initialManagers: AdminManager[];
-};
-
-export default function ManagerManageClient({
-  initialManagers,
-}: ManagerManageClientProps) {
+export default function ManagerManageClient() {
   const router = useRouter();
   const {
     searchKeyword,
@@ -30,7 +23,7 @@ export default function ManagerManageClient({
     setDeleteTarget,
     setDeleteCompleteOpen,
     deleteManager,
-  } = useManagerList(initialManagers);
+  } = useManagerList();
 
   return (
     <main aria-labelledby="manager-management-title">

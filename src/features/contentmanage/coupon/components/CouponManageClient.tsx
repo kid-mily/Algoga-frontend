@@ -20,7 +20,7 @@ const ITEMS_PER_PAGE = 10;
 export default function CouponManageClient() {
   const router = useRouter();
   const { coupons, isLoading, errorMessage, refetch } = useAdminCouponList();
-
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<CouponStatusFilter>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,6 +29,7 @@ export default function CouponManageClient() {
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [actionError, setActionError] = useState("");
 
+  //쿠폰 목록이 바뀌거나, 검색어가 바뀌거나, 상태 필터가 바뀔 때만 다시 필터링
   const filteredCoupons = useMemo(
     () => filterCoupons(coupons, searchTerm, statusFilter),
     [coupons, searchTerm, statusFilter]
@@ -46,7 +47,8 @@ export default function CouponManageClient() {
     if (!selectedCoupon) return;
 
     try {
-      const deleteCourseId = getCouponCourseId(selectedCoupon);
+      // 백엔드 API
+      const deleteCourseId = getCouponCourseId(selectedCoupon); 
       const deleteCouponPolicyId = getCouponId(selectedCoupon);
 
       setActionError("");

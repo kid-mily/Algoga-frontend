@@ -26,7 +26,6 @@ export default function CreateCouponClient() {
         setIsLoading(false);
       }
     };
-
     void fetchCourses();
   }, []);
 
