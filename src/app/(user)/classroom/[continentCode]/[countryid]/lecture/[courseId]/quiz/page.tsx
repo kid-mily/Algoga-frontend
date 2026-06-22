@@ -3,7 +3,7 @@ import QuizClient from "@/features/classroom/quiz/components/QuizClient";
 import { getCourseDetail } from "@/features/services/lectureDetail.service";
 
 // 공개 강의 제목과 퀴즈 설명은 30분마다 갱신합니다.
-export const revalidate = 1800;
+// export const revalidate = 1800;
 
 interface QuizPageProps {
   params: Promise<{

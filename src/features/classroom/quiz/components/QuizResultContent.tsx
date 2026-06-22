@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import QuizExplanationModal from "./QuizExplanationModal";
 import type { CourseQuizAttempt, CourseQuizSubmitResult } from "../types";
@@ -23,15 +23,27 @@ export default function QuizResultContent({
 }: QuizResultContentProps) {
   const completion = useCourseCompletion(courseId);
 
+  // 자동 수료 요청이 중복 실행되지 않도록 막는 ref
+  const didRequestCompletion = useRef(false);
+
   // 해설 모달 상태
-  const [isExplanationOpen, setIsExplanationOpen] =
-    useState(false);
+  const [isExplanationOpen, setIsExplanationOpen] = useState(false);
+
+  // 퀴즈 제출 결과 화면에 들어오면 자동으로 수료 처리
+  useEffect(() => {
+    if (
+      didRequestCompletion.current ||
+      completion.status !== "idle"
+    ) {
+      return;
+    }
+
+    didRequestCompletion.current = true;
+    completion.handleComplete();
+  }, [completion.status, completion.handleComplete]);
 
   // 점수를 0~100으로 제한
-  const score = Math.min(
-    Math.max(result.score, 0),
-    100
-  );
+  const score = Math.min(Math.max(result.score, 0), 100);
 
   const certificateHref = `/mypage/coursedetails/${courseId}/certificate`;
 
@@ -59,28 +71,34 @@ export default function QuizResultContent({
               >
                 {completion.isCompleted
                   ? "강의 수료 완료"
-                  : "퀴즈 제출 완료"}
+                  : completion.status === "failed"
+                    ? "수료 처리 실패"
+                    : "수료 처리 중"}
               </strong>
 
               <p className="mt-0.5 text-xs leading-5 text-[#667085]">
                 {completion.message ||
-                  "수료 완료 버튼을 누르면 보상이 자동 지급됩니다."}
+                  "퀴즈 제출 후 수료 완료와 보상이 자동으로 처리됩니다."}
               </p>
             </div>
 
-            {!completion.isCompleted ? (
-              <button
-                type="button"
-                disabled={completion.isProcessing}
-                onClick={completion.handleComplete}
-                className="h-9 rounded-xl bg-[#5E9F9B] px-4 text-xs font-bold text-white"
-              >
-                {completion.isProcessing
-                  ? "처리 중..."
-                  : "수료 완료"}
-              </button>
+            {!completion.isCompleted && completion.isProcessing ? (
+              <span className="shrink-0 rounded-xl bg-[#5E9F9B] px-4 py-2 text-xs font-bold text-white">
+                처리 중...
+              </span>
             ) : null}
           </div>
+
+          {completion.status === "failed" ? (
+            <button
+              type="button"
+              disabled={completion.isProcessing}
+              onClick={completion.handleComplete}
+              className="mt-2 h-8 w-full rounded-xl bg-[#C84444] text-xs font-bold text-white disabled:opacity-60"
+            >
+              다시 수료 처리하기
+            </button>
+          ) : null}
 
           {completion.isCompleted ? (
             <div className="mt-2 flex gap-2">
@@ -118,9 +136,7 @@ export default function QuizResultContent({
         <div className="mt-3 w-full rounded-2xl bg-[#F5F7FB] px-5 py-3">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center">
             <div>
-              <p className="text-xs text-[#A1AEC0]">
-                맞힌 문제
-              </p>
+              <p className="text-xs text-[#A1AEC0]">맞힌 문제</p>
 
               <strong className="mt-0.5 block text-2xl text-[#439A97]">
                 {result.correctCount}
@@ -130,9 +146,7 @@ export default function QuizResultContent({
             <div className="h-9 w-px bg-[#E1E7EF]" />
 
             <div>
-              <p className="text-xs text-[#A1AEC0]">
-                전체 문제
-              </p>
+              <p className="text-xs text-[#A1AEC0]">전체 문제</p>
 
               <strong className="mt-0.5 block text-2xl text-[#0A1628]">
                 {result.totalCount}
@@ -164,10 +178,8 @@ export default function QuizResultContent({
         <button
           type="button"
           disabled={!attempt}
-          onClick={() =>
-            setIsExplanationOpen(true)
-          }
-          className="mt-3 h-10 w-full rounded-xl border border-[#8AB9B7] bg-white text-sm font-bold text-[#5E9F9B]"
+          onClick={() => setIsExplanationOpen(true)}
+          className="mt-3 h-10 w-full rounded-xl border border-[#8AB9B7] bg-white text-sm font-bold text-[#5E9F9B] disabled:cursor-not-allowed disabled:opacity-50"
         >
           해설 보기
         </button>
@@ -195,9 +207,7 @@ export default function QuizResultContent({
       <QuizExplanationModal
         open={isExplanationOpen}
         attempt={attempt}
-        onClose={() =>
-          setIsExplanationOpen(false)
-        }
+        onClose={() => setIsExplanationOpen(false)}
       />
     </>
   );

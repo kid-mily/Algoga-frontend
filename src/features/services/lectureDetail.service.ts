@@ -15,7 +15,7 @@ export const getCourseDetail = async (
     const response = await api.get<ApiResponse<CourseItem[]>>(
       `/api/v1/courses/countries/${countryId}`,
       {
-        next: { revalidate: 1800 },
+        // next: { revalidate: 3 },
       }
     );
 
@@ -40,7 +40,7 @@ export const getCourseReviewSummary = async (
     const response = await api.get<ApiResponse<CourseReviewSummary>>(
       `/api/v1/courses/${courseId}/reviews/summary`,
       {
-        next: { revalidate: 1800 },
+        // next: { revalidate: 3 },
       }
     );
 

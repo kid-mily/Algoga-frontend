@@ -1,35 +1,25 @@
-import { api, ApiResponse } from "@/lib/api";
+import { api, ApiResult, unwrapData } from "@/lib/api";
 
 export interface CourseStudyChapter {
   chapterId: number;
-  courseId?: number;
   title: string;
-  description?: string;
-  videoUrl: string;
+  description: string;
+  videoUrl: string | null;
   durationSeconds: number;
   chapterOrder: number;
-  progressRate?: number;
-  completed?: boolean;
-  watchedSeconds?: number;
-  locked?: boolean;
+  watchedSeconds: number;
+  progressRate: number;
+  completed: boolean;
+  locked: boolean;
 }
 
 export interface CourseStudyDetail {
   courseId: number;
   title: string;
-  description?: string;
-  accessExpiresAt?: string;
-  quizAvailable?: boolean;
-  isEnrolled: boolean;
-  isPaid: boolean;
+  accessExpiresAt: string;
+  quizAvailable: boolean;
   chapters: CourseStudyChapter[];
 }
-
-type CourseStudyDetailResponse = CourseStudyDetail & {
-  enrolled?: boolean;
-  paid?: boolean;
-  purchased?: boolean;
-};
 
 export interface ChapterProgress {
   progressId: number;
@@ -45,21 +35,16 @@ export const getCourseStudyDetail = async (
   courseId: string | number,
   signal?: AbortSignal
 ): Promise<CourseStudyDetail> => {
-  const response = await api.get<ApiResponse<CourseStudyDetail>>(
-    `/api/v1/my/courses/${courseId}`,
-    {
-      cache: "no-store",
-      signal,
-      suppressGlobalError: true,
-    }
-  );
+  const response = await api.get<ApiResult<CourseStudyDetail>>(`/api/v1/my/courses/${courseId}`, {
+    cache: "no-store",
+    signal,
+    suppressGlobalError: true,
+  });
 
-  const data = response.data as CourseStudyDetailResponse;
+  const data = unwrapData(response);
 
   return {
     ...data,
-    isEnrolled: Boolean(data.isEnrolled ?? data.enrolled ?? true),
-    isPaid: Boolean(data.isPaid ?? data.paid ?? data.purchased ?? true),
     chapters: data.chapters ?? [],
   };
 };
@@ -69,15 +54,17 @@ export const updateChapterProgress = async (
   chapterId: string | number,
   watchedSeconds: number
 ): Promise<ChapterProgress> => {
-  const response = await api.post<ApiResponse<ChapterProgress>>(
-    `/api/v1/courses/${courseId}/chapters/${chapterId}/progress`,
+  const response = await api.post<ApiResult<ChapterProgress>>(`/api/v1/courses/${courseId}/chapters/${chapterId}/progress`,
     {
-      watchedSeconds: Math.floor(watchedSeconds),
+      watchedSeconds: Math.max(
+        0,
+        Math.floor(watchedSeconds)
+      ),
     },
     {
       suppressGlobalError: true,
     }
   );
 
-  return response.data;
+  return unwrapData(response);
 };

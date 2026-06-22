@@ -8,7 +8,7 @@ export const getCourses = async (
     const response = await api.get<ApiResponse<CourseItem[]>>(
       `/api/v1/courses/countries/${countryId}`,
       {
-        next: { revalidate: 1800 },
+        // next: { revalidate: 1800 },
       }
     );
 

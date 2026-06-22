@@ -35,7 +35,7 @@ export const getCourseReviews = async (
     courseId: string | number
 ): Promise<CourseReview[]> => {
     const response = await api.get<ApiResponse<CourseReview[]>>(`/api/v1/courses/${courseId}/reviews`, {
-        next: { revalidate: 300 },
+        // next: { revalidate: 300 },
         suppressGlobalError: true,
     });
 
@@ -46,7 +46,7 @@ export const getCourseReviewSummary = async (
     courseId: string | number
 ): Promise<CourseReviewSummary> => {
     const response = await api.get<ApiResponse<CourseReviewSummary>>(`/api/v1/courses/${courseId}/reviews/summary`, {
-        next: { revalidate: 300 },
+        // next: { revalidate: 300 },
         suppressGlobalError: true,
     });
 
