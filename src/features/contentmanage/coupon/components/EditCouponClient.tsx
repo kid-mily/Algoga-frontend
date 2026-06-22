@@ -1,9 +1,9 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import AdminLoadingState from "@/features/common/AdminLoadingState";
+import SubHeader from "@/features/common/components/SubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import AdminLoadingState from "@/features/admin/common/AdminLoadingState";
 import { getLectureListAction } from "@/features/contentmanage/lecture/actions";
 import { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { updateCouponAction } from "../actions";

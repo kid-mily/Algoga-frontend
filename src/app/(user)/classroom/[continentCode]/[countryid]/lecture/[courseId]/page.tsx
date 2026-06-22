@@ -1,7 +1,7 @@
 // 강의 홈 화면
 
 import { notFound } from "next/navigation";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import LectureActionCard from "@/features/classroom/components/LectureActionCard";
 import LectureAttachments from "@/features/classroom/components/LectureAttachments";
 import LectureReviews from "@/features/classroom/components/LectureReviews";

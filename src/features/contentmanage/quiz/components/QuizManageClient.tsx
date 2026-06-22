@@ -1,7 +1,7 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import LoadingSpinner from "@/features/common/LoadingSpinner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import QuizList from "./QuizList";
 import QuizToolbar from "./QuizToolbar";
 import { useAdminQuizList } from "../hooks/useAdminQuizList";

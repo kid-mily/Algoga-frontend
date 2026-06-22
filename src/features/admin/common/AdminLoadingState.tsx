@@ -1,4 +1,4 @@
-import LoadingSpinner from "./LoadingSpinner";
+import LoadingSpinner from "../../common/components/LoadingSpinner";
 
 type AdminLoadingStateProps = {
   text?: string;

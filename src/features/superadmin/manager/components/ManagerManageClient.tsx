@@ -1,6 +1,6 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { useRouter } from "next/navigation";
 import { AdminManager } from "../types";
 import { useManagerList } from "../hooks/useManagerList";

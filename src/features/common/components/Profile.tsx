@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { logout } from "@/features/services/auth.service";
-import CompleteModal from "./CompleteModal";
+import CompleteModal from "./components/CompleteModal";
 import Image from "next/image";
 
 type Props = {

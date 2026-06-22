@@ -1,6 +1,6 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { FormEvent, useEffect, useState } from "react";
 import { CourseCountry, CourseFormData, LectureFormProps } from "../types";
 import { createLectureAction, getLectureCountriesAction } from "../actions";

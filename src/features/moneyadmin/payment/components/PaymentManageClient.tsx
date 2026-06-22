@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import { downloadAdminPaymentsExcel } from "@/features/services/adminPayment.service";
 import { AdminPayment, PaymentStatus, PaymentType } from "../types";
 import { formatPaymentError, formatWon } from "../utils";

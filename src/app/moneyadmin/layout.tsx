@@ -1,5 +1,5 @@
-import ContentHeader from "@/features/common/Contentheader";
-import MoneySidebar from "@/features/common/MoneySidebar";
+import ContentHeader from "@/features/admin/common/Contentheader";
+import MoneySidebar from "@/features/admin/common/MoneySidebar";
 
 export default function MoneyAdminLayout({
   children,

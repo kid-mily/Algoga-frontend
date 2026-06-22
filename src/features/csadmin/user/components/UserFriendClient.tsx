@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { getAdminUserFriends } from "@/features/services/adminUserActivity.service";
-import UserActivityTabs from "@/features/csadmin/user/UserActivityTabs";
+import UserActivityTabs from "@/features/csadmin/user/components/UserActivityTabs";
 import { AdminUserFriend } from "@/features/csadmin/user/types";
 
 type UserFriendClientProps = {

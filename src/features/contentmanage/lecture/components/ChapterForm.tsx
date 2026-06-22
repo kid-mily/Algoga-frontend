@@ -1,8 +1,8 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { FormEvent, useState } from "react";
-import CompleteModal from "@/features/common/CompleteModal";
+import CompleteModal from "@/features/common/components/CompleteModal";
 import { ChapterFormProps } from "../types";
 
 const getVideoDurationSeconds = (file: File): Promise<number> => {

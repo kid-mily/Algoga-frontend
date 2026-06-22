@@ -7,7 +7,7 @@ import MyPageInfoCard from "@/features/mypage/MyPageInfoCard";
 import MyPageSummaryCard from "@/features/mypage/MyPageSummaryCard";
 import PasswordVerifyModal from "@/features/mypage/PasswordVerifyModal";
 import { useMyPage } from "@/features/mypage/hooks/userMyPage";
-import LoadingSpinner from "@/features/common/LoadingSpinner";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 
 export default function MyPage() {
   const router = useRouter();

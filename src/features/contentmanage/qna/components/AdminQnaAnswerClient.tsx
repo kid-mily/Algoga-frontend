@@ -1,11 +1,11 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import CompleteModal from "@/features/common/CompleteModal";
-import LoadingSpinner from "@/features/common/LoadingSpinner";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
+import SubHeader from "@/features/common/components/SubHeader";
 import {
   createCourseQnaComment,
   getCourseQna,

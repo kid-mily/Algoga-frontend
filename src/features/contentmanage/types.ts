@@ -29,18 +29,6 @@ export interface CourseCountry {
   continentName?: string;
 }
 
-//adminAuth.service.ts
-export interface AdminLoginRequest {
-  loginId: string;
-  password: string;
-}
-
-export interface AdminLoginResponse {
-  accessToken: string;
-  refreshToken?: string;
-}
-
-
 export interface CreateAdminCoursePayload {
   countryId: number;
   title: string;

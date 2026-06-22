@@ -10,7 +10,7 @@ import RegisterStepHeader from "@/features/auth/components/RegisterStepHeader";
 import RegisterInfoForm from "@/features/auth/components/RegisterInfoForm";
 import RegisterAgreeForm from "@/features/auth/components/RegisterAgreeForm";
 import RegisterCompleteForm from "@/features/auth/components/RegisterCompleteForm";
-import CompleteModal from "@/features/common/CompleteModal";
+import CompleteModal from "@/features/common/components/CompleteModal";
 
 function RegisterPageContent() {
   const searchParams = useSearchParams();

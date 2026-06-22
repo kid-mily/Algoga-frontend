@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, ChangeEvent, useEffect, useState } from "react";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { getAdminUsers } from "@/features/services/adminUserActivity.service";
 import { AdminUserSummary } from "@/features/csadmin/user/types";
 import UserActivityPagination from "./UserActivityPagination";

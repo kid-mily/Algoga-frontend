@@ -1,4 +1,4 @@
-import LoadingSpinner from "@/features/common/LoadingSpinner";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import { Accommodation } from "../types";
 import AccommodationRow from "./AccommodationRow";
 

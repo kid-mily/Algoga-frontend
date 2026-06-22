@@ -1,7 +1,7 @@
 "use client";
 
-import CheckModal from "@/features/common/CheckModal";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import CheckModal from "@/features/common/components/CheckModal";
+import SubHeader from "@/features/common/components/SubHeader";
 import EvaluationHeader from "./EvaluationHeader";
 import EvaluationNavigation from "./EvaluationNavigation";
 import EvaluationQuestion from "./EvaluationQuestion";

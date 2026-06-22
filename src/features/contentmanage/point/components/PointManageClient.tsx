@@ -1,10 +1,10 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import CompleteModal from "@/features/common/CompleteModal";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import { useAdminPointList } from "../hooks/useAdminPointList";
 import { PointAdjustMode, SelectedPointStudent, StudentPointInfo } from "../types";
 import PointAdjustModal from "./PointAdjustModal";

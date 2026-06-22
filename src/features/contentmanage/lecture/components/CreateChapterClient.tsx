@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import ChapterList from "@/features/contentmanage/lecture/components/ChapterList";
 import ChapterForm from "@/features/contentmanage/lecture/components/ChapterForm";
-import CompleteModal from "@/features/common/CompleteModal";
+import CompleteModal from "@/features/common/components/CompleteModal";
 
 import { createChapterAction, getChapterListAction } from "../actions";
 import { ChapterSubmitPayload, CreateChapterClientProps } from "../types";

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { resetPassword } from "@/features/services/auth.service";
-import CompleteModal from "@/features/common/CompleteModal"; // 🌟 모달 임포트 (경로 확인 필요)
+import CompleteModal from "@/features/common/components/CompleteModal"; // 🌟 모달 임포트 (경로 확인 필요)
 
 export default function NewPwForm() {
   const router = useRouter();

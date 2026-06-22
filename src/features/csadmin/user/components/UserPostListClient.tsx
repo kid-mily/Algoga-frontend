@@ -1,9 +1,9 @@
 ﻿"use client";
 
 import Image from "next/image";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import AdminLoadingState from "@/features/common/AdminLoadingState";
-import UserActivityTabs from "@/features/csadmin/user/UserActivityTabs";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import AdminLoadingState from "@/features/admin/common/AdminLoadingState";
+import UserActivityTabs from "@/features/csadmin/user/components/UserActivityTabs";
 import UserActivityConfirmModal from "@/features/csadmin/user/components/UserActivityConfirmModal";
 import UserActivityPagination from "@/features/csadmin/user/components/UserActivityPagination";
 import UserPostDetailModal from "@/features/csadmin/user/components/UserPostDetailModal";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import SubHeader from "@/features/contentmanage/common/SubHeader"; 
+import SubHeader from "@/features/common/components/SubHeader"; 
 import { useParams } from "next/navigation";
 import PackageItem from "@/features/classroom/components/PackageItem";
 

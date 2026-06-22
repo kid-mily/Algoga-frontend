@@ -1,12 +1,12 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import ChapterCard from "./ChapterCard";
-import CompleteModal from "@/features/common/CompleteModal";
-import Modal from "@/features/common/Modal";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import Modal from "@/features/common/components/Modal";
 
 import { deleteChapterAction, getChapterListAction } from "../actions";
 import { AdminChapter, ChapterListProps } from "../types";

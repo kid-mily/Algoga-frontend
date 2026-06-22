@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import AdminLoadingState from "@/features/common/AdminLoadingState";
-import Modal from "@/features/common/Modal";
-import CompleteModal from "@/features/common/CompleteModal";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import AdminLoadingState from "@/features/admin/common/AdminLoadingState";
+import Modal from "@/features/common/components/Modal";
+import CompleteModal from "@/features/common/components/CompleteModal";
 import CouponToolbar from "./CouponToolbar";
 import CouponTable from "./CouponTable";
 import CouponPagination from "./CouponPagination";

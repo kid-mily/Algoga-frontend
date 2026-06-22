@@ -1,6 +1,6 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { useState } from "react";
 import ChapterItem from "./ChapterItem";
 import { createChapterAction } from "../actions";

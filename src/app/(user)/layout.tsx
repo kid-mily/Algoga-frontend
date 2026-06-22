@@ -1,5 +1,5 @@
-import Footer from "@/features/common/Footer"
-import Header from "@/features/common/Header"
+import Footer from "@/features/common/components/Footer"
+import Header from "@/features/common/components/Header"
 import "../globals.css";
 
 export default function UserLayout({
