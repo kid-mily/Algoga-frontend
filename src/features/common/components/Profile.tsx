@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { logout } from "@/features/services/auth.service";
-import CompleteModal from "./components/CompleteModal";
+
 import Image from "next/image";
+import CompleteModal from "./CompleteModal";
 
 type Props = {
     user: {
@@ -111,4 +112,3 @@ export default function Profile({ user }: Props) {
         </div>
     );
 }
-
