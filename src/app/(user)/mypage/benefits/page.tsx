@@ -1,6 +1,6 @@
 "use client";
 
-import LoadingSpinner from "@/features/common/LoadingSpinner";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import MyPageSidebar from "@/features/mypage/MyPageSidebar";
 import MyBenefitsContent from "@/features/mypage/benefits/components/MyBenefitsContent";
 import { useMyBenefits } from "@/features/mypage/benefits/hooks/useMyBenefits";

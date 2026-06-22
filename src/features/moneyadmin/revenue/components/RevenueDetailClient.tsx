@@ -1,7 +1,7 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import SubHeader from "@/features/common/components/SubHeader";
 import { useRevenueDetail } from "../hooks/useRevenueDetail";
 import { formatMonthLabel } from "../utils";
 import DailyRevenueChart from "./DailyRevenueChart";

@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import CheckModal from "../common/CheckModal";
+import CheckModal from "../common/components/CheckModal";
 
 export default function PackPaymentButton() {
 

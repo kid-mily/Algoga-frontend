@@ -2,11 +2,11 @@
 
 import { useRouter } from "next/navigation";
 
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import ChapterForm from "@/features/contentmanage/lecture/components/ChapterForm";
 import ChapterList from "@/features/contentmanage/lecture/components/ChapterList";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import AdminLoadingState from "@/features/common/AdminLoadingState";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import AdminLoadingState from "@/features/admin/common/AdminLoadingState";
 
 import { updateChapterAction } from "../actions";
 import { useAdminChapterDetail } from "../hooks/useAdminChapterDetail";

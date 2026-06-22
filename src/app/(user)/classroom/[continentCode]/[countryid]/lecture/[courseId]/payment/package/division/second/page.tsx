@@ -1,6 +1,6 @@
 // 2차 결제
 
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import PackPaymentButton from "@/features/payment/PackPaymentButton";
 
 import SecondCouponForm from "@/features/payment/SecondCouponForm";

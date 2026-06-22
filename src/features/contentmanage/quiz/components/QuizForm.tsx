@@ -1,10 +1,10 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import CompleteModal from "@/features/common/CompleteModal";
-import Modal from "@/features/common/Modal";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import Modal from "@/features/common/components/Modal";
 import { getLectureListAction } from "@/features/contentmanage/lecture/actions";
 import { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { createQuizAction, updateQuizAction } from "../actions";

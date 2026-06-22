@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import ContentHeader from "@/features/common/Contentheader";
-import SuperAdminSidebar from "@/features/common/SuperAdminSidebar";
+import ContentHeader from "@/features/admin/common/Contentheader";
+import SuperAdminSidebar from "@/features/admin/common/SuperAdminSidebar";
 
 export default function SuperAdminLayout({
   children,

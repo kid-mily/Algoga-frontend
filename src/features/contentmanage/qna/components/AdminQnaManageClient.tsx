@@ -1,9 +1,9 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { useRouter } from "next/navigation";
-import LoadingSpinner from "@/features/common/LoadingSpinner";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import { useAdminQnaList } from "../hooks/useAdminQnaList";
 import { AdminQnaItem, QnaStatusFilter } from "../types";
 import AdminQnaRow from "./AdminQnaRow";

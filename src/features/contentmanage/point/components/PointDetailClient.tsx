@@ -1,7 +1,7 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import SubHeader from "@/features/common/components/SubHeader";
 import { useAdminPointHistory } from "../hooks/useAdminPointHistory";
 import PointHistoryTable from "./PointHistoryTable";
 

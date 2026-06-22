@@ -1,7 +1,7 @@
 "use client";
 
-import SubHeader from "@/features/contentmanage/common/SubHeader";
-import LoadingSpinner from "@/features/common/LoadingSpinner";
+import SubHeader from "@/features/common/components/SubHeader";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import { useCourseQnaDetail } from "../hooks/useCourseQnaDetail";
 import CourseQnaCommentForm from "./CourseQnaCommentForm";
 

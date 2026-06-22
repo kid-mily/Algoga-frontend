@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import ContentHeader from "@/features/common/Contentheader";
-import StatisticAdminSidebar from "@/features/common/StatisticAdminSidebar";
+import ContentHeader from "@/features/admin/common/Contentheader";
+import StatisticAdminSidebar from "@/features/admin/common/StatisticAdminSidebar";
 
 export default function StatisticAdminLayout({
   children,

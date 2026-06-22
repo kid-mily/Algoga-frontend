@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -148,10 +149,11 @@ export default function AdminLoginForm() {
               onClick={() => setShowPassword((prev) => !prev)}
               className="absolute right-4 top-1/2 -translate-y-1/2 disabled:cursor-not-allowed"
             >
-              <img
+              <Image
                 src="/images/eye.svg"
                 alt="비밀번호 보기"
-                className="h-[18px] w-[18px]"
+                width={18}
+                height={18}
               />
             </button>
           </div>

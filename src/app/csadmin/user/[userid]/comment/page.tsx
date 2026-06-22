@@ -1,6 +1,6 @@
 ﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import UserCommentListClient from "@/features/csadmin/user/components/UserCommentListClient";
 
 type UserCommentsPageProps = {

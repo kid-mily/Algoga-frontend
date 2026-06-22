@@ -7,7 +7,7 @@ import {
   verifySignupEmailCode,
 } from "@/features/services/signup.service";
 
-import FormLabel from "@/features/common/FormLabel";
+import FormLabel from "@/features/common/components/FormLabel";
 
 interface RegisterFormData {
   name: string;

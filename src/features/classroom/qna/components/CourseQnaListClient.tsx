@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
-import LoadingSpinner from "@/features/common/LoadingSpinner";
+import SubHeader from "@/features/common/components/SubHeader";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import { useCourseQnaList } from "../hooks/useCourseQnaList";
 import CourseQnaCard from "./CourseQnaCard";
 

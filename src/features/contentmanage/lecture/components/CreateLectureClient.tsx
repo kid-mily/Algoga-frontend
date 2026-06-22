@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import LectureHeader from "@/features/contentmanage/common/LectureHeader";
+import LectureHeader from "@/features/common/components/LectureHeader";
 import LectureForm from "@/features/contentmanage/lecture/components/LectureForm";
 import LectureChapterForm from "@/features/contentmanage/lecture/components/LectureChapterForm";
-import CompleteModal from "@/features/common/CompleteModal";
+import CompleteModal from "@/features/common/components/CompleteModal";
 import LectureCreateStepIndicator from "./LectureCreateStepIndicator";
 
 export default function CreateLectureClient() {

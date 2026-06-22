@@ -1,11 +1,11 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import StudentItem from "./StudentItem";
 import { getCourseStudents } from "@/features/services/adminStudent.service";
-import LoadingSpinner from "@/features/common/LoadingSpinner";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import { Student, StudentFormProps, StudentRow } from "../types";
 
 const formatStudentDate = (value?: string) => {

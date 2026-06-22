@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import CompleteModal from "@/features/common/CompleteModal";
+import CompleteModal from "@/features/common/components/CompleteModal";
 import { LectureUpdateFormProps } from "../types";
 
 export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpdateFormProps) {

@@ -1,6 +1,6 @@
 "use client";
 
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import CourseInfoCard from "@/features/payment/CourseInfoCard";
 import CouponSelector from "@/features/payment/CouponSelector";
 import MileageInput from "@/features/payment/MileageInput";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import SubHeader from "@/features/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import type { CourseReview, CourseReviewSummary } from "@/features/services/courseReview.service";
 
 interface CourseReviewsClientProps {

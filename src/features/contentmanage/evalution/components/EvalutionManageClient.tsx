@@ -1,6 +1,6 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { useRouter } from "next/navigation";
 import EvalutionDeleteModals from "./EvalutionDeleteModals";
 import EvalutionFilterBar from "./EvalutionFilterBar";

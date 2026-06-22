@@ -1,4 +1,4 @@
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import QuizForm from "./QuizForm";
 import { CreateQuizClientProps } from "../types";
 

@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from "next";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import UserActivityListClient from "@/features/csadmin/user/components/UserActivityListClient";
 
 export const metadata: Metadata = {

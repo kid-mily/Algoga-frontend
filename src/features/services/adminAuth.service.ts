@@ -3,7 +3,7 @@ import {
   AdminLoginRequest,
   AdminLoginResponse,
   AdminRole,
-} from "../contentmanage/auth/types";
+} from "@/features/admin/auth/types";
 
 const normalizeRole = (role: AdminRole | undefined) => {
   return role?.replace(/^ROLE_/, "").toUpperCase() ?? "";

@@ -1,7 +1,7 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import { useReservationConversion } from "../hooks/useReservationConversion";
 import { formatNumber, formatPercent } from "../utils";
 import DailyConversionChart from "./DailyConversionChart";

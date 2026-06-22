@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiRequestError } from "@/lib/api";
-import Modal from "@/features/common/Modal";
+import Modal from "@/features/common/components/Modal";
 import { getCourseStudyDetail } from "@/features/services/courseStudy.service";
 import { getMe } from "@/features/services/user.service";
 import type { CourseItem } from "./types";

@@ -3,11 +3,11 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
-import Modal from "@/features/common/Modal";
-import CompleteModal from "@/features/common/CompleteModal";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import AdminLoadingState from "@/features/common/AdminLoadingState";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import Modal from "@/features/common/components/Modal";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import AdminLoadingState from "@/features/admin/common/AdminLoadingState";
 import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 
 import StudentForm from "./StudentForm";

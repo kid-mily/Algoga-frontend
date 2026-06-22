@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-import CompleteModal from "@/features/common/CompleteModal";
-import Modal from "@/features/common/Modal";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import Modal from "@/features/common/components/Modal";
 
 interface QnaFormProps {
   initialAnswer?: string;

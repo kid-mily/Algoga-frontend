@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import AccommodationFormClient from "@/features/contentmanage/package/components/AccommodationFormClient";
 
 export const metadata: Metadata = {

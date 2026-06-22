@@ -1,4 +1,4 @@
-import GlobalErrorModal from "@/features/common/ErrorModal";
+import GlobalErrorModal from "@/features/common/components/ErrorModal";
 import "./globals.css";
 
 export default function RootLayout({

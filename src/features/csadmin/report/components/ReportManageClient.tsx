@@ -2,8 +2,8 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import { getAdminReports } from "@/features/services/adminReport.service";
 import { AdminReportPage, ReportStatus, ReportTargetType } from "../types";
 import { formatReportError } from "../utils";

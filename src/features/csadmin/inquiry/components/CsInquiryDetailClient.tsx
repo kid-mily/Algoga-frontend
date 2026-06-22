@@ -1,10 +1,10 @@
 ﻿"use client";
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import SubHeader from "@/features/common/SubHeader";
-import CompleteModal from "@/features/common/CompleteModal";
-import Modal from "@/features/common/Modal";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import SubHeader from "@/features/common/components/SubHeader";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import Modal from "@/features/common/components/Modal";
 import {
   answerAdminInquiry,
   getAdminInquiryById,

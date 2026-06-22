@@ -1,6 +1,6 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { CsInquiry } from "../types";
 import { useCsInquiryList } from "../hooks/useCsInquiryList";
 import CsInquiryPagination from "./CsInquiryPagination";

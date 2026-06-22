@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import ContentHeader from "@/features/common/Contentheader";
-import CsSidebar from "@/features/common/CsSidebar";
+import ContentHeader from "@/features/admin/common/Contentheader";
+import CsSidebar from "@/features/admin/common/CsSidebar";
 
 export default function CsAdminLayout({
   children,

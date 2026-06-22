@@ -1,7 +1,7 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import { useRevenueStats } from "../hooks/useRevenueStats";
 import { formatWon } from "../utils";
 import RevenueStatsTable from "./RevenueStatsTable";

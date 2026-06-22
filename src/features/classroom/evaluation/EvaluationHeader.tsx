@@ -1,5 +1,5 @@
 import type { EvaluationFormQuestion } from "./types";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 
 interface EvaluationHeaderProps {
   continentCode: string;

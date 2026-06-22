@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import CompleteModal from "@/features/common/CompleteModal";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import CompleteModal from "@/features/common/components/CompleteModal";
 import { downloadRefundExcel } from "@/features/services/adminRefund.service";
 import { CsRefund, CsRefundStatus } from "../types";
 import { useCsRefundList } from "../hooks/useCsRefundList";

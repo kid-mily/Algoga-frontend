@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import Navbar from "./Navbar";
-import Profile from "./Profile";
+
 import { getMe } from "@/features/services/user.service"; // 경로 유지
 import { ApiRequestError } from "@/lib/api";
+import Navbar from "./Navbar";
+import Profile from "./Profile";
 
 // 유저 데이터 타입 정의 (필요에 따라 수정하세요)
 interface UserProfile {

@@ -1,9 +1,9 @@
 "use client";
 
-import LectureHeader from "@/features/contentmanage/common/LectureHeader";
+import LectureHeader from "@/features/common/components/LectureHeader";
 import LectureUpdateForm from "@/features/contentmanage/lecture/components/LectureUpdateForm";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import AdminLoadingState from "@/features/common/AdminLoadingState";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import AdminLoadingState from "@/features/admin/common/AdminLoadingState";
 import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 import { toNumberOrZero } from "@/features/common/utils/number";
 

@@ -1,6 +1,6 @@
 // 1차 결제
 
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import FirstPackCouponForm from "@/features/payment/FirstCouponForm";
 import FirstPaymentSummary from "@/features/payment/FirstPaymentSummary";
 import PackMileageForm from "@/features/payment/PackMileageForm";

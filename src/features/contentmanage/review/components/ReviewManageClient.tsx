@@ -1,6 +1,6 @@
 "use client";
 
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import { useReviewList } from "../hooks/useReviewList";
 import ReviewDeleteModals from "./ReviewDeleteModals";
 import ReviewList from "./ReviewList";
