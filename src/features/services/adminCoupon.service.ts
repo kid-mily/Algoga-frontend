@@ -1,8 +1,5 @@
 ﻿import { adminApi, ApiResponse } from "@/lib/api";
-import {
-  AdminCoupon,
-  AdminCouponPayload,
-} from "../contentmanage/coupon/types";
+import { AdminCoupon, AdminCouponPayload } from "../contentmanage/coupon/types";
 
 export const getAdminCoupons = async (
   courseId: number
@@ -50,7 +47,7 @@ export const updateAdminCoupon = async (
   payload: AdminCouponPayload
 ): Promise<AdminCoupon> => {
   const response = await adminApi.put<ApiResponse<AdminCoupon>>(
-    `/api/v1/admin/courses/${courseId}/coupon-policies/${couponPolicyId}`,
+`/api/v1/admin/courses/${courseId}/coupon-policies/${couponPolicyId}`,
     {
       couponName: payload.couponName,
       discountType: payload.discountType,

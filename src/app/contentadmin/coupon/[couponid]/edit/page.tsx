@@ -22,12 +22,13 @@ export default async function EditCouponPage({
   const couponId = Number(couponid);
   const courseId = Number(courseIdValue);
 
+  // 주소값이 이상하면 404 페이지로 보내는 검사 코드
   if (
-    !/^\d+$/.test(couponid) ||
     !courseIdValue ||
-    !/^\d+$/.test(courseIdValue) ||
-    !Number.isSafeInteger(couponId) ||
-    !Number.isSafeInteger(courseId) ||
+    isNaN(couponId) ||
+    isNaN(courseId) ||
+    !Number.isInteger(couponId) ||
+    !Number.isInteger(courseId) ||
     couponId <= 0 ||
     courseId <= 0
   ) {

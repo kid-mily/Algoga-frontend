@@ -1,6 +1,4 @@
-﻿// src/features/auth/types.ts
-
-export interface User {
+﻿export interface User {
   id: number;
   username: string;
   email: string;
@@ -95,5 +93,25 @@ export interface UpdatePasswordRequest {
   newPassword: string;
 }
 
+export type RegisterFormData = {
+  name: string;
+  username: string;
+  password: string;
+  passwordConfirm: string;
+  email: string;
+  phone: string;
+  birthDate: string;
+  gender: string;
+  nickname: string;
+  socialType: SocialType | "";
+  referralCode: string;
+  signupPath: string;
+  termsServiceAgreed: boolean;
+  termsPrivacyAgreed: boolean;
+  termsMarketingAgreed: boolean;
+};
 
-
+export type ServerError = {
+  field: string;
+  message: string;
+};
