@@ -185,13 +185,32 @@ export function useCourseCompletion(
           "강의 수료를 처리하고 있습니다."
         );
 
-        const result =
-          await completeCourse(courseId);
+        const result = await completeCourse(courseId);
 
         setCompletion(result);
         setStatus("completed");
         setMessage(
           "수료가 완료되었습니다. 쿠폰과 마일리지가 자동 지급됩니다."
+        );
+
+        localStorage.setItem(
+          `course-completed-${courseId}`,
+          "true"
+        );
+
+        window.dispatchEvent(
+          new CustomEvent("course-completion-changed")
+        );
+
+        // 백엔드 이벤트 처리를 기다린 뒤 혜택 재조회
+        await new Promise((resolve) =>
+          window.setTimeout(resolve, 800)
+        );
+
+        await refreshLearningData();
+
+        window.dispatchEvent(
+          new CustomEvent("learning-benefits-updated")
         );
 
         await refreshLearningData();

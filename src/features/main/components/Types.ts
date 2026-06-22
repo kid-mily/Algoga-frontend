@@ -7,18 +7,6 @@ export interface ApiResponse<T> {
     data: T;
 }
 
-// 공지
-// 공지 유형 정의 (오타 방지 및 타입 안정성 확보)
-export type NoticeTag = "EVENT" | "NOTICE" | "MAINTENANCE";
-
-export interface Notice {
-    noticeId: number;
-    tag: NoticeTag;
-    title: string;
-    date: string;
-    time: string;
-}
-
 // 배너
 export type BannerFileType = "IMAGE" | "VIDEO";
 

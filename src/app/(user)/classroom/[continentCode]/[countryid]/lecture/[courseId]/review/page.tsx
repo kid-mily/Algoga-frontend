@@ -3,8 +3,6 @@ import CourseReviewsClient from "@/features/classroom/review/CourseReviewsClient
 import { getCourseReviews, getCourseReviewSummary } from "@/features/services/courseReview.service";
 import { getCourseDetail } from "@/features/services/lectureDetail.service";
 
-export const revalidate = 300;
-
 interface ReviewPageProps {
   params: Promise<{
     countryid: string;

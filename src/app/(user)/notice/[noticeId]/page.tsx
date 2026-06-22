@@ -9,8 +9,6 @@ import {
   getNoticeNavigation,
 } from "@/features/services/notice.service";
 
-export const revalidate = 1800;
-
 interface NoticeDetailPageProps {
   params: Promise<{
     noticeId: string;

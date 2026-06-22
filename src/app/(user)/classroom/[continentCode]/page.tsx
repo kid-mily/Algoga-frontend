@@ -3,8 +3,6 @@ import CountrySelectHeader from "@/features/classroom/components/CountrySelectHe
 import CountrySelectSection from "@/features/classroom/components/CountrySelectSection";
 import { getCountries } from "@/features/services/countrySelect.service";
 
-export const revalidate = 3;    // 300
-
 interface CountrySelectPageProps {
   params: Promise<{
     continentCode: string;

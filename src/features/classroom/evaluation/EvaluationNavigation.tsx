@@ -1,5 +1,3 @@
-// 이전, 다음, 제출 버튼을 담당
-
 interface EvaluationNavigationProps {
   currentStep: number;
   isLast: boolean;
@@ -19,34 +17,39 @@ export default function EvaluationNavigation({
 
   return (
     <nav
-      className="mt-10 flex gap-5 pb-20"
+      className="mt-4"
       aria-label="진단평가 이동"
-    >                                                                           
-      <button
-        type="button"
-        onClick={onPrev}
-        disabled={isFirst}
-        className={`h-[50px] flex-1 rounded-3xl border text-2xl font-bold transition ${
-          isFirst
-            ? "cursor-not-allowed border-[#E4EAF2] bg-[#E4EAF2] text-[#B4BEC8]"
-            : "border-[#E4EAF2] bg-white text-[#0A1628] hover:bg-gray-50"
-        }`}
-      >
-        이전
-      </button>
+    >
 
-      <button
-        type="button"
-        onClick={onNext}
-        disabled={!hasSelectedAnswer}
-        className={`h-[50px] flex-1 rounded-3xl text-2xl font-bold transition ${
-          hasSelectedAnswer
-            ? "bg-[#439A97] text-white hover:bg-[#357A78]"
-            : "cursor-not-allowed bg-[#E4EAF2] text-[#B4BEC8]"
-        }`}
-      >
-        {isLast ? "제출하기" : "다음"}
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={onPrev}
+          disabled={isFirst}
+          className={`h-11 flex-1 rounded-xl border text-sm font-bold transition ${
+            isFirst
+              ? "cursor-not-allowed border-[#E3E9EE] bg-[#E9EEF2] text-[#ADB7C0]"
+              : "border-[#D7E1E8] bg-white text-[#243247] hover:bg-[#F7FAFC] cursor-pointer"
+          }`}
+        >
+          이전 문제
+        </button>
+
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={!hasSelectedAnswer}
+          className={`h-11 flex-[1.5] rounded-xl text-sm font-bold transition ${
+            hasSelectedAnswer
+              ? "bg-[#439A97] text-white shadow-sm hover:bg-[#357A78] cursor-pointer"
+              : "cursor-not-allowed bg-[#D6E0E3] text-[#9EAAAF]"
+          }`}
+        >
+          {isLast
+            ? "진단평가 제출하기"
+            : "다음 문제"}
+        </button>
+      </div>
     </nav>
   );
 }

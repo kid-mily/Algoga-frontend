@@ -2,16 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-import {
-  BenefitApiError,
-  getMyCoupons,
-  getMyMileages,
-} from "@/features/services/myBenefit.service";
-import {
-  MyCoupon,
-  MyMileage,
-} from "../components/types";
+import { BenefitApiError, getMyCoupons, getMyMileages } from "@/features/services/myBenefit.service";
+import { MyCoupon, MyMileage } from "../components/types";
 
 const initialMileage: MyMileage = {
   totalMileage: 0,
@@ -65,6 +57,22 @@ export function useMyBenefits() {
 
   useEffect(() => {
     fetchMyBenefits();
+
+    const handleBenefitsUpdated = () => {
+      fetchMyBenefits();
+    };
+
+    window.addEventListener(
+      "learning-benefits-updated",
+      handleBenefitsUpdated
+    );
+
+    return () => {
+      window.removeEventListener(
+        "learning-benefits-updated",
+        handleBenefitsUpdated
+      );
+    };
   }, [fetchMyBenefits]);
 
   return {
