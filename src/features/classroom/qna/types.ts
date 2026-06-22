@@ -7,6 +7,7 @@ export interface CourseQnaComment {
 
 export interface CourseQna {
   id: number;
+  userId: number;
   title: string;
   content: string;
   writer: string;
@@ -72,6 +73,7 @@ export const normalizeCourseQna = (item: unknown, fallbackId: number): CourseQna
 
   return {
     id: getNumber(record, ["qnaId", "id"], fallbackId),
+    userId: getNumber(record, ["userId", "user_id", "writerId", "writer_id", "authorId", "author_id", "memberId", "member_id"], 0),
     title,
     content,
     writer: getString(record, ["writer", "userName", "nickname", "author"], "작성자"),
