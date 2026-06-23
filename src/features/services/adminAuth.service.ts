@@ -1,4 +1,4 @@
-﻿import { api, ApiResult, unwrapData } from "@/lib/api";
+import { adminApi, api, ApiResult, unwrapData } from "@/lib/api";
 import {
   AdminLoginRequest,
   AdminLoginResponse,
@@ -61,13 +61,17 @@ export const adminLogin = async (
 };
 
 export const adminLogout = async () => {
-  await api.post(
-    "/api/v1/auth/admin/logout",
-    undefined,
-    { suppressGlobalError: true }
-  );
-
-  localStorage.removeItem("adminAccessToken");
-  localStorage.removeItem("adminRefreshToken");
+  try {
+    await adminApi.post(
+      "/api/v1/auth/admin/logout",
+      undefined,
+      { suppressGlobalError: true }
+    );
+  } finally {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("adminAccessToken");
+    localStorage.removeItem("adminRefreshToken");
+    sessionStorage.removeItem("algoga-admin-session-active");
+  }
 };
-

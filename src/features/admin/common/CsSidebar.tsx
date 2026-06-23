@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { adminLogout } from "@/features/services/adminAuth.service";
 
 const menus = [
   {
@@ -44,15 +45,11 @@ const menus = [
 
 export default function CsSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("adminAccessToken");
-    localStorage.removeItem("adminRefreshToken");
+  const handleLogout = async () => {
+    await adminLogout();
     sessionStorage.clear();
-    router.push("/auth/adminlogin");
+    window.location.replace("/auth/adminlogin");
   };
 
   return (
@@ -101,7 +98,7 @@ export default function CsSidebar() {
       <footer className="border-t border-[#E4E7EC] p-4">
         <button
           type="button"
-          onClick={handleLogout}
+          onClick={() => void handleLogout()}
           className="flex w-full items-center gap-3 rounded-[12px] px-4 py-3 text-left text-[15px] text-[#344054] hover:bg-[#F5F7FA]"
         >
           <img
@@ -134,5 +131,3 @@ export default function CsSidebar() {
     </aside>
   );
 }
-
-
