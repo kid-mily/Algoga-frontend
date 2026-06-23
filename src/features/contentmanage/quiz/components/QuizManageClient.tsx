@@ -54,7 +54,7 @@ export default function QuizManageClient({
           aria-live="polite"
           className="mt-6 flex justify-center rounded-[18px] border border-[#E4E7EC] bg-white p-8"
         >
-          <LoadingSpinner text="?? ??? ???? ????..." />
+          <LoadingSpinner text="로딩중입니다" />
         </section>
       )}
 
