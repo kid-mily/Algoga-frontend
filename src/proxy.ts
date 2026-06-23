@@ -1,7 +1,7 @@
 //관리자 경로인지 확인하는 코드
 import { NextRequest, NextResponse } from "next/server";
 
-const ADMIN_LOGIN_PATH = "/auth/adminlogin";
+const FORBIDDEN_PATH = "/forbidden";
 const ADMIN_PATHS = [
   "/contentadmin",
   "/csadmin",
@@ -23,6 +23,31 @@ const ADMIN_ROLES = new Set([
   "ROLE_SUPER_ADMIN",
 ]);
 
+const PATH_ROLE_RULES = [
+  {
+    path: "/contentadmin",
+    roles: ["CONTENT_MANAGER", "ROLE_CONTENT_MANAGER"],
+  },
+  {
+    path: "/csadmin",
+    roles: ["CS_MANAGER", "ROLE_CS_MANAGER"],
+  },
+  {
+    path: "/moneyadmin",
+    roles: ["SETTLEMENT_MANAGER", "ROLE_SETTLEMENT_MANAGER"],
+  },
+  {
+    path: "/statisticadmin",
+    roles: ["STATISTICS_MANAGER", "ROLE_STATISTICS_MANAGER"],
+  },
+  {
+    path: "/superadmin",
+    roles: ["SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+  },
+] as const;
+
+const SUPER_ADMIN_ROLES = new Set(["SUPER_ADMIN", "ROLE_SUPER_ADMIN"]);
+
 const AUTH_COOKIE_NAMES = [
   "adminAccessToken",
   "adminRefreshToken",
@@ -31,10 +56,12 @@ const AUTH_COOKIE_NAMES = [
   "Authorization",
 ];
 
+const isPathMatch = (pathname: string, path: string) => {
+  return pathname === path || pathname.startsWith(`${path}/`);
+};
+
 const isAdminPath = (pathname: string) => {
-  return ADMIN_PATHS.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`)
-  );
+  return ADMIN_PATHS.some((path) => isPathMatch(pathname, path));
 };
 
 const setNoStoreHeaders = (response: NextResponse) => {
@@ -48,13 +75,10 @@ const setNoStoreHeaders = (response: NextResponse) => {
   return response;
 };
 
-const redirectToAdminLogin = (request: NextRequest) => {
+const redirectToForbidden = (request: NextRequest) => {
   const redirectUrl = request.nextUrl.clone();
-  redirectUrl.pathname = ADMIN_LOGIN_PATH;
-  redirectUrl.searchParams.set(
-    "next",
-    `${request.nextUrl.pathname}${request.nextUrl.search}`
-  );
+  redirectUrl.pathname = FORBIDDEN_PATH;
+  redirectUrl.search = "";
 
   return setNoStoreHeaders(NextResponse.redirect(redirectUrl));
 };
@@ -121,8 +145,26 @@ const getRoleValues = (token?: string) => {
   ].flatMap(collectRoleValues);
 };
 
+const normalizeRoles = (roles: string[]) => {
+  return roles.map((role) => role.toUpperCase());
+};
+
 const hasAdminRole = (roles: string[]) => {
-  return roles.some((role) => ADMIN_ROLES.has(role.toUpperCase()));
+  return roles.some((role) => ADMIN_ROLES.has(role));
+};
+
+const canAccessAdminPath = (pathname: string, roles: string[]) => {
+  if (roles.some((role) => SUPER_ADMIN_ROLES.has(role))) {
+    return true;
+  }
+
+  const matchedRule = PATH_ROLE_RULES.find((rule) =>
+    isPathMatch(pathname, rule.path)
+  );
+
+  if (!matchedRule) return false;
+
+  return matchedRule.roles.some((role) => roles.includes(role));
 };
 
 export function proxy(request: NextRequest) {
@@ -141,13 +183,17 @@ export function proxy(request: NextRequest) {
   ).filter(Boolean) as string[];
 
   if (authCookies.length === 0) {
-    return redirectToAdminLogin(request);
+    return redirectToForbidden(request);
   }
 
-  const readableRoles = authCookies.flatMap(getRoleValues);
+  const readableRoles = normalizeRoles(authCookies.flatMap(getRoleValues));
 
   if (readableRoles.length === 0 || !hasAdminRole(readableRoles)) {
-    return redirectToAdminLogin(request);
+    return redirectToForbidden(request);
+  }
+
+  if (!canAccessAdminPath(pathname, readableRoles)) {
+    return redirectToForbidden(request);
   }
 
   return setNoStoreHeaders(NextResponse.next());
