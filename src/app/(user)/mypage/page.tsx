@@ -38,7 +38,7 @@ export default function MyPage() {
       <main className="min-h-[calc(100vh-64px)] bg-[#F5F7FA]">
         <div className="flex w-full">
           <MyPageSidebar
-            name={user.name}
+            nickname={user.nickname}
             initial={userInitial}
             profileImageUrl={user.profileImageUrl}
           />
