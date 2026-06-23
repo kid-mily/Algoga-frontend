@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { login } from "@/features/services/auth.service";
-import CompleteModal from "@/features/common/components/CompleteModal";
-
 export default function LoginForm() {
   const router = useRouter();
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
@@ -16,7 +14,6 @@ export default function LoginForm() {
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [modal, setModal] = useState({ open: false, title: "", description: "" });
 
   const validateUsername = (value: string) => {
     if (!value.trim()) {
@@ -68,18 +65,9 @@ export default function LoginForm() {
       }
 
       router.push("/");
-    } catch (error: unknown) {
-      console.error("로그인 에러:", error);
-      const message =
-        error instanceof Error
-          ? error.message
-          : "아이디 또는 비밀번호를 확인해주세요.";
-
-      setModal({
-        open: true,
-        title: "로그인 실패",
-        description: message,
-      });
+    } catch {
+      setUsernameError("아이디 또는 비밀번호가 틀렸습니다.");
+      setPasswordError("아이디 또는 비밀번호가 틀렸습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -214,14 +202,6 @@ export default function LoginForm() {
           </div>
         </form>
       </div>
-
-      <CompleteModal
-        open={modal.open}
-        title={modal.title}
-        description={modal.description}
-        buttonText="확인"
-        onConfirm={() => setModal((prev) => ({ ...prev, open: false }))}
-      />
     </>
   );
 }
