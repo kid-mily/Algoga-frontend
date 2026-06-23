@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { MyPageUser } from "./types";
+import { MyPageUser, UserGender } from "./types";
 
 interface MyPageInfoCardProps {
   user: MyPageUser;
@@ -7,22 +7,12 @@ interface MyPageInfoCardProps {
   onEdit?: () => void;
 }
 
-const formatGender = (gender?: string) => {
-  if (!gender) {
-    return "-";
-  }
+const formatGender = (gender?: UserGender) => {
+  if (gender === "MALE") return "남성";
+  if (gender === "FEMALE") return "여성";
+  if (gender === "OTHER") return "기타";
 
-  const upperGender = gender.toUpperCase();
-
-  if (upperGender === "MALE" || gender === "남성") {
-    return "남성";
-  }
-
-  if (upperGender === "FEMALE" || gender === "여성") {
-    return "여성";
-  }
-
-  return gender;
+  return "-";
 };
 
 export default function MyPageInfoCard({

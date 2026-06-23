@@ -6,17 +6,23 @@ import MyPageSidebar from "@/features/mypage/MyPageSidebar";
 import MyPageInfoCard from "@/features/mypage/MyPageInfoCard";
 import MyPageSummaryCard from "@/features/mypage/MyPageSummaryCard";
 import PasswordVerifyModal from "@/features/mypage/PasswordVerifyModal";
-import { useMyPage } from "@/features/mypage/hooks/userMyPage";
 import LoadingSpinner from "@/features/common/components/LoadingSpinner";
+import { useMyPage } from "@/features/mypage/hooks/userMyPage";
 
 export default function MyPage() {
   const router = useRouter();
 
-  const { user, summary, errorMessage } = useMyPage();
-
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
-  <LoadingSpinner/>
+  const { user, summary, isLoading, errorMessage } = useMyPage();
+
+  if (isLoading) {
+    return (
+      <main className="flex min-h-[calc(100vh-64px)] items-center justify-center">
+        <LoadingSpinner />
+      </main>
+    );
+  }
 
   if (errorMessage || !user) {
     return (

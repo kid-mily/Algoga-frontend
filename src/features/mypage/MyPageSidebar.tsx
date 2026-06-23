@@ -42,7 +42,7 @@ export default function MyPageSidebar({
             {profileImageUrl ? (
               <Image
                 src={profileImageUrl}
-                alt={`${name} 프로필 이미지`}
+                alt={`${nickname} 프로필 이미지`}
                 width={48}
                 height={48}
                 className="h-full w-full object-cover"
