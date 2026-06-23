@@ -76,6 +76,13 @@ const supportedCountryCodes = new Set([
 const normalizeCountryKey = (value?: string) =>
   value?.replace(/\s/g, "").toUpperCase() ?? "";
 
+const normalizeContinentCode = (value: string) => {
+  const normalized = value.trim().toUpperCase();
+
+  if (normalized === "EURPOE") return "EUROPE";
+
+  return normalized;
+};
 const getValidMaxRewardMileage = (payload: {
   maxRewardMileage?: number;
   mileage?: number;
@@ -88,6 +95,7 @@ const getValidMaxRewardMileage = (payload: {
 
   return maxRewardMileage;
 };
+
 const isSupportedCountry = (country: CourseCountry) => {
   const countryName = country.countryName.replace(/\s/g, "");
   const countryCode = normalizeCountryKey(country.countryCode);
@@ -155,19 +163,26 @@ export const getCourseCountries = async (
 
     const countryGroups = await Promise.all(
       continents.map(async (continent) => {
-        const continentCode =
+        const rawContinentCode =
           continent.continentCode ?? continent.continent_code ?? "";
+        const continentCode = normalizeContinentCode(rawContinentCode);
 
         if (!continentCode) return [];
 
-        const countryResponse = await api.get<ApiResponse<CountryRecord[]>>(
-          `/api/v1/maps/continents/${continentCode}/countries`,
-          {
-            params: { t: Date.now() },
-            signal,
-        suppressGlobalError: true,
-          }
-        );
+        const countryResponse = await api
+          .get<ApiResponse<CountryRecord[]>>(
+            `/api/v1/maps/continents/${continentCode}/countries`,
+            {
+              params: { t: Date.now() },
+              signal,
+              suppressGlobalError: true,
+            }
+          )
+          .catch((error: unknown) => {
+            if (signal?.aborted) throw error;
+
+            return { data: [] } as ApiResponse<CountryRecord[]>;
+          });
 
         const countries = countryResponse.data ?? [];
 
