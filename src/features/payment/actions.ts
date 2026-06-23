@@ -1,11 +1,12 @@
-import { getMyMileage, getUsableCouponsByCourse } from "@/features/services/myBenefit.service";
+
 import type { MyCoupon } from "@/features/mypage/benefits/components/types";
 import type { SinglePaymentPayload } from "./types";
+import { getMyMileages, getUsableCouponsByCourse } from "../services/myBenefit.service";
 
 export const loadSinglePaymentBenefits = async (courseId: number) => {
     const [couponResult, mileageResult] = await Promise.allSettled([
         getUsableCouponsByCourse(courseId),
-        getMyMileage(),
+        getMyMileages(),
     ]);
 
     return {

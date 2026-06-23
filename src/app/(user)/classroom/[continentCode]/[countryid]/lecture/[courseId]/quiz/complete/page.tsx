@@ -9,6 +9,7 @@ import { useCourseCompletion } from "@/features/classroom/completion/hooks/useCo
 import type { CourseQuizAttempt } from "@/features/classroom/quiz/types";
 import type { CourseStudyChapter } from "@/features/services/courseStudy.service";
 import { getCourseStudyDetail } from "@/features/services/courseStudy.service";
+import { getCourseQuizResult, getCourseQuizzes } from "@/features/services/courseQuiz.service";
 
 const getParam = (
   value: string | string[] | undefined
@@ -30,114 +31,120 @@ export default function QuizCompletePage() {
   const countryId = getParam(params.countryid);
   const courseId = getParam(params.courseId);
 
-  const lectureHref =
-    `/classroom/${continentCode}/${countryId}/lecture/${courseId}`;
+  const lectureHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}`;
 
   const studyHref = `${lectureHref}/study`;
   const quizHref = `${lectureHref}/quiz`;
   const quizResultHref = `${quizHref}/complete`;
   const qnaHref = `${lectureHref}/qna`;
 
-  const certificateHref =
-    `/mypage/coursedetails/${courseId}/certificate`;
+  const certificateHref = `/mypage/coursedetails/${courseId}/certificate`;
 
   // 서버 수료 상태
-  const completion =
-    useCourseCompletion(courseId);
+  const completion = useCourseCompletion(courseId);
+  const [courseTitle, setCourseTitle] = useState("");
+  const [chapters, setChapters] = useState<CourseStudyChapter[]>([]);
+  const [attempt, setAttempt] = useState<CourseQuizAttempt | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [courseTitle, setCourseTitle] =
-    useState("");
-
-  const [chapters, setChapters] = useState<
-    CourseStudyChapter[]
-  >([]);
-
-  const [attempt, setAttempt] =
-    useState<CourseQuizAttempt | null>(null);
-
-  const [isLoading, setIsLoading] =
-    useState(true);
-
-  const [errorMessage, setErrorMessage] =
-    useState("");
-
-  const [
-    isReviewModalOpen,
-    setIsReviewModalOpen,
-  ] = useState(false);
+  const [ isReviewModalOpen, setIsReviewModalOpen ] = useState(false);
 
   useEffect(() => {
     if (!courseId) {
-      setErrorMessage(
-        "강의 번호가 올바르지 않습니다."
-      );
-      setIsLoading(false);
       return;
     }
 
     let active = true;
 
     const loadPage = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
+  try {
+    setIsLoading(true);
+    setErrorMessage("");
 
-        // 저장된 퀴즈 결과 조회
-        const storedAttempt =
-          sessionStorage.getItem(
-            `quiz-attempt-${courseId}`
+    // 결과 API 실패 여부와 관계없이 사이드바 데이터는 표시
+    const [course, quizzes] = await Promise.all([
+      getCourseStudyDetail(courseId),
+      getCourseQuizzes(courseId),
+    ]);
+
+    if (!active) return;
+
+    setCourseTitle(course.title);
+    setChapters(
+      [...course.chapters].sort(
+        (a, b) =>
+          a.chapterOrder - b.chapterOrder
+      )
+    );
+
+    try {
+      const savedResult =
+        await getCourseQuizResult(courseId);
+
+      if (!active) return;
+
+      if (!Array.isArray(savedResult.answers)) {
+        throw new Error("퀴즈 결과 응답에 answers가 없습니다.");
+      }
+
+      const selectedAnswers =
+        Object.fromEntries(
+          savedResult.answers.map((answer) => [
+            answer.quizId,
+            answer.selectedOption,
+          ])
+        );
+
+      setAttempt({
+        result: savedResult,
+        quizzes,
+        selectedAnswers,
+      });
+    } catch (resultError) {
+      console.error(
+        "[quiz-complete] DB 결과 조회 실패:",
+        resultError
+      );
+
+      const storedAttempt = sessionStorage.getItem(
+        `quiz-attempt-${courseId}`
+      );
+
+      if (storedAttempt) {
+        try {
+          setAttempt(
+            JSON.parse(storedAttempt) as CourseQuizAttempt
           );
-
-        if (storedAttempt) {
-          try {
-            const parsedAttempt = JSON.parse(
-              storedAttempt
-            ) as CourseQuizAttempt;
-
-            if (active) {
-              setAttempt(parsedAttempt);
-            }
-          } catch (error) {
-            console.error(
-              "[quiz-complete] 응시 결과 파싱 실패:",
-              error
-            );
-
-            if (active) {
-              setErrorMessage(
-                "저장된 퀴즈 결과를 읽을 수 없습니다."
-              );
-            }
-          }
+          setErrorMessage("");
+        } catch (parseError) {
+          console.error(
+            "[quiz-complete] 임시 결과 파싱 실패:",
+            parseError
+          );
+          setErrorMessage(
+            "저장된 퀴즈 결과를 불러오지 못했습니다."
+          );
         }
-
-        // 강의 정보 조회
-        const course =
-          await getCourseStudyDetail(courseId);
-
-        if (!active) return;
-
-        setCourseTitle(course.title);
-
-        setChapters(
-          [...course.chapters].sort(
-            (a, b) =>
-              a.chapterOrder - b.chapterOrder
-          )
-        );
-      } catch (error) {
-        if (!active) return;
-
-        console.error(
-          "[quiz-complete] 결과 페이지 조회 실패:",
-          error
-        );
-
+      } else {
         setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "퀴즈 결과 페이지를 불러오지 못했습니다."
+          "퀴즈 결과 조회 API에서 저장된 결과를 찾지 못했습니다."
         );
+      }
+    }
+  } catch (error) {
+    if (!active) return;
+
+    console.error(
+      "[quiz-complete] 강의 정보 조회 실패:",
+      error
+    );
+
+    setErrorMessage(
+      error instanceof Error
+        ? error.message
+        : "강의 정보를 불러오지 못했습니다."
+    );
       } finally {
         if (active) {
           setIsLoading(false);
@@ -145,12 +152,22 @@ export default function QuizCompletePage() {
       }
     };
 
-    loadPage();
+    void loadPage();
 
     return () => {
       active = false;
     };
   }, [courseId]);
+
+  if (!courseId) {
+    return (
+      <main className="flex h-[calc(100dvh-64px)] items-center justify-center bg-[#F5F7FB]">
+        <p className="text-sm text-red-500">
+          강의 번호가 올바르지 않습니다.
+        </p>
+      </main>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -169,6 +186,7 @@ export default function QuizCompletePage() {
           courseTitle={courseTitle || "강의"}
           chapters={chapters}
           quizAvailable
+          quizSubmitted={attempt !== null || completion.isCompleted}
           courseCompleted={completion.isCompleted}
           mode="complete"
           lectureHref={lectureHref}

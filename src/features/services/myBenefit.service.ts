@@ -1,137 +1,89 @@
-import { ApiResponse } from "@/lib/api";
+import { api, ApiRequestError, ApiResponse } from "@/lib/api";
 import {
   MyCoupon,
   MyMileage,
 } from "@/features/mypage/benefits/components/types";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "https://kidmily.kro.kr";
-
-const MY_COUPONS_ENDPOINT = "/api/v1/my/coupons";
-const MY_MILEAGES_ENDPOINT = "/api/v1/my/mileages";
-
 export class BenefitApiError extends Error {
-  status: number;
-  code?: string;
-  traceId?: string;
+  status?: number;
 
-  constructor(
-    message: string,
-    status: number,
-    options?: {
-      code?: string;
-      traceId?: string;
-    }
-  ) {
+  constructor(message: string, status?: number) {
     super(message);
-
     this.name = "BenefitApiError";
     this.status = status;
-    this.code = options?.code;
-    this.traceId = options?.traceId;
   }
 }
 
-interface ErrorResponse {
-  code?: string;
-  errorCode?: string;
-  message?: string;
-  traceId?: string;
-}
+const initialMileage: MyMileage = {
+  totalMileage: 0,
+  totalEarnedMileage: 0,
+  totalUsedMileage: 0,
+  histories: [],
+};
 
-async function requestBenefit<T>(endpoint: string): Promise<T> {
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      Accept: "application/json",
-    },
-    cache: "no-store",
-  });
+const unwrapBenefitData = <T>(response: ApiResponse<T>): T => {
+  return response.data;
+};
 
-  const responseText = await response.text();
-  const responseData = responseText ? JSON.parse(responseText) : null;
-
-  console.log("쿠폰/마일리지 API 응답:", {
-    endpoint,
-    status: response.status,
-    data: responseData,
-  });
-
-  if (!response.ok) {
-    const errorData = responseData as ErrorResponse | null;
-
-    throw new BenefitApiError(
-      errorData?.message ??
-        `쿠폰 및 마일리지 정보를 불러오지 못했습니다. (${response.status})`,
-      response.status,
+// 내 쿠폰 전체 조회
+export const getMyCoupons = async (): Promise<MyCoupon[]> => {
+  try {
+    const response = await api.get<ApiResponse<MyCoupon[]>>(
+      "/api/v1/my/coupons",
       {
-        code: errorData?.errorCode ?? errorData?.code,
-        traceId: errorData?.traceId,
+        cache: "no-store",
+        suppressGlobalError: true,
       }
     );
+
+    return unwrapBenefitData(response) ?? [];
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      throw new BenefitApiError(
+        error.message || "쿠폰 정보를 불러오지 못했습니다.",
+        error.status
+      );
+    }
+
+    throw new BenefitApiError("쿠폰 정보를 불러오지 못했습니다.");
   }
-
-  if (
-    responseData &&
-    typeof responseData === "object" &&
-    "data" in responseData
-  ) {
-    return (responseData as ApiResponse<T>).data;
-  }
-
-  return responseData as T;
-}
-
-const normalizeCoupons = (data: unknown): MyCoupon[] => {
-  if (Array.isArray(data)) {
-    return data as MyCoupon[];
-  }
-
-  if (
-    data &&
-    typeof data === "object" &&
-    "content" in data &&
-    Array.isArray((data as { content?: unknown }).content)
-  ) {
-    return (data as { content: MyCoupon[] }).content;
-  }
-
-  return [];
 };
 
-const normalizeMileage = (data: unknown): MyMileage => {
-  const mileage = data as Partial<MyMileage> | null;
-
-  return {
-    totalMileage: mileage?.totalMileage ?? 0,
-    totalEarnedMileage: mileage?.totalEarnedMileage ?? 0,
-    totalUsedMileage: mileage?.totalUsedMileage ?? 0,
-    histories: Array.isArray(mileage?.histories) ? mileage.histories : [],
-  };
-};
-
-export async function getMyCoupons(): Promise<MyCoupon[]> {
-  const data = await requestBenefit<unknown>(MY_COUPONS_ENDPOINT);
-  return normalizeCoupons(data);
-}
-
-export async function getMyMileages(): Promise<MyMileage> {
-  const data = await requestBenefit<unknown>(MY_MILEAGES_ENDPOINT);
-  return normalizeMileage(data);
-}
-
-export async function getMyMileage(): Promise<MyMileage> {
-  return getMyMileages();
-}
-
-export async function getUsableCouponsByCourse(courseId: number): Promise<MyCoupon[]> {
+// 특정 강의에서 사용 가능한 쿠폰만 조회
+export const getUsableCouponsByCourse = async (
+  courseId: number
+): Promise<MyCoupon[]> => {
   const coupons = await getMyCoupons();
 
-  return coupons.filter(
-    (coupon) =>
+  return coupons.filter((coupon) => {
+    return (
       coupon.courseId === courseId &&
-      coupon.usable &&
-      coupon.status === "ISSUED"
-  );
-}
+      coupon.status === "ISSUED" &&
+      coupon.usable === true
+    );
+  });
+};
+
+// 내 마일리지 조회
+export const getMyMileages = async (): Promise<MyMileage> => {
+  try {
+    const response = await api.get<ApiResponse<MyMileage>>(
+      "/api/v1/my/mileages",
+      {
+        cache: "no-store",
+        suppressGlobalError: true,
+      }
+    );
+
+    return unwrapBenefitData(response) ?? initialMileage;
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      throw new BenefitApiError(
+        error.message || "마일리지 정보를 불러오지 못했습니다.",
+        error.status
+      );
+    }
+
+    throw new BenefitApiError("마일리지 정보를 불러오지 못했습니다.");
+  }
+};

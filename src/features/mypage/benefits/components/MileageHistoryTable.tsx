@@ -87,7 +87,7 @@ function MileageHistoryRow({ history }: MileageHistoryRowProps) {
       </td>
 
       <td className="max-w-60 truncate px-6 py-4 text-right text-gray-600">
-        {history.reason || "-"}
+        {history.courseTitle || history.reason || "-"}
       </td>
     </tr>
   );

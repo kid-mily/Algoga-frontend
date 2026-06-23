@@ -15,6 +15,7 @@ export default function CourseLearningSidebar({
     chapters,
     selectedChapterId,
     quizAvailable,
+    quizSubmitted = false,
     courseCompleted = false,
     mode,
     lectureHref,
@@ -24,7 +25,7 @@ export default function CourseLearningSidebar({
     qnaHref,
     onChapterSelect,
 }: LearningSidebarProps) {
-  
+
     // 데이터 가공 및 상태 판정
     const orderedChapters = sortChapters(chapters);
     const totalProgress = Math.min(Math.max(getTotalProgress(orderedChapters), 0), 100);
@@ -49,7 +50,7 @@ export default function CourseLearningSidebar({
     };
 
     return (
-        <aside className="flex h-full min-h-0 w-[300px] shrink-0 flex-col border-r border-[#E6ECF2] bg-white">
+        <aside className="flex min-h-[calc(100dvh-64px)] w-[280px] shrink-0 flex-col border-r border-[#E6ECF2] bg-white">
         {/* 강의 정보 헤더 */}
         <header className="shrink-0 bg-[#EFF6FF] px-4 pb-5 pt-4">
             <Link href={lectureHref} className="text-xs font-semibold text-[#6B9DCC]">
@@ -86,8 +87,8 @@ export default function CourseLearningSidebar({
             </div>
         </header>
 
-        {/* 챕터 및 퀴즈 목록 (스크롤 영역) */}
-        <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        {/* 챕터 및 퀴즈 목록 */}
+        <nav className="flex-1 px-3 py-2">
             <ol className="space-y-2">
             {orderedChapters.map((chapter, index) => {
                 const isActive = mode === "study" && selectedChapterId === chapter.chapterId;
@@ -126,10 +127,10 @@ export default function CourseLearningSidebar({
 
             {/* 퀴즈 메뉴 분기 영역 */}
             <li>
-                {courseCompleted ? (
+                {quizSubmitted || courseCompleted ? (
                 <Link
                     href={quizResultHref}
-                    className={`flex items-center gap-3 rounded-[18px] border px-4 py-3 transition ${
+                    className={`flex items-center gap-3 rounded-[18px] border px-4 py-2 transition ${
                     mode === "complete" ? "border-[#6D9F9B] bg-[#EFF7FF] shadow-sm" : "border-transparent hover:bg-[#F6FAFD]"
                     }`}
                 >
@@ -142,7 +143,7 @@ export default function CourseLearningSidebar({
                 ) : quizUnlocked ? (
                 <Link
                     href={quizHref}
-                    className={`flex items-center gap-3 rounded-[18px] border px-4 py-3 transition ${
+                    className={`flex items-center gap-3 rounded-[18px] border px-4 py-2 transition ${
                     mode === "quiz" ? "border-[#6D9F9B] bg-[#EFF7FF] shadow-sm" : "border-transparent hover:bg-[#F6FAFD]"
                     }`}
                 >
@@ -166,17 +167,8 @@ export default function CourseLearningSidebar({
             </ol>
         </nav>
 
-        {/* 하단 고정 영역 (수료증 및 Q&A) */}
-        {courseCompleted && (
-            <div className="shrink-0 border-t border-[#E6ECF2] px-3 pt-3">
-            <Link
-                href={certificateHref}
-                className="flex h-11 items-center justify-center rounded-2xl bg-[#5E9F9B] text-xs font-bold text-white transition hover:opacity-90"
-            >
-                수료증 보기
-            </Link>
-            </div>
-        )}
+        {/* 하단 고정 영역 (Q&A) */}
+            <div className="shrink-0 border-t border-[#E6ECF2]"></div>
 
         <div className="shrink-0 p-3">
             <Link

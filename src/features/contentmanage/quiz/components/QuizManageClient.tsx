@@ -8,7 +8,6 @@ import { useAdminQuizList } from "../hooks/useAdminQuizList";
 import { QuizManageClientProps } from "../types";
 import SubHeader from "@/features/common/components/SubHeader";
 
-
 export default function QuizManageClient({
   initialCourseId = "all",
 }: QuizManageClientProps) {

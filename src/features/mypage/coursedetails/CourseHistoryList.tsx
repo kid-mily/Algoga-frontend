@@ -31,7 +31,7 @@ const formatDate = (value?: string | null) => {
 
 const getStudyHref = (course: MyCourse) => {
   if (!course.continentCode) {
-    return `/classroom/${course.continentCode}/${course.countryId}/lecture/${course.courseId}`;
+    return `/classroom/${course.continentCode}/${course.countryId}/lecture/${course.courseId}/study`;
   }
 
   return (
