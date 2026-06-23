@@ -1,16 +1,42 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { markAdminSessionActive } from "@/features/admin/auth/adminSession";
 import {
   adminLogin,
   getAdminLoginRole,
   getAdminRedirectPathByRole,
 } from "@/features/services/adminAuth.service";
 
+const ADMIN_PATH_PREFIXES = [
+  "/contentadmin",
+  "/csadmin",
+  "/moneyadmin",
+  "/statisticadmin",
+  "/superadmin",
+];
+
+const getSafeNextPath = () => {
+  const rawNext = new URLSearchParams(window.location.search).get("next");
+
+  if (!rawNext) return null;
+
+  try {
+    const nextUrl = new URL(rawNext, window.location.origin);
+    const isInternal = nextUrl.origin === window.location.origin;
+    const isAdminPath = ADMIN_PATH_PREFIXES.some(
+      (path) => nextUrl.pathname === path || nextUrl.pathname.startsWith(`${path}/`)
+    );
+
+    if (!isInternal || !isAdminPath) return null;
+
+    return `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+  } catch {
+    return null;
+  }
+};
 export default function AdminLoginForm() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
@@ -54,8 +80,11 @@ export default function AdminLoginForm() {
         throw new Error("관리자 역할 정보를 받지 못했습니다.");
       }
 
+      markAdminSessionActive();
       window.dispatchEvent(new Event("auth-state-changed"));
-      router.push(getAdminRedirectPathByRole(role));
+      window.location.replace(
+        getSafeNextPath() ?? getAdminRedirectPathByRole(role)
+      );
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "관리자 로그인에 실패했습니다.";
@@ -147,11 +176,14 @@ export default function AdminLoginForm() {
               type="button"
               disabled={isLoading}
               onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+              aria-pressed={showPassword}
               className="absolute right-4 top-1/2 -translate-y-1/2 disabled:cursor-not-allowed"
             >
               <Image
                 src="/images/eye.svg"
-                alt="비밀번호 보기"
+                alt=""
+                aria-hidden="true"
                 width={18}
                 height={18}
               />
@@ -189,7 +221,3 @@ export default function AdminLoginForm() {
     </div>
   );
 }
-
-
-
-

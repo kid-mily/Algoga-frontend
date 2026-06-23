@@ -1,22 +1,24 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { adminLogout } from "@/features/services/adminAuth.service";
+import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
 
 export default function ContentSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const adminInfo = {
     loginId: "관리자",
     role: "",
   };
 
-  const handleAdminLogout = () => {
-    localStorage.removeItem("adminAccessToken");
-    localStorage.removeItem("adminRefreshToken");
-
-    router.push("/auth/adminlogin");
-    router.refresh();
+  const handleAdminLogout = async () => {
+    try {
+      await adminLogout();
+    } finally {
+      clearAdminSessionActive();
+      window.location.replace("/auth/adminlogin");
+    }
   };
 
   const adminInitial = adminInfo.loginId ? adminInfo.loginId[0].toUpperCase() : "?";
@@ -221,5 +223,3 @@ export default function ContentSidebar() {
     </aside>
   );
 }
-
-

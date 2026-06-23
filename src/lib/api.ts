@@ -1,5 +1,9 @@
-﻿const BASE_URL =
+import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
+const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
+
+const USER_LOGIN_PATH = "/auth/login";
+const ADMIN_LOGIN_PATH = "/auth/adminlogin";
 
 export type ApiResponse<T> = {
   timestamp?: string;
@@ -28,6 +32,7 @@ export type ApiRequestOptions = RequestInit & {
 };
 
 let refreshPromise: Promise<boolean> | null = null;
+const logoutPromises = new Map<string, Promise<void>>();
 
 export class ApiRequestError extends Error {
   status?: number;
@@ -57,10 +62,7 @@ export class ApiRequestError extends Error {
   }
 }
 
-const buildUrl = (
-  path: string,
-  params?: ApiRequestOptions["params"]
-) => {
+const buildUrl = (path: string, params?: ApiRequestOptions["params"]) => {
   const url = new URL(`${BASE_URL}${path}`);
 
   if (params) {
@@ -93,11 +95,58 @@ const refreshAccessToken = async (refreshPath: string) => {
   return refreshPromise;
 };
 
-  async function request<T>(
-    path: string,
-    options: ApiRequestOptions = {},
-    refreshPath = "/api/v1/auth/refresh"
-  ): Promise<T> {
+const getLogoutPath = (refreshPath: string) => {
+  return refreshPath.includes("/admin/")
+    ? "/api/v1/auth/admin/logout"
+    : "/api/v1/auth/logout";
+};
+
+const clearLegacyClientTokens = () => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("adminAccessToken");
+  localStorage.removeItem("adminRefreshToken");
+  clearAdminSessionActive();
+};
+
+const getLoginPath = (refreshPath: string) => {
+  return refreshPath.includes("/admin/") ? ADMIN_LOGIN_PATH : USER_LOGIN_PATH;
+};
+
+const cleanupAuthSession = async (logoutPath: string, loginPath: string) => {
+  if (typeof window === "undefined") return;
+
+  const promiseKey = `${logoutPath}:${loginPath}`;
+
+  if (!logoutPromises.has(promiseKey)) {
+    const logoutPromise = fetch(buildUrl(logoutPath), {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+      },
+    })
+      .catch(() => undefined)
+      .then(() => {
+        clearLegacyClientTokens();
+        window.dispatchEvent(new Event("auth-state-changed"));
+        window.location.replace(loginPath);
+      })
+      .finally(() => {
+        logoutPromises.delete(promiseKey);
+      });
+
+    logoutPromises.set(promiseKey, logoutPromise);
+  }
+
+  await logoutPromises.get(promiseKey);
+};
+
+async function request<T>(
+  path: string,
+  options: ApiRequestOptions = {},
+  refreshPath = "/api/v1/auth/refresh"
+): Promise<T> {
   const {
     params,
     suppressGlobalError,
@@ -142,23 +191,23 @@ const refreshAccessToken = async (refreshPath: string) => {
     });
 
     const shouldRefresh =
-    (response.status === 401 || response.status === 403) &&
-    !skipAuth &&
-    path !== refreshPath &&
-    typeof window !== "undefined";
+      (response.status === 401 || response.status === 403) &&
+      !skipAuth &&
+      path !== refreshPath &&
+      typeof window !== "undefined";
 
-  if (shouldRefresh) {
-    const refreshed = await refreshAccessToken(refreshPath);
+    if (shouldRefresh) {
+      const refreshed = await refreshAccessToken(refreshPath);
 
-    if (refreshed && !controller.signal.aborted) {
-      response = await fetch(requestUrl, {
-        ...fetchOptions,
-        credentials: fetchOptions.credentials ?? "include",
-        signal: controller.signal,
-        headers,
-      });
+      if (refreshed && !controller.signal.aborted) {
+        response = await fetch(requestUrl, {
+          ...fetchOptions,
+          credentials: fetchOptions.credentials ?? "include",
+          signal: controller.signal,
+          headers,
+        });
+      }
     }
-  }
   } catch (error: unknown) {
     if (didTimeout) {
       throw new ApiRequestError({
@@ -178,15 +227,24 @@ const refreshAccessToken = async (refreshPath: string) => {
   const result = await response.json().catch(() => null);
 
   if (!response.ok) {
-    if (!suppressGlobalError && typeof window !== "undefined") {
+    const logoutPath = getLogoutPath(refreshPath);
+    const shouldCleanupAuth =
+      typeof window !== "undefined" &&
+      !skipAuth &&
+      !suppressGlobalError &&
+      response.status === 401 &&
+      path !== refreshPath &&
+      path !== logoutPath;
+
+    if (shouldCleanupAuth) {
+      await cleanupAuthSession(logoutPath, getLoginPath(refreshPath));
+    } else if (!suppressGlobalError && typeof window !== "undefined") {
       sessionStorage.setItem("errorData", JSON.stringify(result));
 
       if (response.status === 500) {
         window.location.href = "/error/500";
       } else {
-        window.dispatchEvent(
-          new CustomEvent("api-error", { detail: result })
-        );
+        window.dispatchEvent(new CustomEvent("api-error", { detail: result }));
       }
     }
 

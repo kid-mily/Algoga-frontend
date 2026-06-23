@@ -1,4 +1,4 @@
-﻿import { api, adminApi, ApiResponse } from "@/lib/api";
+import { api, adminApi, ApiResponse } from "@/lib/api";
 import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 import {
   AdminCourse,
@@ -76,6 +76,18 @@ const supportedCountryCodes = new Set([
 const normalizeCountryKey = (value?: string) =>
   value?.replace(/\s/g, "").toUpperCase() ?? "";
 
+const getValidMaxRewardMileage = (payload: {
+  maxRewardMileage?: number;
+  mileage?: number;
+}) => {
+  const maxRewardMileage = payload.maxRewardMileage ?? payload.mileage ?? 0;
+
+  if (!Number.isFinite(maxRewardMileage) || maxRewardMileage < 0) {
+    throw new Error("최대 지급 마일리지는 0 이상의 숫자로 입력해주세요.");
+  }
+
+  return maxRewardMileage;
+};
 const isSupportedCountry = (country: CourseCountry) => {
   const countryName = country.countryName.replace(/\s/g, "");
   const countryCode = normalizeCountryKey(country.countryCode);
@@ -184,7 +196,7 @@ export const createAdminCourse = async (
 ): Promise<AdminCourse> => {
   try {
     const formData = new FormData();
-    const maxRewardMileage = payload.maxRewardMileage ?? payload.mileage ?? 0;
+    const maxRewardMileage = getValidMaxRewardMileage(payload);
 
     const request = {
       countryId: payload.countryId,
@@ -264,7 +276,7 @@ export const updateAdminCourse = async (
   try {
     const formData = new FormData();
 
-    const maxRewardMileage = payload.maxRewardMileage ?? payload.mileage ?? 0;
+    const maxRewardMileage = getValidMaxRewardMileage(payload);
 
     const requestData = {
       countryId: payload.countryId,
@@ -311,4 +323,3 @@ export const deleteAdminCourse = async (courseId: number) => {
     throw new Error(getErrorMessage(error, "강의 삭제에 실패했습니다."));
   }
 };
-

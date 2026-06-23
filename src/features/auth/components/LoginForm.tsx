@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,9 +8,7 @@ import CompleteModal from "@/features/common/components/CompleteModal";
 
 export default function LoginForm() {
   const router = useRouter();
-  const apiBaseUrl = (
-    process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr"
-  ).replace(/\/$/, "");
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -77,7 +75,6 @@ export default function LoginForm() {
           ? error.message
           : "아이디 또는 비밀번호를 확인해주세요.";
 
-      // 🌟 alert 제거 후 모달 호출로 변경
       setModal({
         open: true,
         title: "로그인 실패",
@@ -88,13 +85,17 @@ export default function LoginForm() {
     }
   };
 
-  const socialLoginUrls = {
-    kakao: `${apiBaseUrl}/oauth2/authorization/kakao`,
-    google: `${apiBaseUrl}/oauth2/authorization/google`,
-  };
+  const hasSocialLoginConfig = Boolean(apiBaseUrl);
+  const socialLoginUrls = hasSocialLoginConfig
+    ? {
+        kakao: `${apiBaseUrl}/oauth2/authorization/kakao`,
+        google: `${apiBaseUrl}/oauth2/authorization/google`,
+      }
+    : null;
 
   return (
     <>
+    {/* 로그인폼 */}
       <div className="w-[400px]">
         <h1 className="text-[32px] font-bold text-[#111827]">로그인</h1>
         <p className="mt-2 text-[15px] text-[#98A2B3]">계정에 로그인하세요</p>
@@ -186,18 +187,26 @@ export default function LoginForm() {
             <div className="h-px flex-1 bg-[#E4E7EC]" />
           </div>
 
-          <a
-            href={socialLoginUrls.kakao}
-            className="mt-5 flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#FEE500] text-[17px] font-semibold text-black"
-          >
-            카카오로 계속하기
-          </a>
-          <a
-            href={socialLoginUrls.google}
-            className="mt-4 flex h-[56px] w-full items-center justify-center rounded-[16px] border border-[#D0D5DD] bg-[#F2F4F7] text-[17px] font-semibold text-[#344054]"
-          >
-            구글로 계속하기
-          </a>
+          {socialLoginUrls ? (
+            <>
+              <a
+                href={socialLoginUrls.kakao}
+                className="mt-5 flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#FEE500] text-[17px] font-semibold text-black"
+              >
+                카카오로 계속하기
+              </a>
+              <a
+                href={socialLoginUrls.google}
+                className="mt-4 flex h-[56px] w-full items-center justify-center rounded-[16px] border border-[#D0D5DD] bg-[#F2F4F7] text-[17px] font-semibold text-[#344054]"
+              >
+                구글로 계속하기
+              </a>
+            </>
+          ) : (
+            <p className="mt-5 text-center text-[13px] text-[#DC2626]">
+              소셜 로그인 설정이 필요합니다.
+            </p>
+          )}
 
           <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
             계정이 없으신가요?{" "}
@@ -216,4 +225,3 @@ export default function LoginForm() {
     </>
   );
 }
-

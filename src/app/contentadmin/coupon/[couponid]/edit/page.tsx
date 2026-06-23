@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import EditCouponClient from "@/features/contentmanage/coupon/components/EditCouponClient";
 
@@ -22,10 +22,11 @@ export default async function EditCouponPage({
   const couponId = Number(couponid);
   const courseId = Number(courseIdValue);
 
+  // 주소값이 이상하면 404 페이지로 보내는 검사 코드
   if (
-    !/^\d+$/.test(couponid) ||
     !courseIdValue ||
-    !/^\d+$/.test(courseIdValue) ||
+    isNaN(couponId) ||
+    isNaN(courseId) ||
     !Number.isSafeInteger(couponId) ||
     !Number.isSafeInteger(courseId) ||
     couponId <= 0 ||
@@ -36,4 +37,3 @@ export default async function EditCouponPage({
 
   return <EditCouponClient couponId={couponId} courseId={courseId} />;
 }
-

@@ -64,6 +64,7 @@ export const useAdminQnaList = () => {
         qna.lecture.toLowerCase().includes(keyword) ||
         qna.title.toLowerCase().includes(keyword) ||
         qna.content.toLowerCase().includes(keyword) ||
+        String(qna.userId).includes(keyword) ||
         qna.writer.toLowerCase().includes(keyword);
 
       return matchesStatus && matchesKeyword;

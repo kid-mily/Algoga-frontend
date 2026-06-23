@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import FindHeader from "@/features/auth/components/FindHeader";
-// 🌟 1. 이미 만들어둔 auth.service.ts에서 findId 함수를 불러옵니다!
+//  1. 이미 만들어둔 auth.service.ts에서 findId 함수를 불러옵니다!
 import { findId } from "@/features/services/auth.service"; 
 
 export default function FindIdForm() {
@@ -24,11 +24,11 @@ export default function FindIdForm() {
       setIsLoading(true);
       setErrorMessage("");
 
-      // 🌟 2. fetch 대신 auth.service.ts의 findId 함수 사용!
+      // 2. fetch 대신 auth.service.ts의 findId 함수 사용!
       // (내부적으로 Axios를 사용하며 URL 꼬임 문제를 해결해 줍니다)
       const result = await findId({ name, email });
 
-      // 🌟 3. 백엔드 개발자분 말씀대로 응답 구조에 맞게 데이터 추출
+      // 3. 백엔드 개발자분 말씀대로 응답 구조에 맞게 데이터 추출
       // 백엔드 응답: { status: 200, data: { maskedId: "alg***" }, message: "..." }
       // result는 response.data 이므로, 실제 값은 result.data.maskedId 에 있습니다.
       const maskedId = result.maskedId;

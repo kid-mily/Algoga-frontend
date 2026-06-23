@@ -1,12 +1,12 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   deleteAdminManager,
   getAdminManagers,
 } from "@/features/services/adminManager.service";
 import { AdminManager, ManagerRole } from "../types";
 
-export const useManagerList = (initialManagers: AdminManager[]) => {
-  const [managers, setManagers] = useState<AdminManager[]>(initialManagers);
+export const useManagerList = () => {
+  const [managers, setManagers] = useState<AdminManager[]>([]);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState("");
   const [selectedRole, setSelectedRole] = useState<ManagerRole | "ALL">("ALL");
@@ -30,11 +30,9 @@ export const useManagerList = (initialManagers: AdminManager[]) => {
         setManagers(data);
       } catch (fetchError: unknown) {
         if (signal?.aborted) return;
-
-        setManagers(initialManagers);
         setError(
           fetchError instanceof Error
-            ? `${fetchError.message} 임시 데이터를 표시합니다.`
+            ? fetchError.message
             : "관리자 계정 목록을 불러오지 못했습니다."
         );
       } finally {
@@ -43,8 +41,12 @@ export const useManagerList = (initialManagers: AdminManager[]) => {
         }
       }
     },
-    [debouncedSearchKeyword, initialManagers]
+    [debouncedSearchKeyword]
   );
+
+  const refetch = useCallback(() => {
+    void fetchManagers();
+  }, [fetchManagers]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -118,6 +120,6 @@ export const useManagerList = (initialManagers: AdminManager[]) => {
     setDeleteTarget,
     setDeleteCompleteOpen,
     deleteManager,
+    refetch,
   };
 };
-
