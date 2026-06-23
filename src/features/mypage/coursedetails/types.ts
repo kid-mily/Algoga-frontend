@@ -10,9 +10,7 @@ export interface MyCourse {
     thumbnailUrl: string;
     countryId: number;
     countryName: string;
-
-    // 현재 API 명세에는 없지만 학습 URL 생성에 필요합니다.
-    continentCode?: string;
+    continentCode: string;
 
     totalDurationSeconds: number;
     studentCount: number;
@@ -32,7 +30,7 @@ export interface MyCourse {
 
 export interface LatestDiagnosisResult {
     resultId: number;
-    countryId: number;
+    countryid: number;
     correctCount: number;
     totalCount: number;
     score: number;

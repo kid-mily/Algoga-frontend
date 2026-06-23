@@ -10,6 +10,7 @@ export interface LearningSidebarProps {
     chapters: CourseStudyChapter[];
     selectedChapterId?: number;
     quizAvailable: boolean;
+    quizSubmitted?: boolean;
     courseCompleted?: boolean;
     mode: LearningMode;
     lectureHref: string;

@@ -11,11 +11,14 @@ export function useCourseCompletionStatus(
 ) {
   const [isCompleted, setIsCompleted] =
     useState(false);
+  const [quizSubmitted, setQuizSubmitted] =
+    useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const checkCompletion = useCallback(async () => {
     if (!courseId) {
       setIsCompleted(false);
+      setQuizSubmitted(false);
       setIsLoading(false);
       return;
     }
@@ -37,6 +40,10 @@ export function useCourseCompletionStatus(
 
       const serverCompleted =
         isMyCourseCompleted(currentCourse);
+
+      setQuizSubmitted(
+        currentCourse?.quizSubmitted === true
+      );
 
       setIsCompleted(
         serverCompleted || localCompleted
@@ -66,10 +73,12 @@ export function useCourseCompletionStatus(
   }, [courseId]);
 
   useEffect(() => {
-    checkCompletion();
+    queueMicrotask(() => {
+      void checkCompletion();
+    });
 
     const handleCompletionChanged = () => {
-      checkCompletion();
+      void checkCompletion();
     };
 
     window.addEventListener(
@@ -87,6 +96,7 @@ export function useCourseCompletionStatus(
 
   return {
     isCompleted,
+    quizSubmitted,
     isLoading,
     refresh: checkCompletion,
   };

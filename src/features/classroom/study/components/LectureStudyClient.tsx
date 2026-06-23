@@ -32,15 +32,12 @@ export default function LectureStudyClient() {
   const completion =
     useCourseCompletionStatus(courseId);
 
-  const lectureHref =
-    `/classroom/${continentCode}/${countryId}/lecture/${courseId}`;
+  const lectureHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}`;
   const studyHref = `${lectureHref}/study`;
   const quizHref = `${lectureHref}/quiz`;
-  const quizResultHref =
-    `${quizHref}/complete`;
+  const quizResultHref = `${quizHref}/complete`;
   const qnaHref = `${lectureHref}/qna`;
-  const certificateHref =
-    `/mypage/coursedetails/${courseId}/certificate`;
+  const certificateHref = `/mypage/coursedetails/${courseId}/certificate`;
 
   if (study.isLoading) {
     return (
@@ -76,7 +73,7 @@ export default function LectureStudyClient() {
   }
 
   return (
-    <main className="flex h-[calc(100dvh-64px)] overflow-hidden bg-[#F5F7FB]">
+    <main className="flex min-h-[calc(100dvh-64px)] items-start bg-[#F5F7FB]">
       <CourseLearningSidebar
         courseTitle={study.course.title}
         chapters={study.chapters}
@@ -86,6 +83,7 @@ export default function LectureStudyClient() {
         quizAvailable={
           study.course.quizAvailable === true
         }
+        quizSubmitted={completion.quizSubmitted}
         courseCompleted={
           completion.isCompleted
         }
@@ -101,10 +99,10 @@ export default function LectureStudyClient() {
         }
       />
 
-      <section className="min-w-0 flex-1 overflow-y-auto p-4">
-        <div className="mx-auto max-w-[940px]">
+      <section className="min-w-0 flex-1 px-5 py-5 lg:px-8 lg:py-6">
+        <div className="mx-auto w-full max-w-[980px]">
           {completion.isCompleted ? (
-            <div className="mb-3 flex items-center justify-between rounded-[18px] border border-[#BDE4CA] bg-[#EFFAF2] px-5 py-3">
+            <div className="mx-auto mb-4 flex max-w-[820px] flex-col gap-3 rounded-lg border border-[#BDE4CA] bg-[#EFFAF2] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <strong className="text-sm text-[#367C47]">
                   수료 완료 · 복습 가능

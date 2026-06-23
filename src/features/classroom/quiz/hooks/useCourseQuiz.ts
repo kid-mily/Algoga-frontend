@@ -31,8 +31,10 @@ export function useCourseQuiz(
   // 데이터 패칭 및 에러 핸들링
   useEffect(() => {
     if (!courseId) {
-      setErrorMessage("강의 번호가 올바르지 않습니다.");
-      setIsLoading(false);
+      queueMicrotask(() => {
+        setErrorMessage("강의 번호가 올바르지 않습니다.");
+        setIsLoading(false);
+      });
       return;
     }
 
@@ -171,19 +173,27 @@ export function useCourseQuiz(
       setIsSubmitting(true);
       setErrorMessage("");
 
-      const result = await submitCourseQuiz(courseId, answers);
-      
+      const result = await submitCourseQuiz(
+        courseId,
+        answers
+      );
+
       const attempt: CourseQuizAttempt = {
         result,
         quizzes,
         selectedAnswers,
       };
 
-      // 세션 스토리지 정보 기록 및 상태 갱신
-      sessionStorage.setItem(`quiz-attempt-${courseId}`, JSON.stringify(attempt));
-      sessionStorage.setItem(`quiz-result-${courseId}`, JSON.stringify(result));
+      // POST 성공 시 백엔드 DB 저장 완료
       setSubmitResult(result);
 
+      // DB 조회 실패 시 제출 직후 결과를 복구하기 위한 보조 데이터입니다.
+      sessionStorage.setItem(
+        `quiz-attempt-${courseId}`,
+        JSON.stringify(attempt)
+      );
+
+      // 결과 페이지는 GET API로 DB 결과를 다시 조회
       router.replace(completeHref);
     } catch (error) {
       console.error("[quiz] 퀴즈 제출 실패:", error);

@@ -10,9 +10,17 @@ export interface CourseQuiz {
     option4: string;
 }
 
-export interface CourseQuizAnswer {
+export interface CourseQuizResultAnswer {
     quizId: number;
     selectedOption: 1 | 2 | 3 | 4;
+    correctOption: 1 | 2 | 3 | 4;
+    correct: boolean;
+    explanation?: string;
+}
+
+export interface CourseQuizSavedResult
+    extends CourseQuizSubmitResult {
+    answers: CourseQuizResultAnswer[];
 }
 
 export interface CourseQuizWrongAnswer {
@@ -47,4 +55,9 @@ export interface CourseQuizAttempt {
     result: CourseQuizSubmitResult;
     quizzes: CourseQuiz[];
     selectedAnswers: Record<number, number>;
+}
+
+export interface CourseQuizAnswer {
+    quizId: number;
+    selectedOption: 1 | 2 | 3 | 4;
 }
