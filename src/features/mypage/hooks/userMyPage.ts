@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
-
 import type {
   MyPageData,
   MyPageSummary,
@@ -22,31 +25,34 @@ const initialSummary: MyPageSummary = {
 export function useMyPage() {
   const router = useRouter();
 
-  const [user, setUser] = useState<MyPageUser | null>(null);
-  const [summary, setSummary] = useState<MyPageSummary>(initialSummary);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [user, setUser] =
+    useState<MyPageUser | null>(null);
+  const [summary, setSummary] =
+    useState(initialSummary);
+  const [isLoading, setIsLoading] =
+    useState(true);
+  const [errorMessage, setErrorMessage] =
+    useState("");
 
   const fetchMyPage = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage("");
 
-      const data: MyPageData = await getMyPageData();
+      const data: MyPageData =
+        await getMyPageData();
 
       setUser(data.user);
       setSummary(data.summary);
     } catch (error) {
       console.error("마이페이지 조회 실패:", error);
 
-      if (error instanceof MyPageApiError) {
-        if (error.status === 401 || error.status === 403) {
-          router.replace("/auth/login");
-          return;
-        }
-
-        setErrorMessage(error.message);
+      if (
+        error instanceof MyPageApiError &&
+        (error.status === 401 ||
+          error.status === 403)
+      ) {
+        router.replace("/auth/login");
         return;
       }
 
@@ -61,7 +67,7 @@ export function useMyPage() {
   }, [router]);
 
   useEffect(() => {
-    fetchMyPage();
+    void fetchMyPage();
   }, [fetchMyPage]);
 
   return {

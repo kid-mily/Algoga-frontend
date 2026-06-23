@@ -63,3 +63,17 @@ export interface CertificatePdfFile {
 export interface CertificatePdfData extends CertificatePdfFile {
   url: string;
 }
+
+export interface MyPageEditFormProps {
+  user: MyPageUser;
+  initial: string;
+}
+
+export interface SubmitMyPageEditPayload {
+  nickname: string;
+  email: string;
+  phone: string;
+  profileImage: File | null;
+  currentPassword: string;
+  newPassword: string;
+}

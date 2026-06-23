@@ -1,7 +1,7 @@
 "use client";
 
-import MyPageSidebar from "./MyPageSidebar";
 import { useMyPage } from "./hooks/userMyPage";
+import MyPageSidebar from "./MyPageSidebar";
 
 interface MyPageLayoutProps {
   title: string;
@@ -46,7 +46,7 @@ export default function MyPageLayout({
     <main className=" bg-[#F5F7FA]">
       <div className="flex w-full">
         <MyPageSidebar
-          name={user.name}
+          nickname={user.nickname}
           initial={userInitial}
           profileImageUrl={user.profileImageUrl}
         />

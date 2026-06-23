@@ -4,7 +4,7 @@ import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import MyPageSidebar from "@/features/mypage/MyPageSidebar";
 import MyBenefitsContent from "@/features/mypage/benefits/components/MyBenefitsContent";
 import { useMyBenefits } from "@/features/mypage/benefits/hooks/useMyBenefits";
-import { useMyPage } from "@/features/mypage/hooks/userMyPage";
+import { useMyPage } from "@/features/mypage/hooks/useMyPageEditForm";
 
 export default function MyBenefitsPage() {
   const {
