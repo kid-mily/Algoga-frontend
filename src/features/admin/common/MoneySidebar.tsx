@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { getCurrentAdminPayload } from "@/lib/adminToken";
 import { adminLogout } from "@/features/services/adminAuth.service";
+import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
 
 const menus = [
   {
@@ -34,8 +35,12 @@ export default function MoneySidebar() {
   const adminEmail = adminPayload?.role ?? adminPayload?.authority ?? "SETTLEMENT_MANAGER";
 
   const handleLogout = async () => {
-    await Promise.resolve(adminLogout());
-    window.location.replace("/auth/adminlogin");
+    try {
+      await adminLogout();
+    } finally {
+      clearAdminSessionActive();
+      window.location.replace("/auth/adminlogin");
+    }
   };
 
   return (

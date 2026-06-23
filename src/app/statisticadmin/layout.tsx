@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import AdminAuthGuard from "@/features/admin/auth/AdminAuthGuard";
-import ContentHeader from "@/features/admin/common/Contentheader";
+import ContentHeader from "@/features/admin/common/ContentHeader";
 import StatisticAdminSidebar from "@/features/admin/common/StatisticAdminSidebar";
 
 export default function StatisticAdminLayout({

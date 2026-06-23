@@ -1,11 +1,12 @@
-﻿'use client'
+'use client'
 
+import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { logout } from "@/features/services/auth.service";
 
-import Image from "next/image";
-import CompleteModal from "./CompleteModal";
+import CompleteModal from "@/features/common/components/CompleteModal";
 
 type Props = {
     user: {
@@ -14,6 +15,7 @@ type Props = {
 }
 
 export default function Profile({ user }: Props) {
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     
     // 상태 변수명을 logoutModal로 명확하게 사용
@@ -63,10 +65,12 @@ export default function Profile({ user }: Props) {
                         className="flex items-center cursor-pointer"
                         onClick={() => setIsOpen(!isOpen)}
                     >
-                        <img
+                        <Image
                             src="/images/DefaultImg.svg"
                             alt="기본 이미지"
-                            className="w-8 h-8 flex items-center justify-center"
+                            width={32}
+                            height={32}
+                            className="flex h-8 w-8 items-center justify-center"
                         />
                         <p className="mx-3">
                             {user.nickname}님
@@ -106,7 +110,7 @@ export default function Profile({ user }: Props) {
                 buttonText="확인"
                 onConfirm={() => {
                     setLogoutModal({ open: false });
-                    window.location.href = "/auth/login"; // 확인 클릭 시 이동
+                    router.push("/auth/login");
                 }}
             />
         </div>

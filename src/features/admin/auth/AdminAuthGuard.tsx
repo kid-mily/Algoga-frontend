@@ -2,22 +2,13 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-
-const ADMIN_SESSION_KEY = "algoga-admin-session-active";
-
-export const markAdminSessionActive = () => {
-  sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
-};
-
-export const clearAdminSessionActive = () => {
-  sessionStorage.removeItem(ADMIN_SESSION_KEY);
-};
+import { isAdminSessionActive } from "@/features/admin/auth/adminSession";
 
 export default function AdminAuthGuard({ children }: { children: ReactNode }) {
   const [isAllowed, setIsAllowed] = useState(false);
 
   useEffect(() => {
-    if (sessionStorage.getItem(ADMIN_SESSION_KEY) !== "true") {
+    if (!isAdminSessionActive()) {
       const next = `${window.location.pathname}${window.location.search}`;
       window.location.replace(
         `/auth/adminlogin?next=${encodeURIComponent(next)}`

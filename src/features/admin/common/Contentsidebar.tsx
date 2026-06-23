@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { adminLogout } from "@/features/services/adminAuth.service";
+import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
 
 export default function ContentSidebar() {
   const pathname = usePathname();
@@ -12,9 +13,12 @@ export default function ContentSidebar() {
   };
 
   const handleAdminLogout = async () => {
-    await adminLogout();
-    sessionStorage.clear();
-    window.location.replace("/auth/adminlogin");
+    try {
+      await adminLogout();
+    } finally {
+      clearAdminSessionActive();
+      window.location.replace("/auth/adminlogin");
+    }
   };
 
   const adminInitial = adminInfo.loginId ? adminInfo.loginId[0].toUpperCase() : "?";

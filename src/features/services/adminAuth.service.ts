@@ -4,6 +4,7 @@ import {
   AdminLoginResponse,
   AdminRole,
 } from "@/features/admin/auth/types";
+import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
 
 const normalizeRole = (role: AdminRole | undefined) => {
   return role?.replace(/^ROLE_/, "").toUpperCase() ?? "";
@@ -13,7 +14,6 @@ const firstRole = (roles: AdminLoginResponse["roles"]) => {
   if (Array.isArray(roles)) {
     return roles[0];
   }
-
   return roles;
 };
 
@@ -67,11 +67,11 @@ export const adminLogout = async () => {
       undefined,
       { suppressGlobalError: true }
     );
+  } catch (logoutError) {
+    console.warn("관리자 로그아웃 API 호출 실패:", logoutError);
   } finally {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
     localStorage.removeItem("adminAccessToken");
     localStorage.removeItem("adminRefreshToken");
-    sessionStorage.removeItem("algoga-admin-session-active");
+    clearAdminSessionActive();
   }
 };

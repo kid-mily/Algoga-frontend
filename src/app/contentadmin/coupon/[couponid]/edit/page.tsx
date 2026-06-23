@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import EditCouponClient from "@/features/contentmanage/coupon/components/EditCouponClient";
 
@@ -27,8 +27,8 @@ export default async function EditCouponPage({
     !courseIdValue ||
     isNaN(couponId) ||
     isNaN(courseId) ||
-    !Number.isInteger(couponId) ||
-    !Number.isInteger(courseId) ||
+    !Number.isSafeInteger(couponId) ||
+    !Number.isSafeInteger(courseId) ||
     couponId <= 0 ||
     courseId <= 0
   ) {
@@ -37,4 +37,3 @@ export default async function EditCouponPage({
 
   return <EditCouponClient couponId={couponId} courseId={courseId} />;
 }
-

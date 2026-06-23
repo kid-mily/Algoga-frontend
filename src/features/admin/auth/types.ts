@@ -13,8 +13,7 @@ export type AdminRole =
   | "ROLE_CS_MANAGER"
   | "ROLE_SETTLEMENT_MANAGER"
   | "ROLE_STATISTICS_MANAGER"
-  | "ROLE_SUPER_ADMIN"
-  | string;
+  | "ROLE_SUPER_ADMIN";
 
 export interface AdminLoginResponse {
   managerId?: number;

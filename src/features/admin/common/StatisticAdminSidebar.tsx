@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { adminLogout } from "@/features/services/adminAuth.service";
+import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
 import { getCurrentAdminPayload } from "@/lib/adminToken";
 
 const menus = [
@@ -46,8 +47,12 @@ export default function StatisticAdminSidebar() {
   const adminEmail = adminPayload?.role ?? adminPayload?.authority ?? "STATISTICS_MANAGER";
 
   const handleLogout = async () => {
-    await Promise.resolve(adminLogout());
-    window.location.replace("/auth/adminlogin");
+    try {
+      await adminLogout();
+    } finally {
+      clearAdminSessionActive();
+      window.location.replace("/auth/adminlogin");
+    }
   };
 
   return (

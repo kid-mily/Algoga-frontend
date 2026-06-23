@@ -51,7 +51,10 @@ const setNoStoreHeaders = (response: NextResponse) => {
 const redirectToAdminLogin = (request: NextRequest) => {
   const redirectUrl = request.nextUrl.clone();
   redirectUrl.pathname = ADMIN_LOGIN_PATH;
-  redirectUrl.searchParams.set("next", request.nextUrl.pathname);
+  redirectUrl.searchParams.set(
+    "next",
+    `${request.nextUrl.pathname}${request.nextUrl.search}`
+  );
 
   return setNoStoreHeaders(NextResponse.redirect(redirectUrl));
 };
@@ -143,7 +146,7 @@ export function proxy(request: NextRequest) {
 
   const readableRoles = authCookies.flatMap(getRoleValues);
 
-  if (readableRoles.length > 0 && !hasAdminRole(readableRoles)) {
+  if (readableRoles.length === 0 || !hasAdminRole(readableRoles)) {
     return redirectToAdminLogin(request);
   }
 

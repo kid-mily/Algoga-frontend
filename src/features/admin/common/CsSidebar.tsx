@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { adminLogout } from "@/features/services/adminAuth.service";
+import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
 
 const menus = [
   {
@@ -47,9 +48,12 @@ export default function CsSidebar() {
   const pathname = usePathname();
 
   const handleLogout = async () => {
-    await adminLogout();
-    sessionStorage.clear();
-    window.location.replace("/auth/adminlogin");
+    try {
+      await adminLogout();
+    } finally {
+      clearAdminSessionActive();
+      window.location.replace("/auth/adminlogin");
+    }
   };
 
   return (
