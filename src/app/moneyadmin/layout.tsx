@@ -1,3 +1,4 @@
+import AdminAuthGuard from "@/features/admin/auth/AdminAuthGuard";
 import ContentHeader from "@/features/admin/common/Contentheader";
 import MoneySidebar from "@/features/admin/common/MoneySidebar";
 
@@ -7,13 +8,14 @@ export default function MoneyAdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-[#F8F8F8]">
-      <MoneySidebar />
-
-      <div className="flex flex-1 flex-col">
-        <ContentHeader />
-        <main className="flex-1 overflow-y-auto p-8">{children}</main>
+    <AdminAuthGuard>
+      <div className="flex h-screen bg-[#F8F8F8]">
+        <MoneySidebar />
+        <div className="flex flex-1 flex-col">
+          <ContentHeader />
+          <main className="flex-1 overflow-y-auto p-8">{children}</main>
+        </div>
       </div>
-    </div>
+    </AdminAuthGuard>
   );
 }

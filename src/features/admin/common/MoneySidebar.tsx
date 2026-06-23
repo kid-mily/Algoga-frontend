@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { getCurrentAdminPayload } from "@/lib/adminToken";
 import { adminLogout } from "@/features/services/adminAuth.service";
 
@@ -29,14 +29,13 @@ const menus = [
 
 export default function MoneySidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const adminPayload = getCurrentAdminPayload();
   const adminName = adminPayload?.sub ?? "정산 관리자";
   const adminEmail = adminPayload?.role ?? adminPayload?.authority ?? "SETTLEMENT_MANAGER";
 
   const handleLogout = async () => {
     await Promise.resolve(adminLogout());
-    router.push("/auth/adminlogin");
+    window.location.replace("/auth/adminlogin");
   };
 
   return (

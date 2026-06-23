@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { adminLogout } from "@/features/services/adminAuth.service";
 import { getCurrentAdminPayload } from "@/lib/adminToken";
 
@@ -41,14 +41,13 @@ const menus = [
 
 export default function StatisticAdminSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const adminPayload = getCurrentAdminPayload();
   const adminName = adminPayload?.sub ?? "통계 관리자";
   const adminEmail = adminPayload?.role ?? adminPayload?.authority ?? "STATISTICS_MANAGER";
 
   const handleLogout = async () => {
     await Promise.resolve(adminLogout());
-    router.push("/auth/adminlogin");
+    window.location.replace("/auth/adminlogin");
   };
 
   return (
