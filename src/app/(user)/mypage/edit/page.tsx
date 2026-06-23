@@ -44,7 +44,7 @@ export default function MyPageEditPage() {
           <aside className="h-full w-[240px] shrink-0 bg-white" />
 
           <section className="min-h-[calc(100vh-64px)] w-full p-6">
-            <div className="flex h-full min-h-[300px] items-center justify-center rounded-2xl bg-white text-sm text-slate-500">
+            <div className="flex min-h-[300px] max-w-3xl items-center justify-center rounded-2xl bg-white text-sm text-slate-500">
               회원 정보를 불러오는 중입니다.
             </div>
           </section>
@@ -60,7 +60,7 @@ export default function MyPageEditPage() {
           <aside className="h-full w-[240px] shrink-0 bg-white" />
 
           <section className="min-h-[calc(100vh-64px)] w-full p-6">
-            <div className="flex h-full min-h-[300px] items-center justify-center rounded-2xl bg-white text-sm text-slate-500">
+            <div className="flex min-h-[300px] max-w-3xl items-center justify-center rounded-2xl bg-white text-sm text-slate-500">
               회원 정보를 불러오지 못했습니다.
             </div>
           </section>
@@ -78,8 +78,10 @@ export default function MyPageEditPage() {
           profileImageUrl={user.profileImageUrl}
         />
 
-        <section className="min-h-[calc(100vh-64px)] min-w-3xl p-6">
-          <MyPageEditForm user={user} initial={userInitial} />
+        <section className="min-h-[calc(100vh-64px)] min-w-0 w-full p-6">
+          <div className="w-full mx-auto max-w-3xl">
+            <MyPageEditForm user={user} initial={userInitial} />
+          </div>
         </section>
       </div>
     </main>

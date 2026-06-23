@@ -127,14 +127,6 @@ export default function MyPageEditForm({
           <span aria-hidden="true">‹</span>
           정보 수정
         </button>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex h-10 items-center rounded-xl bg-[#5f9c98] px-6 text-sm font-bold text-white transition hover:bg-[#528d89] disabled:opacity-60"
-        >
-          {isSubmitting ? "저장 중" : "저장"}
-        </button>
       </div>
 
       <section className="flex-1 overflow-hidden rounded-2xl bg-white shadow-sm">
@@ -179,7 +171,7 @@ export default function MyPageEditForm({
           </div>
         </div>
 
-        <div className="grid gap-4 px-6 py-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 px-6 py-6 md:grid-cols-2">
           <Field
             label="성명"
             value={user.name || ""}
