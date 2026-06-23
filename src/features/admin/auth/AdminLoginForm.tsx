@@ -80,7 +80,7 @@ export default function AdminLoginForm() {
         throw new Error("관리자 역할 정보를 받지 못했습니다.");
       }
 
-      markAdminSessionActive();
+      markAdminSessionActive(role);
       window.dispatchEvent(new Event("auth-state-changed"));
       window.location.replace(
         getSafeNextPath() ?? getAdminRedirectPathByRole(role)

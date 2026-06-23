@@ -2,17 +2,71 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { isAdminSessionActive } from "@/features/admin/auth/adminSession";
+import {
+  clearAdminSessionActive,
+  getAdminSessionRole,
+  isAdminSessionActive,
+} from "@/features/admin/auth/adminSession";
+
+const PATH_ROLE_RULES = [
+  {
+    path: "/contentadmin",
+    roles: ["CONTENT_MANAGER", "ROLE_CONTENT_MANAGER", "SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+  },
+  {
+    path: "/csadmin",
+    roles: ["CS_MANAGER", "ROLE_CS_MANAGER", "SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+  },
+  {
+    path: "/moneyadmin",
+    roles: ["SETTLEMENT_MANAGER", "ROLE_SETTLEMENT_MANAGER", "SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+  },
+  {
+    path: "/statisticadmin",
+    roles: ["STATISTICS_MANAGER", "ROLE_STATISTICS_MANAGER", "SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+  },
+  {
+    path: "/superadmin",
+    roles: ["SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+  },
+] as const;
+
+const isPathMatch = (pathname: string, path: string) => {
+  return pathname === path || pathname.startsWith(`${path}/`);
+};
+
+const canAccessPath = (pathname: string, role: string | null) => {
+  if (!role) return false;
+
+  const normalizedRole = role.toUpperCase();
+  const matchedRule = PATH_ROLE_RULES.find((rule) =>
+    isPathMatch(pathname, rule.path)
+  );
+
+  if (!matchedRule) return false;
+
+  return matchedRule.roles.includes(normalizedRole as never);
+};
 
 export default function AdminAuthGuard({ children }: { children: ReactNode }) {
   const [isAllowed, setIsAllowed] = useState(false);
 
   useEffect(() => {
     if (!isAdminSessionActive()) {
-      const next = `${window.location.pathname}${window.location.search}`;
-      window.location.replace(
-        `/auth/adminlogin?next=${encodeURIComponent(next)}`
-      );
+      window.location.replace("/forbidden");
+      return;
+    }
+
+    const role = getAdminSessionRole();
+
+    if (!role) {
+      clearAdminSessionActive();
+      window.location.replace("/forbidden");
+      return;
+    }
+
+    if (!canAccessPath(window.location.pathname, role)) {
+      window.location.replace("/forbidden");
       return;
     }
 
