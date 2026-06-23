@@ -1,5 +1,5 @@
 import AdminAuthGuard from "@/features/admin/auth/AdminAuthGuard";
-import ContentHeader from "@/features/admin/common/Contentheader";
+import ContentHeader from "@/features/admin/common/ContentHeader";
 import MoneySidebar from "@/features/admin/common/MoneySidebar";
 
 export default function MoneyAdminLayout({

@@ -44,6 +44,10 @@ export const useManagerList = () => {
     [debouncedSearchKeyword]
   );
 
+  const refetch = useCallback(() => {
+    void fetchManagers();
+  }, [fetchManagers]);
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setDebouncedSearchKeyword(searchKeyword);
@@ -116,5 +120,6 @@ export const useManagerList = () => {
     setDeleteTarget,
     setDeleteCompleteOpen,
     deleteManager,
+    refetch,
   };
 };

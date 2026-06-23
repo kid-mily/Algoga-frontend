@@ -1,5 +1,6 @@
 // id 찾기 완료 
 
+import Image from "next/image";
 import Link from "next/link";
 
 interface FindIdCompleteProps {
@@ -13,7 +14,7 @@ export default function FindIdComplete({
     <div className="flex w-[420px] flex-col items-center">
       {/* 아이콘 */}
       <div className="flex h-[88px] w-[88px] items-center justify-center rounded-full bg-[#439A97] text-[42px] text-white">
-         <img src="/images/check.svg" alt="체크아이콘" />
+         <Image src="/images/check.svg" alt="체크아이콘" width={42} height={42} />
       </div>
 
       {/* 타이틀 */}

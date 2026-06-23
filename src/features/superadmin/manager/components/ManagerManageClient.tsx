@@ -23,6 +23,7 @@ export default function ManagerManageClient() {
     setDeleteTarget,
     setDeleteCompleteOpen,
     deleteManager,
+    refetch,
   } = useManagerList();
 
   return (
@@ -60,6 +61,15 @@ export default function ManagerManageClient() {
       />
 
       <AdminErrorBanner message={error} className="mb-4" />
+      {error && (
+        <button
+          type="button"
+          onClick={refetch}
+          className="mb-4 h-[40px] rounded-[10px] border border-[#D0D5DD] bg-white px-4 text-[14px] font-semibold text-[#344054]"
+        >
+          다시 시도
+        </button>
+      )}
 
       <ManagerTable
         managers={filteredManagers}

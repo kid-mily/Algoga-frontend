@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -85,10 +85,13 @@ export default function LoginForm() {
     }
   };
 
-  const socialLoginUrls = {
-    kakao: `${apiBaseUrl}/oauth2/authorization/kakao`,
-    google: `${apiBaseUrl}/oauth2/authorization/google`,
-  };
+  const hasSocialLoginConfig = Boolean(apiBaseUrl);
+  const socialLoginUrls = hasSocialLoginConfig
+    ? {
+        kakao: `${apiBaseUrl}/oauth2/authorization/kakao`,
+        google: `${apiBaseUrl}/oauth2/authorization/google`,
+      }
+    : null;
 
   return (
     <>
@@ -184,18 +187,26 @@ export default function LoginForm() {
             <div className="h-px flex-1 bg-[#E4E7EC]" />
           </div>
 
-          <a
-            href={socialLoginUrls.kakao}
-            className="mt-5 flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#FEE500] text-[17px] font-semibold text-black"
-          >
-            카카오로 계속하기
-          </a>
-          <a
-            href={socialLoginUrls.google}
-            className="mt-4 flex h-[56px] w-full items-center justify-center rounded-[16px] border border-[#D0D5DD] bg-[#F2F4F7] text-[17px] font-semibold text-[#344054]"
-          >
-            구글로 계속하기
-          </a>
+          {socialLoginUrls ? (
+            <>
+              <a
+                href={socialLoginUrls.kakao}
+                className="mt-5 flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#FEE500] text-[17px] font-semibold text-black"
+              >
+                카카오로 계속하기
+              </a>
+              <a
+                href={socialLoginUrls.google}
+                className="mt-4 flex h-[56px] w-full items-center justify-center rounded-[16px] border border-[#D0D5DD] bg-[#F2F4F7] text-[17px] font-semibold text-[#344054]"
+              >
+                구글로 계속하기
+              </a>
+            </>
+          ) : (
+            <p className="mt-5 text-center text-[13px] text-[#DC2626]">
+              소셜 로그인 설정이 필요합니다.
+            </p>
+          )}
 
           <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
             계정이 없으신가요?{" "}
@@ -214,4 +225,3 @@ export default function LoginForm() {
     </>
   );
 }
-

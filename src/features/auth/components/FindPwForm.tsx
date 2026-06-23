@@ -33,9 +33,13 @@ export default function FindPwForm() {
       });
 
       router.push("/auth/login/findpwcomplete");
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 에러 발생 시 빨간색 글자 출력
-      setErrorMessage(error.message || "비밀번호 찾기에 실패했습니다.");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "비밀번호 찾기에 실패했습니다."
+      );
     } finally {
       setIsLoading(false);
     }

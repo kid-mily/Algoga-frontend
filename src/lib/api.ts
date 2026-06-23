@@ -1,3 +1,4 @@
+import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
 
@@ -31,7 +32,7 @@ export type ApiRequestOptions = RequestInit & {
 };
 
 let refreshPromise: Promise<boolean> | null = null;
-let logoutPromise: Promise<void> | null = null;
+const logoutPromises = new Map<string, Promise<void>>();
 
 export class ApiRequestError extends Error {
   status?: number;
@@ -105,7 +106,7 @@ const clearLegacyClientTokens = () => {
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("adminAccessToken");
   localStorage.removeItem("adminRefreshToken");
-  sessionStorage.removeItem("algoga-admin-session-active");
+  clearAdminSessionActive();
 };
 
 const getLoginPath = (refreshPath: string) => {
@@ -115,24 +116,30 @@ const getLoginPath = (refreshPath: string) => {
 const cleanupAuthSession = async (logoutPath: string, loginPath: string) => {
   if (typeof window === "undefined") return;
 
-  logoutPromise ??= fetch(buildUrl(logoutPath), {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      Accept: "application/json",
-    },
-  })
-    .catch(() => undefined)
-    .then(() => {
-      clearLegacyClientTokens();
-      window.dispatchEvent(new Event("auth-state-changed"));
-      window.location.replace(loginPath);
-    })
-    .finally(() => {
-      logoutPromise = null;
-    });
+  const promiseKey = `${logoutPath}:${loginPath}`;
 
-  await logoutPromise;
+  if (!logoutPromises.has(promiseKey)) {
+    const logoutPromise = fetch(buildUrl(logoutPath), {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+      },
+    })
+      .catch(() => undefined)
+      .then(() => {
+        clearLegacyClientTokens();
+        window.dispatchEvent(new Event("auth-state-changed"));
+        window.location.replace(loginPath);
+      })
+      .finally(() => {
+        logoutPromises.delete(promiseKey);
+      });
+
+    logoutPromises.set(promiseKey, logoutPromise);
+  }
+
+  await logoutPromises.get(promiseKey);
 };
 
 async function request<T>(
@@ -225,7 +232,7 @@ async function request<T>(
       typeof window !== "undefined" &&
       !skipAuth &&
       !suppressGlobalError &&
-      (response.status === 401 || response.status === 404) &&
+      response.status === 401 &&
       path !== refreshPath &&
       path !== logoutPath;
 

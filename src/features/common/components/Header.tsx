@@ -1,5 +1,6 @@
-﻿'use client'
+'use client'
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -64,13 +65,16 @@ export default function Header() {
     return (
         <header className="bg-white w-full h-16 flex items-center justify-between px-5">
             <Link href='/'> 
-                <img src="/images/알고가_로고.png" alt="로고" className="w-[130px] h-[45px] cursor-pointer"/>
+                <Image
+                    src="/images/알고가_로고.png"
+                    alt="로고"
+                    width={130}
+                    height={45}
+                    className="h-[45px] w-[130px] cursor-pointer"
+                />
             </Link>
             <Navbar/>
             <Profile user={user}/>
         </header>
     );
 }
-
-
-

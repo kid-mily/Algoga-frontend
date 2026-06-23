@@ -108,13 +108,13 @@ export const getCourseEnrollmentStatistics = async ({
     .filter(
       (item): item is CourseEnrollmentStatistic => item !== null
     );
-  const pageNumber = getNumber(record, ["page", "number"], page - 1);
+  const pageNumber = Math.max(0, getNumber(record, ["page", "number"], page - 1));
   const totalElements = getNumber(
     record,
     ["totalElements", "totalCount"],
     content.length
   );
-  const pageSize = getNumber(record, ["size", "pageSize"], size);
+  const pageSize = Math.max(1, getNumber(record, ["size", "pageSize"], size));
   const fallbackTotalPages = Math.max(1, Math.ceil(totalElements / pageSize));
 
   return {
@@ -123,7 +123,7 @@ export const getCourseEnrollmentStatistics = async ({
       1,
       getNumber(record, ["totalPages", "totalPage"], fallbackTotalPages)
     ),
-    page: pageNumber + 1,
+    page: Math.max(1, pageNumber + 1),
     size: pageSize,
     content,
   };

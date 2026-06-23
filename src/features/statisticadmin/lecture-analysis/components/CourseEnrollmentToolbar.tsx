@@ -35,7 +35,7 @@ export default function CourseEnrollmentToolbar({
             value={searchKeyword}
             onChange={onSearchKeywordChange}
             placeholder="강의명 검색..."
-            className="w-full text-[14px] outline-none placeholder:text-[#98A2B3] focus:ring-0"
+            className="w-full rounded-[6px] text-[14px] placeholder:text-[#98A2B3] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#439A97]"
           />
         </label>
       </form>

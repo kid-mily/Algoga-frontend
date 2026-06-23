@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { resetPassword } from "@/features/services/auth.service";
@@ -161,11 +162,16 @@ export default function NewPwForm() {
               type="button"
               disabled={isLoading}
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+              aria-pressed={showPassword}
               className="absolute right-4 top-1/2 -translate-y-1/2 disabled:cursor-not-allowed"
             >
-              <img
+              <Image
                 src="/images/eye.svg"
-                alt="보기"
+                alt=""
+                aria-hidden="true"
+                width={22}
+                height={22}
                 className="h-[22px] w-[22px]"
               />
             </button>
@@ -205,11 +211,16 @@ export default function NewPwForm() {
               type="button"
               disabled={isLoading}
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              aria-label={showConfirmPassword ? "비밀번호 확인 숨기기" : "비밀번호 확인 보기"}
+              aria-pressed={showConfirmPassword}
               className="absolute right-4 top-1/2 -translate-y-1/2 disabled:cursor-not-allowed"
             >
-              <img
+              <Image
                 src="/images/eye.svg"
-                alt="보기"
+                alt=""
+                aria-hidden="true"
+                width={22}
+                height={22}
                 className="h-[22px] w-[22px]"
               />
             </button>
@@ -283,4 +294,3 @@ export default function NewPwForm() {
     </>
   );
 }
-
