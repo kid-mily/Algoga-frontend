@@ -50,7 +50,7 @@ export default function MyPageInfoCard({
 
           <div className="min-w-0">
             <h2 className="text-xl font-bold text-[#0A1628]">
-              {user.name}
+              {user.nickname}
             </h2>
 
             <p className="mt-1 truncate text-sm text-[#8A9BB0]">

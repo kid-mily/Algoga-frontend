@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Image from "next/image";
 import Link from "next/link";
@@ -11,14 +11,14 @@ import Profile from "./Profile";
 
 // 유저 데이터 타입 정의 (필요에 따라 수정하세요)
 interface UserProfile {
-  username: string;
-  name: string;
-  nickname: string;
-  email: string;
-  profileImageUrl?: string;
-  phone: string;
-  gender: string;
-  birthDate: string;
+    username: string;
+    name: string;
+    nickname: string;
+    email: string;
+    profileImageUrl?: string;
+    phone: string;
+    gender: string;
+    birthDate: string;
 }
 
 export default function Header() {
