@@ -152,13 +152,15 @@ export default function LoginForm() {
 
           {/* 로그인 버튼 */}
           <button
-            type="submit"
-            disabled={!isValid || isLoading}
-            className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition ${
-              isValid && !isLoading ? "bg-[#439A97] hover:bg-[#367c79]" : "cursor-not-allowed bg-[#D0D5DD]"
-            }`}
-          >
-            {isLoading ? "로그인 중..." : "로그인"}
+              type="submit"
+              disabled={isLoading}
+              className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition ${
+                isLoading
+                  ? "cursor-not-allowed bg-[#D0D5DD]"
+                  : "bg-[#439A97] hover:bg-[#367c79]"
+              }`}
+            >
+              {isLoading ? "로그인 중..." : "로그인"}
           </button>
 
           <Link
