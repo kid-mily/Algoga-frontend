@@ -63,7 +63,7 @@ export default function CouponTable({
           ) : (
             coupons.map((coupon) => (
               <CouponRow
-                key={`${coupon.courseId}-${coupon.couponPolicyId || coupon.id}`}
+                key={`${coupon.courseId}-${coupon.couponPolicyId}`}
                 coupon={coupon}
                 onEdit={() => onEdit(coupon)}
                 onDelete={() => onDelete(coupon)}

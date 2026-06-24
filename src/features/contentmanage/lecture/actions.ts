@@ -3,6 +3,7 @@ import {
   deleteAdminCourse,
   getAdminCourse,
   getAdminCourses,
+  getAdminDeletedCourses,
   getCourseCountries,
   updateAdminCourse,
 } from "@/features/services/adminCourse.service";
@@ -16,6 +17,7 @@ import {
 import {
   CreateAdminChapterPayload,
   CreateAdminCoursePayload,
+  DeletedCourseQueryParams,
   UpdateChapterPayload,
   UpdateLecturePayload,
 } from "./types";
@@ -24,8 +26,15 @@ export const getLectureListAction = (signal?: AbortSignal) => {
   return getAdminCourses(signal);
 };
 
-export const getLectureCountriesAction = () => {
-  return getCourseCountries();
+export const getLectureCountriesAction = (signal?: AbortSignal) => {
+  return getCourseCountries(signal);
+};
+
+export const getDeletedLectureListAction = (
+  params: DeletedCourseQueryParams,
+  signal?: AbortSignal
+) => {
+  return getAdminDeletedCourses(params, signal);
 };
 
 export const getLectureDetailAction = (lectureId: number) => {

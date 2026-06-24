@@ -59,7 +59,22 @@ export default function ContentSidebar() {
             강의 관리
           </Link>
 
+
           <Link
+            href="/contentadmin/lecture/deleted"
+            className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
+              pathname === "/contentadmin/lecture/deleted"
+                ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
+                : "text-[#344054] hover:bg-[#F5F7FA]"
+            }`}
+          >
+            <img
+              src="/images/delete.svg"
+              alt="삭제 강의"
+              className="h-[20px] w-[20px]"
+            />
+            삭제 강의 목록
+          </Link>          <Link
             href="/contentadmin/coupon"
             className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
               pathname === "/contentadmin/coupon"
