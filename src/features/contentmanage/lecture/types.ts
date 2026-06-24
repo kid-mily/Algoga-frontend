@@ -341,3 +341,46 @@ export interface StudentItemProps extends StudentRow {
   checked: boolean;
   onCheck: () => void;
 }
+
+export type DeletedCourseLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+export type DeletedCourseStatus = "DRAFT" | "PUBLISHED";
+
+export type CourseFile = {
+  fileUrl: string;
+  originalFileName: string | null;
+  fileOrder: number;
+};
+
+export interface AdminDeletedCourse {
+  courseId: number;
+  countryId: number;
+  managerId: number;
+  title: string;
+  description: string;
+  price: number;
+  thumbnailUrl: string | null;
+  fileUrls: string[];
+  files: CourseFile[];
+  level: DeletedCourseLevel;
+  levelName: string;
+  status: DeletedCourseStatus;
+  countryName?: string;
+}
+
+export type AdminDeletedCoursePage = {
+  content: AdminDeletedCourse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+};
+
+export type DeletedCourseQueryParams = {
+  countryId?: number;
+  countryName?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
+};

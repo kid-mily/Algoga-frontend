@@ -1,5 +1,5 @@
+export type CouponDiscountType = "RATE" | "AMOUNT";
 import { CourseItem } from "../classroom/components/types";
-import { CouponDiscountType } from "../mypage/benefits/components/types";
 
 // 결제 요청
 export interface CreateLecturePaymentPayload {
