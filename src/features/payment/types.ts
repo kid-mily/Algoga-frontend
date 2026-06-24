@@ -1,5 +1,5 @@
-import type { CouponDiscountType } from "@/features/common/types/coupon";
 import { CourseItem } from "../classroom/components/types";
+import { CouponDiscountType } from "../mypage/benefits/components/types";
 
 // 결제 요청
 export interface CreateLecturePaymentPayload {

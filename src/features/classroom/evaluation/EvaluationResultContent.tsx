@@ -184,6 +184,14 @@ export default function EvaluationResultContent({
   }, [countryId]);
 
   const courseListHref = `/classroom/${continentCode}/${countryId}`;
+  const recommendedCourse = recommendedCourses[0];
+
+  const packageLoungeHref = recommendedCourse
+    ? `/packagelounge` +
+      `?countryId=${countryId}` +
+      `&courseId=${recommendedCourse.courseId}` +
+      `&continentCode=${encodeURIComponent(continentCode)}`
+    : courseListHref;
 
   if (isLoading) {
     return (
@@ -391,10 +399,12 @@ export default function EvaluationResultContent({
                     >
                       <div className="relative aspect-[16/10] overflow-hidden bg-[#EAF2F5]">
                         {course.thumbnailUrl ? (
-                          <img
+                          <Image
                             src={course.thumbnailUrl}
                             alt={course.title}
-                            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-cover transition duration-300 group-hover:scale-105"
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center text-sm font-bold text-[#7C8A9A]">
@@ -435,6 +445,12 @@ export default function EvaluationResultContent({
                         </div>
                       </div>
                     </Link>
+                    <Link
+                      href= "/"
+                      className="mt-2 flex min-h-11 items-center justify-center rounded-2xl bg-[#439A97] px-4 text-xs font-extrabold text-white transition hover:bg-[#377F7C]"
+                    >
+                      이 강의로 패키지 선택
+                    </Link>
                   </li>
                 );
               })}
@@ -455,7 +471,7 @@ export default function EvaluationResultContent({
           </Link>
 
           <Link
-            href="/classroom/packagelounge"
+            href={packageLoungeHref}
             className="flex min-h-12 items-center justify-center rounded-2xl bg-[#D85F25] px-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#C9551F]"
           >
             패키지 라운지로 이동
