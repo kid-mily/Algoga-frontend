@@ -1,4 +1,4 @@
-import type { CouponDiscountType } from "@/features/common/types/coupon";
+export type CouponDiscountType = "RATE" | "AMOUNT";
 import { CourseItem } from "../classroom/components/types";
 
 // 결제 요청

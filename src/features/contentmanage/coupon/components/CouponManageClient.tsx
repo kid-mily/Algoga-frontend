@@ -1,4 +1,6 @@
-﻿"use client";
+﻿// 쿠폰 목록 클라이언트
+
+"use client";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";

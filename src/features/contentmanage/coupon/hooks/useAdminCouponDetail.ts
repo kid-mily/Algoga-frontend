@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { getCouponDetailAction } from "../actions";
-import { AdminCouponRecord } from "../types";
+import type { AdminCoupon } from "../types";
 
 export function useAdminCouponDetail(courseId: number, couponId: number) {
-  const [coupon, setCoupon] = useState<AdminCouponRecord | null>(null);
+  const [coupon, setCoupon] = useState<AdminCoupon | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 

@@ -3,8 +3,8 @@ import {
   CouponStatistic,
   CouponStatisticsData,
   CouponStatisticsSummary,
+  type CouponDiscountType,
 } from "@/features/statisticadmin/coupon/types";
-import type { CouponDiscountType } from "@/features/common/types/coupon";
 
 type UnknownRecord = Record<string, unknown>;
 

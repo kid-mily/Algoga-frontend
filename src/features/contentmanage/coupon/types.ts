@@ -1,45 +1,18 @@
-import { AdminCourse } from "@/features/contentmanage/lecture/types";
-import type { CouponDiscountType } from "@/features/common/types/coupon";
+import type { AdminCourse } from "@/features/contentmanage/lecture/types";
+export type CouponDiscountType = "RATE" | "AMOUNT";
 
 export interface AdminCoupon {
   couponPolicyId: number;
   courseId: number;
-  managerId?: number;
+  managerId: number;
   couponName: string;
   discountType: CouponDiscountType;
   discountValue: number;
   validDays: number;
   active: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
-
-export type AdminCouponRecord = AdminCoupon & {
-  id?: number;
-  couponId?: number;
-  coupon_id?: number;
-  couponPolicyId?: number;
-  coupon_policy_id?: number;
-  policyId?: number;
-  policy_id?: number;
-  benefitId?: number;
-  benefit_id?: number;
-  course_id?: number;
-  course?: {
-    courseId?: number;
-    id?: number;
-  };
-  name?: string;
-  coupon_name?: string;
-  discount_type?: string;
-  discount_value?: number;
-  valid_days?: number;
-  isActive?: boolean;
-  is_active?: boolean;
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
-};
 
 export interface AdminCouponPayload {
   courseId: number;
@@ -50,7 +23,7 @@ export interface AdminCouponPayload {
   active: boolean;
 }
 
-export type CouponWithLecture = AdminCouponRecord & {
+export type CouponWithLecture = AdminCoupon & {
   lectureName?: string;
 };
 
@@ -61,7 +34,6 @@ export type CouponFormData = {
   couponName: string;
   discountType: CouponDiscountType;
   discountValue: string;
-  validDays: string;
   active: string;
 };
 
