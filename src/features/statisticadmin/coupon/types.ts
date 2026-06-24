@@ -1,4 +1,4 @@
-import type { CouponDiscountType } from "@/features/common/types/coupon";
+export type CouponDiscountType = "RATE" | "AMOUNT";
 
 export type CouponStatistic = {
   couponPolicyId: number;

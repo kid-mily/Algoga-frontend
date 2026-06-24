@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import SubHeader from "@/features/common/components/SubHeader";
@@ -80,7 +80,6 @@ export default function EditCouponClient({
             couponName: getCouponName(coupon),
             discountType: coupon.discountType || "RATE",
             discountValue: String(coupon.discountValue || ""),
-            validDays: String(coupon.validDays || ""),
             active: String(coupon.active !== false),
           }}
           onSubmit={handleEdit}
