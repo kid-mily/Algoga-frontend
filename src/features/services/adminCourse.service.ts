@@ -2,8 +2,10 @@ import { api, adminApi, ApiResponse } from "@/lib/api";
 import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 import {
   AdminCourse,
+  AdminDeletedCoursePage,
   CourseCountry,
   CreateAdminCoursePayload,
+  DeletedCourseQueryParams,
   UpdateLecturePayload,
 } from "../contentmanage/lecture/types";
 
@@ -146,6 +148,35 @@ export const getAdminCourses = async (
   }
 };
 
+
+export const getAdminDeletedCourses = async (
+  params: DeletedCourseQueryParams = {},
+  signal?: AbortSignal
+): Promise<AdminDeletedCoursePage> => {
+  try {
+    const response = await adminApi.get<ApiResponse<AdminDeletedCoursePage>>(
+      "/api/v1/admin/courses/deleted",
+      {
+        params: {
+          countryId: params.countryId,
+          countryName: params.countryName,
+          page: params.page ?? 0,
+          size: params.size ?? 10,
+          sort: params.sort,
+          t: Date.now(),
+        },
+        signal,
+        suppressGlobalError: true,
+      }
+    );
+
+    return response.data;
+  } catch (error: unknown) {
+    throw new Error(
+      getErrorMessage(error, "삭제 강의 목록 조회에 실패했습니다.")
+    );
+  }
+};
 export const getCourseCountries = async (
   signal?: AbortSignal
 ): Promise<CourseCountry[]> => {
