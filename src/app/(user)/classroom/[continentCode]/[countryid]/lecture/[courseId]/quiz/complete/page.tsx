@@ -9,142 +9,95 @@ import { useCourseCompletion } from "@/features/classroom/completion/hooks/useCo
 import type { CourseQuizAttempt } from "@/features/classroom/quiz/types";
 import type { CourseStudyChapter } from "@/features/services/courseStudy.service";
 import { getCourseStudyDetail } from "@/features/services/courseStudy.service";
-import { getCourseQuizResult, getCourseQuizzes } from "@/features/services/courseQuiz.service";
+import {
+  getCourseQuizResult,
+  getCourseQuizzes,
+} from "@/features/services/courseQuiz.service";
 
-const getParam = (
-  value: string | string[] | undefined
-) => {
+const getParam = (value: string | string[] | undefined) => {
   if (!value) return "";
 
-  return decodeURIComponent(
-    Array.isArray(value) ? value[0] : value
-  );
+  return decodeURIComponent(Array.isArray(value) ? value[0] : value);
 };
 
 export default function QuizCompletePage() {
   const params = useParams();
   const router = useRouter();
 
-  const continentCode = getParam(
-    params.continentCode
-  );
+  const continentCode = getParam(params.continentCode);
   const countryId = getParam(params.countryid);
   const courseId = getParam(params.courseId);
 
   const lectureHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}`;
-
   const studyHref = `${lectureHref}/study`;
   const quizHref = `${lectureHref}/quiz`;
   const quizResultHref = `${quizHref}/complete`;
   const qnaHref = `${lectureHref}/qna`;
-
   const certificateHref = `/mypage/coursedetails/${courseId}/certificate`;
 
-  // 서버 수료 상태
   const completion = useCourseCompletion(courseId);
+
   const [courseTitle, setCourseTitle] = useState("");
   const [chapters, setChapters] = useState<CourseStudyChapter[]>([]);
   const [attempt, setAttempt] = useState<CourseQuizAttempt | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-
-  const [ isReviewModalOpen, setIsReviewModalOpen ] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!courseId) {
-      return;
-    }
+    if (!courseId) return;
 
     let active = true;
 
     const loadPage = async () => {
-  try {
-    setIsLoading(true);
-    setErrorMessage("");
+      try {
+        setIsLoading(true);
+        setErrorMessage("");
 
-    // 결과 API 실패 여부와 관계없이 사이드바 데이터는 표시
-    const [course, quizzes] = await Promise.all([
-      getCourseStudyDetail(courseId),
-      getCourseQuizzes(courseId),
-    ]);
+        const [course, quizzes, savedResult] = await Promise.all([
+          getCourseStudyDetail(courseId),
+          getCourseQuizzes(courseId),
+          getCourseQuizResult(courseId),
+        ]);
 
-    if (!active) return;
+        if (!active) return;
 
-    setCourseTitle(course.title);
-    setChapters(
-      [...course.chapters].sort(
-        (a, b) =>
-          a.chapterOrder - b.chapterOrder
-      )
-    );
+        setCourseTitle(course.title);
+        setChapters(
+          [...course.chapters].sort(
+            (a, b) => a.chapterOrder - b.chapterOrder
+          )
+        );
 
-    try {
-      const savedResult =
-        await getCourseQuizResult(courseId);
-
-      if (!active) return;
-
-      if (!Array.isArray(savedResult.answers)) {
-        throw new Error("퀴즈 결과 응답에 answers가 없습니다.");
-      }
-
-      const selectedAnswers =
-        Object.fromEntries(
+        const selectedAnswers = Object.fromEntries(
           savedResult.answers.map((answer) => [
             answer.quizId,
             answer.selectedOption,
           ])
         );
 
-      setAttempt({
-        result: savedResult,
-        quizzes,
-        selectedAnswers,
-      });
-    } catch (resultError) {
-      console.error(
-        "[quiz-complete] DB 결과 조회 실패:",
-        resultError
-      );
+        setAttempt({
+          result: {
+            userId: savedResult.userId,
+            courseId: savedResult.courseId,
+            totalCount: savedResult.totalCount,
+            correctCount: savedResult.correctCount,
+            score: savedResult.score,
+            wrongAnswers: savedResult.wrongAnswers,
+          },
+          quizzes,
+          selectedAnswers,
+        });
+      } catch (error) {
+        if (!active) return;
 
-      const storedAttempt = sessionStorage.getItem(
-        `quiz-attempt-${courseId}`
-      );
+        console.error("[quiz-complete] 퀴즈 결과 조회 실패:", error);
 
-      if (storedAttempt) {
-        try {
-          setAttempt(
-            JSON.parse(storedAttempt) as CourseQuizAttempt
-          );
-          setErrorMessage("");
-        } catch (parseError) {
-          console.error(
-            "[quiz-complete] 임시 결과 파싱 실패:",
-            parseError
-          );
-          setErrorMessage(
-            "저장된 퀴즈 결과를 불러오지 못했습니다."
-          );
-        }
-      } else {
         setErrorMessage(
-          "퀴즈 결과 조회 API에서 저장된 결과를 찾지 못했습니다."
+          error instanceof Error
+            ? error.message
+            : "퀴즈 결과를 불러오지 못했습니다."
         );
-      }
-    }
-  } catch (error) {
-    if (!active) return;
-
-    console.error(
-      "[quiz-complete] 강의 정보 조회 실패:",
-      error
-    );
-
-    setErrorMessage(
-      error instanceof Error
-        ? error.message
-        : "강의 정보를 불러오지 못했습니다."
-    );
       } finally {
         if (active) {
           setIsLoading(false);
@@ -195,9 +148,7 @@ export default function QuizCompletePage() {
           quizResultHref={quizResultHref}
           certificateHref={certificateHref}
           qnaHref={qnaHref}
-          onChapterSelect={() =>
-            router.push(studyHref)
-          }
+          onChapterSelect={() => router.push(studyHref)}
         />
 
         <section className="flex min-h-0 min-w-0 flex-1 p-3">
@@ -233,15 +184,13 @@ export default function QuizCompletePage() {
 
                   <p className="mt-2 text-sm text-[#8A9BB0]">
                     {errorMessage ||
-                      "퀴즈를 제출한 후 결과를 확인해 주세요."}
+                      "퀴즈를 제출한 뒤 결과를 확인해 주세요."}
                   </p>
 
                   <div className="mt-5 flex justify-center gap-2">
                     <button
                       type="button"
-                      onClick={() =>
-                        router.replace(quizHref)
-                      }
+                      onClick={() => router.replace(quizHref)}
                       className="h-10 rounded-[14px] border border-[#DCE5F0] px-5 text-sm font-bold text-[#243247]"
                     >
                       퀴즈로 돌아가기
@@ -249,9 +198,7 @@ export default function QuizCompletePage() {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        router.replace(studyHref)
-                      }
+                      onClick={() => router.replace(studyHref)}
                       className="h-10 rounded-[14px] bg-[#5E9F9B] px-5 text-sm font-bold text-white"
                     >
                       강의로 돌아가기
@@ -263,12 +210,8 @@ export default function QuizCompletePage() {
                   courseId={courseId}
                   result={attempt.result}
                   attempt={attempt}
-                  onReview={() =>
-                    setIsReviewModalOpen(true)
-                  }
-                  onClose={() =>
-                    router.replace(studyHref)
-                  }
+                  onReview={() => setIsReviewModalOpen(true)}
+                  onClose={() => router.replace(studyHref)}
                 />
               )}
             </section>
@@ -279,29 +222,19 @@ export default function QuizCompletePage() {
       <ReviewModal
         open={isReviewModalOpen}
         courseId={courseId}
-        onClose={() =>
-          setIsReviewModalOpen(false)
-        }
+        onClose={() => setIsReviewModalOpen(false)}
         onSuccess={(review) => {
           setIsReviewModalOpen(false);
 
-          console.log(
-            "[review] 등록된 후기:",
-            review
-          );
+          console.log("[review] 등록된 후기:", review);
 
           window.dispatchEvent(
-            new CustomEvent(
-              "course-review-created",
-              {
-                detail: review,
-              }
-            )
+            new CustomEvent("course-review-created", {
+              detail: review,
+            })
           );
 
-          window.alert(
-            "수강 후기가 등록되었습니다."
-          );
+          window.alert("수강 후기가 등록되었습니다.");
         }}
       />
     </>

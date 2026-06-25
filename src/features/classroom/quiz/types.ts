@@ -18,22 +18,11 @@ export interface CourseQuizResultAnswer {
     explanation?: string;
 }
 
-export interface CourseQuizSavedResult extends CourseQuizSubmitResult {
-    submissionId: number;
-    submittedAt: string;
-    answers: CourseQuizResultAnswer[];
-}
-
-export type CourseQuizScoreResult = Pick<
-    CourseQuizSavedResult,
-    "courseId" | "totalCount" | "correctCount" | "score"
->;
-
 export interface CourseQuizWrongAnswer {
     quizId: number;
-    selectedOption: number;
-    correctOption: number;
-    question?: string;
+    question: string;
+    selectedOption: 1 | 2 | 3 | 4;
+    correctOption: 1 | 2 | 3 | 4;
     explanation?: string;
 }
 
@@ -45,6 +34,14 @@ export interface CourseQuizSubmitResult {
     score: number;
     wrongAnswers: CourseQuizWrongAnswer[];
 }
+
+export interface CourseQuizSavedResult extends CourseQuizSubmitResult {
+    submissionId: number;
+    submittedAt: string;
+    answers: CourseQuizResultAnswer[];
+}
+
+export type CourseQuizScoreResult = Pick<CourseQuizSavedResult,"courseId" | "totalCount" | "correctCount" | "score" | "wrongAnswers">;
 
 export interface QuizState {
     courseTitle: string;
