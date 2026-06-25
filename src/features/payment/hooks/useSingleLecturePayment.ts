@@ -35,7 +35,13 @@ export function useSingleLecturePayment({
   const [coupons, setCoupons] = useState<MyCoupon[]>([]);
   const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null);
   const [mileageBalance, setMileageBalance] = useState(0);
+
+  // 입력 중인 마일리지
+  const [mileageInputValue, setMileageInputValue] = useState("");
+
+  // 실제 결제에 적용된 마일리지
   const [usedMileage, setUsedMileage] = useState(0);
+
   const [isLoadingBenefits, setIsLoadingBenefits] = useState(true);
   const [isPaying, setIsPaying] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -96,9 +102,7 @@ export function useSingleLecturePayment({
   }, [courseId, completeUrl, router]);
 
   const selectedCoupon = useMemo(() => {
-    return (
-      coupons.find((coupon) => coupon.userCouponId === selectedCouponId) ?? null
-    );
+    return coupons.find((coupon) => coupon.userCouponId === selectedCouponId) ?? null;
   }, [coupons, selectedCouponId]);
 
   const price = Number(course.price ?? 0);
@@ -118,17 +122,34 @@ export function useSingleLecturePayment({
     [price, couponDiscount, usedMileage]
   );
 
+  useEffect(() => {
+    if (usedMileage > maxMileage) {
+      setUsedMileage(maxMileage);
+    }
+  }, [maxMileage, usedMileage]);
+
   const handleCouponChange = useCallback((couponId: number | null) => {
     setSelectedCouponId(couponId);
+
+    // 쿠폰이 바뀌면 결제 금액이 바뀌므로 적용된 마일리지 초기화
     setUsedMileage(0);
+    setMileageInputValue("");
   }, []);
 
-  const handleMileageChange = useCallback(
-    (value: string) => {
-      setUsedMileage(normalizeMileageInput(value, maxMileage));
-    },
-    [maxMileage]
-  );
+  const handleMileageInputChange = useCallback((value: string) => {
+    setMileageInputValue(value);
+  }, []);
+
+  const handleApplyMileage = useCallback(() => {
+    const nextMileage = normalizeMileageInput(mileageInputValue, maxMileage);
+
+    setUsedMileage(nextMileage);
+    setMileageInputValue(String(nextMileage));
+  }, [mileageInputValue, maxMileage]);
+
+  const handleUseAllMileage = useCallback(() => {
+    setMileageInputValue(String(maxMileage));
+  }, [maxMileage]);
 
   const handlePay = useCallback(async () => {
     if (isPaying) return;
@@ -213,19 +234,12 @@ export function useSingleLecturePayment({
         });
 
         if (error.status === 409) {
-          console.warn(
-            "[single-payment] 이미 처리된 결제입니다. 완료 페이지로 이동합니다.",
-            error.responseData
-          );
-
           router.push(completeUrl);
           return;
         }
 
         if (error.status === 401 || error.status === 403) {
-          setErrorMessage(
-            "로그인이 필요합니다. 로그인 후 다시 결제해 주세요."
-          );
+          setErrorMessage("로그인이 필요합니다. 로그인 후 다시 결제해 주세요.");
           return;
         }
 
@@ -264,6 +278,7 @@ export function useSingleLecturePayment({
     coupons,
     selectedCouponId,
     mileageBalance,
+    mileageInputValue,
     usedMileage,
     isLoadingBenefits,
     isPaying,
@@ -273,7 +288,9 @@ export function useSingleLecturePayment({
     maxMileage,
     finalAmount,
     handleCouponChange,
-    handleMileageChange,
+    handleMileageInputChange,
+    handleApplyMileage,
+    handleUseAllMileage,
     handlePay,
     handleBack: router.back,
   };

@@ -77,16 +77,11 @@ export default function LectureStudyClient() {
       <CourseLearningSidebar
         courseTitle={study.course.title}
         chapters={study.chapters}
-        selectedChapterId={
-          study.selectedChapter?.chapterId
-        }
-        quizAvailable={
-          study.course.quizAvailable === true
-        }
+        selectedChapterId={study.selectedChapter?.chapterId}
+        courseProgressRate={study.totalProgress}
+        quizAvailable={study.course.quizAvailable === true}
         quizSubmitted={completion.quizSubmitted}
-        courseCompleted={
-          completion.isCompleted
-        }
+        courseCompleted={completion.isCompleted}
         mode="study"
         lectureHref={lectureHref}
         studyHref={studyHref}
@@ -94,9 +89,7 @@ export default function LectureStudyClient() {
         quizResultHref={quizResultHref}
         certificateHref={certificateHref}
         qnaHref={qnaHref}
-        onChapterSelect={
-          study.handleChapterSelect
-        }
+        onChapterSelect={study.handleChapterSelect}
       />
 
       <section className="min-w-0 flex-1 px-5 py-5 lg:px-8 lg:py-6">

@@ -18,6 +18,7 @@ export interface CourseStudyDetail {
   title: string;
   accessExpiresAt: string;
   quizAvailable: boolean;
+  courseProgressRate?: number;
   chapters: CourseStudyChapter[];
 }
 
@@ -29,6 +30,10 @@ export interface ChapterProgress {
   watchedSeconds: number;
   progressRate: number;
   completed: boolean;
+  nextChapterId: number | null;
+  nextChapterUnlocked: boolean;
+  courseProgressRate: number;
+  quizAvailable: boolean;
 }
 
 export const getCourseStudyDetail = async (

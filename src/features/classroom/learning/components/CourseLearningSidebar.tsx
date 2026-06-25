@@ -2,18 +2,13 @@
 
 import Link from "next/link";
 import type { LearningSidebarProps } from "../types";
-import {
-    areAllChaptersCompleted,
-    canOpenChapter,
-    formatChapterDuration,
-    getTotalProgress,
-    sortChapters,
-} from "../actions";
+import { canOpenChapter, formatChapterDuration, getTotalProgress, sortChapters } from "../actions";
 
 export default function CourseLearningSidebar({
     courseTitle,
     chapters,
     selectedChapterId,
+    courseProgressRate,
     quizAvailable,
     quizSubmitted = false,
     courseCompleted = false,
@@ -21,16 +16,32 @@ export default function CourseLearningSidebar({
     lectureHref,
     quizHref,
     quizResultHref,
-    certificateHref,
     qnaHref,
     onChapterSelect,
 }: LearningSidebarProps) {
 
     // 데이터 가공 및 상태 판정
     const orderedChapters = sortChapters(chapters);
-    const totalProgress = Math.min(Math.max(getTotalProgress(orderedChapters), 0), 100);
-    const allChaptersCompleted = areAllChaptersCompleted(orderedChapters);
-    const quizUnlocked = quizAvailable && allChaptersCompleted;
+
+    const calculatedProgress = getTotalProgress(
+        orderedChapters,
+    );
+
+    const totalProgress = typeof courseProgressRate === "number"
+        ? Math.min(
+            Math.max(
+                Math.round(
+                    courseProgressRate,
+                ), 0 ), 100,
+            )
+            : Math.min(
+                Math.max(
+                calculatedProgress, 0),
+                100,
+            );
+
+            // 백엔드 응답을 활성화 기준으로 사용
+            const quizUnlocked = quizAvailable === true;
 
     // 💡 스타일 추출: 버튼 활성화/비활성화 상태에 따른 스타일
     const getButtonStyles = (isActive: boolean) => {

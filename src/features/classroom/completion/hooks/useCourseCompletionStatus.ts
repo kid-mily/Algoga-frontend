@@ -32,8 +32,8 @@ export function useCourseCompletionStatus(
           `course-completed-${courseId}`
         ) === "true";
 
-      const courses = await getMyCourses();
-      const currentCourse = courses.find(
+      const courses = await getMyCourses(0, 100);
+      const currentCourse = courses.content.find(
         (course) =>
           String(course.courseId) === String(courseId)
       );

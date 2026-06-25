@@ -73,8 +73,11 @@ export const createCourseQnaComment = async (
   payload: CreateCourseQnaCommentPayload
 ) => {
   const response = await api.post<CourseQnaApiResponse<unknown>>(
-    `/api/v1/courses/${courseId}/qnas/${qnaId}`,
-    payload
+    `/api/v1/courses/${courseId}/qnas/${qnaId}/comments`,
+    {
+      parentCommentId: payload.parentCommentId ?? null,
+      content: payload.content,
+    }
   );
 
   return unwrapData(response);

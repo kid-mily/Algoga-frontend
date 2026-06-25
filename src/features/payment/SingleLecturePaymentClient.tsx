@@ -19,6 +19,7 @@ export default function SingleLecturePaymentClient({
     coupons,
     selectedCouponId,
     mileageBalance,
+    mileageInputValue,
     usedMileage,
     isLoadingBenefits,
     isPaying,
@@ -28,7 +29,9 @@ export default function SingleLecturePaymentClient({
     maxMileage,
     finalAmount,
     handleCouponChange,
-    handleMileageChange,
+    handleMileageInputChange,
+    handleApplyMileage,
+    handleUseAllMileage,
     handlePay,
     handleBack,
   } = useSingleLecturePayment({
@@ -62,7 +65,7 @@ export default function SingleLecturePaymentClient({
             </p>
 
             <p className="mt-2 text-xs font-medium text-red-500">
-              자세한 오류 정보는 브라우저 콘솔을 확인해 주세요.
+              자세한 오류 정보는 브라우저 콘솔에서 확인할 수 있습니다.
             </p>
           </div>
         )}
@@ -82,8 +85,11 @@ export default function SingleLecturePaymentClient({
         <MileageInput
           mileageBalance={mileageBalance}
           maxMileage={maxMileage}
+          mileageInputValue={mileageInputValue}
           usedMileage={usedMileage}
-          onChange={handleMileageChange}
+          onChange={handleMileageInputChange}
+          onApply={handleApplyMileage}
+          onUseAll={handleUseAllMileage}
         />
 
         <PaymentSummary

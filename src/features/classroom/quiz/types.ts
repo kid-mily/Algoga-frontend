@@ -18,10 +18,16 @@ export interface CourseQuizResultAnswer {
     explanation?: string;
 }
 
-export interface CourseQuizSavedResult
-    extends CourseQuizSubmitResult {
+export interface CourseQuizSavedResult extends CourseQuizSubmitResult {
+    submissionId: number;
+    submittedAt: string;
     answers: CourseQuizResultAnswer[];
 }
+
+export type CourseQuizScoreResult = Pick<
+    CourseQuizSavedResult,
+    "courseId" | "totalCount" | "correctCount" | "score"
+>;
 
 export interface CourseQuizWrongAnswer {
     quizId: number;

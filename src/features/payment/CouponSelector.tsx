@@ -38,11 +38,6 @@ export default function CouponSelector({ coupons, selectedCouponId, onChange }: 
                     ))}
                 </select>
             </div>
-            
-            {/* 경고 안내 */}
-            <div className="mt-4 bg-[#FFF8E8] border border-[#F6C453] rounded-2xl px-4 py-3 text-sm text-[#D48806]">
-                ⚠ 환불 시 쿠폰은 재발급되지 않습니다
-            </div>
         </div>
     );
 }
