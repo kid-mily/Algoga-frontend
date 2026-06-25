@@ -1,5 +1,6 @@
 ﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { Client, type IMessage } from "@stomp/stompjs";
+import { normalizeChatMessage } from "../services/chatService";
 import type { ChatMessage, ReadEvent } from "../types/chat";
 
 type UseChatSocketOptions = {
@@ -105,8 +106,14 @@ export const useChatSocket = ({ roomId, onMessage, onRead }: UseChatSocketOption
         setIsConnected(true);
 
         client.subscribe(`/topic/chat/rooms/${roomId}`, (message) => {
-          const parsedMessage = unwrapBody(parseBody(message)) as ChatMessage | null;
-          if (!parsedMessage) return;
+          const rawMessage = unwrapBody(parseBody(message));
+          if (!rawMessage || typeof rawMessage !== "object") return;
+
+          const parsedMessage = normalizeChatMessage({
+            roomId,
+            ...(rawMessage as Record<string, unknown>),
+          });
+          if (!parsedMessage.content) return;
 
           onMessage?.(parsedMessage);
         });
@@ -150,5 +157,6 @@ export const useChatSocket = ({ roomId, onMessage, onRead }: UseChatSocketOption
     sendRead,
   };
 };
+
 
 

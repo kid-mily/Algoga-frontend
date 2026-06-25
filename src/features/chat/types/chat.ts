@@ -1,4 +1,4 @@
-export type ChatRoomType = "DIRECT" | "GROUP";
+﻿export type ChatRoomType = "DIRECT" | "GROUP";
 
 export interface ChatRoom {
   roomId: number;
@@ -21,6 +21,7 @@ export interface ChatMessage {
   createdAt: string;
   unreadCount?: number;
   isMine?: boolean;
+  isSystem?: boolean;
 }
 
 export interface Friend {
@@ -42,3 +43,5 @@ export interface RoomNotification {
 }
 
 export type ChatPanelView = "list" | "room" | "direct-create" | "group-create";
+
+
