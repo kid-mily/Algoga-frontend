@@ -1,4 +1,8 @@
-import { LatestDiagnosisResult, MyCourse, PageResponse } from "@/features/mypage/coursedetails/types";
+import type {
+  LatestDiagnosisResult,
+  MyCourse,
+  PageResponse,
+} from "@/features/mypage/coursedetails/types";
 import { api, ApiRequestError, ApiResult, unwrapData } from "@/lib/api";
 
 const emptyPage = <T>(page: number, size: number): PageResponse<T> => ({
@@ -18,7 +22,10 @@ export async function getMyCourses(
   const response = await api.get<ApiResult<PageResponse<MyCourse>>>(
     "/api/v1/my/courses",
     {
-      params: { page, size },
+      params: {
+        page,
+        size,
+      },
       cache: "no-store",
       suppressGlobalError: true,
     }
@@ -28,7 +35,7 @@ export async function getMyCourses(
 
   return {
     ...result,
-    content: result.content.map((course) => ({
+    content: (result.content ?? []).map((course) => ({
       ...course,
       thumbnailUrl: course.thumbnailUrl ?? null,
       countryName: course.countryName ?? "",
@@ -38,8 +45,13 @@ export async function getMyCourses(
       progressRate: course.progressRate ?? 0,
       completedChapterCount: course.completedChapterCount ?? 0,
       totalChapterCount: course.totalChapterCount ?? 0,
+      quizSubmitted: course.quizSubmitted ?? false,
+      reviewWritten: course.reviewWritten ?? false,
       certificateAvailable:
         course.certificateAvailable ?? Boolean(course.certificateCode),
+      certificateCode: course.certificateCode ?? null,
+      certificateDownloadUrl: course.certificateDownloadUrl ?? null,
+      completedAt: course.completedAt ?? null,
     })),
   };
 }
@@ -67,5 +79,6 @@ export async function getLatestDiagnoses(): Promise<LatestDiagnosisResult[]> {
   }
 }
 
-export const isMyCourseCompleted = (course?: MyCourse) =>
-  course?.learningStatus === "COMPLETED";
+export const isMyCourseCompleted = (course?: MyCourse) => {
+  return course?.learningStatus === "COMPLETED";
+};

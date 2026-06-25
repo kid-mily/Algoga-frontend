@@ -30,7 +30,12 @@ export const submitCourseQuiz = async (
     { suppressGlobalError: true }
   );
 
-  return response.data;
+  return {
+    ...response.data,
+    wrongAnswers: response.data.wrongAnswers ?? [],
+    completion: response.data.completion ?? null,
+    courseCompleted: response.data.courseCompleted ?? false,
+  };
 };
 
 export const getCourseQuizResult = async (
@@ -44,5 +49,8 @@ export const getCourseQuizResult = async (
     }
   );
 
-  return response.data;
+  return {
+    ...response.data,
+    answers: response.data.answers ?? [],
+  };
 };

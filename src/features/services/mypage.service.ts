@@ -29,6 +29,15 @@ export class MyPageApiError extends Error {
   }
 }
 
+type MyCoursesCountResponse =
+  | {
+      content?: unknown[];
+      totalElements?: number;
+      totalCount?: number;
+      total?: number;
+    }
+  | unknown[];
+
 const toMyPageUser = (user: Partial<MyPageUser>): MyPageUser => ({
   username: user.username ?? "",
   password: user.password ?? "",
@@ -42,38 +51,79 @@ const toMyPageUser = (user: Partial<MyPageUser>): MyPageUser => ({
   personalCode: user.personalCode ?? "",
 });
 
+const getMyCourseCount = async (): Promise<number> => {
+  const response = await api.get<ApiResponse<MyCoursesCountResponse>>(
+    "/api/v1/my/courses",
+    {
+      params: {
+        page: 0,
+        size: 1,
+      },
+      cache: "no-store",
+      suppressGlobalError: true,
+    }
+  );
+
+  const data = unwrapData(response);
+
+  if (Array.isArray(data)) {
+    return data.length;
+  }
+
+  if (typeof data.totalElements === "number") {
+    return data.totalElements;
+  }
+
+  if (typeof data.totalCount === "number") {
+    return data.totalCount;
+  }
+
+  if (typeof data.total === "number") {
+    return data.total;
+  }
+
+  if (Array.isArray(data.content)) {
+    return data.content.length;
+  }
+
+  return 0;
+};
+
 export async function getMyPageUser(): Promise<MyPageUser> {
   const user = await getMe();
+
+  if (!user) {
+    throw new Error("로그인이 필요한 서비스입니다.");
+  }
 
   return toMyPageUser(user);
 }
 
 export async function getMyPageData(): Promise<MyPageData> {
-  const [user, coupons, payments] = await Promise.all([
+  const [user, coupons, payments, courseCount] = await Promise.all([
     getMyPageUser(),
 
-    // 쿠폰 API가 실패해도 마이페이지 전체는 표시
     getMyCoupons().catch((error) => {
       console.error("쿠폰 조회 실패:", error);
       return [];
     }),
 
-    // 결제 내역 API가 실패해도 마이페이지 전체는 표시
     getMyPayments().catch((error) => {
       console.error("결제 내역 조회 실패:", error);
       return [];
+    }),
+
+    getMyCourseCount().catch((error) => {
+      console.error("수강 강좌 개수 조회 실패:", error);
+      return 0;
     }),
   ]);
 
   return {
     user,
-
     summary: {
-      // TODO: 수강 내역 API 연결 후 실제 개수로 변경
-      courseCount: 0,
-
+      courseCount,
       reservationCount: Array.isArray(payments) ? payments.length : 0,
-
       couponCount: Array.isArray(coupons) ? coupons.length : 0,
     },
   };
