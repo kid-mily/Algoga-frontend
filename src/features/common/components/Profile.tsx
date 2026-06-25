@@ -57,14 +57,21 @@ export default function Profile({ user }: Props) {
         height={24}
         className="cursor-pointer"
       />
-
-      <Image
-        src="/images/ChatIcon.svg"
-        alt="채팅"
-        width={24}
-        height={24}
-        className="cursor-pointer"
-      />
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new Event("chat-widget-toggle"))}
+        aria-label="채팅창 열기"
+        className="flex h-6 w-6 items-center justify-center"
+      >
+        <Image
+          src="/images/ChatIcon.svg"
+          alt=""
+          width={24}
+          height={24}
+          aria-hidden="true"
+          className="cursor-pointer"
+        />
+      </button>
 
       <Image
         src="/images/NoticeIcon.svg"
@@ -123,3 +130,4 @@ export default function Profile({ user }: Props) {
     </div>
   );
 }
+
