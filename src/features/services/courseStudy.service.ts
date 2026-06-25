@@ -30,21 +30,24 @@ export interface ChapterProgress {
   watchedSeconds: number;
   progressRate: number;
   completed: boolean;
-  nextChapterId: number | null;
-  nextChapterUnlocked: boolean;
-  courseProgressRate: number;
-  quizAvailable: boolean;
+  nextChapterId?: number | null;
+  nextChapterUnlocked?: boolean;
+  courseProgressRate?: number;
+  quizAvailable?: boolean;
 }
 
 export const getCourseStudyDetail = async (
   courseId: string | number,
   signal?: AbortSignal
 ): Promise<CourseStudyDetail> => {
-  const response = await api.get<ApiResult<CourseStudyDetail>>(`/api/v1/my/courses/${courseId}`, {
-    cache: "no-store",
-    signal,
-    suppressGlobalError: true,
-  });
+  const response = await api.get<ApiResult<CourseStudyDetail>>(
+    `/api/v1/my/courses/${courseId}`,
+    {
+      cache: "no-store",
+      signal,
+      suppressGlobalError: true,
+    }
+  );
 
   const data = unwrapData(response);
 
@@ -59,12 +62,10 @@ export const updateChapterProgress = async (
   chapterId: string | number,
   watchedSeconds: number
 ): Promise<ChapterProgress> => {
-  const response = await api.post<ApiResult<ChapterProgress>>(`/api/v1/courses/${courseId}/chapters/${chapterId}/progress`,
+  const response = await api.post<ApiResult<ChapterProgress>>(
+    `/api/v1/courses/${courseId}/chapters/${chapterId}/progress`,
     {
-      watchedSeconds: Math.max(
-        0,
-        Math.floor(watchedSeconds)
-      ),
+      watchedSeconds: Math.max(0, Math.floor(watchedSeconds)),
     },
     {
       suppressGlobalError: true,

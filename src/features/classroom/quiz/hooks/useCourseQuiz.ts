@@ -3,11 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiRequestError } from "@/lib/api";
-import { CourseStudyChapter, getCourseStudyDetail } from "@/features/services/courseStudy.service";
-import { getCourseQuizzes, submitCourseQuiz } from "@/features/services/courseQuiz.service";
+import {
+  CourseStudyChapter,
+  getCourseStudyDetail,
+} from "@/features/services/courseStudy.service";
+import {
+  getCourseQuizzes,
+  submitCourseQuiz,
+} from "@/features/services/courseQuiz.service";
 import { areAllChaptersCompleted } from "../../learning/actions";
 import { createQuizAnswers } from "../actions";
-import type { CourseQuiz, CourseQuizAttempt, CourseQuizSubmitResult } from "../types";
+import type { CourseQuiz, CourseQuizSubmitResult } from "../types";
 
 export function useCourseQuiz(
   courseId: string,
@@ -19,16 +25,17 @@ export function useCourseQuiz(
   const [courseTitle, setCourseTitle] = useState(initialCourseTitle);
   const [chapters, setChapters] = useState<CourseStudyChapter[]>([]);
   const [quizzes, setQuizzes] = useState<CourseQuiz[]>([]);
-  const [submitResult, setSubmitResult] = useState<CourseQuizSubmitResult | null>(null);
+  const [submitResult, setSubmitResult] =
+    useState<CourseQuizSubmitResult | null>(null);
 
-  //  UI 및 퀴즈 진행 상태
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>(
+    {}
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // 데이터 패칭 및 에러 핸들링
   useEffect(() => {
     if (!courseId) {
       queueMicrotask(() => {
@@ -45,26 +52,29 @@ export function useCourseQuiz(
         setIsLoading(true);
         setErrorMessage("");
 
-        // 1. 강의 정보 조회
         const course = await getCourseStudyDetail(courseId, controller.signal);
-        if (controller.signal.aborted) return;
 
-        // 챕터 정렬
-        const orderedChapters = [...course.chapters].sort(
-          (a, b) => a.chapterOrder - b.chapterOrder
-        );
-        setCourseTitle(course.title);
-        setChapters(orderedChapters);
-
-        // 2. 학습 완료 여부 검증
-        if (!areAllChaptersCompleted(orderedChapters)) {
-          setErrorMessage("모든 챕터를 완료한 후 퀴즈를 풀 수 있습니다.");
+        if (controller.signal.aborted) {
           return;
         }
 
-        // 3. 퀴즈 목록 조회
+        const orderedChapters = [...course.chapters].sort(
+          (a, b) => a.chapterOrder - b.chapterOrder
+        );
+
+        setCourseTitle(course.title);
+        setChapters(orderedChapters);
+
+        if (!areAllChaptersCompleted(orderedChapters)) {
+          setErrorMessage("모든 챕터를 완료해야 퀴즈를 풀 수 있습니다.");
+          return;
+        }
+
         const quizList = await getCourseQuizzes(courseId);
-        if (controller.signal.aborted) return;
+
+        if (controller.signal.aborted) {
+          return;
+        }
 
         if (quizList.length === 0) {
           setErrorMessage("등록된 퀴즈가 없습니다.");
@@ -73,24 +83,25 @@ export function useCourseQuiz(
 
         setQuizzes(quizList);
       } catch (error) {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          return;
+        }
 
         console.error("[quiz] 퀴즈 조회 실패:", error);
 
-        // API 에러 세부 분기 처리
         if (error instanceof ApiRequestError) {
           switch (error.status) {
             case 401:
               router.replace("/auth/login");
               return;
             case 400:
-              setErrorMessage("모든 챕터를 완료한 후 퀴즈를 풀 수 있습니다.");
+              setErrorMessage("모든 챕터를 완료해야 퀴즈를 풀 수 있습니다.");
               return;
             case 403:
               setErrorMessage("수강 등록된 강의가 아닙니다.");
               return;
             case 404:
-              setErrorMessage("등록된 퀴즈가 없습니다.");
+              setErrorMessage("등록된 퀴즈가 없거나 강의를 찾을 수 없습니다.");
               return;
             default:
               setErrorMessage(error.message);
@@ -106,66 +117,73 @@ export function useCourseQuiz(
       }
     };
 
-    loadQuizData();
+    void loadQuizData();
 
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+    };
   }, [courseId, router]);
 
   const currentQuiz = quizzes[currentIndex] ?? null;
   const isReviewing = submitResult !== null;
 
-  // 채점 정보 연산
-  const currentWrongAnswer = currentQuiz && submitResult
-    ? submitResult.wrongAnswers.find((answer) => answer.quizId === currentQuiz.quizId)
-    : undefined;
+  const currentWrongAnswer =
+    currentQuiz && submitResult
+      ? submitResult.wrongAnswers.find(
+          (answer) => answer.quizId === currentQuiz.quizId
+        )
+      : undefined;
 
-  const submittedOption = currentQuiz ? selectedAnswers[currentQuiz.quizId] : undefined;
+  const submittedOption = currentQuiz
+    ? selectedAnswers[currentQuiz.quizId]
+    : undefined;
 
   const correctOption = submitResult
     ? currentWrongAnswer?.correctOption ?? submittedOption
     : undefined;
 
-  // --- Actions ---
-
-  // 답안 선택
   const selectAnswer = (option: number) => {
-    if (!currentQuiz || submitResult) return;
-    if (option < 1 || option > 4) return;
+    if (!currentQuiz || submitResult) {
+      return;
+    }
 
-    setSelectedAnswers((prev) => ({
-      ...prev,
+    if (option < 1 || option > 4) {
+      return;
+    }
+
+    setSelectedAnswers((previousAnswers) => ({
+      ...previousAnswers,
       [currentQuiz.quizId]: option,
     }));
+
     setErrorMessage("");
   };
 
-  // 이전 문제 이동
   const previous = () => {
-    setCurrentIndex((prevIndex) => Math.max(0, prevIndex - 1));
+    setCurrentIndex((previousIndex) => Math.max(0, previousIndex - 1));
     setErrorMessage("");
   };
 
-  // 다음 문제 이동 또는 최종 제출
   const nextOrSubmit = async () => {
-    if (!currentQuiz || submitResult || isSubmitting) return;
+    if (!currentQuiz || submitResult || isSubmitting) {
+      return;
+    }
 
-    // 미선택 상태 방어 코드
     if (!selectedAnswers[currentQuiz.quizId]) {
       setErrorMessage("답안을 선택해 주세요.");
       return;
     }
 
-    // 다음 문제로 이동 가능할 때
     if (currentIndex < quizzes.length - 1) {
-      setCurrentIndex((prevIndex) => prevIndex + 1);
+      setCurrentIndex((previousIndex) => previousIndex + 1);
       setErrorMessage("");
       return;
     }
 
-    // 최종 제출 데이터 포맷팅
     const answers = createQuizAnswers(quizzes, selectedAnswers);
+
     if (!answers) {
-      setErrorMessage("등록된 모든 문제에 한 번씩 답해야 합니다.");
+      setErrorMessage("등록된 모든 문제에 답해야 제출할 수 있습니다.");
       return;
     }
 
@@ -173,27 +191,15 @@ export function useCourseQuiz(
       setIsSubmitting(true);
       setErrorMessage("");
 
-      const result = await submitCourseQuiz(
-        courseId,
-        answers
-      );
-
-      const attempt: CourseQuizAttempt = {
-        result,
-        quizzes,
-        selectedAnswers,
-      };
-
-      // POST 성공 시 백엔드 DB 저장 완료
+      const result = await submitCourseQuiz(courseId, answers);
       setSubmitResult(result);
 
-      // DB 조회 실패 시 제출 직후 결과를 복구하기 위한 보조 데이터입니다.
-      sessionStorage.setItem(
-        `quiz-attempt-${courseId}`,
-        JSON.stringify(attempt)
-      );
+      if (result.courseCompleted) {
+        localStorage.setItem(`course-completed-${courseId}`, "true");
+        window.dispatchEvent(new CustomEvent("course-completion-changed"));
+        window.dispatchEvent(new CustomEvent("learning-benefits-updated"));
+      }
 
-      // 결과 페이지는 GET API로 DB 결과를 다시 조회
       router.replace(completeHref);
     } catch (error) {
       console.error("[quiz] 퀴즈 제출 실패:", error);
@@ -203,6 +209,7 @@ export function useCourseQuiz(
           router.replace("/auth/login");
           return;
         }
+
         setErrorMessage(error.message);
         return;
       }

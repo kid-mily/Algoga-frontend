@@ -5,18 +5,14 @@ import { useParams, useRouter } from "next/navigation";
 import CourseLearningSidebar from "@/features/classroom/learning/components/CourseLearningSidebar";
 import QuizResultContent from "@/features/classroom/quiz/components/QuizResultContent";
 import ReviewModal from "@/features/classroom/review/ReviewModal";
-import { useCourseCompletion } from "@/features/classroom/completion/hooks/useCourseCompletion";
 import type { CourseQuizAttempt } from "@/features/classroom/quiz/types";
 import type { CourseStudyChapter } from "@/features/services/courseStudy.service";
 import { getCourseStudyDetail } from "@/features/services/courseStudy.service";
-import {
-  getCourseQuizResult,
-  getCourseQuizzes,
-} from "@/features/services/courseQuiz.service";
+import { getCourseQuizResult } from "@/features/services/courseQuiz.service";
+import { useCourseCompletionStatus } from "@/features/classroom/completion/hooks/useCourseCompletionStatus";
 
 const getParam = (value: string | string[] | undefined) => {
   if (!value) return "";
-
   return decodeURIComponent(Array.isArray(value) ? value[0] : value);
 };
 
@@ -35,7 +31,7 @@ export default function QuizCompletePage() {
   const qnaHref = `${lectureHref}/qna`;
   const certificateHref = `/mypage/coursedetails/${courseId}/certificate`;
 
-  const completion = useCourseCompletion(courseId);
+  const completion = useCourseCompletionStatus(courseId);
 
   const [courseTitle, setCourseTitle] = useState("");
   const [chapters, setChapters] = useState<CourseStudyChapter[]>([]);
@@ -53,37 +49,45 @@ export default function QuizCompletePage() {
       try {
         setIsLoading(true);
         setErrorMessage("");
+        setAttempt(null);
 
-        const [course, quizzes, savedResult] = await Promise.all([
+        const [course, savedResult] = await Promise.all([
           getCourseStudyDetail(courseId),
-          getCourseQuizzes(courseId),
           getCourseQuizResult(courseId),
         ]);
 
         if (!active) return;
 
-        setCourseTitle(course.title);
-        setChapters(
-          [...course.chapters].sort(
-            (a, b) => a.chapterOrder - b.chapterOrder
-          )
+        const orderedChapters = [...course.chapters].sort(
+          (a, b) => a.chapterOrder - b.chapterOrder
         );
 
+        const resultAnswers = savedResult.answers ?? [];
+
+        const quizzes = resultAnswers.map((answer) => ({
+          quizId: answer.quizId,
+          courseId: savedResult.courseId,
+          question: answer.question,
+          option1: answer.option1,
+          option2: answer.option2,
+          option3: answer.option3,
+          option4: answer.option4,
+        }));
+
         const selectedAnswers = Object.fromEntries(
-          savedResult.answers.map((answer) => [
+          resultAnswers.map((answer) => [
             answer.quizId,
             answer.selectedOption,
           ])
         );
 
+        setCourseTitle(course.title);
+        setChapters(orderedChapters);
+
         setAttempt({
           result: {
-            userId: savedResult.userId,
-            courseId: savedResult.courseId,
-            totalCount: savedResult.totalCount,
-            correctCount: savedResult.correctCount,
-            score: savedResult.score,
-            wrongAnswers: savedResult.wrongAnswers,
+            ...savedResult,
+            answers: resultAnswers,
           },
           quizzes,
           selectedAnswers,
@@ -98,6 +102,8 @@ export default function QuizCompletePage() {
             ? error.message
             : "퀴즈 결과를 불러오지 못했습니다."
         );
+
+        setAttempt(null);
       } finally {
         if (active) {
           setIsLoading(false);
@@ -184,7 +190,7 @@ export default function QuizCompletePage() {
 
                   <p className="mt-2 text-sm text-[#8A9BB0]">
                     {errorMessage ||
-                      "퀴즈를 제출한 뒤 결과를 확인해 주세요."}
+                      "퀴즈를 제출한 후 결과를 확인해 주세요."}
                   </p>
 
                   <div className="mt-5 flex justify-center gap-2">
@@ -225,8 +231,6 @@ export default function QuizCompletePage() {
         onClose={() => setIsReviewModalOpen(false)}
         onSuccess={(review) => {
           setIsReviewModalOpen(false);
-
-          console.log("[review] 등록된 후기:", review);
 
           window.dispatchEvent(
             new CustomEvent("course-review-created", {
