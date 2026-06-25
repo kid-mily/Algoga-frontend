@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import type { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { getAdminCourses } from "@/features/services/adminCourse.service";
 import {
@@ -13,7 +13,6 @@ export const useReviewList = () => {
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [reviews, setReviews] = useState<AdminReview[]>([]);
-  const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedScore, setSelectedScore] = useState("전체");
   const [deleteTarget, setDeleteTarget] = useState<AdminReview | null>(null);
   const [deleteCompleteOpen, setDeleteCompleteOpen] = useState(false);
@@ -33,7 +32,6 @@ export const useReviewList = () => {
 
         if (controller.signal.aborted) return;
         setCourses(data);
-        setSelectedCourseId((prev) => prev ?? data[0]?.courseId ?? null);
         if (data.length === 0) {
           setIsLoading(false);
         }
@@ -57,9 +55,7 @@ export const useReviewList = () => {
   );
 
   useEffect(() => {
-    if (!selectedCourse) {
-      return;
-    }
+    if (courses.length === 0) return;
 
     const controller = new AbortController();
 
@@ -67,7 +63,12 @@ export const useReviewList = () => {
       try {
         setIsLoading(true);
         setError("");
-        const data = await getAdminCourseReviews(selectedCourse, controller.signal);
+
+        const data = selectedCourse
+          ? await getAdminCourseReviews(selectedCourse, controller.signal)
+          : (await Promise.all(
+              courses.map((course) => getAdminCourseReviews(course, controller.signal))
+            )).flat();
 
         if (controller.signal.aborted) return;
         setReviews(data);
@@ -87,22 +88,15 @@ export const useReviewList = () => {
     return () => {
       controller.abort();
     };
-  }, [selectedCourse]);
+  }, [courses, selectedCourse]);
 
   const filteredReviews = useMemo(() => {
-    const keyword = searchKeyword.trim().toLowerCase();
     const score = selectedScore === "전체" ? null : Number(selectedScore[0]);
 
     return reviews.filter((review) => {
-      const keywordMatched =
-        !keyword ||
-        review.packageName.toLowerCase().includes(keyword) ||
-        review.user.toLowerCase().includes(keyword);
-      const scoreMatched = score === null || Math.floor(review.rating) === score;
-
-      return keywordMatched && scoreMatched;
+      return score === null || Math.floor(review.rating) === score;
     });
-  }, [reviews, searchKeyword, selectedScore]);
+  }, [reviews, selectedScore]);
 
   const deleteReview = async () => {
     if (!deleteTarget || isProcessing) return;
@@ -153,7 +147,6 @@ export const useReviewList = () => {
   return {
     courses,
     selectedCourseId,
-    searchKeyword,
     selectedScore,
     filteredReviews,
     deleteTarget,
@@ -164,7 +157,6 @@ export const useReviewList = () => {
     isProcessing,
     error,
     setSelectedCourseId,
-    setSearchKeyword,
     setSelectedScore,
     setDeleteTarget,
     setDeleteCompleteOpen,

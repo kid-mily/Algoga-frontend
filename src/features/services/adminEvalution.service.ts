@@ -1,5 +1,6 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import { getCourseCountries } from "@/features/services/adminCourse.service";
+import { getAdminUserDetail } from "@/features/services/adminUserActivity.service";
 import {
   EvalutionLevel,
   EvalutionQuestion,
@@ -34,6 +35,12 @@ const getString = (record: UnknownRecord, keys: string[], fallback = "-") => {
   if (typeof value === "number") return String(value);
 
   return fallback;
+};
+
+const getNestedRecord = (record: UnknownRecord, keys: string[]) => {
+  const value = keys.map((key) => record[key]).find((item) => item !== null && item !== undefined);
+
+  return getRecord(value);
 };
 
 const getNumber = (record: UnknownRecord, keys: string[], fallback = 0) => {
@@ -115,11 +122,15 @@ export const normalizeEvalutionResult = (
   fallbackId = 0
 ): EvalutionResult => {
   const record = getRecord(item);
+  const user = getNestedRecord(record, ["user", "member", "student"]);
   const userId = getNumber(record, ["userId", "memberId"]);
+  const userName =
+    getString(record, ["name", "userName", "username", "nickname"], "") ||
+    getString(user, ["name", "userName", "username", "nickname"], "-");
 
   return {
     resultId: getNumber(record, ["resultId", "id"], fallbackId),
-    userName: getString(record, ["userName", "nickname", "name"], "-"),
+    userName,
     userId: userId ? `U${String(userId).padStart(4, "0")}` : "-",
     level: normalizeResultLevel(getString(record, ["level", "resultLevel"], "중급")),
     score: getNumber(record, ["score", "totalScore", "correctCount"], 0),
@@ -173,10 +184,37 @@ export const getEvalutionResults = async (
     }
   );
   const data = unwrapData(response);
-
-  return getItems(data).map((item, index) =>
+  const results = getItems(data).map((item, index) =>
     normalizeEvalutionResult(item, index + 1)
   );
+
+  const missingUserIds = results
+    .filter((result) => result.userName === "-" && result.userId !== "-")
+    .map((result) => Number(result.userId.replace(/^U/, "")))
+    .filter((userId) => Number.isSafeInteger(userId) && userId > 0);
+
+  if (missingUserIds.length === 0) return results;
+
+  try {
+    const users = await Promise.all(
+      Array.from(new Set(missingUserIds)).map(async (userId) => {
+        const user = getRecord(await getAdminUserDetail(userId, { signal }));
+        const userName = getString(user, ["name", "nickname", "userName", "username"], "-");
+
+        return [userId, userName] as const;
+      })
+    );
+    const userNameMap = new Map(users);
+
+    return results.map((result) => {
+      const userId = Number(result.userId.replace(/^U/, ""));
+      const userName = userNameMap.get(userId);
+
+      return userName && userName !== "-" ? { ...result, userName } : result;
+    });
+  } catch {
+    return results;
+  }
 };
 
 export const createEvalutionQuestion = async (

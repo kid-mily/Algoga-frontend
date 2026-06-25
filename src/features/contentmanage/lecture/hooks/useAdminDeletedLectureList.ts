@@ -20,7 +20,7 @@ export function useAdminDeletedLectureList() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [selectedCountryId, setSelectedCountryId] = useState("");
-  const [countryNameKeyword, setCountryNameKeyword] = useState("");
+  const [lectureTitleKeyword, setLectureTitleKeyword] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -34,7 +34,6 @@ export function useAdminDeletedLectureList() {
           page: Math.max(currentPage - 1, 0),
           size: DEFAULT_PAGE_SIZE,
           countryId: selectedCountryId ? Number(selectedCountryId) : undefined,
-          countryName: countryNameKeyword.trim() || undefined,
         };
 
         const data = await getDeletedLectureListAction(params, signal);
@@ -48,10 +47,16 @@ export function useAdminDeletedLectureList() {
                 course.countryName || countryNameMap.get(course.countryId) || "-",
             }))
           : [];
+        const keyword = lectureTitleKeyword.trim().toLowerCase();
+        const filteredCourses = keyword
+          ? coursesWithCountryNames.filter((course) =>
+              course.title.toLowerCase().includes(keyword)
+            )
+          : coursesWithCountryNames;
 
-        setCourses(coursesWithCountryNames);
-        setTotalPages(Math.max(data.totalPages || 1, 1));
-        setTotalElements(data.totalElements || 0);
+        setCourses(filteredCourses);
+        setTotalPages(keyword ? 1 : Math.max(data.totalPages || 1, 1));
+        setTotalElements(keyword ? filteredCourses.length : data.totalElements || 0);
       } catch (error: unknown) {
         if (signal?.aborted) return;
 
@@ -69,7 +74,7 @@ export function useAdminDeletedLectureList() {
         }
       }
     },
-    [countries, countryNameKeyword, currentPage, selectedCountryId]
+    [countries, currentPage, lectureTitleKeyword, selectedCountryId]
   );
 
   useEffect(() => {
@@ -103,8 +108,8 @@ export function useAdminDeletedLectureList() {
     setCurrentPage(1);
   };
 
-  const changeCountryNameKeyword = (value: string) => {
-    setCountryNameKeyword(value);
+  const changeLectureTitleKeyword = (value: string) => {
+    setLectureTitleKeyword(value);
     setCurrentPage(1);
   };
 
@@ -115,11 +120,11 @@ export function useAdminDeletedLectureList() {
     totalPages,
     totalElements,
     selectedCountryId,
-    countryNameKeyword,
+    lectureTitleKeyword,
     isLoading,
     errorMessage,
     setCurrentPage,
     changeSelectedCountryId,
-    changeCountryNameKeyword,
+    changeLectureTitleKeyword,
   };
 }

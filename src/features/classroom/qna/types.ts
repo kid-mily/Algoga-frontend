@@ -53,7 +53,7 @@ export const normalizeCourseQnaComment = (
 
   return {
     id: numberOf(record, ["commentId", "id"], fallbackId),
-    writer: stringOf(record, ["nickname", "writer", "userName"], writerType === "MANAGER" ? "관리자" : "작성자"),
+    writer: stringOf(record, ["name", "nickname", "writer", "userName", "username"], writerType === "MANAGER" ? "관리자" : "작성자"),
     writerType: writerType === "MANAGER" ? "MANAGER" : "USER",
     parentCommentId: record.parentCommentId === null ? null : numberOf(record, ["parentCommentId"]) || null,
     content: stringOf(record, ["content", "comment", "reply"]),
@@ -89,7 +89,7 @@ export const normalizeCourseQna = (item: unknown, fallbackId: number): CourseQna
     userId: numberOf(record, ["userId"]),
     title: stringOf(record, ["title"], question.slice(0, 30) || "제목 없음"),
     content: question,
-    writer: stringOf(record, ["nickname", "writer"], "작성자"),
+    writer: stringOf(record, ["name", "nickname", "writer", "userName", "username"], "작성자"),
     createdAt: stringOf(record, ["createdAt"]),
     isAnswered: stringOf(record, ["status"]) === "ANSWERED" || Boolean(answer),
     comments,

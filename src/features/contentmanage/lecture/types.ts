@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 
 export interface AdminCourse {
   courseId: number;
@@ -158,7 +158,7 @@ export type ChapterSubmitPayload = {
   title: string;
   description: string;
   duration: string;
-  video: File;
+  video: File | null;
 };
 
 export interface ChapterFormProps {
@@ -185,6 +185,7 @@ export interface ChapterItemProps {
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onVideoUpload: (file: File) => void;
+  onVideoRemove: () => void;
 }
 
 export interface ChapterListProps {
@@ -384,3 +385,4 @@ export type DeletedCourseQueryParams = {
   size?: number;
   sort?: string;
 };
+

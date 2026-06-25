@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useState } from "react";
 import { PointAdjustMode } from "../types";
@@ -112,7 +112,7 @@ export default function PointAdjustModal({
     >
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-[520px] rounded-[28px] bg-white shadow-xl"
+        className="flex h-[760px] w-full max-w-[520px] flex-col rounded-[28px] bg-white shadow-xl"
       >
         <header className="flex items-start justify-between px-7 pt-7">
           <section>
@@ -137,7 +137,7 @@ export default function PointAdjustModal({
           </button>
         </header>
 
-        <section className="px-7 py-6">
+        <section className="flex-1 px-7 py-6">
           <section className={`rounded-[18px] p-5 ${modeText.panelClass}`}>
             <p className={`text-[14px] font-medium ${modeText.labelClass}`}>
               현재 보유 마일리지
@@ -166,11 +166,14 @@ export default function PointAdjustModal({
             />
           </section>
 
-          {isRecallOverLimit && (
-            <p role="alert" className="mt-3 text-[13px] font-medium text-[#DC2626]">
-              보유 마일리지보다 많이 회수할 수 없습니다.
-            </p>
-          )}
+          <p
+            role={isRecallOverLimit ? "alert" : undefined}
+            className={`mt-3 min-h-[20px] text-[13px] font-medium ${
+              isRecallOverLimit ? "text-[#DC2626]" : "text-transparent"
+            }`}
+          >
+            보유 마일리지보다 많이 회수할 수 없습니다.
+          </p>
 
           <section className="mt-6">
             <label
@@ -187,17 +190,19 @@ export default function PointAdjustModal({
               className="mt-3 h-[120px] w-full resize-none rounded-[16px] border border-[#E4E7EC] px-4 py-4 text-[15px] outline-none"
             />
           </section>
-
-          {isActive && (
-            <section className={`mt-6 rounded-[18px] p-5 ${modeText.panelClass}`}>
-              <p className={`text-[14px] font-medium ${modeText.labelClass}`}>
-                {modeText.nextLabel}
-              </p>
-              <p className={`mt-2 text-[36px] font-bold ${modeText.valueClass}`}>
-                {nextPoint.toLocaleString()}원
-              </p>
-            </section>
-          )}
+          <section
+            aria-hidden={!isActive}
+            className={`mt-6 min-h-[128px] rounded-[18px] p-5 transition-opacity ${
+              isActive ? `${modeText.panelClass} opacity-100` : "bg-transparent opacity-0"
+            }`}
+          >
+            <p className={`text-[14px] font-medium ${modeText.labelClass}`}>
+              {modeText.nextLabel}
+            </p>
+            <p className={`mt-2 text-[36px] font-bold ${modeText.valueClass}`}>
+              {nextPoint.toLocaleString()}원
+            </p>
+          </section>
         </section>
 
         <footer className="flex items-center justify-end gap-3 border-t border-[#E4E7EC] px-7 py-5">
@@ -224,3 +229,6 @@ export default function PointAdjustModal({
     </aside>
   );
 }
+
+
+

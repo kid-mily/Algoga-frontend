@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { useState } from "react";
@@ -93,7 +93,16 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
     const preview = URL.createObjectURL(file);
     try {
       const durationSeconds = await getVideoDurationSeconds(file);
-      setChapters((prev) => prev.map((chapter) => (chapter.id === id ? { ...chapter, video: file, preview, durationSeconds } : chapter)));
+      setChapters((prev) =>
+        prev.map((chapter) => {
+          if (chapter.id !== id) return chapter;
+          if (chapter.preview.startsWith("blob:")) {
+            URL.revokeObjectURL(chapter.preview);
+          }
+
+          return { ...chapter, video: file, preview, durationSeconds };
+        })
+      );
       if (chapterErrors[id]?.video) {
         setChapterErrors((prev) => ({ ...prev, [id]: { ...prev[id], video: "" } }));
       }
@@ -103,6 +112,19 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
     }
   };
 
+  const handleVideoRemove = (id: number) => {
+    setChapters((prev) =>
+      prev.map((chapter) => {
+        if (chapter.id !== id) return chapter;
+        if (chapter.preview.startsWith("blob:")) {
+          URL.revokeObjectURL(chapter.preview);
+        }
+
+        return { ...chapter, video: null, preview: "", durationSeconds: 0 };
+      })
+    );
+    setChapterErrors((prev) => ({ ...prev, [id]: { ...prev[id], video: "" } }));
+  };
   const validateChapters = () => {
     setGlobalError("");
     const newErrors: Record<number, ChapterErrors> = {};
@@ -200,6 +222,7 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
               onTitleChange={(value) => handleTitleChange(chapter.id, value)}
               onDescriptionChange={(value) => handleDescriptionChange(chapter.id, value)}
               onVideoUpload={(file) => handleVideoUpload(chapter.id, file)}
+              onVideoRemove={() => handleVideoRemove(chapter.id)}
             />
             {chapter.video && !chapterErrors[chapter.id]?.video && (
               <p className="mt-2 text-[13px] font-medium text-[#439A97]">
@@ -231,3 +254,4 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
     </section>
   );
 }
+
