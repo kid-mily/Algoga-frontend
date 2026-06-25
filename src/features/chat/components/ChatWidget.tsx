@@ -1,9 +1,10 @@
-﻿// src/features/chat/components/ChatWidget.tsx
+// src/features/chat/components/ChatWidget.tsx
 
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { getMe } from "@/features/services/user.service";
 import {
   createDirectChatRoom,
   createGroupChatRoom,
@@ -11,11 +12,14 @@ import {
   getFriends,
   leaveChatRoom,
 } from "../services/chatService";
-import type { ChatPanelView, ChatRoom, Friend } from "../types/chat";
+import { useChatNotificationSocket } from "../hooks/useChatNotificationSocket";
+import type { ChatPanelView, ChatRoom, Friend, RoomNotification } from "../types/chat";
 import ChatListPanel from "./ChatListPanel";
 import ChatRoomPanel from "./ChatRoomPanel";
 import FriendSelectPanel from "./FriendSelectPanel";
 import GroupChatCreatePanel from "./GroupChatCreatePanel";
+
+const chatUnreadCountEventName = "chat-unread-count-changed";
 
 const adminPathPrefixes = [
   "/contentadmin",
@@ -31,6 +35,7 @@ export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [view, setView] = useState<ChatPanelView>("list");
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<number>();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
@@ -76,11 +81,74 @@ export default function ChatWidget() {
   }, []);
 
   useEffect(() => {
+    if (isAdminPage) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCurrentUserId(undefined);
+      setRooms([]);
+      window.dispatchEvent(new CustomEvent(chatUnreadCountEventName, { detail: 0 }));
+      return;
+    }
+
+    let isMounted = true;
+
+    const syncCurrentUser = async () => {
+      try {
+        const user = await getMe();
+        if (!isMounted) return;
+
+        setCurrentUserId(user?.userId);
+
+        if (!user) {
+          setRooms([]);
+          window.dispatchEvent(new CustomEvent(chatUnreadCountEventName, { detail: 0 }));
+        }
+      } catch {
+        if (!isMounted) return;
+
+        setCurrentUserId(undefined);
+        setRooms([]);
+        window.dispatchEvent(new CustomEvent(chatUnreadCountEventName, { detail: 0 }));
+      }
+    };
+
+    void syncCurrentUser();
+    window.addEventListener("auth-state-changed", syncCurrentUser);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("auth-state-changed", syncCurrentUser);
+    };
+  }, [isAdminPage]);
+
+  useEffect(() => {
+    const totalUnreadCount = rooms.reduce(
+      (total, room) => total + (room.unreadCount ?? 0),
+      0
+    );
+
+    window.dispatchEvent(
+      new CustomEvent(chatUnreadCountEventName, { detail: totalUnreadCount })
+    );
+  }, [rooms]);
+
+  useEffect(() => {
+    if (!currentUserId || isAdminPage) return;
+
+    const controller = new AbortController();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadRooms(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [currentUserId, isAdminPage, loadRooms]);
+
+  useEffect(() => {
     if (!isOpen || isAdminPage) return;
 
     const controller = new AbortController();
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadRooms(controller.signal);
+    void loadRooms(controller.signal);
 
     return () => {
       controller.abort();
@@ -109,7 +177,6 @@ export default function ChatWidget() {
       window.removeEventListener("chat-widget-toggle", handleToggleChat);
     };
   }, [isAdminPage]);
-
 
   const handleClose = () => {
     setIsOpen(false);
@@ -183,8 +250,48 @@ export default function ChatWidget() {
     );
   }, []);
 
+  const handleRoomNotification = useCallback(
+    (notification: RoomNotification) => {
+      const isCurrentRoomOpen =
+        isOpen && view === "room" && selectedRoom?.roomId === notification.roomId;
+
+      setRooms((prev) => {
+        let hasRoom = false;
+        const nextRooms = prev.map((room) => {
+          if (room.roomId !== notification.roomId) return room;
+
+          hasRoom = true;
+
+          return {
+            ...room,
+            lastMessage: notification.lastMessage,
+            lastMessageAt: notification.lastMessageAt,
+            unreadCount: isCurrentRoomOpen ? 0 : notification.unreadCount,
+          };
+        });
+
+        if (!hasRoom) {
+          void loadRooms();
+          return prev;
+        }
+
+        return nextRooms.sort((a, b) => {
+          const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+          const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+
+          return timeB - timeA;
+        });
+      });
+    },
+    [isOpen, loadRooms, selectedRoom?.roomId, view]
+  );
+
+  useChatNotificationSocket({
+    userId: currentUserId,
+    onNotification: handleRoomNotification,
+  });
+
   const handleLeaveRoom = async (room: ChatRoom) => {
-    // console.log("DELETE 호출 직전", room.roomId);
     if (isProcessing) return;
 
     try {
@@ -266,9 +373,3 @@ export default function ChatWidget() {
     </>
   );
 }
-
-
-
-
-
-

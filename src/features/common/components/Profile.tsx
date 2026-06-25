@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -15,6 +15,7 @@ type Props = {
 export default function Profile({ user }: Props) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -31,6 +32,22 @@ export default function Profile({ user }: Props) {
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+
+  useEffect(() => {
+    const handleChatUnreadCountChange = (event: Event) => {
+      const unreadEvent = event as CustomEvent<number>;
+      const nextCount = Number(unreadEvent.detail);
+
+      setChatUnreadCount(Number.isFinite(nextCount) ? nextCount : 0);
+    };
+
+    window.addEventListener("chat-unread-count-changed", handleChatUnreadCountChange);
+
+    return () => {
+      window.removeEventListener("chat-unread-count-changed", handleChatUnreadCountChange);
     };
   }, []);
 
@@ -61,7 +78,7 @@ export default function Profile({ user }: Props) {
         type="button"
         onClick={() => window.dispatchEvent(new Event("chat-widget-toggle"))}
         aria-label="채팅창 열기"
-        className="flex h-6 w-6 items-center justify-center"
+        className="relative flex h-6 w-6 items-center justify-center"
       >
         <Image
           src="/images/ChatIcon.svg"
@@ -71,6 +88,11 @@ export default function Profile({ user }: Props) {
           aria-hidden="true"
           className="cursor-pointer"
         />
+        {chatUnreadCount > 0 && (
+          <span className="absolute -right-2 -top-2 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#EF4444] px-1 text-[10px] font-bold leading-none text-white">
+            {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
+          </span>
+        )}
       </button>
 
       <Image
@@ -130,4 +152,3 @@ export default function Profile({ user }: Props) {
     </div>
   );
 }
-

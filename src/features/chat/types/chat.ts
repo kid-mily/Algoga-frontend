@@ -1,4 +1,4 @@
-﻿export type ChatRoomType = "DIRECT" | "GROUP";
+export type ChatRoomType = "DIRECT" | "GROUP";
 
 export interface ChatRoom {
   roomId: number;
@@ -34,5 +34,11 @@ export interface ReadEvent {
   readerId: number;
 }
 
-export type ChatPanelView = "list" | "room" | "direct-create" | "group-create";
+export interface RoomNotification {
+  roomId: number;
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCount: number;
+}
 
+export type ChatPanelView = "list" | "room" | "direct-create" | "group-create";
