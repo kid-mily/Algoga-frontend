@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -84,12 +84,24 @@ export default function MyPageEditForm({
     try {
       setIsSubmitting(true);
 
-      await updateMyProfile({
+      const updatedProfile = await updateMyProfile({
         nickname: trimmedNickname,
         email: trimmedEmail,
         phone: trimmedPhone,
         profileImage,
       });
+
+      window.dispatchEvent(
+        new CustomEvent("profile-updated", {
+          detail: {
+            nickname: updatedProfile.nickname ?? trimmedNickname,
+            profileImageUrl:
+              updatedProfile.profileImageUrl === undefined
+                ? previewUrl || user.profileImageUrl
+                : updatedProfile.profileImageUrl,
+          },
+        })
+      );
 
       if (currentPassword && newPassword) {
         await changeMyPassword({

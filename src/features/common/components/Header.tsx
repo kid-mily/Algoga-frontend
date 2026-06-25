@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -13,7 +13,7 @@ interface UserProfile {
   name: string;
   nickname: string;
   email: string;
-  profileImageUrl?: string;
+  profileImageUrl?: string | null;
   phone: string;
   gender: string;
   birthDate: string;
@@ -37,11 +37,36 @@ export default function Header() {
       }
     };
 
+    const handleProfileUpdated = (event: Event) => {
+      const profileEvent = event as CustomEvent<{
+        nickname?: string;
+        profileImageUrl?: string | null;
+      }>;
+      const nextProfile = profileEvent.detail;
+
+      if (!nextProfile) return;
+
+      setUser((prevUser) => {
+        if (!prevUser) return prevUser;
+
+        return {
+          ...prevUser,
+          nickname: nextProfile.nickname ?? prevUser.nickname,
+          profileImageUrl:
+            nextProfile.profileImageUrl === undefined
+              ? prevUser.profileImageUrl
+              : nextProfile.profileImageUrl,
+        };
+      });
+    };
+
     fetchUser();
     window.addEventListener("auth-state-changed", fetchUser);
+    window.addEventListener("profile-updated", handleProfileUpdated);
 
     return () => {
       window.removeEventListener("auth-state-changed", fetchUser);
+      window.removeEventListener("profile-updated", handleProfileUpdated);
     };
   }, []);
 
@@ -67,3 +92,4 @@ export default function Header() {
     </header>
   );
 }
+
