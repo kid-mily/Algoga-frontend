@@ -79,29 +79,46 @@ export function useLectureStudy(
         lastReportedSecondsRef.current = chapter.watchedSeconds ?? 0;
     };
 
-    const moveToNextChapter = (
-        progress: ChapterProgress,
-    ) => {
-        if (
-            !progress.nextChapterUnlocked || progress.nextChapterId === null
-        ) {
+    const moveToNextChapter = async (progress: ChapterProgress) => {
+        if (!progress.nextChapterUnlocked || progress.nextChapterId === null) {
             return;
         }
 
-        const nextChapter = chapters.find(
-            (chapter) =>
-                chapter.chapterId === progress.nextChapterId,
-        );
+        try {
+            const {
+            course: refreshedCourse,
+            } = await loadLectureStudy(courseId);
 
-        if (!nextChapter) return;
+            const refreshedChapters = sortChapters(refreshedCourse.chapters ?? []);
+            const nextChapter = refreshedChapters.find(
+            (chapter) => chapter.chapterId === progress.nextChapterId
+            );
 
-        selectChapter({
+            setCourse({
+            ...refreshedCourse,
+            chapters: refreshedChapters,
+            });
+
+            if (!nextChapter) return;
+
+            selectChapter(nextChapter);
+        } catch (error) {
+            console.error("[study] 다음 챕터 정보 갱신 실패:", error);
+
+            const nextChapter = chapters.find(
+            (chapter) => chapter.chapterId === progress.nextChapterId
+            );
+
+            if (!nextChapter) return;
+
+            selectChapter({
             ...nextChapter,
             locked: false,
-        });
-    };
-
-    useEffect(() => {
+            });
+        }
+        };
+        
+        useEffect(() => {
         if (!courseId) return;
 
         const controller = new AbortController();
@@ -316,24 +333,13 @@ export function useLectureStudy(
         selectChapter(chapter);
         };
 
-    const handleVideoEnded = async (
-        currentTime: number,
-    ) => {
+    const handleVideoEnded = async (currentTime: number) => {
         setIsPlaying(false);
 
-        const progress =
-        await reportProgress(
-            currentTime,
-            true,
-        );
+        const progress = await reportProgress(currentTime, true);
 
-        if (
-        progress?.completed &&
-        progress.nextChapterUnlocked
-        ) {
-        moveToNextChapter(
-            progress,
-        );
+        if (progress?.completed && progress.nextChapterUnlocked) {
+            await moveToNextChapter(progress);
         }
     };
 

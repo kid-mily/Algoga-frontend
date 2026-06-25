@@ -53,6 +53,7 @@ export default function QuizCompletePage() {
       try {
         setIsLoading(true);
         setErrorMessage("");
+        setAttempt(null);
 
         const [course, quizzes, savedResult] = await Promise.all([
           getCourseStudyDetail(courseId),
@@ -63,14 +64,33 @@ export default function QuizCompletePage() {
         if (!active) return;
 
         setCourseTitle(course.title);
+
         setChapters(
           [...course.chapters].sort(
             (a, b) => a.chapterOrder - b.chapterOrder
           )
         );
 
+        const resultAnswers = Array.isArray(savedResult.answers)
+          ? savedResult.answers
+          : [];
+
+        if (resultAnswers.length === 0) {
+          console.error(
+            "[quiz-complete] DB 퀴즈 결과에 answers가 없습니다.",
+            savedResult
+          );
+
+          setErrorMessage(
+            "퀴즈 결과는 조회됐지만 선택 답안 정보가 없습니다. 백엔드 응답의 answers 필드를 확인해 주세요."
+          );
+
+          setAttempt(null);
+          return;
+        }
+
         const selectedAnswers = Object.fromEntries(
-          savedResult.answers.map((answer) => [
+          resultAnswers.map((answer) => [
             answer.quizId,
             answer.selectedOption,
           ])
@@ -83,7 +103,7 @@ export default function QuizCompletePage() {
             totalCount: savedResult.totalCount,
             correctCount: savedResult.correctCount,
             score: savedResult.score,
-            wrongAnswers: savedResult.wrongAnswers,
+            wrongAnswers: savedResult.wrongAnswers ?? [],
           },
           quizzes,
           selectedAnswers,
@@ -98,6 +118,8 @@ export default function QuizCompletePage() {
             ? error.message
             : "퀴즈 결과를 불러오지 못했습니다."
         );
+
+        setAttempt(null);
       } finally {
         if (active) {
           setIsLoading(false);

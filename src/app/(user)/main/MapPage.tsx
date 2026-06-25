@@ -15,7 +15,7 @@ export default function MapPage() {
     return (
       <div className="p-10 w-full min-h-screen bg-[#f5f6f8]">
       <div className="max-w-5xl w-full h-[500px] border rounded-xl overflow-hidden shadow-lg bg-white mx-auto">
-        {/* <WorldMap /> */}
+        <WorldMap />
       </div>
       </div>
     )
