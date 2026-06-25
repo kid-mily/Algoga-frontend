@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -9,7 +9,14 @@ import { logout } from "@/features/services/auth.service";
 type Props = {
   user: {
     nickname: string;
+    profileImageUrl?: string | null;
   } | null;
+};
+
+const getProfileImageSrc = (profileImageUrl?: string | null) => {
+  if (!profileImageUrl || profileImageUrl === "null") return "/images/DefaultImg.svg";
+
+  return profileImageUrl;
 };
 
 export default function Profile({ user }: Props) {
@@ -110,11 +117,11 @@ export default function Profile({ user }: Props) {
             onClick={() => setIsOpen((prev) => !prev)}
           >
             <Image
-              src="/images/DefaultImg.svg"
-              alt="기본 이미지"
+              src={getProfileImageSrc(user.profileImageUrl)}
+              alt={`${user.nickname} 프로필 이미지`}
               width={32}
               height={32}
-              className="flex h-8 w-8 items-center justify-center"
+              className="h-8 w-8 rounded-full object-cover"
             />
 
             <p className="mx-3">{user.nickname}님</p>
@@ -152,3 +159,5 @@ export default function Profile({ user }: Props) {
     </div>
   );
 }
+
+
