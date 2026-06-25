@@ -46,10 +46,7 @@ export default function LectureManageClient() {
     [lectures, countries]
   );
 
-  const countryOptions = useMemo(
-    () => getCountryOptions(lecturesWithCountryName),
-    [lecturesWithCountryName]
-  );
+  const countryOptions = useMemo(() => getCountryOptions(countries), [countries]);
 
   const filteredLectures = useMemo(
     () =>

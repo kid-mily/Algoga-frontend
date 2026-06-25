@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { LectureToolbarProps } from "../types";
 
@@ -19,11 +20,12 @@ export default function LectureToolbar({
     >
       <div className="flex flex-wrap gap-3">
         <div className="flex h-[42px] min-w-0 flex-1 items-center rounded-[12px] border border-[#E4E7EC] px-3">
-          <img
+          <Image
             src="/images/search.svg"
-            alt="검색"
+            alt=""
+            width={15}
+            height={15}
             aria-hidden="true"
-            className="h-[15px] w-[15px]"
           />
           <label htmlFor="lecture-search" className="sr-only">
             강의 검색
@@ -71,12 +73,6 @@ export default function LectureToolbar({
           <option value="private">비공개</option>
         </select>
 
-        <Link
-          href="/contentadmin/lecture/deleted"
-          className="flex h-[42px] items-center whitespace-nowrap rounded-[12px] border border-[#E4E7EC] bg-white px-4 text-[13px] font-semibold text-[#344054]"
-        >
-          삭제 강의 목록
-        </Link>
         <Link
           href="/contentadmin/lecture/new"
           className="flex h-[42px] items-center whitespace-nowrap rounded-[12px] bg-[#439A97] px-4 text-[13px] font-semibold text-white"

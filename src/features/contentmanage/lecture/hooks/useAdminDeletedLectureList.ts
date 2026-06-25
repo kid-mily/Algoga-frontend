@@ -38,7 +38,18 @@ export function useAdminDeletedLectureList() {
         };
 
         const data = await getDeletedLectureListAction(params, signal);
-        setCourses(Array.isArray(data.content) ? data.content : []);
+        const countryNameMap = new Map(
+          countries.map((country) => [country.countryId, country.countryName])
+        );
+        const coursesWithCountryNames = Array.isArray(data.content)
+          ? data.content.map((course) => ({
+              ...course,
+              countryName:
+                course.countryName || countryNameMap.get(course.countryId) || "-",
+            }))
+          : [];
+
+        setCourses(coursesWithCountryNames);
         setTotalPages(Math.max(data.totalPages || 1, 1));
         setTotalElements(data.totalElements || 0);
       } catch (error: unknown) {
@@ -58,7 +69,7 @@ export function useAdminDeletedLectureList() {
         }
       }
     },
-    [countryNameKeyword, currentPage, selectedCountryId]
+    [countries, countryNameKeyword, currentPage, selectedCountryId]
   );
 
   useEffect(() => {

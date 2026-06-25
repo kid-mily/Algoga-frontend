@@ -30,9 +30,9 @@ export function withCountryNames(
   });
 }
 
-export function getCountryOptions(lectures: AdminCourseRecord[]) {
-  const names = lectures
-    .map((lecture) => lecture.countryName)
+export function getCountryOptions(countries: CourseCountry[]) {
+  const names = countries
+    .map((country) => country.countryName)
     .filter((country): country is string => Boolean(country));
 
   return Array.from(new Set(names));
