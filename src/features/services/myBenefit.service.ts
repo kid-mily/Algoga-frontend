@@ -56,11 +56,16 @@ export const getUsableCouponsByCourse = async (
   const coupons = await getMyCoupons();
 
   return coupons.filter((coupon) => {
-    return (
-      coupon.courseId === courseId &&
-      coupon.status === "ISSUED" &&
-      coupon.usable === true
-    );
+    const isIssued = coupon.status === "ISSUED";
+    const isUsable = coupon.usable === true;
+
+    const isCourseCoupon = coupon.courseId === courseId;
+    const isGlobalCoupon =
+      coupon.courseId === null ||
+      coupon.courseId === undefined ||
+      coupon.courseId === 0;
+
+    return isIssued && isUsable && (isCourseCoupon || isGlobalCoupon);
   });
 };
 

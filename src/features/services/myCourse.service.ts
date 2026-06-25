@@ -1,69 +1,71 @@
-import { api, ApiResult, ApiRequestError, unwrapData } from "@/lib/api";
-import { LatestDiagnosisResult, MyCourse } from "@/features/mypage/coursedetails/types";
+import { LatestDiagnosisResult, MyCourse, PageResponse } from "@/features/mypage/coursedetails/types";
+import { api, ApiRequestError, ApiResult, unwrapData } from "@/lib/api";
 
-const normalizeCourses = (
-  data: unknown
-): MyCourse[] => {
-  if (Array.isArray(data)) {
-    return data as MyCourse[];
-  }
+const emptyPage = <T>(page: number, size: number): PageResponse<T> => ({
+  content: [],
+  page,
+  size,
+  totalElements: 0,
+  totalPages: 0,
+  first: true,
+  last: true,
+});
 
-  if (
-    data &&
-    typeof data === "object" && "content" in data && Array.isArray(
-      (data as { content?: unknown }).content
-    )
-  ) {
-    return (
-      data as { content: MyCourse[] }
-    ).content;
-  }
-
-  return [];
-};
-
-export const getMyCourses =
-  async (): Promise<MyCourse[]> => {
-    const response = await api.get<ApiResult<unknown>>("/api/v1/my/courses", {
+export async function getMyCourses(
+  page = 0,
+  size = 10
+): Promise<PageResponse<MyCourse>> {
+  const response = await api.get<ApiResult<PageResponse<MyCourse>>>(
+    "/api/v1/my/courses",
+    {
+      params: { page, size },
       cache: "no-store",
       suppressGlobalError: true,
-    });
+    }
+  );
 
-    return normalizeCourses(
-      unwrapData(response)
-    );
+  const result = unwrapData(response) ?? emptyPage<MyCourse>(page, size);
+
+  return {
+    ...result,
+    content: result.content.map((course) => ({
+      ...course,
+      thumbnailUrl: course.thumbnailUrl ?? null,
+      countryName: course.countryName ?? "",
+      totalDurationSeconds: course.totalDurationSeconds ?? 0,
+      studentCount: course.studentCount ?? 0,
+      averageRating: course.averageRating ?? 0,
+      progressRate: course.progressRate ?? 0,
+      completedChapterCount: course.completedChapterCount ?? 0,
+      totalChapterCount: course.totalChapterCount ?? 0,
+      certificateAvailable:
+        course.certificateAvailable ?? Boolean(course.certificateCode),
+    })),
   };
+}
 
-export const getLatestDiagnosis =
-  async (): Promise<LatestDiagnosisResult | null> => {
-    try {
-      const response = await api.get<ApiResult<LatestDiagnosisResult>>("/api/v1/diagnosis/me/latest", {
+export async function getLatestDiagnoses(): Promise<LatestDiagnosisResult[]> {
+  try {
+    const response = await api.get<ApiResult<LatestDiagnosisResult[]>>(
+      "/api/v1/diagnosis/me/latest",
+      {
         cache: "no-store",
         suppressGlobalError: true,
-      });
-
-      return unwrapData(response);
-    } catch (error) {
-      // 아직 진단평가를 응시하지 않은 경우
-      if (
-        error instanceof ApiRequestError &&
-        error.status === 404
-      ) {
-        return null;
       }
+    );
 
-      throw error;
+    return unwrapData(response) ?? [];
+  } catch (error) {
+    if (
+      error instanceof ApiRequestError &&
+      (error.code === "DIAGNOSIS_RESULT_NOT_FOUND" || error.status === 404)
+    ) {
+      return [];
     }
-  };
 
-export const isMyCourseCompleted = (
-  course?: MyCourse
-): boolean => {
-  if (!course) return false;
+    throw error;
+  }
+}
 
-  return (
-    course.learningStatus === "COMPLETED" ||
-    course.certificateAvailable === true ||
-    course.completedAt !== null
-  );
-};
+export const isMyCourseCompleted = (course?: MyCourse) =>
+  course?.learningStatus === "COMPLETED";

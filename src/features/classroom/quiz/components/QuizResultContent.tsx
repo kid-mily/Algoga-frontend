@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import QuizExplanationModal from "./QuizExplanationModal";
-import type { CourseQuizAttempt, CourseQuizSubmitResult } from "../types";
+import type { CourseQuizAttempt, CourseQuizScoreResult } from "../types";
 import { useCourseCompletion } from "@/features/classroom/completion/hooks/useCourseCompletion";
 
 interface QuizResultContentProps {
   courseId: string;
-  result: CourseQuizSubmitResult;
+  result: CourseQuizScoreResult;
   attempt: CourseQuizAttempt | null;
   onReview: () => void;
   onClose: () => void;
@@ -22,6 +22,8 @@ export default function QuizResultContent({
   onClose,
 }: QuizResultContentProps) {
   const completion = useCourseCompletion(courseId);
+  const completionStatus = completion.status;
+  const handleComplete = completion.handleComplete;
 
   // 자동 수료 요청이 중복 실행되지 않도록 막는 ref
   const didRequestCompletion = useRef(false);
@@ -33,14 +35,14 @@ export default function QuizResultContent({
   useEffect(() => {
     if (
       didRequestCompletion.current ||
-      completion.status !== "idle"
+      completionStatus !== "idle"
     ) {
       return;
     }
 
     didRequestCompletion.current = true;
-    completion.handleComplete();
-  }, [completion.status, completion.handleComplete]);
+    handleComplete();
+  }, [completionStatus, handleComplete]);
 
   // 점수를 0~100으로 제한
   const score = Math.min(Math.max(result.score, 0), 100);

@@ -18,10 +18,6 @@ interface MyCourseItem {
   learningStatus: "IN_PROGRESS" | "COMPLETED";
 }
 
-interface MyCoursesResponse {
-  data?: MyCourseItem[];
-}
-
 // 오류 코드 추출
 const getCompletionErrorCode = (
   error: ApiRequestError
@@ -41,19 +37,8 @@ const getCompletionErrorCode = (
 const getMyCourseList = async (): Promise<
   MyCourseItem[]
 > => {
-  const response =
-    (await getMyCourses()) as unknown;
-
-  if (Array.isArray(response)) {
-    return response as MyCourseItem[];
-  }
-
-  const responseObject =
-    response as MyCoursesResponse;
-
-  return Array.isArray(responseObject.data)
-    ? responseObject.data
-    : [];
+  const response = await getMyCourses(0, 100);
+  return response.content as MyCourseItem[];
 };
 
 export function useCourseCompletion(
@@ -168,116 +153,100 @@ export function useCourseCompletion(
   }, [courseId]);
 
   // 강의 수료 처리
-  const handleComplete =
-    useCallback(async () => {
-      if (
-        !courseId ||
-        status === "processing" ||
-        status === "completed" ||
-        status === "already-completed"
-      ) {
+  const handleComplete = useCallback(async () => {
+  if (
+    !courseId ||
+    status === "processing" ||
+    status === "completed" ||
+    status === "already-completed"
+  ) {
+    return;
+  }
+
+  try {
+    setStatus("processing");
+    setMessage("강의 수료를 처리하고 있습니다.");
+
+    const alreadyCompleted = await checkCompletionStatus();
+
+    if (alreadyCompleted) {
+      setStatus("already-completed");
+      setMessage("이미 수료 완료된 강의입니다.");
+      return;
+    }
+
+    const result = await completeCourse(courseId);
+
+    setCompletion(result);
+    setStatus("completed");
+    setMessage("수료가 완료되었습니다. 쿠폰과 마일리지가 자동 지급됩니다.");
+
+    localStorage.setItem(`course-completed-${courseId}`, "true");
+
+    window.dispatchEvent(new CustomEvent("course-completion-changed"));
+    window.dispatchEvent(new CustomEvent("learning-benefits-updated"));
+
+    await new Promise((resolve) => window.setTimeout(resolve, 800));
+    await refreshLearningData();
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      const code = getCompletionErrorCode(error);
+
+      const isAlreadyCompleted =
+        error.status === 409 ||
+        code === "LMS_017" ||
+        code === "COURSE_ALREADY_COMPLETED" ||
+        error.message.includes("이미 수강 완료");
+
+      if (isAlreadyCompleted) {
+        setStatus("already-completed");
+        setMessage("이미 수료 완료된 강의입니다.");
+
+        localStorage.setItem(`course-completed-${courseId}`, "true");
+
+        window.dispatchEvent(new CustomEvent("course-completion-changed"));
+        window.dispatchEvent(new CustomEvent("learning-benefits-updated"));
+
+        await refreshLearningData();
         return;
       }
 
-      try {
-        setStatus("processing");
-        setMessage(
-          "강의 수료를 처리하고 있습니다."
-        );
+      console.error("[course-completion] 수료 처리 실패:", error);
 
-        const result = await completeCourse(courseId);
-
-        setCompletion(result);
-        setStatus("completed");
-        setMessage(
-          "수료가 완료되었습니다. 쿠폰과 마일리지가 자동 지급됩니다."
-        );
-
-        localStorage.setItem(
-          `course-completed-${courseId}`,
-          "true"
-        );
-
-        window.dispatchEvent(
-          new CustomEvent("course-completion-changed")
-        );
-
-        // 백엔드 이벤트 처리를 기다린 뒤 혜택 재조회
-        await new Promise((resolve) =>
-          window.setTimeout(resolve, 800)
-        );
-
-        await refreshLearningData();
-
-        window.dispatchEvent(
-          new CustomEvent("learning-benefits-updated")
-        );
-
-        await refreshLearningData();
-      } catch (error) {
-        console.error(
-          "[course-completion] 수료 처리 실패:",
-          error
-        );
-
-        if (error instanceof ApiRequestError) {
-          const code =
-            getCompletionErrorCode(error);
-
-          if (code === "LMS_017") {
-            setStatus("already-completed");
-            setMessage(
-              "이미 수료 완료된 강의입니다."
-            );
-
-            await refreshLearningData();
-            await checkCompletionStatus();
-            return;
-          }
-
-          if (code === "LMS_015") {
-            setStatus("failed");
-            setMessage(
-              "모든 챕터를 완료한 후 수료할 수 있습니다."
-            );
-            return;
-          }
-
-          if (code === "LMS_018") {
-            setStatus("failed");
-            setMessage(
-              "퀴즈를 제출한 후 수료할 수 있습니다."
-            );
-            return;
-          }
-
-          if (code === "LMS_001") {
-            setStatus("failed");
-            setMessage(
-              "해당 강의를 찾을 수 없습니다."
-            );
-            return;
-          }
-
-          setStatus("failed");
-          setMessage(
-            error.message ||
-              "강의 수료 처리에 실패했습니다."
-          );
-          return;
-        }
-
+      if (code === "LMS_015") {
         setStatus("failed");
-        setMessage(
-          "강의 수료 처리에 실패했습니다."
-        );
+        setMessage("모든 챕터를 완료해야 수료할 수 있습니다.");
+        return;
       }
-    }, [
-      courseId,
-      status,
-      checkCompletionStatus,
-      refreshLearningData,
-    ]);
+
+      if (code === "LMS_018") {
+        setStatus("failed");
+        setMessage("퀴즈를 제출해야 수료할 수 있습니다.");
+        return;
+      }
+
+      if (code === "LMS_001") {
+        setStatus("failed");
+        setMessage("해당 강의를 찾을 수 없습니다.");
+        return;
+      }
+
+      setStatus("failed");
+      setMessage(error.message || "강의 수료 처리에 실패했습니다.");
+      return;
+    }
+
+    console.error("[course-completion] 수료 처리 실패:", error);
+
+    setStatus("failed");
+    setMessage("강의 수료 처리에 실패했습니다.");
+  }
+}, [
+  courseId,
+  status,
+  checkCompletionStatus,
+  refreshLearningData,
+]);
 
   return {
     status,

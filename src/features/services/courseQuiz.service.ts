@@ -34,7 +34,14 @@ export const getCourseQuizResult = async (
   courseId: string | number
 ): Promise<CourseQuizSavedResult> => {
   const response =
-    await api.get<ApiResponse<CourseQuizSavedResult>>(
+    await api.get<ApiResponse<{
+      submissionId: number;
+      courseId: number;
+      totalCount: number;
+      correctCount: number;
+      score: number;
+      submittedAt: string;
+    }>>(
       `/api/v1/courses/${courseId}/quiz/result`,
       {
         cache: "no-store",
@@ -42,5 +49,10 @@ export const getCourseQuizResult = async (
       }
     );
 
-  return response.data;
+  return {
+    ...response.data,
+    userId: 0,
+    wrongAnswers: [],
+    answers: [],
+  };
 };

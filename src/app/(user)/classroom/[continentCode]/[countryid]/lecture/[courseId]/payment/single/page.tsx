@@ -1,4 +1,6 @@
-﻿import { notFound } from "next/navigation";
+﻿// 단과 결제 페이지
+
+import { notFound } from "next/navigation";
 import { getCourseDetail } from "@/features/services/lectureDetail.service";
 import SingleLecturePaymentClient from "@/features/payment/SingleLecturePaymentClient";
 
