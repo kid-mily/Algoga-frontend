@@ -2,6 +2,8 @@ import { api, ApiRequestError, ApiResponse } from "@/lib/api";
 
 export interface UserProfileResponse {
   userId: number;
+  id?: number;
+  memberId?: number;
   username: string;
   name: string;
   nickname: string;
@@ -22,13 +24,24 @@ const unwrapData = <T>(response: ApiResponse<T> | T): T => {
   return response as T;
 };
 
+const normalizeUserProfile = (profile: UserProfileResponse | null): UserProfileResponse | null => {
+  if (!profile) return null;
+
+  const normalizedUserId = Number(profile.userId ?? profile.id ?? profile.memberId);
+
+  return {
+    ...profile,
+    userId: Number.isFinite(normalizedUserId) ? normalizedUserId : 0,
+  };
+};
+
 export const getMe = async (): Promise<UserProfileResponse | null> => {
   try {
     const response = await api.get<UserMeResponse>("/api/v1/users/me", {
       suppressGlobalError: true,
     });
 
-    return unwrapData(response);
+    return normalizeUserProfile(unwrapData(response));
   } catch (error) {
     if (error instanceof ApiRequestError && error.status === 401) {
       return null;

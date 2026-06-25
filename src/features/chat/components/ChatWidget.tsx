@@ -1,4 +1,4 @@
-// src/features/chat/components/ChatWidget.tsx
+﻿// src/features/chat/components/ChatWidget.tsx
 
 "use client";
 
@@ -13,7 +13,7 @@ import {
   leaveChatRoom,
 } from "../services/chatService";
 import { useChatNotificationSocket } from "../hooks/useChatNotificationSocket";
-import type { ChatPanelView, ChatRoom, Friend, RoomNotification } from "../types/chat";
+import type { ChatMessage, ChatPanelView, ChatRoom, Friend, RoomNotification } from "../types/chat";
 import ChatListPanel from "./ChatListPanel";
 import ChatRoomPanel from "./ChatRoomPanel";
 import FriendSelectPanel from "./FriendSelectPanel";
@@ -38,29 +38,37 @@ export default function ChatWidget() {
   const [currentUserId, setCurrentUserId] = useState<number>();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
+  const [leaveTargetRoom, setLeaveTargetRoom] = useState<ChatRoom | null>(null);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const [isLoadingFriends, setIsLoadingFriends] = useState(false);
   const [roomsError, setRoomsError] = useState("");
   const [friendsError, setFriendsError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const loadRooms = useCallback(async (signal?: AbortSignal) => {
-    try {
-      setIsLoadingRooms(true);
-      setRoomsError("");
+  const loadRooms = useCallback(
+    async (signal?: AbortSignal, options: { showLoading?: boolean } = {}) => {
+      const shouldShowLoading = options.showLoading ?? true;
 
-      const data = await getChatRooms(signal);
-      setRooms(data);
-    } catch (error) {
-      if (signal?.aborted) return;
+      try {
+        if (shouldShowLoading) {
+          setIsLoadingRooms(true);
+        }
+        setRoomsError("");
 
-      setRoomsError(error instanceof Error ? error.message : "채팅방 목록을 불러오지 못했습니다.");
-    } finally {
-      if (!signal?.aborted) {
-        setIsLoadingRooms(false);
+        const data = await getChatRooms(signal);
+        setRooms(data);
+      } catch (error) {
+        if (signal?.aborted) return;
+
+        setRoomsError(error instanceof Error ? error.message : "채팅방 목록을 불러오지 못했습니다.");
+      } finally {
+        if (!signal?.aborted && shouldShowLoading) {
+          setIsLoadingRooms(false);
+        }
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   const loadFriends = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -96,9 +104,10 @@ export default function ChatWidget() {
         const user = await getMe();
         if (!isMounted) return;
 
-        setCurrentUserId(user?.userId);
+        const nextUserId = user?.userId && user.userId > 0 ? user.userId : undefined;
+        setCurrentUserId(nextUserId);
 
-        if (!user) {
+        if (!nextUserId) {
           setRooms([]);
           window.dispatchEvent(new CustomEvent(chatUnreadCountEventName, { detail: 0 }));
         }
@@ -144,6 +153,18 @@ export default function ChatWidget() {
   }, [currentUserId, isAdminPage, loadRooms]);
 
   useEffect(() => {
+    if (!currentUserId || isAdminPage) return;
+
+    const intervalId = window.setInterval(() => {
+      void loadRooms(undefined, { showLoading: false });
+    }, 3000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [currentUserId, isAdminPage, loadRooms]);
+
+  useEffect(() => {
     if (!isOpen || isAdminPage) return;
 
     const controller = new AbortController();
@@ -182,6 +203,7 @@ export default function ChatWidget() {
     setIsOpen(false);
     setView("list");
     setSelectedRoom(null);
+    setLeaveTargetRoom(null);
   };
 
   const handleStartDirectChat = () => {
@@ -250,23 +272,20 @@ export default function ChatWidget() {
     );
   }, []);
 
-  const handleRoomNotification = useCallback(
-    (notification: RoomNotification) => {
-      const isCurrentRoomOpen =
-        isOpen && view === "room" && selectedRoom?.roomId === notification.roomId;
-
+  const updateRoomPreview = useCallback(
+    (roomId: number, lastMessage: string, lastMessageAt: string, unreadCount?: number) => {
       setRooms((prev) => {
         let hasRoom = false;
         const nextRooms = prev.map((room) => {
-          if (room.roomId !== notification.roomId) return room;
+          if (room.roomId !== roomId) return room;
 
           hasRoom = true;
 
           return {
             ...room,
-            lastMessage: notification.lastMessage,
-            lastMessageAt: notification.lastMessageAt,
-            unreadCount: isCurrentRoomOpen ? 0 : notification.unreadCount,
+            lastMessage,
+            lastMessageAt,
+            unreadCount: unreadCount ?? room.unreadCount ?? 0,
           };
         });
 
@@ -283,7 +302,29 @@ export default function ChatWidget() {
         });
       });
     },
-    [isOpen, loadRooms, selectedRoom?.roomId, view]
+    [loadRooms]
+  );
+
+  const handleCurrentRoomMessage = useCallback(
+    (message: ChatMessage) => {
+      updateRoomPreview(message.roomId, message.content, message.createdAt, 0);
+    },
+    [updateRoomPreview]
+  );
+
+  const handleRoomNotification = useCallback(
+    (notification: RoomNotification) => {
+      const isCurrentRoomOpen =
+        isOpen && view === "room" && selectedRoom?.roomId === notification.roomId;
+
+      updateRoomPreview(
+        notification.roomId,
+        notification.lastMessage,
+        notification.lastMessageAt,
+        isCurrentRoomOpen ? 0 : notification.unreadCount
+      );
+    },
+    [isOpen, selectedRoom?.roomId, updateRoomPreview, view]
   );
 
   useChatNotificationSocket({
@@ -291,19 +332,26 @@ export default function ChatWidget() {
     onNotification: handleRoomNotification,
   });
 
-  const handleLeaveRoom = async (room: ChatRoom) => {
+  const requestLeaveRoom = (room: ChatRoom) => {
     if (isProcessing) return;
+
+    setLeaveTargetRoom(room);
+  };
+
+  const handleLeaveRoom = async () => {
+    if (!leaveTargetRoom || isProcessing) return;
 
     try {
       setIsProcessing(true);
-      await leaveChatRoom(room.roomId);
-      setRooms((prev) => prev.filter((item) => item.roomId !== room.roomId));
+      await leaveChatRoom(leaveTargetRoom.roomId);
+      setRooms((prev) => prev.filter((item) => item.roomId !== leaveTargetRoom.roomId));
 
-      if (selectedRoom?.roomId === room.roomId) {
+      if (selectedRoom?.roomId === leaveTargetRoom.roomId) {
         setSelectedRoom(null);
         setView("list");
       }
 
+      setLeaveTargetRoom(null);
       await loadRooms();
     } catch (error) {
       setRoomsError(error instanceof Error ? error.message : "채팅방을 나가지 못했습니다.");
@@ -336,7 +384,7 @@ export default function ChatWidget() {
               }}
               onStartDirectChat={handleStartDirectChat}
               onStartGroupChat={handleStartGroupChat}
-              onLeaveRoom={handleLeaveRoom}
+              onLeaveRoom={requestLeaveRoom}
             />
           )}
 
@@ -366,10 +414,57 @@ export default function ChatWidget() {
               onBack={() => setView("list")}
               onClose={handleClose}
               onReadRoom={markRoomAsRead}
+              onRoomMessage={handleCurrentRoomMessage}
+              onLeaveRoom={requestLeaveRoom}
+              isLeaving={isProcessing}
             />
+          )}
+
+          {leaveTargetRoom && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[20px] bg-black/20 px-5">
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="chat-leave-title"
+                aria-describedby="chat-leave-description"
+                className="w-full max-w-[280px] rounded-[16px] bg-white p-5 text-center shadow-[0_16px_40px_rgba(16,24,40,0.24)]"
+              >
+                <h3 id="chat-leave-title" className="text-[17px] font-bold text-[#111827]">
+                  채팅방 나가기
+                </h3>
+                <p id="chat-leave-description" className="mt-2 text-[13px] leading-5 text-[#667085]">
+                  정말 이 채팅방을 나가시겠습니까?
+                </p>
+                <div className="mt-5 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isProcessing) return;
+
+                      setLeaveTargetRoom(null);
+                    }}
+                    disabled={isProcessing}
+                    className="h-10 flex-1 rounded-[10px] border border-[#D0D5DD] bg-white text-[14px] font-semibold text-[#344054] transition hover:bg-[#F9FAFB] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLeaveRoom}
+                    disabled={isProcessing}
+                    className="h-10 flex-1 rounded-[10px] bg-[#E5484D] text-[14px] font-semibold text-white transition hover:bg-[#D92D20] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isProcessing ? "나가는 중" : "나가기"}
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}
+
+
     </>
   );
 }
+

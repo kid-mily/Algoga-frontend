@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, LogOut, X } from "lucide-react";
 import { getMe } from "@/features/services/user.service";
 import { getChatMessages } from "../services/chatService";
 import { useChatSocket } from "../hooks/useChatSocket";
@@ -14,6 +14,9 @@ type ChatRoomPanelProps = {
   onBack: () => void;
   onClose: () => void;
   onReadRoom?: (roomId: number) => void;
+  onRoomMessage?: (message: ChatMessage) => void;
+  onLeaveRoom?: (room: ChatRoom) => void;
+  isLeaving?: boolean;
 };
 
 const mergeMessage = (messages: ChatMessage[], nextMessage: ChatMessage) => {
@@ -24,7 +27,15 @@ const mergeMessage = (messages: ChatMessage[], nextMessage: ChatMessage) => {
   return [...messages, nextMessage];
 };
 
-export default function ChatRoomPanel({ room, onBack, onClose, onReadRoom }: ChatRoomPanelProps) {
+export default function ChatRoomPanel({
+  room,
+  onBack,
+  onClose,
+  onReadRoom,
+  onRoomMessage,
+  onLeaveRoom,
+  isLeaving,
+}: ChatRoomPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentUserId, setCurrentUserId] = useState<number>();
   const [currentUserNickname, setCurrentUserNickname] = useState("");
@@ -35,32 +46,38 @@ export default function ChatRoomPanel({ room, onBack, onClose, onReadRoom }: Cha
   const handleSocketMessage = useCallback(
     (message: ChatMessage) => {
       setMessages((prev) => mergeMessage(prev, message));
+      onRoomMessage?.(message);
 
       if (currentUserId && message.senderId !== currentUserId) {
         sendReadRef.current();
       }
     },
-    [currentUserId]
+    [currentUserId, onRoomMessage]
   );
 
   const handleReadEvent = useCallback(
-    (event: { readerId: number }) => {
-      if (!currentUserId || event.readerId === currentUserId) return;
+    (event: { roomId: number; readerId: number }) => {
+      if (!currentUserId || event.roomId !== room.roomId || event.readerId === currentUserId) return;
 
       setMessages((prev) =>
-        prev.map((message) =>
-          message.isMine ||
-          message.senderId === currentUserId ||
-          message.senderNickname === currentUserNickname
-            ? {
-                ...message,
-                unreadCount: 0,
-              }
-            : message
-        )
+        prev.map((message) => {
+          const isMyMessage = Boolean(
+            message.isMine ||
+              message.senderId === currentUserId ||
+              message.senderNickname === currentUserNickname
+          );
+
+          if (!isMyMessage || !message.unreadCount) return message;
+
+          return {
+            ...message,
+            unreadCount:
+              room.type === "GROUP" ? Math.max(message.unreadCount - 1, 0) : 0,
+          };
+        })
       );
     },
-    [currentUserId, currentUserNickname]
+    [currentUserId, currentUserNickname, room.roomId, room.type]
   );
 
   const { isConnected, sendMessage, sendRead } = useChatSocket({
@@ -153,14 +170,28 @@ export default function ChatRoomPanel({ room, onBack, onClose, onReadRoom }: Cha
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="채팅창 닫기"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#667085] transition hover:bg-[#F2F4F7] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#439A97]"
-        >
-          <X size={20} />
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          {onLeaveRoom && (
+            <button
+              type="button"
+              onClick={() => onLeaveRoom(room)}
+              disabled={isLeaving}
+              aria-label="채팅방 나가기"
+              title="채팅방 나가기"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-[#667085] transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EF4444]"
+            >
+              <LogOut size={18} />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="채팅창 닫기"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[#667085] transition hover:bg-[#F2F4F7] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#439A97]"
+          >
+            <X size={20} />
+          </button>
+        </div>
       </header>
 
       {errorMessage ? (
@@ -181,11 +212,6 @@ export default function ChatRoomPanel({ room, onBack, onClose, onReadRoom }: Cha
     </section>
   );
 }
-
-
-
-
-
 
 
 

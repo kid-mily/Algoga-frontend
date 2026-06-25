@@ -12,6 +12,17 @@ type SocketEnvelope = {
   data?: unknown;
 };
 
+type RawRecord = Record<string, unknown>;
+
+const getNumber = (record: RawRecord, keys: string[], fallback = 0) => {
+  const value = keys
+    .map((key) => record[key])
+    .find((item) => item !== undefined && item !== null && item !== "");
+  const numberValue = typeof value === "number" ? value : Number(value);
+
+  return Number.isFinite(numberValue) ? numberValue : fallback;
+};
+
 const getWebSocketUrl = () => {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
   const url = new URL(apiUrl);
@@ -38,15 +49,15 @@ const unwrapBody = (body: unknown) => {
   return body;
 };
 
-const parseReadEvent = (body: unknown): ReadEvent | null => {
+const parseReadEvent = (body: unknown, fallbackRoomId?: number): ReadEvent | null => {
   const unwrappedBody = unwrapBody(body);
   if (!unwrappedBody || typeof unwrappedBody !== "object") return null;
 
-  const record = unwrappedBody as Record<string, unknown>;
-  const roomId = Number(record.roomId);
-  const readerId = Number(record.readerId);
+  const record = unwrappedBody as RawRecord;
+  const roomId = getNumber(record, ["roomId", "chatRoomId", "id"], fallbackRoomId ?? 0);
+  const readerId = getNumber(record, ["readerId", "userId", "memberId", "readerUserId", "readUserId"]);
 
-  if (!Number.isFinite(roomId) || !Number.isFinite(readerId)) return null;
+  if (roomId <= 0 || readerId <= 0) return null;
 
   return { roomId, readerId };
 };
@@ -101,7 +112,7 @@ export const useChatSocket = ({ roomId, onMessage, onRead }: UseChatSocketOption
         });
 
         client.subscribe(`/topic/chat/rooms/${roomId}/read`, (message) => {
-          const parsedEvent = parseReadEvent(parseBody(message));
+          const parsedEvent = parseReadEvent(parseBody(message), roomId);
           if (!parsedEvent) return;
 
           onRead?.(parsedEvent);
@@ -139,3 +150,5 @@ export const useChatSocket = ({ roomId, onMessage, onRead }: UseChatSocketOption
     sendRead,
   };
 };
+
+
