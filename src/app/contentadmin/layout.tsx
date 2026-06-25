@@ -1,5 +1,5 @@
 import AdminAuthGuard from "@/features/admin/auth/AdminAuthGuard";
-import ContentHeader from "@/features/admin/common/Contentheader";
+import ContentHeader from "@/features/admin/common/ContentHeader";
 import ContentSidebar from "@/features/admin/common/Contentsidebar";
 
 export default function ContentLayout({
