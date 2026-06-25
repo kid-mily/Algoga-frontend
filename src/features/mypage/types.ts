@@ -1,4 +1,4 @@
-export interface ApiErrorResponse {
+﻿export interface ApiErrorResponse {
   timestamp?: string;
   status?: number;
   code?: string;
@@ -44,6 +44,8 @@ export interface UpdateProfileResponse {
   accessToken?: string;
   refreshToken?: string;
   requiresPasswordChange?: boolean;
+  nickname?: string;
+  profileImageUrl?: string | null;
 }
 
 export interface VerifyPasswordRequest {
