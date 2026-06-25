@@ -76,17 +76,19 @@ const normalizeChatRoom = (item: unknown): ChatRoom => {
 
 export const normalizeChatMessage = (item: unknown): ChatMessage => {
   const record = asRecord(item);
+  const senderId = getNumber(record, ["senderId", "userId"], -1);
 
   return {
     messageId: getNumber(record, ["messageId", "chatMessageId", "id"], Date.now()),
     roomId: getNumber(record, ["roomId", "chatRoomId"]),
-    senderId: getNumber(record, ["senderId", "userId"], 0) || undefined,
+    senderId: senderId >= 0 ? senderId : undefined,
     senderNickname: getString(record, ["senderNickname", "nickname", "senderName", "name"], "알 수 없음"),
     senderProfileImageUrl: getNullableString(record, ["senderProfileImageUrl", "profileImageUrl"]),
     content: getString(record, ["content", "message", "text"], ""),
     createdAt: getString(record, ["createdAt", "sentAt", "timestamp"], ""),
     unreadCount: getNumber(record, ["unreadCount"], 0),
     isMine: getBoolean(record, ["isMine", "mine", "myMessage", "sentByMe", "fromMe"]),
+    isSystem: senderId === 0,
   };
 };
 
@@ -154,6 +156,7 @@ export const createGroupChatRoom = async (roomName: string, targetUserIds: numbe
 
   return normalizeChatRoom(unwrapData(response));
 };
+
 
 
 

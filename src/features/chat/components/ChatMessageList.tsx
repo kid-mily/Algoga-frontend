@@ -60,6 +60,18 @@ export default function ChatMessageList({
   return (
     <div ref={messageListRef} className="flex-1 space-y-3 overflow-y-auto bg-[#F8FAFC] px-4 py-4">
       {messages.map((message) => {
+        const isSystemMessage = Boolean(message.isSystem || message.senderId === 0);
+
+        if (isSystemMessage) {
+          return (
+            <div key={message.messageId} className="flex justify-center px-4">
+              <p className="rounded-full bg-[#E4E7EC] px-3 py-1 text-center text-[12px] font-medium text-[#667085]">
+                {message.content}
+              </p>
+            </div>
+          );
+        }
+
         const isMine = Boolean(
           message.isMine ||
             (currentUserId && message.senderId === currentUserId) ||
@@ -99,4 +111,5 @@ export default function ChatMessageList({
     </div>
   );
 }
+
 

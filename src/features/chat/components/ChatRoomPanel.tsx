@@ -48,7 +48,7 @@ export default function ChatRoomPanel({
       setMessages((prev) => mergeMessage(prev, message));
       onRoomMessage?.(message);
 
-      if (currentUserId && message.senderId !== currentUserId) {
+      if (!message.isSystem && currentUserId && message.senderId !== currentUserId) {
         sendReadRef.current();
       }
     },
@@ -212,6 +212,7 @@ export default function ChatRoomPanel({
     </section>
   );
 }
+
 
 
 

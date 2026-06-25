@@ -157,7 +157,7 @@ export default function ChatWidget() {
 
     const intervalId = window.setInterval(() => {
       void loadRooms(undefined, { showLoading: false });
-    }, 3000);
+    }, 30000);
 
     return () => {
       window.clearInterval(intervalId);
@@ -467,4 +467,5 @@ export default function ChatWidget() {
     </>
   );
 }
+
 
