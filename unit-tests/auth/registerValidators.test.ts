@@ -6,12 +6,41 @@ import {
   REGISTER_REQUIRED_PASSWORD_MESSAGE,
   REGISTER_REQUIRED_USERNAME_MESSAGE,
   REGISTER_INVALID_EMAIL_MESSAGE,
+  REGISTER_EMAIL_VERIFY_MESSAGE,
+  REGISTER_INVALID_PHONE_MESSAGE,
+  REGISTER_PASSWORD_CONFIRM_MESSAGE,
+  REGISTER_REQUIRED_BIRTH_DATE_MESSAGE,
+  REGISTER_REQUIRED_GENDER_MESSAGE,
+  REGISTER_USERNAME_CHECK_MESSAGE,
   validateRegisterEmail,
+  validateRegisterInfoForm,
   validateRegisterName,
   validateRegisterNickname,
   validateRegisterPassword,
   validateRegisterUsername,
 } from "@/features/auth/utils/registerValidators";
+import type { RegisterFormData } from "@/features/auth/types";
+
+const createValidRegisterFormData = (
+  override: Partial<RegisterFormData> = {}
+): RegisterFormData => ({
+  name: "김알고",
+  username: "testuser",
+  password: "password123",
+  passwordConfirm: "password123",
+  email: "test@example.com",
+  phone: "010-1234-5678",
+  birthDate: "2000-01-01",
+  gender: "FEMALE",
+  nickname: "알고가조아",
+  socialType: "",
+  referralCode: "",
+  signupPath: "search",
+  termsServiceAgreed: true,
+  termsPrivacyAgreed: true,
+  termsMarketingAgreed: false,
+  ...override,
+});
 
 describe("회원가입 유효성 검사 단위 테스트", () => {
   test("이름이 비어 있으면 이름 필수 메시지를 반환한다", () => {
@@ -187,6 +216,90 @@ describe("회원가입 유효성 검사 단위 테스트", () => {
         email: "test@example.com",
         nickname: "알고가조아",
       })
-    ).toThrow("비밀번호가 일치하지 않습니다.");
+    ).toThrow(REGISTER_PASSWORD_CONFIRM_MESSAGE);
+  });
+
+  test("일반 회원가입 값이 모두 정상이고 중복 확인과 이메일 인증이 끝나면 에러가 없다", () => {
+    const result = validateRegisterInfoForm(createValidRegisterFormData(), {
+      isUsernameChecked: true,
+      isEmailVerified: true,
+    });
+
+    expect(result).toEqual({});
+  });
+
+  test("비밀번호 확인이 다르면 passwordConfirm 에러를 반환한다", () => {
+    const result = validateRegisterInfoForm(
+      createValidRegisterFormData({ passwordConfirm: "password456" }),
+      {
+        isUsernameChecked: true,
+        isEmailVerified: true,
+      }
+    );
+
+    expect(result.passwordConfirm).toBe(REGISTER_PASSWORD_CONFIRM_MESSAGE);
+  });
+
+  test("아이디 중복 확인을 하지 않으면 username 에러를 반환한다", () => {
+    const result = validateRegisterInfoForm(createValidRegisterFormData(), {
+      isUsernameChecked: false,
+      isEmailVerified: true,
+    });
+
+    expect(result.username).toBe(REGISTER_USERNAME_CHECK_MESSAGE);
+  });
+
+  test("이메일 인증을 하지 않으면 email 에러를 반환한다", () => {
+    const result = validateRegisterInfoForm(createValidRegisterFormData(), {
+      isUsernameChecked: true,
+      isEmailVerified: false,
+    });
+
+    expect(result.email).toBe(REGISTER_EMAIL_VERIFY_MESSAGE);
+  });
+
+  test("전화번호 형식이 올바르지 않으면 phone 에러를 반환한다", () => {
+    const result = validateRegisterInfoForm(
+      createValidRegisterFormData({ phone: "01012345678" }),
+      {
+        isUsernameChecked: true,
+        isEmailVerified: true,
+      }
+    );
+
+    expect(result.phone).toBe(REGISTER_INVALID_PHONE_MESSAGE);
+  });
+
+  test("생년월일과 성별이 없으면 각각 에러를 반환한다", () => {
+    const result = validateRegisterInfoForm(
+      createValidRegisterFormData({ birthDate: "", gender: "" }),
+      {
+        isUsernameChecked: true,
+        isEmailVerified: true,
+      }
+    );
+
+    expect(result.birthDate).toBe(REGISTER_REQUIRED_BIRTH_DATE_MESSAGE);
+    expect(result.gender).toBe(REGISTER_REQUIRED_GENDER_MESSAGE);
+  });
+
+  test("소셜 회원가입이면 아이디, 비밀번호, 이메일 인증 검사를 건너뛴다", () => {
+    const result = validateRegisterInfoForm(
+      createValidRegisterFormData({
+        username: "",
+        password: "",
+        passwordConfirm: "",
+      }),
+      {
+        isSocialSignup: true,
+        isUsernameChecked: false,
+        isEmailVerified: false,
+      }
+    );
+
+    expect(result.username).toBeUndefined();
+    expect(result.password).toBeUndefined();
+    expect(result.passwordConfirm).toBeUndefined();
+    expect(result.email).toBeUndefined();
   });
 });
