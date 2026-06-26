@@ -23,7 +23,7 @@ export default function LectureGrid({
   return (
     <ul className="grid grid-cols-3 gap-5">
       {lectures.map((lecture) => (
-        <li key={lecture.courseId}>
+        <li key={lecture.courseId} className="h-full">
           <LectureCard
             lecture={lecture}
             continentCode={continentCode}

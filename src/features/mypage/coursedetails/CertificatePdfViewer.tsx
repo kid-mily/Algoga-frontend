@@ -7,12 +7,14 @@ export default function CertificatePdfViewer({
   pdfUrl,
   title = "수료증",
 }: CertificatePdfViewerProps) {
+  const viewerUrl = `${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`;
+
   return (
-    <section className="overflow-hidden rounded-xl border border-[#D9E2EC] bg-white shadow-sm">
+    <section className="mx-auto w-full max-w-[520px] overflow-hidden bg-white">
       <iframe
-        src={`${pdfUrl}#toolbar=0&navpanes=0`}
+        src={viewerUrl}
         title={title}
-        className="h-[540px] w-full"
+        className="aspect-[210/297] w-full border-0 bg-white outline-none"
       />
     </section>
   );

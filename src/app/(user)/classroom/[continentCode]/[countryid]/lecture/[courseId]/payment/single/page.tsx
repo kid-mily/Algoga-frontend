@@ -1,9 +1,6 @@
-﻿// 단과 결제 페이지
-
-import { notFound } from "next/navigation";
+﻿import { notFound } from "next/navigation";
 import { getCourseDetail } from "@/features/services/lectureDetail.service";
 import SingleLecturePaymentClient from "@/features/payment/SingleLecturePaymentClient";
-
 
 interface PageProps {
   params: Promise<{
@@ -22,7 +19,14 @@ export default async function SingleLecturePaymentPage({ params }: PageProps) {
     notFound();
   }
 
-  const course = await getCourseDetail(countryid, numericCourseId);
+  let course = null;
+
+  try {
+    course = await getCourseDetail(countryid, numericCourseId);
+  } catch (error) {
+    console.error("[single-payment-page] 강의 상세 조회 실패:", error);
+    notFound();
+  }
 
   if (!course) {
     notFound();
