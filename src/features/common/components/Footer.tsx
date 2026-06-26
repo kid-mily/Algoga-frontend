@@ -6,7 +6,7 @@ export default function Footer() {
                     {/* 로고 */}
                     <div className="flex flex-col gap-2">
                         <img
-                        src="/images/알고가_로고.png"
+                        src="/images/algoga-logo.png"
                         alt="로고"
                         className="h-[36px] w-[105px]"
                         />

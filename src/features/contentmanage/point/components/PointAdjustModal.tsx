@@ -112,7 +112,7 @@ export default function PointAdjustModal({
     >
       <form
         onSubmit={handleSubmit}
-        className="flex h-[760px] w-full max-w-[520px] flex-col rounded-[28px] bg-white shadow-xl"
+        className="flex h-[760px] max-h-[calc(100vh-32px)] w-full max-w-[520px] flex-col overflow-hidden rounded-[28px] bg-white shadow-xl"
       >
         <header className="flex items-start justify-between px-7 pt-7">
           <section>
@@ -137,12 +137,12 @@ export default function PointAdjustModal({
           </button>
         </header>
 
-        <section className="flex-1 px-7 py-6">
+        <section className="min-h-0 flex-1 overflow-y-auto px-7 py-6">
           <section className={`rounded-[18px] p-5 ${modeText.panelClass}`}>
             <p className={`text-[14px] font-medium ${modeText.labelClass}`}>
               현재 보유 마일리지
             </p>
-            <p className={`mt-2 text-[42px] font-bold ${modeText.valueClass}`}>
+            <p className={`mt-2 break-all text-[38px] font-bold leading-tight ${modeText.valueClass}`}>
               {currentPoint.toLocaleString()}원
             </p>
           </section>
@@ -199,7 +199,7 @@ export default function PointAdjustModal({
             <p className={`text-[14px] font-medium ${modeText.labelClass}`}>
               {modeText.nextLabel}
             </p>
-            <p className={`mt-2 text-[36px] font-bold ${modeText.valueClass}`}>
+            <p className={`mt-2 break-all text-[34px] font-bold leading-tight ${modeText.valueClass}`}>
               {nextPoint.toLocaleString()}원
             </p>
           </section>

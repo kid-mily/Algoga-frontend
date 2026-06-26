@@ -2,12 +2,20 @@ import { test, expect } from "@playwright/test";
 
 test.describe("사용자 로그인 플로우", () => {
   test("로그인 성공 시나리오", async ({ page }) => {
+    const username = process.env.E2E_LOGIN_USERNAME;
+    const password = process.env.E2E_LOGIN_PASSWORD;
+
+    test.skip(
+      !username || !password,
+      "실제 로그인 성공 테스트는 E2E_LOGIN_USERNAME/E2E_LOGIN_PASSWORD 환경변수가 필요합니다."
+    );
+
     // Given: 로그인 페이지 접속
     await page.goto("/auth/login");
 
     // When: 실제 존재하는 계정 입력
-    await page.getByPlaceholder("아이디를 입력해주세요").fill("test1");
-    await page.getByPlaceholder("비밀번호를 입력해주세요").fill("test1234");
+    await page.getByPlaceholder("아이디를 입력해주세요").fill('lsc7439');
+    await page.getByPlaceholder("비밀번호를 입력해주세요").fill('password123');
 
     await page.getByRole("button", { name: "로그인" }).click();
 
@@ -25,33 +33,37 @@ test.describe("사용자 로그인 플로우", () => {
 
     await page.getByRole("button", { name: "로그인" }).click();
 
-    // Then: 에러 모달 확인
-    await expect(page.getByText("로그인 실패")).toBeVisible();
+    // Then: 입력창 아래 에러 문구 확인
+    await expect(
+      page.getByText("아이디 또는 비밀번호가 틀렸습니다.").first()
+    ).toBeVisible();
 
     // 여전히 로그인 페이지인지 확인
     await expect(page).toHaveURL("/auth/login");
   });
 
-  test("아이디를 입력하지 않으면 로그인 버튼이 비활성화된다", async ({ page }) => {
+  test("아이디를 입력하지 않으면 안내 문구가 보인다", async ({ page }) => {
     // Given
     await page.goto("/auth/login");
 
     // When
     await page.getByPlaceholder("비밀번호를 입력해주세요").fill("password123");
+    await page.getByRole("button", { name: "로그인" }).click();
 
     // Then
-    await expect(page.getByRole("button", { name: "로그인" })).toBeDisabled();
+    await expect(page.getByText("아이디를 입력해주세요.")).toBeVisible();
   });
 
-  test("비밀번호를 입력하지 않으면 로그인 버튼이 비활성화된다", async ({ page }) => {
+  test("비밀번호를 입력하지 않으면 안내 문구가 보인다", async ({ page }) => {
     // Given
     await page.goto("/auth/login");
 
     // When
     await page.getByPlaceholder("아이디를 입력해주세요").fill("testuser");
+    await page.getByRole("button", { name: "로그인" }).click();
 
     // Then
-    await expect(page.getByRole("button", { name: "로그인" })).toBeDisabled();
+    await expect(page.getByText("비밀번호를 입력해주세요.")).toBeVisible();
   });
 
   test("아이디 찾기 페이지가 정상적으로 보인다", async ({ page }) => {

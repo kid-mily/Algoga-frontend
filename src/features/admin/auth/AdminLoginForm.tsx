@@ -2,7 +2,10 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { markAdminSessionActive } from "@/features/admin/auth/adminSession";
+import {
+  markAdminSessionActive,
+  saveAdminDisplayInfo,
+} from "@/features/admin/auth/adminSession";
 import {
   adminLogin,
   getAdminLoginRole,
@@ -81,6 +84,7 @@ export default function AdminLoginForm() {
       }
 
       markAdminSessionActive(role);
+      saveAdminDisplayInfo(admin, role, trimmedLoginId);
       window.dispatchEvent(new Event("auth-state-changed"));
       window.location.replace(
         getSafeNextPath() ?? getAdminRedirectPathByRole(role)

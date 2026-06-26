@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { adminLogout } from "@/features/services/adminAuth.service";
 import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
-import { getCurrentAdminPayload } from "@/lib/adminToken";
+import { getCurrentAdminDisplayInfo } from "@/features/admin/auth/adminDisplay";
 
 const menus = [
   {
@@ -42,9 +42,7 @@ const menus = [
 
 export default function StatisticAdminSidebar() {
   const pathname = usePathname();
-  const adminPayload = getCurrentAdminPayload();
-  const adminName = adminPayload?.sub ?? "통계 관리자";
-  const adminEmail = adminPayload?.role ?? adminPayload?.authority ?? "STATISTICS_MANAGER";
+  const adminInfo = getCurrentAdminDisplayInfo("STATISTICS_MANAGER");
 
   const handleLogout = async () => {
     try {
@@ -121,8 +119,8 @@ export default function StatisticAdminSidebar() {
             />
           </div>
           <div className="min-w-0">
-            <p className="text-[14px] font-semibold text-[#111827]">{adminName}</p>
-            <p className="text-[13px] text-[#98A2B3]">{adminEmail}</p>
+            <p className="text-[14px] font-semibold text-[#111827]">{adminInfo.name}</p>
+            <p className="text-[13px] text-[#98A2B3]">{adminInfo.email}</p>
           </div>
         </div>
       </div>

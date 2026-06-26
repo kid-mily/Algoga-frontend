@@ -80,30 +80,39 @@ export default function ChatMessageList({
         const shouldShowUnreadCount = Boolean(
           message.unreadCount && (roomType === "GROUP" || isMine)
         );
+        const messageMeta = (
+          <span
+            className={`flex shrink-0 flex-col gap-0.5 text-[11px] leading-tight text-[#98A2B3] ${
+              isMine ? "items-end" : "items-start"
+            }`}
+          >
+            {shouldShowUnreadCount ? (
+              <span className="font-bold text-[#439A97]">{message.unreadCount}</span>
+            ) : null}
+            <span>{formatMessageTime(message.createdAt)}</span>
+          </span>
+        );
 
         return (
           <div key={message.messageId} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-            <div className={`flex max-w-[78%] flex-col ${isMine ? "items-end" : "items-start"}`}>
+            <div className={`flex max-w-[86%] flex-col ${isMine ? "items-end" : "items-start"}`}>
               {!isMine && (
                 <span className="mb-1 text-[12px] font-semibold text-[#667085]">
                   {message.senderNickname}
                 </span>
               )}
-              <p
-                className={`rounded-[16px] px-4 py-2 text-[14px] leading-6 ${
-                  isMine
-                    ? "rounded-br-[4px] bg-[#439A97] text-white"
-                    : "rounded-bl-[4px] bg-white text-[#344054] shadow-sm"
-                }`}
-              >
-                {message.content}
-              </p>
-              <span className={`mt-1 flex items-center gap-1 text-[11px] text-[#98A2B3] ${isMine ? "flex-row-reverse" : ""}`}>
-                {shouldShowUnreadCount ? (
-                  <span className="font-bold text-[#439A97]">{message.unreadCount}</span>
-                ) : null}
-                <span>{formatMessageTime(message.createdAt)}</span>
-              </span>
+              <div className={`flex max-w-full items-end gap-1.5 ${isMine ? "flex-row" : "flex-row-reverse"}`}>
+                {messageMeta}
+                <p
+                  className={`min-w-0 break-words rounded-[16px] px-4 py-2 text-[14px] leading-6 ${
+                    isMine
+                      ? "rounded-br-[4px] bg-[#439A97] text-white"
+                      : "rounded-bl-[4px] bg-white text-[#344054] shadow-sm"
+                  }`}
+                >
+                  {message.content}
+                </p>
+              </div>
             </div>
           </div>
         );

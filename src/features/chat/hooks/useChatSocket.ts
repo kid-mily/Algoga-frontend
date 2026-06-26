@@ -50,17 +50,46 @@ const unwrapBody = (body: unknown) => {
   return body;
 };
 
+const getNestedRecord = (record: RawRecord, keys: string[]) => {
+  const value = keys
+    .map((key) => record[key])
+    .find((item) => item !== undefined && item !== null);
+
+  return value && typeof value === "object" ? (value as RawRecord) : record;
+};
+
 const parseReadEvent = (body: unknown, fallbackRoomId?: number): ReadEvent | null => {
   const unwrappedBody = unwrapBody(body);
   if (!unwrappedBody || typeof unwrappedBody !== "object") return null;
 
-  const record = unwrappedBody as RawRecord;
+  const record = getNestedRecord(unwrappedBody as RawRecord, [
+    "read",
+    "readEvent",
+    "payload",
+    "message",
+    "body",
+  ]);
   const roomId = getNumber(record, ["roomId", "chatRoomId", "id"], fallbackRoomId ?? 0);
-  const readerId = getNumber(record, ["readerId", "userId", "memberId", "readerUserId", "readUserId"]);
+  const readerId = getNumber(record, [
+    "readerId",
+    "userId",
+    "memberId",
+    "readerUserId",
+    "readUserId",
+    "readByUserId",
+    "readMemberId",
+  ]);
+  const messageId = getNumber(record, ["messageId", "chatMessageId"]);
+  const unreadCount = getNumber(record, ["unreadCount", "remainingUnreadCount"], -1);
 
-  if (roomId <= 0 || readerId <= 0) return null;
+  if (roomId <= 0 || (readerId <= 0 && messageId <= 0)) return null;
 
-  return { roomId, readerId };
+  return {
+    roomId,
+    readerId: readerId > 0 ? readerId : undefined,
+    messageId: messageId > 0 ? messageId : undefined,
+    unreadCount: unreadCount >= 0 ? unreadCount : undefined,
+  };
 };
 
 export const useChatSocket = ({ roomId, onMessage, onRead }: UseChatSocketOptions) => {

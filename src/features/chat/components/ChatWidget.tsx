@@ -29,6 +29,18 @@ const adminPathPrefixes = [
   "/superadmin",
 ];
 
+const getRoomSortTime = (room: ChatRoom) => {
+  const value = room.lastMessageAt;
+  if (!value) return 0;
+
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? 0 : time;
+};
+
+const sortRoomsByRecentMessage = (rooms: ChatRoom[]) => {
+  return [...rooms].sort((a, b) => getRoomSortTime(b) - getRoomSortTime(a));
+};
+
 export default function ChatWidget() {
   const pathname = usePathname();
   const isAdminPage = adminPathPrefixes.some((prefix) => pathname.startsWith(prefix));
@@ -56,7 +68,7 @@ export default function ChatWidget() {
         setRoomsError("");
 
         const data = await getChatRooms(signal);
-        setRooms(data);
+        setRooms(sortRoomsByRecentMessage(data));
       } catch (error) {
         if (signal?.aborted) return;
 
@@ -294,12 +306,7 @@ export default function ChatWidget() {
           return prev;
         }
 
-        return nextRooms.sort((a, b) => {
-          const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
-          const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
-
-          return timeB - timeA;
-        });
+        return sortRoomsByRecentMessage(nextRooms);
       });
     },
     [loadRooms]
