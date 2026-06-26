@@ -3,8 +3,9 @@ import NoticeSection from "@/features/main/components/NoticeSection";
 import AiSchedule from "@/features/main/components/AiSchedule";
 import Banner from "@/features/main/components/Banner";
 import MapSection from "./main/MapSection";
-import ScheduleCalendar from "@/features/main/components/ScheduleCalendar";
+
 import { getMainNotices } from "@/features/services/notice.service";
+import ScheduleCalendar from "@/features/main/components/ScheduleCalendar";
 
 export default async function Home() {
   const notices = await getMainNotices();
