@@ -80,7 +80,7 @@ export default function Header() {
     <header className="flex h-16 w-full items-center justify-between bg-white px-5">
       <Link href="/">
         <Image
-          src="/images/알고가_로고.png"
+          src="/images/algoga-logo.png"
           alt="로고"
           width={130}
           height={45}

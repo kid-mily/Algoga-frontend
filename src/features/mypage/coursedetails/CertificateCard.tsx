@@ -69,7 +69,7 @@ export default function CertificateCard({
 
           <div>
             <Image
-              src="/images/알고가_로고.png"
+              src="/images/algoga-logo.png"
               alt=""
               width={128}
               height={128}
