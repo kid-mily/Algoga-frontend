@@ -55,7 +55,7 @@ export default function CalendarGrid({
   );
 
   return (
-    <div className="p-8">
+    <div className="p-2">
       <div className="mb-5 grid grid-cols-7 rounded-xl bg-[#F8FAFC] py-3">
         {week_days.map((day, index) => (
           <span
