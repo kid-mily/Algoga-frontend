@@ -1,36 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  checkUsernameDuplicate,
-  sendSignupEmailCode,
-  verifySignupEmailCode,
-} from "@/features/services/signup.service";
+import { checkUsernameDuplicate, sendSignupEmailCode, verifySignupEmailCode } from "@/features/services/signup.service";
 
-import FormLabel from "@/features/common/FormLabel";
+import FormLabel from "@/features/common/components/FormLabel";
 
-interface RegisterFormData {
-  name: string;
-  username: string;
-  password: string;
-  passwordConfirm: string;
-  email: string;
-  phone: string;
-  birthDate: string;
-  gender: string;
-  nickname: string;
-  socialType?: string;
-  referralCode: string;
-  signupPath: string;
-}
+import { RegisterFormData } from "../types";
+import { validateRegisterInfoForm } from "../utils/registerValidators";
 
 interface RegisterInfoFormProps {
   formData: RegisterFormData;
   onChange: (field: string, value: string) => void;
   onNext: () => void;
   isLoading?: boolean;
-  serverError?: { field: string; message: string }; // 🌟 객체 형태로 변경
-  setServerError?: (err: { field: string; message: string }) => void; // 🌟 객체 형태로 변경
+  serverError?: { field: string; message: string }; // 객체 형태로 변경
+  setServerError?: (err: { field: string; message: string }) => void; // 객체 형태로 변경
   isSocialSignup?: boolean;
 }
 
@@ -71,47 +55,11 @@ export default function RegisterInfoForm({
   }, []);
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) newErrors.name = "이름은 필수입니다.";
-
-    if (!isSocialSignup && (!formData.username || formData.username.length < 4 || formData.username.length > 20)) {
-      newErrors.username = "아이디는 4자 이상 20자 이하로 입력해주세요.";
-    }
-
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    if (!isSocialSignup && (!formData.password || !passwordRegex.test(formData.password))) {
-      newErrors.password = "비밀번호는 영문, 숫자 조합 8자 이상이어야 합니다.";
-    }
-
-    if (!isSocialSignup && formData.password !== formData.passwordConfirm) {
-      newErrors.passwordConfirm = "비밀번호가 일치하지 않습니다.";
-    }
-
-    if (!formData.email || !emailRegex.test(formData.email)) {
-      newErrors.email = "올바른 이메일 형식을 입력해주세요.";
-    }
-
-    if (!isSocialSignup && !newErrors.username && !isUsernameChecked) {
-      newErrors.username = "아이디 중복 확인을 완료해주세요.";
-    }
-
-    if (!isSocialSignup && !newErrors.email && !isEmailVerified) {
-      newErrors.email = "이메일 인증을 완료해주세요.";
-    }
-
-    const phoneRegex = /^\d{2,3}-\d{3,4}-\d{4}$/;
-    if (!formData.phone || !phoneRegex.test(formData.phone)) {
-      newErrors.phone = "올바른 전화번호 형식을 입력해주세요. (예: 010-1234-5678)";
-    }
-
-    if (!formData.birthDate) newErrors.birthDate = "생년월일은 필수입니다.";
-
-    if (!formData.gender) newErrors.gender = "성별은 필수입니다.";
-
-    if (!formData.nickname || formData.nickname.length > 50) {
-      newErrors.nickname = "닉네임은 필수이며 50자 이내여야 합니다.";
-    }
+    const newErrors = validateRegisterInfoForm(formData, {
+      isSocialSignup,
+      isUsernameChecked,
+      isEmailVerified,
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -359,7 +307,8 @@ export default function RegisterInfoForm({
               {usernameMessage}
             </p>
           )}
-          {/* 🌟 아이디 중복 관련 백엔드 에러 표시 */}
+          
+          {/* 아이디 중복 관련 백엔드 에러 표시 */}
           {serverError?.field === "username" && !errors.username && (
             <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
           )}
@@ -414,7 +363,7 @@ export default function RegisterInfoForm({
           {errors.nickname && <p className="mt-1 text-[13px] text-red-500">{errors.nickname}</p>}
         </div>
 
-        {/* 🌟 이메일 */}
+        {/*  이메일 */}
         <div className="col-span-2">
           <FormLabel required>이메일</FormLabel>
           <div className="mt-3 flex gap-2">
@@ -431,6 +380,8 @@ export default function RegisterInfoForm({
               }`}
               disabled={isLoading || isEmailVerified || (isSocialSignup && Boolean(formData.email))}
             />
+
+            {/* 소셜로그인 */}
             {!isSocialSignup && (
               <button
                 type="button"
@@ -453,6 +404,7 @@ export default function RegisterInfoForm({
               </button>
             )}
           </div>
+
           {/* 프론트엔드 자체 에러 (형식 등) */}
           {errors.email && <p className="mt-1 text-[13px] text-red-500">{errors.email}</p>}
           {!errors.email && emailMessage && (
@@ -464,7 +416,7 @@ export default function RegisterInfoForm({
             </p>
           )}
           
-          {/* 🌟 이메일 중복 관련 백엔드 에러 표시 */}
+          {/*  이메일 중복 관련 백엔드 에러 표시 */}
           {serverError?.field === "email" && !errors.email && (
             <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
           )}
@@ -568,7 +520,7 @@ export default function RegisterInfoForm({
           />
         </div>
 
-        <div /> {/* 빈 공간 */}
+        <div />
 
         {/* 유입 경로 */}
         <div className="col-span-2">

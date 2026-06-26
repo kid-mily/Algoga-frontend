@@ -9,8 +9,6 @@ import {
   noticeTypes,
 } from "@/features/notice/components/types";
 
-export const revalidate = 1800;
-
 interface NoticePageProps {
   searchParams?: Promise<{
     tag?: string;

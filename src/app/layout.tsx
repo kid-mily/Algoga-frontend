@@ -1,4 +1,5 @@
-import GlobalErrorModal from "@/features/common/ErrorModal";
+﻿import GlobalErrorModal from "@/features/common/components/ErrorModal";
+import ChatWidget from "@/features/chat/components/ChatWidget";
 import "./globals.css";
 
 export default function RootLayout({
@@ -10,6 +11,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <GlobalErrorModal />
+        <ChatWidget />
 
         {children}
       </body>

@@ -6,14 +6,20 @@
     "dev": "next dev -p 17000",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:unit": "jest",
+    "test:unit:watch": "jest --watch"
   },
   "dependencies": {
     "@portone/browser-sdk": "^0.1.8",
+    "@stomp/stompjs": "^7.3.0",
     "@svgr/webpack": "^8.1.0",
     "@tailwindcss/postcss": "^4.3.0",
     "axios": "^1.16.1",
     "leaflet": "^1.9.4",
+    "lucide-react": "^1.21.0",
     "next": "^16.2.6",
     "postcss": "^8.5.15",
     "react": "19.2.4",
@@ -22,12 +28,20 @@
     "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
     "@types/leaflet": "^1.9.21",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

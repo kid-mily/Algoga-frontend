@@ -1,66 +1,52 @@
+﻿import type { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { reviewScoreFilters } from "../types";
 
 type ReviewToolbarProps = {
-  searchKeyword: string;
+  courses: AdminCourse[];
+  selectedCourseId: number | null;
   selectedScore: string;
-  onSearchKeywordChange: (value: string) => void;
+  onSelectedCourseChange: (courseId: number | null) => void;
   onSelectedScoreChange: (value: string) => void;
 };
 
 export default function ReviewToolbar({
-  searchKeyword,
+  courses,
+  selectedCourseId,
   selectedScore,
-  onSearchKeywordChange,
+  onSelectedCourseChange,
   onSelectedScoreChange,
 }: ReviewToolbarProps) {
   return (
     <section className="mb-6 rounded-[16px] border border-[#E4E7EC] bg-white p-4">
       <form
-        role="search"
-        aria-label="후기 검색 및 필터"
-        className="flex items-center gap-3"
+        aria-label="후기 필터"
+        className="flex flex-wrap items-center gap-3"
         onSubmit={(event) => event.preventDefault()}
       >
-        <div className="flex h-[44px] min-w-0 flex-1 items-center gap-3 rounded-[10px] border border-[#E4E7EC] px-4">
-          <img
-            src="/images/search.svg"
-            alt=""
-            aria-hidden="true"
-            className="h-[18px] w-[18px]"
-          />
-          <label htmlFor="review-search" className="sr-only">
-            강의명 또는 학생 이름 검색
-          </label>
-          <input
-            id="review-search"
-            type="search"
-            value={searchKeyword}
-            onChange={(event) => onSearchKeywordChange(event.target.value)}
-            placeholder="강의명 또는 학생 이름 검색..."
-            className="w-full text-[14px] outline-none placeholder:text-[#98A2B3]"
-          />
-        </div>
-
-        <button
-          type="button"
-          className="flex h-[44px] min-w-[170px] items-center justify-between rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] font-semibold text-[#344054]"
+        <label htmlFor="review-course" className="sr-only">
+          강의 선택
+        </label>
+        <select
+          id="review-course"
+          value={selectedCourseId ?? ""}
+          onChange={(event) =>
+            onSelectedCourseChange(event.target.value ? Number(event.target.value) : null)
+          }
+          className="h-[44px] min-w-[240px] rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] font-semibold text-[#344054] outline-none focus-visible:border-[#639E9B] focus-visible:ring-2 focus-visible:ring-[#D7EDEA]"
         >
-          <span className="flex items-center gap-2">
-            <img
-              src="/images/book.svg"
-              alt=""
-              aria-hidden="true"
-              className="h-[16px] w-[16px]"
-            />
-            전체 강의
-          </span>
-          <img
-            src="/images/arrow.svg"
-            alt=""
-            aria-hidden="true"
-            className="h-[14px] w-[14px] rotate-90"
-          />
-        </button>
+          <option value="">전체 후기</option>
+          {courses.length === 0 ? (
+            <option value="" disabled>
+              강의 없음
+            </option>
+          ) : (
+            courses.map((course) => (
+              <option key={course.courseId} value={course.courseId}>
+                {course.title}
+              </option>
+            ))
+          )}
+        </select>
 
         <div
           role="group"

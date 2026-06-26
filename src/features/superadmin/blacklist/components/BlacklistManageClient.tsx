@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import CompleteModal from "@/features/common/CompleteModal";
-import Modal from "@/features/common/Modal";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import Modal from "@/features/common/components/Modal";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import {
   deregisterBlacklistUser,
   getBlacklistCandidates,
@@ -97,18 +97,28 @@ export default function BlacklistManageClient() {
   const handleRegister = async () => {
     if (!registerTarget || isProcessing) return;
 
+    const targetUserId = registerTarget.userId;
+
     try {
       setIsProcessing(true);
       setError("");
-      await registerBlacklistUser(registerTarget.userId);
+      await registerBlacklistUser(targetUserId);
+    } catch (actionError: unknown) {
+      setError(getErrorMessage(actionError, "블랙리스트 등록에 실패했습니다."));
+      setIsProcessing(false);
+      return;
+    }
+
+    setRegisterTarget(null);
+    setCompleteMessage("블랙리스트 등록이 완료되었습니다.");
+
+    try {
       await Promise.all([
         loadCandidates(candidatePage),
         loadBlacklists(blacklistPage),
       ]);
-      setRegisterTarget(null);
-      setCompleteMessage("블랙리스트 등록이 완료되었습니다.");
-    } catch (actionError: unknown) {
-      setError(getErrorMessage(actionError, "블랙리스트 등록에 실패했습니다."));
+    } catch (reloadError: unknown) {
+      setError(getErrorMessage(reloadError, "등록은 완료됐지만 목록을 새로고침하지 못했습니다."));
     } finally {
       setIsProcessing(false);
     }

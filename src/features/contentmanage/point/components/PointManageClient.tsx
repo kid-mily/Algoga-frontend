@@ -1,10 +1,11 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import CompleteModal from "@/features/common/CompleteModal";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import { useMemo, useState } from "react";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import { useAdminPointList } from "../hooks/useAdminPointList";
 import { PointAdjustMode, SelectedPointStudent, StudentPointInfo } from "../types";
 import PointAdjustModal from "./PointAdjustModal";
@@ -20,6 +21,7 @@ export default function PointManageClient() {
     recallStudentPoints,
   } = useAdminPointList();
 
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [modalMode, setModalMode] = useState<PointAdjustMode>("give");
   const [isAdjustOpen, setIsAdjustOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] =
@@ -31,14 +33,32 @@ export default function PointManageClient() {
     mode: PointAdjustMode,
     student: StudentPointInfo
   ) => {
+    const studentName = student.userName?.trim() || `사용자 #${student.userId}`;
+
     setModalMode(mode);
     setSelectedStudent({
       userId: student.userId,
-      name: student.userName,
+      name: studentName,
       point: student.totalPoint,
     });
     setIsAdjustOpen(true);
   };
+
+  const filteredStudents = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase();
+
+    if (!keyword) {
+      return students;
+    }
+
+    return students.filter((student) => {
+      return (
+        String(student.userId).includes(keyword) ||
+        student.userName.toLowerCase().includes(keyword) ||
+        student.email.toLowerCase().includes(keyword)
+      );
+    });
+  }, [searchKeyword, students]);
 
   const handleSubmit = async (amount: number, reason: string) => {
     if (!selectedStudent) {
@@ -77,8 +97,32 @@ export default function PointManageClient() {
 
       <AdminErrorBanner message={error} className="mt-4" />
 
+      <form
+        role="search"
+        className="mt-5 rounded-[18px] border border-[#E4E7EC] bg-white p-4"
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <label className="flex h-[44px] items-center rounded-[14px] border border-[#E4E7EC] px-4">
+          <Image
+            src="/images/search.svg"
+            alt=""
+            aria-hidden="true"
+            width={16}
+            height={16}
+          />
+          <span className="sr-only">마일리지 사용자 검색</span>
+          <input
+            type="text"
+            value={searchKeyword}
+            onChange={(event) => setSearchKeyword(event.target.value)}
+            placeholder="이름, 이메일, 사용자 ID 검색..."
+            className="ml-3 flex-1 bg-transparent text-[14px] outline-none placeholder:text-[#98A2B3]"
+          />
+        </label>
+      </form>
+
       <PointTable
-        students={students}
+        students={filteredStudents}
         isLoading={isLoading}
         onDetail={(studentId) => router.push(`/contentadmin/point/${studentId}`)}
         onGive={(student) => openAdjustModal("give", student)}

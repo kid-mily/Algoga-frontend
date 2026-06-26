@@ -1,8 +1,10 @@
-"use client";
+﻿"use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import { FormEvent, useState } from "react";
-import CompleteModal from "@/features/common/CompleteModal";
+import Image from "next/image";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import { FormEvent, useRef, useState } from "react";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import Modal from "@/features/common/components/Modal";
 import { ChapterFormProps } from "../types";
 
 const getVideoDurationSeconds = (file: File): Promise<number> => {
@@ -46,17 +48,24 @@ export default function ChapterForm({
   const [duration, setDuration] = useState(initialChapter.duration);
   const [video, setVideo] = useState<File | null>(initialChapter.video);
   const [preview, setPreview] = useState(initialChapter.preview);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [openCompleteModal, setOpenCompleteModal] = useState(false);
+  const [openVideoDeleteModal, setOpenVideoDeleteModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({ title: "", description: "", video: "" });
   const [globalError, setGlobalError] = useState("");
 
   const isCreateMode = mode === "create";
+  const hasVideo = Boolean(video || preview);
 
   const handleVideoUpload = async (file: File) => {
     if (!file.type.startsWith("video/")) {
       setErrors((prev) => ({ ...prev, video: "영상 파일만 업로드할 수 있습니다." }));
       return;
+    }
+
+    if (preview.startsWith("blob:")) {
+      URL.revokeObjectURL(preview);
     }
 
     setVideo(file);
@@ -69,6 +78,20 @@ export default function ChapterForm({
     } catch {
       setErrors((prev) => ({ ...prev, video: "영상 길이를 확인할 수 없습니다." }));
     }
+  };
+
+  const handleVideoRemove = () => {
+    if (preview.startsWith("blob:")) {
+      URL.revokeObjectURL(preview);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    setVideo(null);
+    setPreview("");
+    setDuration("");
+    setErrors((prev) => ({ ...prev, video: "" }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -101,7 +124,7 @@ export default function ChapterForm({
 
     try {
       if (onSubmit) {
-        const isSuccess = await onSubmit({ title, description, duration, video: video as File });
+        const isSuccess = await onSubmit({ title, description, duration, video });
         if (isSuccess === false) return;
       }
       setOpenCompleteModal(true);
@@ -196,29 +219,37 @@ export default function ChapterForm({
         </div>
 
         <div>
-          <label htmlFor="chapter-video" className="text-[13px] font-semibold text-[#344054]">
+          <span className="text-[13px] font-semibold text-[#344054]">
             강의 영상
-          </label>
-          <label
-            htmlFor="chapter-video"
-            className={`mt-2 flex h-[120px] cursor-pointer flex-col items-center justify-center rounded-[14px] border border-dashed transition-colors ${
+          </span>
+          <div
+            className={`relative mt-2 flex h-[120px] flex-col items-center justify-center rounded-[14px] border border-dashed transition-colors ${
               errors.video ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#D0D5DD] bg-[#FCFCFD]"
             }`}
           >
-            {video || preview ? (
+            {hasVideo ? (
               <span className="flex flex-col items-center">
                 <video src={preview} controls className="h-[65px] rounded-[8px]" aria-label="챕터 영상 미리보기" />
-                <span className="mt-2 text-[12px] font-medium text-[#111827]">
+                <span className="mt-2 max-w-[260px] truncate text-[12px] font-medium text-[#111827]">
                   {video ? video.name : "기존 영상"}
                 </span>
+                <button
+                  type="button"
+                  onClick={() => setOpenVideoDeleteModal(true)}
+                  className="absolute right-3 top-3 flex h-[32px] w-[32px] items-center justify-center rounded-full border border-[#FCA5A5] bg-white shadow-sm transition hover:bg-[#FEF2F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#DC2626]"
+                  aria-label="챕터 영상 삭제"
+                >
+                  <Image src="/images/delete.svg" alt="" width={15} height={15} aria-hidden="true" />
+                </button>
               </span>
             ) : (
-              <>
-                <img src="/images/upload.svg" alt="업로드" aria-hidden className="h-[22px] w-[22px]" />
+              <label htmlFor="chapter-video" className="flex h-full w-full cursor-pointer flex-col items-center justify-center">
+                <Image src="/images/upload.svg" alt="" width={22} height={22} aria-hidden="true" />
                 <span className="mt-2 text-[12px] font-semibold text-[#344054]">영상 파일 업로드</span>
-              </>
+              </label>
             )}
             <input
+              ref={fileInputRef}
               id="chapter-video"
               type="file"
               accept="video/*"
@@ -231,7 +262,7 @@ export default function ChapterForm({
                 handleVideoUpload(file);
               }}
             />
-          </label>
+          </div>
           {errors.video && (
             <p id="chapter-video-error" className="mt-1 text-[13px] text-[#DC2626]">
               {errors.video}
@@ -271,6 +302,19 @@ export default function ChapterForm({
           else onClose?.();
         }}
       />
+      <Modal
+        open={openVideoDeleteModal}
+        title="영상 삭제"
+        description="선택한 영상을 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        onCancel={() => setOpenVideoDeleteModal(false)}
+        onConfirm={() => {
+          handleVideoRemove();
+          setOpenVideoDeleteModal(false);
+        }}
+      />
     </form>
   );
 }
+

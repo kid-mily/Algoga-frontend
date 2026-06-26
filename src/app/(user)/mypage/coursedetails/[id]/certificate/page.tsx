@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useParams } from "next/navigation";
 
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import { useCertificatePdf } from "@/features/mypage/coursedetails/useCertificatePdf";
 import CertificatePdfViewer from "@/features/mypage/coursedetails/CertificatePdfViewer";
 import { openCertificatePdf } from "@/features/mypage/coursedetails/certificate.action";

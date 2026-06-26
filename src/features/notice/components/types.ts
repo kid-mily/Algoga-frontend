@@ -2,6 +2,18 @@ export type NoticeType = "ALL" | "NOTICE" | "EVENT" | "MAINTENANCE";
 
 export type NoticeCategory = Exclude<NoticeType, "ALL">;
 
+// 공지
+// 공지 유형 정의 (오타 방지 및 타입 안정성 확보)
+export type NoticeTag = "EVENT" | "NOTICE" | "MAINTENANCE";
+
+export interface Notice {
+    noticeId: number;
+    tag: NoticeTag;
+    title: string;
+    date: string;
+    time: string;
+}
+
 export interface NoticeAll {
   noticeId: number;
   type: NoticeCategory;

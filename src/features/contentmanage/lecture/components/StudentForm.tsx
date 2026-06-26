@@ -1,11 +1,55 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import { useEffect, useState } from "react";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import StudentItem from "./StudentItem";
 import { getCourseStudents } from "@/features/services/adminStudent.service";
-import LoadingSpinner from "@/features/common/LoadingSpinner";
-import { StudentFormProps, StudentRow } from "../types";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
+import { Student, StudentFormProps, StudentRow } from "../types";
+
+const formatStudentDate = (value?: string) => {
+  if (!value) return "-";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return value.slice(0, 10) || "-";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const mapStudentToRow = (
+  student: Student,
+  fallbackCourseTitle: string
+): StudentRow => ({
+  id: student.userId,
+  name: student.userName || student.name || "이름 없음",
+  lecture: student.courseTitle || fallbackCourseTitle,
+  email: student.email,
+  status:
+    student.learningStatus === "COMPLETED" ||
+    student.status === "COMPLETED" ||
+    student.status === "complete" ||
+    student.progressRate === 100 ||
+    student.progress === 100
+      ? "complete"
+      : "progress",
+  progress: Math.min(
+    100,
+    Math.max(0, student.progressRate ?? student.progress ?? 0)
+  ),
+  quizComplete:
+    student.quizSubmitted ??
+    student.quizCompleted ??
+    student.quizComplete ??
+    false,
+  reviewWritten: student.reviewCreated ?? student.reviewWritten ?? false,
+  createdAt: formatStudentDate(student.completedAt),
+});
 
 export default function StudentForm({
   open,
@@ -17,39 +61,55 @@ export default function StudentForm({
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchStudents = async () => {
       if (!courseId) return;
       try {
         setIsLoading(true);
         setApiError("");
-        const data = await getCourseStudents(courseId);
-        const mappedData: StudentRow[] = data.map((student) => ({
-          id: student.userId,
-          name: student.userName,
-          lecture: courseTitle,
-          email: student.email,
-          status: "progress",
-          progress: 0,
-          quizComplete: false,
-          reviewWritten: false,
-          createdAt: student.enrolledAt ? student.enrolledAt.substring(0, 10) : "-",
-        }));
+        const data = await getCourseStudents(courseId, controller.signal);
+        if (controller.signal.aborted) return;
+        const mappedData = data.map((student) =>
+          mapStudentToRow(student, courseTitle)
+        );
         setStudents(mappedData);
       } catch (error: unknown) {
+        if (controller.signal.aborted) return;
         const message =
           error instanceof Error ? error.message : "수강생 목록을 불러오지 못했습니다.";
         setApiError(message);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     if (open && courseId) {
       void fetchStudents();
     }
+
+    return () => {
+      controller.abort();
+    };
   }, [open, courseId, courseTitle]);
+
+  const filteredStudents = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase();
+
+    if (!keyword) return students;
+
+    return students.filter((student) =>
+      [student.name, student.email]
+        .join(" ")
+        .toLowerCase()
+        .includes(keyword)
+    );
+  }, [searchKeyword, students]);
 
   if (!open) return null;
 
@@ -57,14 +117,19 @@ export default function StudentForm({
     setStudents([]);
     setSelectedIds([]);
     setApiError("");
+    setSearchKeyword("");
     onClose();
   };
 
   const handleSelectAll = () => {
-    if (selectedIds.length === students.length && students.length > 0) {
+    const allFilteredSelected =
+      filteredStudents.length > 0 &&
+      filteredStudents.every((student) => selectedIds.includes(student.id));
+
+    if (allFilteredSelected) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(students.map((student) => student.id));
+      setSelectedIds(filteredStudents.map((student) => student.id));
     }
   };
 
@@ -102,13 +167,15 @@ export default function StudentForm({
           onSubmit={(event) => event.preventDefault()}
         >
           <div className="flex h-[52px] w-[420px] items-center rounded-[14px] border border-[#D0D5DD] bg-white px-4">
-            <img src="/images/search.svg" alt="검색" aria-hidden="true" className="h-[20px] w-[20px]" />
+            <Image src="/images/search.svg" alt="" aria-hidden="true" width={20} height={20} />
             <label htmlFor="student-search" className="sr-only">
               수강생 검색
             </label>
             <input
               id="student-search"
               type="search"
+              value={searchKeyword}
+              onChange={(event) => setSearchKeyword(event.target.value)}
               placeholder="이름 또는 이메일 검색"
               className="ml-3 w-full bg-transparent text-[15px] text-[#111827] outline-none placeholder:text-[#98A2B3]"
             />
@@ -130,7 +197,7 @@ export default function StudentForm({
                 type="button"
                 className="flex h-[44px] items-center gap-2 rounded-[12px] bg-[#439A97] px-5 text-[14px] font-semibold text-white"
               >
-                <img src="/images/bell.svg" alt="종" aria-hidden="true" className="h-[20px] w-[20px]" />
+                <Image src="/images/bell.svg" alt="" aria-hidden="true" width={20} height={20} />
                 알림 보내기
               </button>
             </div>
@@ -147,7 +214,12 @@ export default function StudentForm({
                 <th scope="col" className="w-[50px] px-6 py-4 text-left">
                   <input
                     type="checkbox"
-                    checked={students.length > 0 && selectedIds.length === students.length}
+                    checked={
+                      filteredStudents.length > 0 &&
+                      filteredStudents.every((student) =>
+                        selectedIds.includes(student.id)
+                      )
+                    }
                     onChange={handleSelectAll}
                     aria-label="전체 수강생 선택"
                     className="h-[18px] w-[18px] accent-[#439A97]"
@@ -159,7 +231,7 @@ export default function StudentForm({
                 <th scope="col" className="px-6 py-4 text-left">진도율</th>
                 <th scope="col" className="px-6 py-4 text-left">퀴즈</th>
                 <th scope="col" className="px-6 py-4 text-left">리뷰</th>
-                <th scope="col" className="px-6 py-4 text-left">등록일</th>
+                <th scope="col" className="px-6 py-4 text-left">완료일</th>
               </tr>
             </thead>
             <tbody>
@@ -171,14 +243,16 @@ export default function StudentForm({
                     </div>
                   </td>
                 </tr>
-              ) : students.length === 0 && !apiError ? (
+              ) : filteredStudents.length === 0 && !apiError ? (
                 <tr>
                   <td colSpan={8} className="p-10 text-center text-[#667085]">
-                    현재 이 강의를 수강 중인 수강생이 없습니다.
+                    {students.length === 0
+                      ? "현재 이 강의를 수강 중인 수강생이 없습니다."
+                      : "검색 결과가 없습니다."}
                   </td>
                 </tr>
               ) : (
-                students.map((student) => (
+                filteredStudents.map((student) => (
                   <StudentItem
                     key={student.id}
                     id={student.id}

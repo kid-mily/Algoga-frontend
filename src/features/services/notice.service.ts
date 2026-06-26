@@ -1,13 +1,5 @@
 import { api, ApiResponse } from "@/lib/api";
-import { Notice } from "@/features/main/components/Types";
-import {
-  emptyNoticePageResult,
-  NoticeAll,
-  NoticeDetail,
-  NoticeNavigationResult,
-  NoticePageResult,
-  NoticeType,
-} from "../notice/components/types";
+import { emptyNoticePageResult, Notice, NoticeAll, NoticeDetail, NoticeNavigationResult, NoticePageResult, NoticeType } from "../notice/components/types";
 
 const NOTICE_REVALIDATE_SECONDS = 1800;
 

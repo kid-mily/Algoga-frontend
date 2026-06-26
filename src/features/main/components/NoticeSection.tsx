@@ -21,7 +21,7 @@ export default async function NoticeSection() {
   const notices = await getMainNotices();
 
   return (
-    <section className="h-full rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+    <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-[#0A1628]">
           공지사항

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import EvalutionManageClient from "@/features/contentmanage/evalution/components/EvalutionManageClient";
-import { defaultEvalutionQuestions } from "@/features/contentmanage/evalution/types";
 
 export const metadata: Metadata = {
   title: "진단평가 관리 | 알고가 관리자",
@@ -13,5 +12,5 @@ export const metadata: Metadata = {
 };
 
 export default function EvalutionPage() {
-  return <EvalutionManageClient initialQuestions={defaultEvalutionQuestions} />;
+  return <EvalutionManageClient />;
 }

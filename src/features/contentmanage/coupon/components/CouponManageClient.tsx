@@ -1,12 +1,14 @@
+﻿// 쿠폰 목록 클라이언트
+
 "use client";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import AdminLoadingState from "@/features/common/AdminLoadingState";
-import Modal from "@/features/common/Modal";
-import CompleteModal from "@/features/common/CompleteModal";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import AdminLoadingState from "@/features/admin/common/AdminLoadingState";
+import Modal from "@/features/common/components/Modal";
+import CompleteModal from "@/features/common/components/CompleteModal";
 import CouponToolbar from "./CouponToolbar";
 import CouponTable from "./CouponTable";
 import CouponPagination from "./CouponPagination";
@@ -20,7 +22,7 @@ const ITEMS_PER_PAGE = 10;
 export default function CouponManageClient() {
   const router = useRouter();
   const { coupons, isLoading, errorMessage, refetch } = useAdminCouponList();
-
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<CouponStatusFilter>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,6 +31,7 @@ export default function CouponManageClient() {
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [actionError, setActionError] = useState("");
 
+  //쿠폰 목록이 바뀌거나, 검색어가 바뀌거나, 상태 필터가 바뀔 때만 다시 필터링
   const filteredCoupons = useMemo(
     () => filterCoupons(coupons, searchTerm, statusFilter),
     [coupons, searchTerm, statusFilter]
@@ -46,14 +49,9 @@ export default function CouponManageClient() {
     if (!selectedCoupon) return;
 
     try {
-      const deleteCourseId = getCouponCourseId(selectedCoupon);
+      // 백엔드 API
+      const deleteCourseId = getCouponCourseId(selectedCoupon); 
       const deleteCouponPolicyId = getCouponId(selectedCoupon);
-
-      console.log("[coupon:delete] selected coupon", selectedCoupon);
-      console.log("[coupon:delete] request values", {
-        courseId: deleteCourseId,
-        couponPolicyId: deleteCouponPolicyId,
-      });
 
       setActionError("");
       await deleteCouponAction(
@@ -148,3 +146,4 @@ export default function CouponManageClient() {
     </main>
   );
 }
+

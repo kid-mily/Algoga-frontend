@@ -1,8 +1,8 @@
 // 2차 결제
 
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import PackPaymentButton from "@/features/payment/PackPaymentButton";
-import PaymentMethod from "@/features/payment/PaymentMethod";
+
 import SecondCouponForm from "@/features/payment/SecondCouponForm";
 import SecondPaymentSummary from "@/features/payment/SecondPaymentSummary";
 
@@ -35,9 +35,6 @@ export default function SecondPayment() {
 
                 {/* 쿠폰 */}
                 <SecondCouponForm/>
-
-                {/* 결제 수단 */}
-                <PaymentMethod/>
 
                 {/* 결제 */}
                 <SecondPaymentSummary/>

@@ -1,6 +1,6 @@
 "use client";
 
-import LoadingSpinner from "@/features/common/LoadingSpinner";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import MyPageSidebar from "@/features/mypage/MyPageSidebar";
 import MyBenefitsContent from "@/features/mypage/benefits/components/MyBenefitsContent";
 import { useMyBenefits } from "@/features/mypage/benefits/hooks/useMyBenefits";
@@ -62,7 +62,7 @@ export default function MyBenefitsPage() {
     <main className="min-h-[calc(100vh-64px)] bg-[#F5F7FA]">
       <div className="flex min-h-[calc(100vh-64px)] w-full">
         <MyPageSidebar
-          name={user.name}
+          nickname={user.nickname}
           initial={userInitial}
           profileImageUrl={user.profileImageUrl}
         />

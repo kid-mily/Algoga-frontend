@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import CompleteModal from "@/features/common/CompleteModal";
+import CompleteModal from "@/features/common/components/CompleteModal";
 import { LectureUpdateFormProps } from "../types";
 
 export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpdateFormProps) {
@@ -231,7 +231,7 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
 
             <div>
               <label htmlFor="lecture-edit-mileage" className="text-[14px] font-semibold text-[#111827]">
-                마일리지
+                최대 지급 마일리지
               </label>
               <div className="relative mt-2">
                 <input

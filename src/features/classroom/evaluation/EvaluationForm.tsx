@@ -1,24 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
-import CheckModal from "@/features/common/CheckModal";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
-import {
-  DiagnosisSubmitError,
-  submitDiagnosisResult,
-} from "@/features/services/evaluation.service";
-
+import CheckModal from "@/features/common/components/CheckModal";
+import SubHeader from "@/features/common/components/SubHeader";
 import EvaluationHeader from "./EvaluationHeader";
 import EvaluationNavigation from "./EvaluationNavigation";
 import EvaluationQuestion from "./EvaluationQuestion";
-
-import type { EvaluationAnswer, EvaluationFormQuestion } from "./types";
-import {
-  DIAGNOSIS_RESULT_STORAGE_KEY,
-  PENDING_DIAGNOSIS_SUBMIT_STORAGE_KEY,
-} from "./types";
+import { useEvaluationForm } from "./hooks/useEvaluationForm";
+import type { EvaluationFormQuestion } from "./types";
 
 interface EvaluationFormProps {
   continentCode: string;
@@ -31,142 +19,35 @@ export default function EvaluationForm({
   countryId,
   questions,
 }: EvaluationFormProps) {
-  const router = useRouter();
-
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<EvaluationAnswer[]>([]);
-  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitErrorMessage, setSubmitErrorMessage] = useState("");
-
-  const currentQuestion = questions[step];
-
-  const selectedAnswer =
-    answers.find((answer) => answer.questionId === currentQuestion?.questionId)
-      ?.selectedOption ?? null;
-
-  const isLast = step === questions.length - 1;
-  const isAllAnswered = answers.length === questions.length;
-
-  const progress =
-    questions.length > 0
-      ? Math.round(((step + 1) / questions.length) * 100)
-      : 0;
-
-  const handleSelectAnswer = (selectedOption: number) => {
-    if (!currentQuestion) return;
-
-    setAnswers((prev) => {
-      const remainingAnswers = prev.filter(
-        (answer) => answer.questionId !== currentQuestion.questionId
-      );
-
-      return [
-        ...remainingAnswers,
-        {
-          questionId: currentQuestion.questionId,
-          selectedOption,
-        },
-      ];
-    });
-  };
-
-  const handlePrev = () => {
-    setStep((prev) => Math.max(prev - 1, 0));
-  };
-
-  const handleNext = () => {
-    if (selectedAnswer === null) return;
-
-    if (isLast) {
-      setIsCompleteModalOpen(true);
-      return;
-    }
-
-    setStep((prev) => prev + 1);
-  };
-
-  const handleSubmitResult = async () => {
-    const sortedAnswers = questions
-      .map((question) =>
-        answers.find((answer) => answer.questionId === question.questionId)
-      )
-      .filter((answer): answer is EvaluationAnswer => Boolean(answer));
-
-    if (sortedAnswers.length !== questions.length) {
-      setIsCompleteModalOpen(false);
-      setSubmitErrorMessage("모든 문항에 답변한 뒤 제출해 주세요.");
-      return;
-    }
-
-    const payload = {
-      countryId: Number(countryId),
-      answers: sortedAnswers.map((answer) => ({
-        questionId: answer.questionId,
-        selectedOption: answer.selectedOption,
-      })),
-    };
-
-    try {
-      setIsSubmitting(true);
-      setSubmitErrorMessage("");
-
-      const result = await submitDiagnosisResult(payload);
-
-      sessionStorage.setItem(
-        DIAGNOSIS_RESULT_STORAGE_KEY,
-        JSON.stringify(result)
-      );
-
-      setIsCompleteModalOpen(false);
-
-      router.replace(
-        `/classroom/${continentCode}/${countryId}/evaluation/result?level=${result.level}`
-      );
-    } catch (error) {
-      console.error("진단평가 결과 제출 실패:", error);
-
-      if (
-        error instanceof DiagnosisSubmitError &&
-        error.status === 401 &&
-        error.errorCode === "LMS_039"
-      ) {
-        sessionStorage.setItem(
-          PENDING_DIAGNOSIS_SUBMIT_STORAGE_KEY,
-          JSON.stringify({
-            continentCode,
-            countryId,
-            payload,
-          })
-        );
-
-        router.push("/auth/login");
-        return;
-      }
-
-      if (error instanceof DiagnosisSubmitError) {
-        setSubmitErrorMessage(
-          error.traceId
-            ? `${error.message} traceId: ${error.traceId}`
-            : error.message
-        );
-        return;
-      }
-
-      setSubmitErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "진단평가 결과 제출에 실패했습니다."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const {
+    step,
+    currentQuestion,
+    selectedAnswer,
+    isLast,
+    isAllAnswered,
+    progress,
+    isCompleteModalOpen,
+    isSubmitting,
+    submitErrorMessage,
+    handleSelectAnswer,
+    handlePrev,
+    handleNext,
+    handleSubmitResult,
+    closeCompleteModal,
+  } = useEvaluationForm({
+    continentCode,
+    countryId,
+    questions,
+  });
 
   if (questions.length === 0) {
     return (
-      <main className="min-h-screen w-full bg-[#F5F7FA] px-4 py-10">
-        <section className="mx-auto w-full max-w-5xl pt-20">
+      <main className="relative min-h-[calc(100dvh-64px)] overflow-hidden bg-[#F3F8FC] px-4 py-6">
+        {/* 배경 장식 */}
+        <div className="pointer-events-none absolute -left-20 top-16 h-48 w-48 rounded-full bg-[#DCEEF3]/70" />
+        <div className="pointer-events-none absolute -right-20 bottom-10 h-56 w-56 rounded-full bg-[#E8F3E8]/70" />
+
+        <section className="relative mx-auto w-full max-w-2xl">
           <SubHeader
             backHref={`/classroom/${continentCode}/${countryId}`}
             backText="강의 목록으로 돌아가기"
@@ -174,13 +55,17 @@ export default function EvaluationForm({
             description=""
           />
 
-          <article className="mt-8 rounded-3xl bg-white px-8 py-16 text-center shadow-sm">
-            <h1 className="text-2xl font-bold text-[#0A1628]">
-              준비된 진단평가가 없습니다.
+          <article className="mt-5 rounded-2xl border border-[#E3EDF3] bg-white px-6 py-10 text-center shadow-sm">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF5F5] text-xl">
+              🧭
+            </div>
+
+            <h1 className="mt-4 text-xl font-bold text-[#0A1628]">
+              준비된 진단평가가 없습니다
             </h1>
 
-            <p className="mt-3 text-sm font-medium text-[#8A94A6]">
-              해당 국가의 진단평가 문제를 준비 중입니다.
+            <p className="mt-2 text-sm font-medium text-[#8A94A6]">
+              해당 여행지의 진단평가 문제를 준비 중입니다.
             </p>
           </article>
         </section>
@@ -189,8 +74,12 @@ export default function EvaluationForm({
   }
 
   return (
-    <main className="min-h-screen w-full bg-[#F5F7FA] px-4 py-10">
-      <section className="mx-auto w-full max-w-5xl pt-20">
+    <main className="relative min-h-[calc(100dvh-64px)] overflow-hidden bg-[#F3F8FC] px-4 py-5">
+      {/* 배경 */}
+      <div className="pointer-events-none absolute -left-24 top-20 h-56 w-56 rounded-full bg-[#DDEFF3]/65" />
+      <div className="pointer-events-none absolute -right-24 bottom-10 h-64 w-64 rounded-full bg-[#E6F2E8]/70" />
+
+      <section className="relative mx-auto w-full max-w-2xl">
         <EvaluationHeader
           continentCode={continentCode}
           countryId={countryId}
@@ -199,7 +88,10 @@ export default function EvaluationForm({
           progress={progress}
         />
 
-        <form className="mt-3" onSubmit={(event) => event.preventDefault()}>
+        <form
+          className="mt-3"
+          onSubmit={(event) => event.preventDefault()}
+        >
           <EvaluationQuestion
             question={currentQuestion}
             questionNumber={step + 1}
@@ -210,14 +102,19 @@ export default function EvaluationForm({
           <EvaluationNavigation
             currentStep={step}
             isLast={isLast}
-            hasSelectedAnswer={isLast ? isAllAnswered : selectedAnswer !== null}
+            hasSelectedAnswer={
+              isLast ? isAllAnswered : selectedAnswer !== null
+            }
             onPrev={handlePrev}
             onNext={handleNext}
           />
         </form>
 
         {submitErrorMessage && (
-          <p className="mt-4 text-center text-sm font-semibold text-red-500">
+          <p
+            role="alert"
+            className="mt-3 rounded-xl bg-red-50 px-4 py-2.5 text-center text-sm font-semibold text-red-500"
+          >
             {submitErrorMessage}
           </p>
         )}
@@ -225,9 +122,12 @@ export default function EvaluationForm({
 
       <CheckModal
         open={isCompleteModalOpen}
-        title="진단평가를 제출할까요?"
-        description="제출 후에는 답안을 수정할 수 없습니다."
+        title="진단평가를 제출하시겠습니까?"
+        description="제출하면 답안을 수정할 수 없습니다."
         buttonText={isSubmitting ? "제출 중..." : "제출하기"}
+        cancelText="계속 풀기"
+        isProcessing={isSubmitting}
+        onCancel={closeCompleteModal}
         onConfirm={handleSubmitResult}
       />
     </main>

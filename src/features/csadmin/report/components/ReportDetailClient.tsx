@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import CompleteModal from "@/features/common/CompleteModal";
-import Modal from "@/features/common/Modal";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import Modal from "@/features/common/components/Modal";
+import SubHeader from "@/features/common/components/SubHeader";
 import {
   completeAdminReport,
   deleteReportedTarget,
@@ -14,6 +14,7 @@ import {
 } from "@/features/services/adminReport.service";
 import {
   AdminReport,
+  reportStatusLabel,
   reportTargetTypeLabel,
 } from "@/features/csadmin/report/types";
 import { formatReportError } from "@/features/csadmin/report/utils";
@@ -125,6 +126,7 @@ export default function ReportDetailClient({ reportId }: ReportDetailClientProps
 
   const targetDeleteLabel =
     report.targetType === "COMMENT" ? "댓글 삭제" : "게시글 삭제";
+  const isReceived = report.status === "RECEIVED";
 
   return (
     <main aria-labelledby="report-detail-title">
@@ -153,9 +155,16 @@ export default function ReportDetailClient({ reportId }: ReportDetailClientProps
 
         <dl className="grid grid-cols-2 gap-4 p-6 text-[14px]">
           <Info label="신고자" value={`${report.reporterName} (#${report.reporterId})`} />
+          <Info
+            label="피신고자"
+            value={`${report.reportedUserName} ${
+              report.reportedUserId > 0 ? `(#${report.reportedUserId})` : ""
+            }`}
+          />
           <Info label="대상 유형" value={reportTargetTypeLabel[report.targetType]} />
           <Info label="대상 ID" value={String(report.targetId)} />
-          <Info label="처리 상태" value={report.status} />
+          <Info label="처리 상태" value={reportStatusLabel[report.status]} />
+          <Info label="게시글 제목" value={report.postTitle} wide />
           <Info label="신고 사유" value={report.reason} wide />
           <Info label="대상 내용" value={report.content} wide preserve />
         </dl>
@@ -171,7 +180,7 @@ export default function ReportDetailClient({ reportId }: ReportDetailClientProps
           </button>
           <button
             type="button"
-            disabled={isSubmitting || report.status !== "PENDING"}
+            disabled={isSubmitting || !isReceived}
             onClick={() => setConfirmAction("reject")}
             className="h-[34px] rounded-[8px] border border-[#D0D5DD] px-4 text-[13px] font-semibold text-[#344054] disabled:cursor-not-allowed disabled:text-[#98A2B3]"
           >

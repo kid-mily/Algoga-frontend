@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import CompleteModal from "@/features/common/CompleteModal";
-import Modal from "@/features/common/Modal";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import Modal from "@/features/common/components/Modal";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import {
   getBlacklistCandidateById,
   getReportedUserReports,
@@ -30,9 +30,11 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
     totalPages: 1,
   });
   const [reportPage, setReportPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isUserLoading, setIsUserLoading] = useState(true);
+  const [isReportLoading, setIsReportLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState("");
+  const [userError, setUserError] = useState("");
+  const [reportError, setReportError] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
 
@@ -41,27 +43,51 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
 
     const load = async () => {
       try {
-        setIsLoading(true);
-        setError("");
-        const [userData, reportData] = await Promise.all([
-          getBlacklistCandidateById(userId, controller.signal),
-          getReportedUserReports({
-            userId,
-            index: reportPage,
-            size: REPORT_PAGE_SIZE,
-            signal: controller.signal,
-          }),
-        ]);
+        setIsUserLoading(true);
+        setUserError("");
+        const userData = await getBlacklistCandidateById(userId, controller.signal);
 
         if (controller.signal.aborted) return;
         setUser(userData);
+      } catch (loadError: unknown) {
+        if (controller.signal.aborted) return;
+        setUserError(getErrorMessage(loadError, "유저 상세 정보를 불러오지 못했습니다."));
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsUserLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      controller.abort();
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const load = async () => {
+      try {
+        setIsReportLoading(true);
+        setReportError("");
+        const reportData = await getReportedUserReports({
+          userId,
+          index: reportPage,
+          size: REPORT_PAGE_SIZE,
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
         setReports(reportData);
       } catch (loadError: unknown) {
         if (controller.signal.aborted) return;
-        setError(getErrorMessage(loadError, "유저 상세 정보를 불러오지 못했습니다."));
+        setReportError(getErrorMessage(loadError, "신고 이력을 불러오지 못했습니다."));
       } finally {
         if (!controller.signal.aborted) {
-          setIsLoading(false);
+          setIsReportLoading(false);
         }
       }
     };
@@ -78,12 +104,13 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
 
     try {
       setIsProcessing(true);
-      setError("");
+      setUserError("");
+      setReportError("");
       await registerBlacklistUser(userId);
       setConfirmOpen(false);
       setCompleteOpen(true);
     } catch (actionError: unknown) {
-      setError(getErrorMessage(actionError, "블랙리스트 등록에 실패했습니다."));
+      setUserError(getErrorMessage(actionError, "블랙리스트 등록에 실패했습니다."));
     } finally {
       setIsProcessing(false);
     }
@@ -108,13 +135,13 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
         </h1>
       </div>
 
-      <AdminErrorBanner message={error} className="mb-4" />
+      <AdminErrorBanner message={userError || reportError} className="mb-4" />
 
       <div className="grid grid-cols-[1fr_360px] gap-6">
         <section className="space-y-6">
           <section className="rounded-[16px] border border-[#E4E7EC] bg-white p-6">
             <h2 className="mb-6 text-[20px] font-bold text-[#111827]">유저 정보</h2>
-            {isLoading ? (
+            {isUserLoading ? (
               <p className="text-[14px] text-[#667085]">유저 정보를 불러오는 중입니다...</p>
             ) : user ? (
               <div className="grid grid-cols-2 gap-x-16 gap-y-7">
@@ -143,7 +170,7 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
                 </tr>
               </thead>
               <tbody>
-                {isLoading ? (
+                {isReportLoading ? (
                   <ReportEmptyRow text="신고 이력을 불러오는 중입니다." />
                 ) : reports.items.length === 0 ? (
                   <ReportEmptyRow text="신고 이력이 없습니다." />

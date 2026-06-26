@@ -2,10 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import CompleteModal from "@/features/common/CompleteModal";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
-import Modal from "@/features/common/Modal";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import SubHeader from "@/features/common/components/SubHeader";
+import Modal from "@/features/common/components/Modal";
 import { useNoticeForm } from "../hooks/useNoticeForm";
 
 type NoticeFormClientProps = {

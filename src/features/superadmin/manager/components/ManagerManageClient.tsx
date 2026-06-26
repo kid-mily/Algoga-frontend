@@ -1,20 +1,13 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { useRouter } from "next/navigation";
-import { AdminManager } from "../types";
 import { useManagerList } from "../hooks/useManagerList";
 import ManagerDeleteModals from "./ManagerDeleteModals";
 import ManagerTable from "./ManagerTable";
 import ManagerToolbar from "./ManagerToolbar";
 
-type ManagerManageClientProps = {
-  initialManagers: AdminManager[];
-};
-
-export default function ManagerManageClient({
-  initialManagers,
-}: ManagerManageClientProps) {
+export default function ManagerManageClient() {
   const router = useRouter();
   const {
     searchKeyword,
@@ -30,7 +23,8 @@ export default function ManagerManageClient({
     setDeleteTarget,
     setDeleteCompleteOpen,
     deleteManager,
-  } = useManagerList(initialManagers);
+    refetch,
+  } = useManagerList();
 
   return (
     <main aria-labelledby="manager-management-title">
@@ -67,6 +61,15 @@ export default function ManagerManageClient({
       />
 
       <AdminErrorBanner message={error} className="mb-4" />
+      {error && (
+        <button
+          type="button"
+          onClick={refetch}
+          className="mb-4 h-[40px] rounded-[10px] border border-[#D0D5DD] bg-white px-4 text-[14px] font-semibold text-[#344054]"
+        >
+          다시 시도
+        </button>
+      )}
 
       <ManagerTable
         managers={filteredManagers}

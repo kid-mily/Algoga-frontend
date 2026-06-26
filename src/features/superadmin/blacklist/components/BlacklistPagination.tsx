@@ -1,15 +1,32 @@
+import { memo, useMemo } from "react";
+
 type BlacklistPaginationProps = {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
 };
 
-export default function BlacklistPagination({
+const PAGE_WINDOW_SIZE = 7;
+
+function BlacklistPagination({
   currentPage,
   totalPages,
   onPageChange,
 }: BlacklistPaginationProps) {
-  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  const pages = useMemo(() => {
+    const normalizedTotalPages = Math.max(1, totalPages);
+    const halfWindow = Math.floor(PAGE_WINDOW_SIZE / 2);
+    const startPage = Math.max(
+      1,
+      Math.min(currentPage - halfWindow, normalizedTotalPages - PAGE_WINDOW_SIZE + 1)
+    );
+    const endPage = Math.min(normalizedTotalPages, startPage + PAGE_WINDOW_SIZE - 1);
+
+    return Array.from(
+      { length: endPage - startPage + 1 },
+      (_, index) => startPage + index
+    );
+  }, [currentPage, totalPages]);
 
   return (
     <nav
@@ -50,3 +67,5 @@ export default function BlacklistPagination({
     </nav>
   );
 }
+
+export default memo(BlacklistPagination);

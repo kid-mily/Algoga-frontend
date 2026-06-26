@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   deleteAdminPost,
-  getAdminPostDetail,
   getAdminUserPosts,
 } from "@/features/services/adminUserActivity.service";
 import { AdminUserPost } from "@/features/csadmin/user/types";
@@ -24,7 +23,6 @@ export const useUserPostList = (userId: number) => {
   const [totalCount, setTotalCount] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
   const requestIdRef = useRef(0);
-  const detailControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -60,26 +58,9 @@ export const useUserPostList = (userId: number) => {
   }, [currentPage, reloadKey, userId]);
 
   const openPostDetail = useCallback(async (postId: number) => {
-    detailControllerRef.current?.abort();
-    const controller = new AbortController();
-    detailControllerRef.current = controller;
     setError("");
-
-    try {
-      const post = await getAdminPostDetail(postId, controller.signal);
-      if (controller.signal.aborted) return;
-      setSelectedPost(post);
-    } catch (detailError: unknown) {
-      if (controller.signal.aborted) return;
-      setError(getErrorMessage(detailError, "게시글 상세 정보를 불러오지 못했습니다."));
-    }
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      detailControllerRef.current?.abort();
-    };
-  }, []);
+    setSelectedPost(posts.find((post) => post.postId === postId) ?? null);
+  }, [posts]);
 
   const changePage = useCallback((page: number) => {
     setError("");

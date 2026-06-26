@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent } from "react";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import CompleteModal from "@/features/common/CompleteModal";
-import Modal from "@/features/common/Modal";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import Modal from "@/features/common/components/Modal";
 import { refundStatusOptions, CsRefundFormData } from "../types";
 import { useRefundForm } from "../hooks/useRefundForm";
 import RefundStatusBadge from "./RefundStatusBadge";

@@ -10,16 +10,14 @@ export default function RegisterHeader() {
       >
         ‹
       </Link>
-
       {/* 로고 */}
       <div className="flex items-center justify-center">
           <img
-            src="/images/알고가_로고_.png"
+            src="/images/algoga-logo-auth.png"
             alt="로고"
             className="h-[45px] w-auto cursor-pointer"
       />
       </div>
-
       {/* 텍스트 */}
       <span className="text-[24px] font-semibold text-[#439A97]">
         알고가 회원가입

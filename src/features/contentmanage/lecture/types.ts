@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 
 export interface AdminCourse {
   courseId: number;
@@ -8,6 +8,7 @@ export interface AdminCourse {
   description?: string;
   price?: number;
   mileage?: number;
+  maxRewardMileage?: number;
   thumbnailUrl?: string | null;
   fileUrls?: string[];
   level?: string;
@@ -44,6 +45,7 @@ export interface CreateAdminCoursePayload {
   description: string;
   price: number;
   mileage?: number;
+  maxRewardMileage?: number;
   level: string;
   status?: string;
   thumbnail: File;
@@ -94,8 +96,24 @@ export interface CreateAdminChapterPayload {
 export interface Student {
   userId: number;
   userName: string;
+  name?: string;
   email: string;
+  courseId?: number;
+  courseTitle?: string;
   enrolledAt: string;
+  progress?: number;
+  progressRate?: number;
+  completedChapterCount?: number;
+  totalChapterCount?: number;
+  quizComplete?: boolean;
+  quizCompleted?: boolean;
+  quizSubmitted?: boolean;
+  reviewWritten?: boolean;
+  reviewCreated?: boolean;
+  status?: string;
+  learningStatus?: string;
+  accessExpiresAt?: string;
+  completedAt?: string;
 }
 
 export type UpdateLecturePayload = {
@@ -104,6 +122,7 @@ export type UpdateLecturePayload = {
   description: string;
   price: number;
   mileage?: number;
+  maxRewardMileage?: number;
   level: string;
   status: string;
   thumbnail?: File;
@@ -139,7 +158,7 @@ export type ChapterSubmitPayload = {
   title: string;
   description: string;
   duration: string;
-  video: File;
+  video: File | null;
 };
 
 export interface ChapterFormProps {
@@ -166,6 +185,7 @@ export interface ChapterItemProps {
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onVideoUpload: (file: File) => void;
+  onVideoRemove: () => void;
 }
 
 export interface ChapterListProps {
@@ -218,6 +238,7 @@ export type EditLecturePayload = {
   description: string;
   price: string;
   mileage?: string;
+  maxRewardMileage?: string;
   isPublic: string;
   status?: string;
 };
@@ -321,3 +342,47 @@ export interface StudentItemProps extends StudentRow {
   checked: boolean;
   onCheck: () => void;
 }
+
+export type DeletedCourseLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+export type DeletedCourseStatus = "DRAFT" | "PUBLISHED";
+
+export type CourseFile = {
+  fileUrl: string;
+  originalFileName: string | null;
+  fileOrder: number;
+};
+
+export interface AdminDeletedCourse {
+  courseId: number;
+  countryId: number;
+  managerId: number;
+  title: string;
+  description: string;
+  price: number;
+  thumbnailUrl: string | null;
+  fileUrls: string[];
+  files: CourseFile[];
+  level: DeletedCourseLevel;
+  levelName: string;
+  status: DeletedCourseStatus;
+  countryName?: string;
+}
+
+export type AdminDeletedCoursePage = {
+  content: AdminDeletedCourse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+};
+
+export type DeletedCourseQueryParams = {
+  countryId?: number;
+  countryName?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
+};
+

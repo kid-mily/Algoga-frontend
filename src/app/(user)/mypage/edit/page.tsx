@@ -39,12 +39,14 @@ export default function MyPageEditPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-[#f6f8fb] pt-[72px]">
-        <div className="mx-auto flex max-w-[1200px] gap-8 px-6 py-10">
-          <aside className="w-[240px] shrink-0" />
+      <main className="min-h-[calc(100vh-64px)] w-full bg-[#f6f8fb]">
+        <div className="grid min-h-[calc(100vh-64px)] w-full grid-cols-[240px_1fr] items-start">
+          <aside className="h-full w-[240px] shrink-0 bg-white" />
 
-          <section className="flex-1 rounded-2xl bg-white p-10 text-center text-sm text-slate-500">
-            회원 정보를 불러오는 중입니다.
+          <section className="min-h-[calc(100vh-64px)] w-full p-6">
+            <div className="flex min-h-[300px] max-w-3xl items-center justify-center rounded-2xl bg-white text-sm text-slate-500">
+              회원 정보를 불러오는 중입니다.
+            </div>
           </section>
         </div>
       </main>
@@ -53,12 +55,14 @@ export default function MyPageEditPage() {
 
   if (!user) {
     return (
-      <main className="min-h-screen bg-[#f6f8fb] pt-[72px]">
-        <div className="mx-auto flex max-w-[1200px] gap-8 px-6 py-10">
-          <aside className="w-[240px] shrink-0" />
+      <main className="min-h-[calc(100vh-64px)] w-full bg-[#f6f8fb]">
+        <div className="grid min-h-[calc(100vh-64px)] w-full grid-cols-[240px_1fr] items-start">
+          <aside className="h-full w-[240px] shrink-0 bg-white" />
 
-          <section className="flex-1 rounded-2xl bg-white p-10 text-center text-sm text-slate-500">
-            회원 정보를 불러오지 못했습니다.
+          <section className="min-h-[calc(100vh-64px)] w-full p-6">
+            <div className="flex min-h-[300px] max-w-3xl items-center justify-center rounded-2xl bg-white text-sm text-slate-500">
+              회원 정보를 불러오지 못했습니다.
+            </div>
           </section>
         </div>
       </main>
@@ -66,16 +70,18 @@ export default function MyPageEditPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f8fb] pt-[72px]">
-      <div className="mx-auto flex max-w-[1200px] gap-8 px-6 py-10">
+    <main className="min-h-[calc(100vh-64px)] w-full bg-[#f6f8fb]">
+      <div className="grid min-h-[calc(100vh-64px)] w-full grid-cols-[240px_1fr] items-start">
         <MyPageSidebar
-            name={user.nickname || user.name}
-            initial={userInitial}
-            profileImageUrl={user.profileImageUrl}
-        /> 
+          nickname={user.nickname}
+          initial={userInitial}
+          profileImageUrl={user.profileImageUrl}
+        />
 
-        <section className="min-w-0 flex-1">
-          <MyPageEditForm user={user} initial={userInitial} />
+        <section className="min-h-[calc(100vh-64px)] min-w-0 w-full p-6">
+          <div className="w-full mx-auto max-w-3xl">
+            <MyPageEditForm user={user} initial={userInitial} />
+          </div>
         </section>
       </div>
     </main>

@@ -6,17 +6,23 @@ import MyPageSidebar from "@/features/mypage/MyPageSidebar";
 import MyPageInfoCard from "@/features/mypage/MyPageInfoCard";
 import MyPageSummaryCard from "@/features/mypage/MyPageSummaryCard";
 import PasswordVerifyModal from "@/features/mypage/PasswordVerifyModal";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import { useMyPage } from "@/features/mypage/hooks/userMyPage";
-import LoadingSpinner from "@/features/common/LoadingSpinner";
 
 export default function MyPage() {
   const router = useRouter();
 
-  const { user, summary, errorMessage } = useMyPage();
-
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
-  <LoadingSpinner/>
+  const { user, summary, isLoading, errorMessage } = useMyPage();
+
+  if (isLoading) {
+    return (
+      <main className="flex min-h-[calc(100vh-64px)] items-center justify-center">
+        <LoadingSpinner />
+      </main>
+    );
+  }
 
   if (errorMessage || !user) {
     return (
@@ -38,7 +44,7 @@ export default function MyPage() {
       <main className="min-h-[calc(100vh-64px)] bg-[#F5F7FA]">
         <div className="flex w-full">
           <MyPageSidebar
-            name={user.name}
+            nickname={user.nickname}
             initial={userInitial}
             profileImageUrl={user.profileImageUrl}
           />
@@ -111,7 +117,7 @@ function MyPageError({ message }: MyPageErrorProps) {
     <main className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-[#F5F7FA] px-4">
       <section className="rounded-2xl bg-white p-8 text-center shadow-sm">
         <h1 className="text-lg font-bold text-[#0A1628]">
-          정보를 불러올 수 없습니다
+          정보를 불러올 수 없습니다 
         </h1>
 
         <p className="mt-2 text-sm text-red-500">

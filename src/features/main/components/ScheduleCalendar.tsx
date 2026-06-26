@@ -6,7 +6,7 @@ import CalendarGrid from "./CalendarGrid";
 import ScheduleSidebar from "./ScheduleSidebar";
 import { Schedule } from "./Types";
 import { getMethodSchedules } from "@/features/services/schedule.service";
-import { getCookie } from "@/lib/cookie";
+import { ApiRequestError } from "@/lib/api";
 
 const formatDate = (year: number, month: number, date: number) => {
   return `${year}-${String(month).padStart(2, "0")}-${String(date).padStart(
@@ -22,18 +22,19 @@ export default function ScheduleCalendar() {
     () => new Date(today.getFullYear(), today.getMonth(), 1)
   );
 
+  const [selectedDate, setSelectedDate] = useState(() =>
+    formatDate(today.getFullYear(), today.getMonth() + 1, today.getDate())
+  );
+
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
-
-  const [selectedDate, setSelectedDate] = useState(() =>
-    formatDate(today.getFullYear(), today.getMonth() + 1, 1)
-  );
 
   const selectedSchedules = useMemo(() => {
     return schedules.filter((schedule) => schedule.eventDate === selectedDate);
@@ -64,22 +65,6 @@ export default function ScheduleCalendar() {
   };
 
   useEffect(() => {
-    const token = getCookie("accessToken");
-
-    setIsLoggedIn(Boolean(token));
-    setIsAuthChecked(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isAuthChecked) return;
-
-    if (!isLoggedIn) {
-      setSchedules([]);
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
-
     const controller = new AbortController();
 
     const fetchSchedules = async () => {
@@ -90,24 +75,37 @@ export default function ScheduleCalendar() {
         const data = await getMethodSchedules(year, month, controller.signal);
 
         setSchedules(data);
+        setIsLoggedIn(true);
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") return;
+
+        if (
+          error instanceof ApiRequestError &&
+          (error.status === 401 || error.status === 403)
+        ) {
+          setSchedules([]);
+          setIsLoggedIn(false);
+          setError(null);
+          return;
+        }
 
         console.error("일정 데이터를 불러오지 못했습니다:", error);
 
         setSchedules([]);
+        setIsLoggedIn(true);
         setError("일정을 불러올 수 없습니다.");
       } finally {
+        setIsAuthChecked(true);
         setIsLoading(false);
       }
     };
 
-    fetchSchedules();
+    void fetchSchedules();
 
     return () => {
       controller.abort();
     };
-  }, [isAuthChecked, isLoggedIn, year, month]);
+  }, [year, month]);
 
   return (
     <section

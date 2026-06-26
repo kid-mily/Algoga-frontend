@@ -1,17 +1,17 @@
-import Footer from "@/features/common/Footer"
-import Header from "@/features/common/Header"
+﻿import Footer from "@/features/common/components/Footer";
+import Header from "@/features/common/components/Header";
 import "../globals.css";
 
 export default function UserLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <div>
-      <Header/>
+      <Header />
       {children}
-      <Footer/>
+      <Footer />
     </div>
-  )
+  );
 }

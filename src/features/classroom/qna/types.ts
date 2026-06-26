@@ -1,12 +1,16 @@
 export interface CourseQnaComment {
   id: number;
   writer: string;
+  writerType: "USER" | "MANAGER";
+  parentCommentId: number | null;
   content: string;
   createdAt: string;
+  replies: CourseQnaComment[];
 }
 
 export interface CourseQna {
   id: number;
+  userId: number;
   title: string;
   content: string;
   writer: string;
@@ -21,26 +25,22 @@ export interface CreateCourseQnaPayload {
 }
 
 export interface CreateCourseQnaCommentPayload {
+  parentCommentId?: number | null;
   content: string;
 }
 
-export type RawCourseQna = Record<string, unknown>;
-
-const getNumber = (record: RawCourseQna, keys: string[], fallback = 0) => {
+type Raw = Record<string, unknown>;
+const recordOf = (value: unknown): Raw => typeof value === "object" && value !== null ? value as Raw : {};
+const numberOf = (record: Raw, keys: string[], fallback = 0) => {
   const value = keys.map((key) => record[key]).find((item) => item !== undefined);
-
-  return typeof value === "number" ? value : Number(value || fallback);
+  return typeof value === "number" ? value : Number(value ?? fallback);
 };
-
-const getString = (record: RawCourseQna, keys: string[], fallback = "") => {
-  const value = keys.map((key) => record[key]).find((item) => item !== undefined);
-
+const stringOf = (record: Raw, keys: string[], fallback = "") => {
+  const value = keys.map((key) => record[key]).find((item) => typeof item === "string");
   return typeof value === "string" ? value : fallback;
 };
-
-const getArray = (record: RawCourseQna, keys: string[]) => {
+const arrayOf = (record: Raw, keys: string[]) => {
   const value = keys.map((key) => record[key]).find(Array.isArray);
-
   return Array.isArray(value) ? value : [];
 };
 
@@ -48,49 +48,50 @@ export const normalizeCourseQnaComment = (
   item: unknown,
   fallbackId: number
 ): CourseQnaComment => {
-  const record = typeof item === "object" && item !== null ? item as RawCourseQna : {};
+  const record = recordOf(item);
+  const writerType = stringOf(record, ["writerType"], "USER");
 
   return {
-    id: getNumber(record, ["commentId", "answerId", "replyId", "id"], fallbackId),
-    writer: getString(record, ["writer", "userName", "nickname", "author"], "작성자"),
-    content: getString(record, ["content", "comment", "answer", "reply"], ""),
-    createdAt: getString(record, ["createdAt", "createdDate", "updatedAt"], ""),
+    id: numberOf(record, ["commentId", "id"], fallbackId),
+    writer: stringOf(record, ["name", "nickname", "writer", "userName", "username"], writerType === "MANAGER" ? "관리자" : "작성자"),
+    writerType: writerType === "MANAGER" ? "MANAGER" : "USER",
+    parentCommentId: record.parentCommentId === null ? null : numberOf(record, ["parentCommentId"]) || null,
+    content: stringOf(record, ["content", "comment", "reply"]),
+    createdAt: stringOf(record, ["createdAt", "updatedAt"]),
+    replies: arrayOf(record, ["replies"]).map((reply, index) =>
+      normalizeCourseQnaComment(reply, fallbackId * 1000 + index + 1)
+    ),
   };
 };
 
 export const normalizeCourseQna = (item: unknown, fallbackId: number): CourseQna => {
-  const record = typeof item === "object" && item !== null ? item as RawCourseQna : {};
-  const comments = getArray(record, ["comments", "answers", "replies"]).map(
-    (comment, index) => normalizeCourseQnaComment(comment, index + 1)
+  const record = recordOf(item);
+  const answer = stringOf(record, ["answer"]);
+  const comments = arrayOf(record, ["comments"]).map((comment, index) =>
+    normalizeCourseQnaComment(comment, index + 1)
   );
-  const answerContent = getString(record, ["answer", "answerContent"], "");
-  const content = getString(record, ["content", "questionContent", "question"], "");
-  const title =
-    getString(record, ["title", "questionTitle", "subject"], "") ||
-    content.slice(0, 30) ||
-    "제목 없음";
 
+  if (answer) {
+    comments.unshift({
+      id: -1,
+      writer: "관리자",
+      writerType: "MANAGER",
+      parentCommentId: null,
+      content: answer,
+      createdAt: stringOf(record, ["answeredAt", "createdAt"]),
+      replies: [],
+    });
+  }
+
+  const question = stringOf(record, ["question", "content"]);
   return {
-    id: getNumber(record, ["qnaId", "id"], fallbackId),
-    title,
-    content,
-    writer: getString(record, ["writer", "userName", "nickname", "author"], "작성자"),
-    createdAt: getString(record, ["createdAt", "createdDate", "updatedAt"], ""),
-    isAnswered:
-      Boolean(record.isAnswered) ||
-      Boolean(record.answered) ||
-      Boolean(answerContent) ||
-      comments.length > 0,
-    comments: answerContent
-      ? [
-          {
-            id: 1,
-            writer: "관리자",
-            content: answerContent,
-            createdAt: getString(record, ["answeredAt", "updatedAt", "createdAt"], ""),
-          },
-          ...comments,
-        ]
-      : comments,
+    id: numberOf(record, ["qnaId", "id"], fallbackId),
+    userId: numberOf(record, ["userId"]),
+    title: stringOf(record, ["title"], question.slice(0, 30) || "제목 없음"),
+    content: question,
+    writer: stringOf(record, ["name", "nickname", "writer", "userName", "username"], "작성자"),
+    createdAt: stringOf(record, ["createdAt"]),
+    isAnswered: stringOf(record, ["status"]) === "ANSWERED" || Boolean(answer),
+    comments,
   };
 };

@@ -13,11 +13,11 @@ export default function FindPwForm() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
-  // 🌟 에러 메시지 상태 추가
+  // 에러 메시지 상태 추가
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleFindPw = async () => {
-    // 🌟 입력 검사 시 alert 대신 에러 메시지 표시
+    // 입력 검사 시 alert 대신 에러 메시지 표시
     if (!userId.trim() || !email.trim()) {
       setErrorMessage("아이디와 이메일을 모두 입력해주세요.");
       return;
@@ -32,10 +32,15 @@ export default function FindPwForm() {
         email: email.trim(),
       });
 
+      sessionStorage.setItem("pendingPasswordResetUsername", userId.trim());
       router.push("/auth/login/findpwcomplete");
-    } catch (error: any) {
-      // 🌟 에러 발생 시 빨간색 글자 출력
-      setErrorMessage(error.message || "비밀번호 찾기에 실패했습니다.");
+    } catch (error: unknown) {
+      // 에러 발생 시 빨간색 글자 출력
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "비밀번호 찾기에 실패했습니다."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +89,7 @@ export default function FindPwForm() {
           />
         </div>
 
-        {/* 🌟 에러 메시지 출력 영역 */}
+        {/* 에러 메시지 출력 영역 */}
         {errorMessage && (
             <p className="mt-4 text-[14px] font-medium text-[#DC2626] text-center">
                 {errorMessage}

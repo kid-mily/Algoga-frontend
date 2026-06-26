@@ -1,27 +1,30 @@
-import type { Metadata } from "next";
-import CourseQnaCreateClient from "@/features/classroom/qna/components/CourseQnaCreateClient";
+import QnaLayout from "@/features/classroom/qna/components/QnaLayout";
+import QnaWriteForm from "@/features/classroom/qna/components/QnaWriteForm";
 
-interface CourseQnaCreatePageProps {
-  params: {
+interface QnaWritePageProps {
+  params: Promise<{
     continentCode: string;
     countryid: string;
     courseId: string;
-  };
+  }>;
 }
 
-export const metadata: Metadata = {
-  title: "Q&A 질문 작성 | 알고가",
-  description: "강의에 대한 새 질문을 작성합니다.",
-};
+export default async function QnaWritePage({ params }: QnaWritePageProps) {
+  const { continentCode, countryid, courseId } = await params;
 
-export default function CourseQnaCreatePage({
-  params,
-}: CourseQnaCreatePageProps) {
   return (
-    <CourseQnaCreateClient
-      continentCode={decodeURIComponent(params.continentCode)}
-      countryId={decodeURIComponent(params.countryid)}
-      courseId={decodeURIComponent(params.courseId)}
-    />
+    <QnaLayout
+      continentCode={continentCode}
+      countryid={countryid}
+      courseId={courseId}
+      title="질문하기"
+      description="여행 강의와 관련된 궁금한 내용을 자유롭게 질문해 주세요."
+    >
+      <QnaWriteForm
+        continentCode={continentCode}
+        countryid={countryid}
+        courseId={courseId}
+      />
+    </QnaLayout>
   );
 }

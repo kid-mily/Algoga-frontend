@@ -1,9 +1,10 @@
-﻿import { api, ApiResult, unwrapData } from "@/lib/api";
+import { adminApi, api, ApiResult, unwrapData } from "@/lib/api";
 import {
   AdminLoginRequest,
   AdminLoginResponse,
   AdminRole,
-} from "../contentmanage/auth/types";
+} from "@/features/admin/auth/types";
+import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
 
 const normalizeRole = (role: AdminRole | undefined) => {
   return role?.replace(/^ROLE_/, "").toUpperCase() ?? "";
@@ -13,7 +14,6 @@ const firstRole = (roles: AdminLoginResponse["roles"]) => {
   if (Array.isArray(roles)) {
     return roles[0];
   }
-
   return roles;
 };
 
@@ -41,6 +41,10 @@ export const getAdminRedirectPathByRole = (role: string) => {
     return "/moneyadmin/payments";
   }
 
+  if (role === "STATISTICS_MANAGER") {
+    return "/statisticadmin/reservation-conversion";
+  }
+
   return "/contentadmin/lecture";
 };
 
@@ -56,8 +60,18 @@ export const adminLogin = async (
   return unwrapData<AdminLoginResponse | null>(response) ?? {};
 };
 
-export const adminLogout = () => {
-  localStorage.removeItem("adminAccessToken");
-  localStorage.removeItem("adminRefreshToken");
+export const adminLogout = async () => {
+  try {
+    await adminApi.post(
+      "/api/v1/auth/admin/logout",
+      undefined,
+      { suppressGlobalError: true }
+    );
+  } catch (logoutError) {
+    console.warn("관리자 로그아웃 API 호출 실패:", logoutError);
+  } finally {
+    localStorage.removeItem("adminAccessToken");
+    localStorage.removeItem("adminRefreshToken");
+    clearAdminSessionActive();
+  }
 };
-

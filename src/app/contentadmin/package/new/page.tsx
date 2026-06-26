@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import PackageFormClient from "@/features/contentmanage/package/components/PackageFormClient";
 
 export const metadata: Metadata = {

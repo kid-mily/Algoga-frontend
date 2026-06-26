@@ -1,13 +1,8 @@
-"use client";
+﻿"use client";
 
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-
-import { setCookie } from "@/lib/cookie";
-import {
-  changeMyPassword,
-  updateMyProfile,
-} from "@/features/services/mypage.service";
+import { changeMyPassword, updateMyProfile } from "@/features/services/mypage.service";
 import type { MyPageUser } from "@/features/mypage/types";
 
 interface MyPageEditFormProps {
@@ -15,7 +10,10 @@ interface MyPageEditFormProps {
   initial: string;
 }
 
-export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
+export default function MyPageEditForm({
+  user,
+  initial,
+}: MyPageEditFormProps) {
   const router = useRouter();
 
   const [nickname, setNickname] = useState(user.nickname || user.name || "");
@@ -26,23 +24,26 @@ export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const displayInitial = useMemo(() => {
-    return nickname.trim().slice(0, 1) || initial;
-  }, [nickname, initial]);
+  const displayInitial = useMemo(
+    () => nickname.trim().slice(0, 1) || initial,
+    [nickname, initial]
+  );
 
   const genderText = useMemo(() => {
     if (user.gender === "MALE") return "남성";
-    if (user.gender === "FEMALE") return "여성";
-    return user.gender || "";
+    if (user.gender === "FEMAL" || user.gender === "FEMALE") return "여성";
+    if (user.gender === "OTHER") return "기타";
+
+    return user.gender || "-";
   }, [user.gender]);
 
-  const handleProfileImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageChange = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
 
     if (!file) return;
@@ -51,7 +52,9 @@ export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
     setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault();
 
     const trimmedNickname = nickname.trim();
@@ -73,40 +76,32 @@ export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
       return;
     }
 
-    if ((currentPassword && !newPassword) || (!currentPassword && newPassword)) {
-      alert("비밀번호를 변경하려면 현재 비밀번호와 새 비밀번호를 모두 입력해주세요.");
+    if (Boolean(currentPassword) !== Boolean(newPassword)) {
+      alert("현재 비밀번호와 새 비밀번호를 모두 입력해주세요.");
       return;
     }
 
     try {
       setIsSubmitting(true);
 
-      console.log("정보 수정 저장 클릭:", {
-        nickname: trimmedNickname,
-        email: trimmedEmail,
-        phone: trimmedPhone,
-        hasProfileImage: Boolean(profileImage),
-        profileImage,
-      });
-
-      const profileResult = await updateMyProfile({
+      const updatedProfile = await updateMyProfile({
         nickname: trimmedNickname,
         email: trimmedEmail,
         phone: trimmedPhone,
         profileImage,
       });
 
-      console.log("프로필 수정 성공 응답:", profileResult);
-
-      if (profileResult?.accessToken) {
-        setCookie("accessToken", profileResult.accessToken);
-      }
-
-      if (profileResult?.refreshToken) {
-        setCookie("refreshToken", profileResult.refreshToken);
-      }
-
-      window.dispatchEvent(new Event("auth-state-changed"));
+      window.dispatchEvent(
+        new CustomEvent("profile-updated", {
+          detail: {
+            nickname: updatedProfile.nickname ?? trimmedNickname,
+            profileImageUrl:
+              updatedProfile.profileImageUrl === undefined
+                ? previewUrl || user.profileImageUrl
+                : updatedProfile.profileImageUrl,
+          },
+        })
+      );
 
       if (currentPassword && newPassword) {
         await changeMyPassword({
@@ -115,15 +110,18 @@ export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
         });
       }
 
+      window.dispatchEvent(new Event("auth-state-changed"));
+
       alert("회원 정보가 수정되었습니다.");
       router.push("/mypage");
       router.refresh();
     } catch (error) {
       console.error("회원 정보 수정 실패:", error);
+
       alert(
         error instanceof Error
           ? error.message
-          : "회원 정보 수정 중 오류가 발생했습니다.",
+          : "회원 정보 수정 중 오류가 발생했습니다."
       );
     } finally {
       setIsSubmitting(false);
@@ -131,8 +129,8 @@ export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="mb-8 flex items-center justify-between">
+    <form onSubmit={handleSubmit} className="flex h-full w-full flex-col">
+      <div className="mb-4 flex items-center justify-between">
         <button
           type="button"
           onClick={() => router.back()}
@@ -141,25 +139,16 @@ export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
           <span aria-hidden="true">‹</span>
           정보 수정
         </button>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex h-11 items-center gap-2 rounded-2xl bg-[#5f9c98] px-6 text-sm font-bold text-white transition hover:bg-[#528d89] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <span aria-hidden="true">□</span>
-          {isSubmitting ? "저장 중" : "저장"}
-        </button>
       </div>
 
-      <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
-        <div className="bg-[#eef5ff] px-8 py-8">
-          <h2 className="mb-5 text-base font-bold text-slate-900">
+      <section className="flex-1 overflow-hidden rounded-2xl bg-white shadow-sm">
+        <div className="bg-[#eef5ff] px-6 py-5">
+          <h2 className="mb-4 text-sm font-bold text-slate-900">
             프로필 사진
           </h2>
 
-          <div className="flex items-center gap-6">
-            <label className="relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-[#5f9c98] text-4xl font-bold text-white">
+          <div className="flex items-center gap-5">
+            <label className="relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-[#5f9c98] text-3xl font-bold text-white">
               {previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -171,7 +160,7 @@ export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
                 displayInitial
               )}
 
-              <span className="absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-[#5f9c98]">
+              <span className="absolute bottom-1.5 right-1.5 rounded-full bg-white/90 px-1.5 py-0.5 text-[10px] font-bold text-[#5f9c98]">
                 사진
               </span>
 
@@ -187,23 +176,43 @@ export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
               <p className="text-sm font-bold text-slate-900">
                 프로필 사진 변경
               </p>
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500">
                 JPG, PNG 파일을 업로드할 수 있어요.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-6 px-8 py-8 md:grid-cols-2">
-          <Field label="성명" value={user.name || ""} disabled />
+        <div className="grid gap-4 px-6 py-6 md:grid-cols-2">
+          <Field
+            label="성명"
+            value={user.name || ""}
+            disabled
+          />
 
-          <Field label="사용자 코드" value={user.personalCode || ""} disabled />
+          <Field
+            label="사용자 코드"
+            value={user.personalCode || ""}
+            disabled
+          />
 
-          <Field label="아이디" value={user.username || ""} disabled />
+          <Field
+            label="아이디"
+            value={user.username || ""}
+            disabled
+          />
 
-          <Field label="성별" value={genderText} disabled />
+          <Field
+            label="성별"
+            value={genderText}
+            disabled
+          />
 
-          <Field label="생년월일" value={user.birthDate || ""} disabled />
+          <Field
+            label="생년월일"
+            value={user.birthDate || ""}
+            disabled
+          />
 
           <Field
             label="닉네임"
@@ -232,7 +241,9 @@ export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
             onChange={setCurrentPassword}
             placeholder="현재 비밀번호"
             visible={showCurrentPassword}
-            onToggle={() => setShowCurrentPassword((prev) => !prev)}
+            onToggle={() =>
+              setShowCurrentPassword((prev) => !prev)
+            }
           />
 
           <PasswordField
@@ -241,16 +252,18 @@ export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
             onChange={setNewPassword}
             placeholder="새 비밀번호"
             visible={showNewPassword}
-            onToggle={() => setShowNewPassword((prev) => !prev)}
+            onToggle={() =>
+              setShowNewPassword((prev) => !prev)
+            }
           />
         </div>
       </section>
 
-      <div className="mt-6 grid gap-3 md:grid-cols-2">
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
         <button
           type="button"
           onClick={() => router.push("/mypage")}
-          className="h-12 rounded-2xl border border-slate-200 bg-white text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+          className="h-11 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-600"
         >
           취소
         </button>
@@ -258,7 +271,7 @@ export default function MyPageEditForm({ user, initial }: MyPageEditFormProps) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="h-12 rounded-2xl bg-[#5f9c98] text-sm font-bold text-white transition hover:bg-[#528d89] disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-11 rounded-xl bg-[#5f9c98] text-sm font-bold text-white disabled:opacity-60"
         >
           {isSubmitting ? "저장 중" : "저장하기"}
         </button>
@@ -275,10 +288,16 @@ interface FieldProps {
   onChange?: (value: string) => void;
 }
 
-function Field({ label, value, placeholder, disabled, onChange }: FieldProps) {
+function Field({
+  label,
+  value,
+  placeholder,
+  disabled,
+  onChange,
+}: FieldProps) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-bold text-slate-900">
+      <span className="mb-1.5 block text-xs font-bold text-slate-900">
         {label}
       </span>
 
@@ -286,8 +305,10 @@ function Field({ label, value, placeholder, disabled, onChange }: FieldProps) {
         value={value}
         disabled={disabled}
         placeholder={placeholder}
-        onChange={(event) => onChange?.(event.target.value)}
-        className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-[#5f9c98] disabled:bg-slate-50 disabled:text-slate-400"
+        onChange={(event) =>
+          onChange?.(event.target.value)
+        }
+        className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#5f9c98] disabled:bg-slate-50 disabled:text-slate-400"
       />
     </label>
   );
@@ -312,7 +333,7 @@ function PasswordField({
 }: PasswordFieldProps) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-bold text-slate-900">
+      <span className="mb-1.5 block text-xs font-bold text-slate-900">
         {label}
       </span>
 
@@ -321,14 +342,16 @@ function PasswordField({
           type={visible ? "text" : "password"}
           value={value}
           placeholder={placeholder}
-          onChange={(event) => onChange(event.target.value)}
-          className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 pr-16 text-sm text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-[#5f9c98]"
+          onChange={(event) =>
+            onChange(event.target.value)
+          }
+          className="h-10 w-full rounded-xl border border-slate-200 px-3 pr-14 text-sm outline-none focus:border-[#5f9c98]"
         />
 
         <button
           type="button"
           onClick={onToggle}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400"
         >
           {visible ? "숨김" : "보기"}
         </button>

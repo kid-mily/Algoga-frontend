@@ -1,4 +1,4 @@
-export interface ApiErrorResponse {
+﻿export interface ApiErrorResponse {
   timestamp?: string;
   status?: number;
   code?: string;
@@ -44,6 +44,8 @@ export interface UpdateProfileResponse {
   accessToken?: string;
   refreshToken?: string;
   requiresPasswordChange?: boolean;
+  nickname?: string;
+  profileImageUrl?: string | null;
 }
 
 export interface VerifyPasswordRequest {
@@ -62,4 +64,18 @@ export interface CertificatePdfFile {
 
 export interface CertificatePdfData extends CertificatePdfFile {
   url: string;
+}
+
+export interface MyPageEditFormProps {
+  user: MyPageUser;
+  initial: string;
+}
+
+export interface SubmitMyPageEditPayload {
+  nickname: string;
+  email: string;
+  phone: string;
+  profileImage: File | null;
+  currentPassword: string;
+  newPassword: string;
 }

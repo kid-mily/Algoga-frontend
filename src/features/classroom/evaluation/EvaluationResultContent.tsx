@@ -3,227 +3,482 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-
+import { api, ApiResponse } from "@/lib/api";
 import {
-    DIAGNOSIS_RESULT_STORAGE_KEY,
-    DiagnosisLevel,
-    DiagnosisRecommendedCourse,
-    DiagnosisResult,
+  DiagnosisAttempt,
+  DiagnosisLevel,
+  DiagnosisRecommendedCourse,
+  DiagnosisResult,
+  EvaluationFormQuestion,
+  DIAGNOSIS_ATTEMPT_STORAGE_KEY,
+  DIAGNOSIS_RESULT_STORAGE_KEY,
 } from "./types";
-import { getDiagnosisRecommendations } from "@/features/services/evaluation.service";
 
 interface EvaluationResultContentProps {
-    continentCode: string;
-    countryId: string;
-    fallbackLevel?: DiagnosisLevel;
+  continentCode: string;
+  countryId: string;
 }
 
+interface RecommendedCourseFile {
+  fileUrl: string;
+  originalFileName: string;
+  fileOrder: number;
+}
+
+type RecommendedCourse = DiagnosisRecommendedCourse & {
+  fileUrls?: string[];
+  files?: RecommendedCourseFile[];
+};
+
+const LEVEL_STYLES: Record<
+  DiagnosisLevel,
+  {
+    label: string;
+    background: string;
+    text: string;
+    border: string;
+  }
+> = {
+  BEGINNER: {
+    label: "초급",
+    background: "bg-[#EAF7F6]",
+    text: "text-[#357A78]",
+    border: "border-[#BFE4E0]",
+  },
+  INTERMEDIATE: {
+    label: "중급",
+    background: "bg-[#FFF4DF]",
+    text: "text-[#A56B16]",
+    border: "border-[#F1D39A]",
+  },
+  ADVANCED: {
+    label: "고급",
+    background: "bg-[#FDECEC]",
+    text: "text-[#B54747]",
+    border: "border-[#F2C4C4]",
+  },
+};
+
+const getCourseLevelStyle = (levelName?: string) => {
+  if (levelName === "초급") {
+    return {
+      background: "bg-[#EAF7F6]",
+      text: "text-[#357A78]",
+    };
+  }
+
+  if (levelName === "고급") {
+    return {
+      background: "bg-[#FDECEC]",
+      text: "text-[#B54747]",
+    };
+  }
+
+  return {
+    background: "bg-[#FFF4DF]",
+    text: "text-[#A56B16]",
+  };
+};
+
 const formatPrice = (price: number) => {
+  if (price === 0) return "무료";
+
   return `${price.toLocaleString("ko-KR")}원`;
 };
 
+const getRecommendedCourses = async (
+  countryId: string,
+  level: DiagnosisLevel
+): Promise<RecommendedCourse[]> => {
+  const response = await api.get<ApiResponse<RecommendedCourse[]>>(
+    `/api/v1/diagnosis/recommendations?countryId=${countryId}&level=${level}`
+  );
+
+  return response.data;
+};
+
+const getRecommendedCoursesFromResult = async (
+  countryId: string,
+  result: DiagnosisResult
+): Promise<RecommendedCourse[]> => {
+  if (Array.isArray(result.recommendedCourses)) {
+    return result.recommendedCourses;
+  }
+
+  return getRecommendedCourses(countryId, result.level);
+};
+
 export default function EvaluationResultContent({
-    continentCode,
-    countryId,
-    fallbackLevel,
+  continentCode,
+  countryId,
 }: EvaluationResultContentProps) {
-    // 진단평가 결과
-    const [result, setResult] = useState<DiagnosisResult | null>(null);
+  const [result, setResult] = useState<DiagnosisResult | null>(null);
 
-    // 추천 강의 목록
-    const [recommendedCourses, setRecommendedCourses] = useState<DiagnosisRecommendedCourse[]>([]);
+  const [questions, setQuestions] = useState<EvaluationFormQuestion[]>([]);
 
-    // 결과 데이터를 불러오는 중인지 확인
-    const [isLoading, setIsLoading] = useState(true);
+  const [recommendedCourses, setRecommendedCourses] = useState<
+    RecommendedCourse[]
+  >([]);
 
-    useEffect(() => {
-        const storedResult = sessionStorage.getItem(DIAGNOSIS_RESULT_STORAGE_KEY);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRecommendationLoading, setIsRecommendationLoading] =
+    useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const loadResult = async () => {
+      try {
+        const storedAttempt = sessionStorage.getItem(
+          DIAGNOSIS_ATTEMPT_STORAGE_KEY
+        );
+
+        if (storedAttempt) {
+          const attempt = JSON.parse(storedAttempt) as DiagnosisAttempt;
+
+          setResult(attempt.result);
+          setQuestions(attempt.questions ?? []);
+
+          setIsRecommendationLoading(true);
+
+          const courses = await getRecommendedCoursesFromResult(
+            countryId,
+            attempt.result
+          );
+
+          setRecommendedCourses(courses);
+          return;
+        }
+
+        // 이전 방식으로 저장된 결과도 처리
+        const storedResult = sessionStorage.getItem(
+          DIAGNOSIS_RESULT_STORAGE_KEY
+        );
 
         if (storedResult) {
-            const parsedResult = JSON.parse(storedResult) as DiagnosisResult;
+          const parsedResult = JSON.parse(storedResult) as DiagnosisResult;
 
-            setResult(parsedResult);
-            setRecommendedCourses(parsedResult.recommendedCourses ?? []);
-            setIsLoading(false);
-            return;
+          setResult(parsedResult);
+
+          setIsRecommendationLoading(true);
+
+          const courses = await getRecommendedCoursesFromResult(
+            countryId,
+            parsedResult
+          );
+
+          setRecommendedCourses(courses);
+          return;
         }
 
-        const loadRecommendations = async () => {
-            if (!fallbackLevel) {
-                setIsLoading(false);
-                return;
-            }
-            const courses = await getDiagnosisRecommendations(countryId, fallbackLevel);
+        setErrorMessage("저장된 진단평가 결과가 없습니다.");
+      } catch (error) {
+        console.error("[diagnosis-result] 결과 파싱 실패:", error);
 
-            setRecommendedCourses(courses);
-            setIsLoading(false);
-        };
-
-        loadRecommendations();
-    }, [countryId, fallbackLevel]);
-
-    if (isLoading) {
-        return (
-            <main className="min-h-screen w-full bg-[#F5F6F8] px-4 py-10">
-                <section className="mx-auto w-full max-w-4xl py-20">
-                    <article className="rounded-3xl bg-white p-10 text-center shadow-sm">
-                        <h1 className="text-2xl font-bold text-[#0A1628]">
-                            진단평가 결과를 불러오고 있습니다.
-                        </h1>
-                    </article>
-                </section>
-            </main>
-        );
-    }
-
-    // 폴백 레벨 명칭 매핑 가독성 개선
-    const getFallbackLevelName = (level?: DiagnosisLevel) => {
-        switch (level) {
-            case "BEGINNER": return "초급";
-            case "INTERMEDIATE": return "중급";
-            case "ADVANCED": return "고급";
-            default: return "추천";
-        }
+        setErrorMessage("진단평가 결과를 읽을 수 없습니다.");
+      } finally {
+        setIsLoading(false);
+        setIsRecommendationLoading(false);
+      }
     };
 
-    const levelName = result?.levelName ?? getFallbackLevelName(fallbackLevel);
-    const score = result?.score;
-    const correctCount = result?.correctCount;
-    const totalCount = result?.totalCount;
+    loadResult();
+  }, [countryId]);
 
+  const courseListHref = `/classroom/${continentCode}/${countryId}`;
+  const recommendedCourse = recommendedCourses[0];
+
+  const packageLoungeHref = recommendedCourse
+    ? `/packagelounge` +
+      `?countryId=${countryId}` +
+      `&courseId=${recommendedCourse.courseId}` +
+      `&continentCode=${encodeURIComponent(continentCode)}`
+    : courseListHref;
+
+  if (isLoading) {
     return (
-        <main className="min-h-screen w-full bg-[#F5F7FA] px-4 py-10">
-            <section className="mx-auto w-full max-w-5xl py-20">
-                {/* 진단 완료 섹션 */}
-                <article className="rounded-3xl bg-white p-10 text-center shadow-sm">
-                    <span className="mx-auto flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[#EEF5FF]">
-                        <Image
-                            src="/images/medal.svg"
-                            alt="진단평가 완료 이미지"
-                            width={28}
-                            height={28}
-                            className="object-contain"
-                        />
-                    </span>
+      <main className="flex min-h-[calc(100dvh-64px)] items-center justify-center bg-[#F4F7FB] px-4">
+        <section className="w-full max-w-sm rounded-[24px] border border-[#E1EAF0] bg-white px-6 py-8 text-center shadow-sm">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF7F6]">
+            <span className="text-xl" aria-hidden="true">
+              ✈
+            </span>
+          </div>
 
-                    <h1 className="mt-5 text-3xl font-bold text-[#0A1628]">
-                        진단평가가 완료되었습니다.
-                    </h1>
-                    <p className="mt-3 text-sm font-medium text-[#8A9BB0]">
-                        결과를 바탕으로 나에게 맞는 강의를 추천해드릴게요.
-                    </p>
-
-                    <div className="mt-6 inline-flex rounded-xl bg-[#FFF3E0] px-6 py-3 text-sm font-bold text-[#E65100]">
-                        추천 단계: {levelName}
-                    </div>
-
-                    {score !== undefined && (
-                        <dl className="mx-auto mt-8 grid max-w-xl grid-cols-3 gap-3">
-                            <div className="rounded-2xl bg-[#F5F7FA] px-4 py-5">
-                                <dt className="text-xs font-semibold text-[#8A94A6]">점수</dt>
-                                <dd className="mt-2 text-xl font-bold text-[#0A1628]">{score}점</dd>
-                            </div>
-
-                            <div className="rounded-2xl bg-[#F5F7FA] px-4 py-5">
-                                <dt className="text-xs font-semibold text-[#8A94A6]">정답</dt>
-                                <dd className="mt-2 text-xl font-bold text-[#0A1628]">{correctCount}</dd>
-                            </div>
-
-                            <div className="rounded-2xl bg-[#F5F7FA] px-4 py-5">
-                                <dt className="text-xs font-semibold text-[#8A94A6]">전체</dt>
-                                <dd className="mt-2 text-xl font-bold text-[#0A1628]">{totalCount}</dd>
-                            </div>
-                        </dl>
-                    )}
-                </article>
-
-                {/* 추천 강의 섹션 */}
-                <section className="mt-8" aria-labelledby="recommended-course-title">
-                    <div className="mb-5 flex items-center justify-between">
-                        <h2 id="recommended-course-title" className="text-2xl font-bold text-[#0A1628]">
-                            추천 강의
-                        </h2>
-                        <Link
-                            href={`/classroom/${continentCode}/${countryId}`}
-                            className="text-sm font-bold text-[#439A97]"
-                        >
-                            전체 강의 보기
-                        </Link>
-                    </div>
-
-                    {recommendedCourses.length === 0 ? (
-                        <article className="rounded-2xl bg-white p-8 text-center shadow-sm">
-                            <h3 className="text-lg font-bold text-[#0A1628]">
-                                추천 강의가 없습니다.
-                            </h3>
-                            <p className="mt-2 text-sm font-medium text-[#8A94A6]">
-                                강의 목록에서 원하는 강의를 직접 선택해보세요.
-                            </p>
-                        </article>
-                    ) : (
-                        <ul className="grid gap-5 md:grid-cols-3">
-                            {recommendedCourses.map((course) => (
-                                <li key={course.courseId}>
-                                    <Link
-                                        href={`/classroom/${continentCode}/${countryId}/lecture/${course.courseId}`}
-                                        className="block overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                                    >
-                                        <div className="h-36 bg-[#DDEDEA]">
-                                            {course.thumbnailUrl && (
-                                                <img
-                                                    src={course.thumbnailUrl}
-                                                    alt={course.title}
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            )}
-                                        </div>
-
-                                        <div className="p-5">
-                                            <span className="inline-flex rounded-lg bg-[#EAF7F6] px-3 py-1 text-xs font-bold text-[#439A97]">
-                                                {course.levelName}
-                                            </span>
-
-                                            <h3 className="mt-3 line-clamp-2 text-lg font-bold text-[#0A1628]">
-                                                {course.title}
-                                            </h3>
-
-                                            <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#8A94A6]">
-                                                {course.description}
-                                            </p>
-
-                                            <div className="mt-5 flex items-center justify-between">
-                                                <span className="text-sm font-semibold text-[#8A94A6]">
-                                                    {course.paid ? "구매 완료" : "수강 가능"}
-                                                </span>
-                                                <strong className="text-base font-bold text-[#439A97]">
-                                                    {formatPrice(course.price)}
-                                                </strong>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </section>
-
-                {/* 하단 네비게이션 */}
-                <nav className="mt-8 flex gap-4" aria-label="진단평가 결과 이동">
-                    <Link
-                        href={`/classroom/${continentCode}/${countryId}`}
-                        className="flex h-14 flex-1 items-center justify-center rounded-2xl border border-gray-200 bg-white text-base font-bold text-[#0A1628] transition hover:bg-gray-50"
-                    >
-                        강의 목록으로 이동
-                    </Link>
-
-                    <Link
-                        href="/classroom/packagelounge"
-                        className="flex h-14 flex-1 items-center justify-center rounded-2xl bg-[#439A97] text-base font-bold text-white transition hover:bg-[#367C79]"
-                    >
-                        패키지 라운지로 이동
-                    </Link>
-                </nav>
-            </section>
-        </main>
+          <p className="mt-4 text-sm font-bold text-[#0A1628]">
+            진단평가 결과를 불러오는 중입니다
+          </p>
+        </section>
+      </main>
     );
+  }
+
+  if (!result) {
+    return (
+      <main className="flex min-h-[calc(100dvh-64px)] items-center justify-center bg-[#F4F7FB] px-4">
+        <section className="w-full max-w-md rounded-[28px] border border-[#E1EAF0] bg-white px-8 py-10 text-center shadow-sm">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FFF4DF] text-xl font-bold text-[#A56B16]">
+            !
+          </div>
+
+          <h1 className="mt-5 text-xl font-extrabold text-[#0A1628]">
+            결과를 확인할 수 없습니다
+          </h1>
+
+          <p className="mt-2 text-sm leading-6 text-[#8A9BB0]">
+            {errorMessage}
+          </p>
+
+          <div className="mt-7 grid grid-cols-2 gap-3">
+            <Link
+              href={courseListHref}
+              className="flex h-11 items-center justify-center rounded-xl border border-[#DCE5F0] bg-white text-sm font-bold text-[#243247]"
+            >
+              강의 목록
+            </Link>
+
+            <Link
+              href={`${courseListHref}/evaluation`}
+              className="flex h-11 items-center justify-center rounded-xl bg-[#D85F25] text-sm font-bold text-white"
+            >
+              다시 응시
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  const levelStyle = LEVEL_STYLES[result.level] ?? LEVEL_STYLES.BEGINNER;
+
+  return (
+    <main className="min-h-[calc(100dvh-64px)] bg-[#F4F7FB] px-4 py-8">
+      <div className="mx-auto w-full max-w-4xl">
+        {/* 결과 티켓 */}
+        <section className="overflow-hidden rounded-[32px] border border-[#D7E3EA] bg-white shadow-[0_18px_45px_rgba(52,79,98,0.12)]">
+          {/* 티켓 상단 */}
+          <div className="grid md:grid-cols-[1fr_260px]">
+            <div className="px-6 py-7 sm:px-9">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-[#EAF7F6] px-3 py-1 text-[11px] font-extrabold tracking-[0.14em] text-[#357A78]">
+                  ALGO BOARDING PASS
+                </span>
+
+                <span className="text-lg" aria-hidden="true">
+                  ✈
+                </span>
+              </div>
+
+              <h1 className="mt-5 text-2xl font-extrabold text-[#0A1628] sm:text-3xl">
+                진단 평가 완료!
+              </h1>
+
+              <p className="mt-2 text-sm font-medium text-[#7C8A9A]">
+                나에게 맞는 강의를 추천해드릴게요.
+              </p>
+            </div>
+
+            {/* 오른쪽 ALGOGA 카드 */}
+            <div className="flex min-h-[180px] items-center justify-center border-t border-[#E1EAF0] bg-[#F8FBFC] px-6 py-6 md:border-l md:border-t-0">
+              <div className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
+                  <Image
+                    src="/images/medal.svg"
+                    alt="진단 평가 완료"
+                    width={32}
+                    height={32}
+                  />
+                </div>
+
+                <p className="mt-3 text-[11px] font-extrabold tracking-[0.14em] text-[#98A2B3]">
+                  ALGOGA
+                </p>
+
+                <p className="mt-1 text-xs font-bold text-[#439A97]">
+                  알고 가는 여행
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 티켓 절취선 */}
+          <div className="relative border-t border-dashed border-[#D7E3EA]">
+            <span className="absolute -left-4 -top-4 h-8 w-8 rounded-full bg-[#F4F7FB]" />
+            <span className="absolute -right-4 -top-4 h-8 w-8 rounded-full bg-[#F4F7FB]" />
+          </div>
+
+          {/* 티켓 하단 */}
+          <div className="grid md:grid-cols-[1fr_260px]">
+            <div className="flex min-h-[180px] items-center px-6 py-7 sm:px-9">
+              <div>
+                <p className="text-[11px] font-extrabold tracking-[0.14em] text-[#98A2B3]">
+                  BOARDING INFO
+                </p>
+
+                <h2 className="mt-2 text-lg font-extrabold text-[#0A1628]">
+                  여행 학습 준비가 완료되었습니다
+                </h2>
+
+                <p className="mt-2 text-sm font-medium text-[#7C8A9A]">
+                  추천 강의에서 다음 여정을 시작해보세요.
+                </p>
+
+                {questions.length > 0 ? (
+                  <p className="mt-3 text-xs font-semibold text-[#98A2B3]">
+                    진단 문항 {questions.length}개 완료
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            {/* 오른쪽 수준 카드 */}
+            <div
+              className={`flex min-h-[180px] items-center justify-center border-t px-6 py-7 text-center md:border-l md:border-t-0 ${levelStyle.background} ${levelStyle.border}`}
+            >
+              <div>
+                <p className="text-[11px] font-extrabold tracking-[0.16em] text-[#98A2B3]">
+                  YOUR LEVEL
+                </p>
+
+                <strong
+                  className={`mt-4 block text-4xl font-extrabold ${levelStyle.text}`}
+                >
+                  {result.levelName || levelStyle.label}
+                </strong>
+
+                <p
+                  className={`mx-auto mt-4 inline-flex rounded-full border px-4 py-1.5 text-xs font-bold ${levelStyle.border} ${levelStyle.text}`}
+                >
+                  맞춤 강의 추천 완료
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 추천 강의 */}
+        <section className="mt-8">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-extrabold tracking-[0.14em] text-[#439A97]">
+                RECOMMENDED CLASS
+              </p>
+
+              <h2 className="mt-1 text-xl font-extrabold text-[#0A1628]">
+                지금 듣기 좋은 추천 강의
+              </h2>
+            </div>
+          </div>
+
+          {isRecommendationLoading ? (
+            <div className="rounded-[24px] border border-[#E1EAF0] bg-white px-6 py-12 text-center text-sm font-bold text-[#8A9BB0] shadow-sm">
+              추천 강의를 불러오는 중입니다.
+            </div>
+          ) : recommendedCourses.length === 0 ? (
+            <div className="rounded-[24px] border border-[#E1EAF0] bg-white px-6 py-12 text-center shadow-sm">
+              <p className="text-sm font-bold text-[#0A1628]">
+                현재 추천할 수 있는 강의가 없습니다.
+              </p>
+
+              <p className="mt-2 text-xs text-[#8A9BB0]">
+                전체 강의 목록에서 원하는 강의를 선택해보세요.
+              </p>
+            </div>
+          ) : (
+            <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {recommendedCourses.map((course) => {
+                const purchased = course.enrolled || course.paid;
+
+                const courseHref = `/classroom/${continentCode}/${countryId}/lecture/${course.courseId}`;
+
+                const courseLevelStyle = getCourseLevelStyle(course.levelName);
+
+                return (
+                  <li key={course.courseId}>
+                    <Link
+                      href={purchased ? `${courseHref}/study` : courseHref}
+                      className="group block h-full overflow-hidden rounded-[26px] border border-[#E1EAF0] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                    >
+                      <div className="relative aspect-[16/10] overflow-hidden bg-[#EAF2F5]">
+                        {course.thumbnailUrl ? (
+                          <Image
+                            src={course.thumbnailUrl}
+                            alt={course.title}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-cover transition duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-sm font-bold text-[#7C8A9A]">
+                            여행 이미지 없음
+                          </div>
+                        )}
+
+                        <span
+                          className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-extrabold shadow-sm ${courseLevelStyle.background} ${courseLevelStyle.text}`}
+                        >
+                          {course.levelName}
+                        </span>
+
+                        {purchased ? (
+                          <span className="absolute right-3 top-3 rounded-full bg-white px-3 py-1 text-[11px] font-extrabold text-[#439A97] shadow-sm">
+                            수강 중
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <div className="p-4">
+                        <h3 className="line-clamp-2 min-h-[40px] text-sm font-extrabold leading-5 text-[#0A1628]">
+                          {course.title}
+                        </h3>
+
+                        <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#8A9BB0]">
+                          {course.description}
+                        </p>
+
+                        <div className="mt-4 flex items-center justify-between border-t border-[#EEF2F6] pt-4">
+                          <strong className="text-sm font-extrabold text-[#0A1628]">
+                            {formatPrice(course.price)}
+                          </strong>
+
+                          <span className="text-xs font-extrabold text-[#439A97]">
+                            {purchased ? "강의 듣기" : "상세 보기"}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                    <Link
+                      href= "/"
+                      className="mt-2 flex min-h-11 items-center justify-center rounded-2xl bg-[#439A97] px-4 text-xs font-extrabold text-white transition hover:bg-[#377F7C]"
+                    >
+                      이 강의로 패키지 선택
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        {/* 하단 버튼 */}
+        <nav
+          className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2"
+          aria-label="진단평가 결과 이동"
+        >
+          <Link
+            href={courseListHref}
+            className="flex min-h-12 items-center justify-center rounded-2xl border border-[#DCE5F0] bg-white px-4 text-sm font-extrabold text-[#0A1628] shadow-sm transition hover:bg-[#F8FAFC]"
+          >
+            단과 강의실에서 자유롭게 선택
+          </Link>
+
+          <Link
+            href={packageLoungeHref}
+            className="flex min-h-12 items-center justify-center rounded-2xl bg-[#D85F25] px-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#C9551F]"
+          >
+            패키지 라운지로 이동
+          </Link>
+        </nav>
+      </div>
+    </main>
+  );
 }

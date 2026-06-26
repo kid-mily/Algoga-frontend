@@ -1,11 +1,11 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import Link from "next/link";
 import { useState } from "react";
-import CompleteModal from "@/features/common/CompleteModal";
-import Modal from "@/features/common/Modal";
-import SimpleSubHeader from "@/features/common/SimpleSubHeader";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import Modal from "@/features/common/components/Modal";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import { useAdminPackageList } from "../hooks/useAdminPackageList";
 import { TravelPackage } from "../types";
 import PackageTable from "./PackageTable";

@@ -1,10 +1,10 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { useEffect, useState } from "react";
 
-import LoadingSpinner from "@/features/common/LoadingSpinner";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
+import SubHeader from "@/features/common/components/SubHeader";
 import QuizForm from "./QuizForm";
 import { getQuizDetailAction } from "../actions";
 import { AdminQuiz, EditQuizClientProps } from "../types";

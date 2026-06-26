@@ -31,7 +31,9 @@ export type PointAdjustMode = "give" | "recall";
 
 export type StudentPointRecord = {
   userId: number;
-  userName: string;
+  userName?: string;
+  name?: string;
+  nickname?: string;
   email: string;
   totalMileage?: number;
   mileage?: number;

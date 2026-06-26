@@ -4,6 +4,7 @@ import {
   RefundRequestApiRecord,
   refundStatusLabel,
 } from "@/features/csadmin/refund/types";
+import type { ApiRequestOptions } from "@/lib/api";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -62,13 +63,13 @@ export const normalizeRefund = (item: RefundRequestApiRecord): CsRefund => {
 };
 
 export const getAdminRefunds = async (
-  signal?: AbortSignal
+  options: Pick<ApiRequestOptions, "headers" | "signal"> = {}
 ): Promise<CsRefund[]> => {
   const response = await adminApi.get<ApiResult<RefundRequestApiRecord[]>>(
     "/api/v1/admin/refund-requests",
     {
       suppressGlobalError: true,
-      signal,
+      ...options,
     }
   );
   const data = unwrapData(response);
@@ -94,25 +95,33 @@ export const getAdminRefundById = async (
 
 export const requestRefundReview = async (refundId: number): Promise<void> => {
   await adminApi.post<ApiResult<string>>(
-    `/api/v1/admin/refund-requests/${refundId}/review`
+    `/api/v1/admin/refund-requests/${refundId}/review`,
+    undefined,
+    { suppressGlobalError: true }
   );
 };
 
 export const approveRefund = async (refundId: number): Promise<void> => {
   await adminApi.post<ApiResult<string>>(
-    `/api/v1/admin/refund-requests/${refundId}/approve`
+    `/api/v1/admin/refund-requests/${refundId}/approve`,
+    undefined,
+    { suppressGlobalError: true }
   );
 };
 
 export const rejectRefund = async (refundId: number): Promise<void> => {
   await adminApi.post<ApiResult<string>>(
-    `/api/v1/admin/refund-requests/${refundId}/reject`
+    `/api/v1/admin/refund-requests/${refundId}/reject`,
+    undefined,
+    { suppressGlobalError: true }
   );
 };
 
 export const completeRefund = async (refundId: number): Promise<void> => {
   await adminApi.post<ApiResult<string>>(
-    `/api/v1/admin/refund-requests/${refundId}/complete`
+    `/api/v1/admin/refund-requests/${refundId}/complete`,
+    undefined,
+    { suppressGlobalError: true }
   );
 };
 

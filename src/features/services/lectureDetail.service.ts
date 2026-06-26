@@ -1,5 +1,10 @@
 import { api, ApiResponse } from "@/lib/api";
-import { CourseItem, CourseReviewSummary, ProgressData, UpdateProgressRequest } from "../classroom/components/types";
+import {
+  CourseItem,
+  CourseReviewSummary,
+  ProgressData,
+  UpdateProgressRequest,
+} from "../classroom/components/types";
 
 // 강의 상세 조회
 export const getCourseDetail = async (
@@ -7,23 +12,22 @@ export const getCourseDetail = async (
   courseId: string | number
 ): Promise<CourseItem | null> => {
   try {
-    // 국가별 강의 목록 요청
     const response = await api.get<ApiResponse<CourseItem[]>>(
       `/api/v1/courses/countries/${countryId}`,
       {
-        next: { revalidate: 1800 },
+        // next: { revalidate: 3 },
       }
     );
 
     const courses = response.data;
-    // 원하는 강의 찾기
+
     const courseDetail = courses.find(
       (course) => String(course.courseId) === String(courseId)
     );
 
-    return courseDetail || null;
+    return courseDetail ?? null;
   } catch (error) {
-    console.error("강의 상세 정보를 불러오는데 실패했습니다:", error);
+    console.error("강의 상세 정보를 불러오는 데 실패했습니다:", error);
     throw error;
   }
 };
@@ -36,13 +40,13 @@ export const getCourseReviewSummary = async (
     const response = await api.get<ApiResponse<CourseReviewSummary>>(
       `/api/v1/courses/${courseId}/reviews/summary`,
       {
-        next: { revalidate: 1800 },
+        // next: { revalidate: 3 },
       }
     );
 
     return response.data;
   } catch (error) {
-    console.error("수강 후기 요약을 불러오는데 실패했습니다:", error);
+    console.error("수강 후기 요약을 불러오는 데 실패했습니다:", error);
     return null;
   }
 };
@@ -52,7 +56,7 @@ export const updateChapterProgress = async (
   courseId: string | number,
   chapterId: string | number,
   watchedSeconds: number
-): Promise<ProgressData | null> => {
+): Promise<ProgressData> => {
   try {
     const requestBody: UpdateProgressRequest = {
       watchedSeconds: Math.floor(watchedSeconds),

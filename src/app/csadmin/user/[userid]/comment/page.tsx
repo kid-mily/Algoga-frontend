@@ -1,6 +1,6 @@
 ﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import UserCommentListClient from "@/features/csadmin/user/components/UserCommentListClient";
 
 type UserCommentsPageProps = {
@@ -29,7 +29,7 @@ export default async function UserCommentsPage({ params }: UserCommentsPageProps
     <main>
       <SubHeader
         backHref="/csadmin/user"
-        backText="유저 활동 관리로 돌아가기"
+        backText="유저 조회로 돌아가기"
         title="회원 댓글 관리"
         description={`회원 #${userId}의 댓글 활동을 확인합니다`}
       />

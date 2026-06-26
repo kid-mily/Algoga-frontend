@@ -2,13 +2,12 @@
 
 // 1차 결제
 
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import FirstPackCouponForm from "@/features/payment/FirstCouponForm";
 import FirstPaymentSummary from "@/features/payment/FirstPaymentSummary";
 import PackMileageForm from "@/features/payment/PackMileageForm";
 import PackPaymentButton from "@/features/payment/PackPaymentButton";
 import PassportForm from "@/features/payment/PassportForm";
-import PaymentMethod from "@/features/payment/PaymentMethod";
 
 export default function FullPayment() {
     
@@ -44,9 +43,6 @@ export default function FullPayment() {
 
                 {/* 마일리지 */}
                 <PackMileageForm/>
-
-                {/* 결제 수단 */}
-                <PaymentMethod/>
 
                 {/* 결제 */}
                 <FirstPaymentSummary/>

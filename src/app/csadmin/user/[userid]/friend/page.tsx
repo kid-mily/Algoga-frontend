@@ -1,6 +1,6 @@
 ﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import UserFriendClient from "@/features/csadmin/user/components/UserFriendClient";
 
 type UserFriendsPageProps = {
@@ -29,7 +29,7 @@ export default async function UserFriendsPage({ params }: UserFriendsPageProps) 
     <main>
       <SubHeader
         backHref="/csadmin/user"
-        backText="유저 활동 관리로 돌아가기"
+        backText="유저 조회로 돌아가기"
         title="회원 친구 관리"
         description={`회원 #${userId}의 친구 활동을 확인합니다`}
       />

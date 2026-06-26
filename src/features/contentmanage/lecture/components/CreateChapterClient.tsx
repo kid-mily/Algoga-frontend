@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 import ChapterList from "@/features/contentmanage/lecture/components/ChapterList";
 import ChapterForm from "@/features/contentmanage/lecture/components/ChapterForm";
-import CompleteModal from "@/features/common/CompleteModal";
+import CompleteModal from "@/features/common/components/CompleteModal";
 
 import { createChapterAction, getChapterListAction } from "../actions";
 import { ChapterSubmitPayload, CreateChapterClientProps } from "../types";
@@ -21,6 +21,15 @@ export default function CreateChapterClient({
 
   const handleCreate = async (data: ChapterSubmitPayload) => {
     const durationSeconds = Number(data.duration);
+
+    if (!data.video) {
+      setAlertModal({
+        open: true,
+        title: "입력 오류",
+        description: "챕터 영상을 업로드해주세요.",
+      });
+      return false;
+    }
 
     if (Number.isNaN(durationSeconds) || durationSeconds < 1) {
       setAlertModal({
@@ -70,7 +79,7 @@ export default function CreateChapterClient({
   };
 
   return (
-    <main className="min-h-screen bg-[#F8F8F8] px-10 py-10">
+    <main className="bg-[#F8F8F8] px-10 py-10">
       <section aria-labelledby="chapter-management-title">
         <SubHeader
           backHref="/contentadmin/lecture"
@@ -96,3 +105,5 @@ export default function CreateChapterClient({
     </main>
   );
 }
+
+

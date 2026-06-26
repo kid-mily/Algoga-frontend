@@ -1,4 +1,4 @@
-import LoadingSpinner from "@/features/common/LoadingSpinner";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import { StudentPointInfo } from "../types";
 import PointRow from "./PointRow";
 

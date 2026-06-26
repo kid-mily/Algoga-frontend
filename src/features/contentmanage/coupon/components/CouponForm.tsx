@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import CompleteModal from "@/features/common/CompleteModal";
-import { CouponFormProps } from "../types";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import type { CouponFormData, CouponFormProps } from "../types";
 
 export default function CouponForm({
   courses,
@@ -13,19 +13,17 @@ export default function CouponForm({
 }: CouponFormProps) {
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CouponFormData>({
     courseId: initialData?.courseId || "",
     couponName: initialData?.couponName || "",
     discountType: initialData?.discountType || "RATE",
     discountValue: initialData?.discountValue || "",
-    validDays: initialData?.validDays || "",
     active: initialData?.active === "false" ? "false" : "true",
   });
   const [errors, setErrors] = useState({
     courseId: "",
     couponName: "",
     discountValue: "",
-    validDays: "",
   });
 
   const handleChange = (
@@ -46,8 +44,7 @@ export default function CouponForm({
       courseId: "",
       couponName: "",
       discountValue: "",
-      validDays: "",
-    };
+      };
     let hasError = false;
 
     if (!formData.courseId) {
@@ -65,10 +62,6 @@ export default function CouponForm({
       hasError = true;
     }
 
-    if (!formData.validDays || Number(formData.validDays) <= 0) {
-      newErrors.validDays = "올바른 유효기간을 입력해주세요.";
-      hasError = true;
-    }
 
     if (hasError) {
       setErrors(newErrors);
@@ -80,7 +73,7 @@ export default function CouponForm({
       couponName: formData.couponName.trim(),
       discountType: formData.discountType,
       discountValue: Number(formData.discountValue),
-      validDays: Number(formData.validDays),
+      validDays: 30,
       active: formData.active === "true",
     });
 
@@ -192,22 +185,6 @@ export default function CouponForm({
               />
               {errors.discountValue && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.discountValue}</p>}
             </section>
-          </section>
-
-          <section aria-label="쿠폰 유효 기간">
-            <label htmlFor="coupon-valid-days" className="text-[14px] font-semibold text-[#111827]">
-              유효 기간 *
-            </label>
-            <input
-              id="coupon-valid-days"
-              type="number"
-              name="validDays"
-              value={formData.validDays}
-              onChange={handleChange}
-              placeholder="예: 30"
-              className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none"
-            />
-            {errors.validDays && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.validDays}</p>}
           </section>
         </fieldset>
 

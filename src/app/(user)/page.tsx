@@ -3,35 +3,80 @@ import NoticeSection from "@/features/main/components/NoticeSection";
 import AiSchedule from "@/features/main/components/AiSchedule";
 import Banner from "@/features/main/components/Banner";
 import MapSection from "./main/MapSection";
-import ScheduleCalendar from "@/features/main/components/ScheduleCalendar";
+
 import { getMainNotices } from "@/features/services/notice.service";
+import ScheduleCalendar from "@/features/main/components/ScheduleCalendar";
 
 export default async function Home() {
-  // 메인 공지사항 데이터 조회
   const notices = await getMainNotices();
 
   return (
-    <main className="min-h-screen w-full bg-[#f5f6f8] px-10 py-10">
-      <h1 className="sr-only">메인 페이지</h1>
+    <main className="relative min-h-screen overflow-x-hidden bg-[#F3F8FC] px-4 pb-6 pt-4 sm:px-6 lg:px-8">
+      <h1 className="sr-only">알고가 메인 페이지</h1>
 
-      <section className="mx-auto h-[500px] w-full max-w-5xl overflow-hidden rounded-xl border bg-white shadow-lg">
-        <MapSection />
-      </section>
+      {/* 배경 장식 */}
+      <div className="pointer-events-none absolute -left-28 top-40 h-72 w-72 rounded-full bg-[#DDEFF3]/60" />
+      <div className="pointer-events-none absolute -right-32 top-[720px] h-80 w-80 rounded-full bg-[#E8F3E8]/70" />
+      <div className="pointer-events-none absolute -left-28 top-[1200px] h-72 w-72 rounded-full bg-[#DDEFF3]/60" />
 
-      <section className="mx-auto mb-5 mt-5 max-w-4xl">
-        <Banner />
-      </section>
+      <div className="relative">
+        {/* 여행 지도 */}
+        <section className="mx-auto flex h-[calc(100dvh-88px)] w-full max-w-6xl flex-col">
+          <header className="mb-3 flex shrink-0 flex-col justify-between gap-3 px-1 sm:flex-row sm:items-end">
+            <div>
+              <h2 className="text-2xl font-bold text-[#0A1628] sm:text-3xl">
+                여행지를 선택하고 학습을 시작하세요
+              </h2>
 
-      <section className="mx-auto mt-5 w-full max-w-4xl">
-        <ScheduleCalendar />
+              <p className="mt-1.5 text-sm leading-6 text-[#7C8A9A]">
+                관심 있는 국가를 지도에서 선택하고 여행에 필요한 강의와 정보를 확인해 보세요.
+              </p>
+            </div>
+          </header>
 
-        <LearnMethod />
+          <div className="relative min-h-0 flex-1 overflow-hidden rounded-[28px] border border-[#DCE8EF] bg-white shadow-[0_16px_50px_rgba(55,88,110,0.12)]">
+            <MapSection />
+          </div>
+        </section>
 
-        <div className="mt-5 grid grid-cols-2 items-stretch gap-5">
-          <NoticeSection />
-          <AiSchedule />
-        </div>
-      </section>
+        {/* 메인 배너 */}
+        <section className="mx-auto mt-5 w-full max-w-6xl">
+          <Banner />
+        </section>
+
+        {/* 여행 학습 대시보드 */}
+        <section className="mx-auto mt-5 w-full max-w-6xl">
+          <header className="mb-3 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold tracking-[0.12em] text-[#439A97]">
+                MY TRAVEL DASHBOARD
+              </p>
+
+              <h2 className="mt-1 text-xl font-bold text-[#0A1628]">
+                나의 여행 학습 플래너
+              </h2>
+
+              <p className="mt-1 text-sm text-[#8A94A6]">
+                여행 준비와 학습 일정을 한곳에서 관리해 보세요.
+              </p>
+            </div>
+          </header>
+
+          <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
+            <ScheduleCalendar />
+
+            <aside className="flex min-w-0 flex-col gap-4 self-start">
+              <NoticeSection />
+              <AiSchedule />
+            </aside>
+          </div>
+        </section>
+
+        {/* 학습 방법 */}
+        <section className="mx-auto mt-5 w-full max-w-6xl">
+          <LearnMethod />
+        </section>
+      </div>
     </main>
   );
 }

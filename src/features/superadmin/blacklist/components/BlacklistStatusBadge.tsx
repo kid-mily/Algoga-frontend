@@ -15,15 +15,16 @@ const reportStatusLabel: Record<ReportHistoryStatus, string> = {
 };
 
 export function BlacklistStatusBadge({ status }: { status: BlacklistStatus }) {
-  const isBlocked = status === "BLACKLISTED";
+  const style =
+    status === "BLACKLISTED"
+      ? "bg-[#FEE2E2] text-[#DC2626]"
+      : status === "UNKNOWN"
+        ? "bg-[#F2F4F7] text-[#667085]"
+        : "bg-[#DCFCE7] text-[#16A34A]";
 
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-[12px] font-bold ${
-        isBlocked
-          ? "bg-[#FEE2E2] text-[#DC2626]"
-          : "bg-[#DCFCE7] text-[#16A34A]"
-      }`}
+      className={`inline-flex rounded-full px-3 py-1 text-[12px] font-bold ${style}`}
     >
       {blacklistStatusLabel[status]}
     </span>

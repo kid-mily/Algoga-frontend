@@ -1,5 +1,4 @@
-import SubHeader from "@/features/contentmanage/common/SubHeader";
-import SearchBar from "./SearchBar";
+import SubHeader from "@/features/common/components/SubHeader";
 
 export default function CountrySelectHeader() {
   return (
@@ -10,8 +9,6 @@ export default function CountrySelectHeader() {
         title="클래스룸"
         description="여행에 필요한 모든 것을 배워보세요"
       />
-
-      <SearchBar />
     </header>
   );
 }

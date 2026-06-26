@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import CheckModal from "../common/CheckModal";
+import CheckModal from "../common/components/CheckModal";
 
 export default function PackPaymentButton() {
 
@@ -37,8 +37,9 @@ export default function PackPaymentButton() {
             <CheckModal
                 open={open}
                 title="결제가 완료되었습니다"
-                description="예약이 완료되었습니다."
+                description="예약과 결제가 완료되었습니다."
                 buttonText="확인"
+                onCancel={() => setOpen(false)}
                 onConfirm={onConfirm}
             />
         </div>

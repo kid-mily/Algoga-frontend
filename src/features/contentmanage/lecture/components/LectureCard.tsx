@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import { LectureCardProps } from "../types";
 
 export default function LectureCard({
@@ -64,23 +64,23 @@ export default function LectureCard({
       </td>
 
       <td className="px-3 py-4 text-center align-middle">
-        <div className="flex min-w-0 items-center justify-center gap-2">
+        <div className="mx-auto flex w-full max-w-[104px] flex-col gap-2">
           <button
             type="button"
             onClick={onChapterManage}
             aria-label={`${displayTitle} 챕터 관리`}
-            className="whitespace-nowrap rounded-full border border-[#B7E4C7] bg-[#EAF7EE] px-2.5 py-1.5 text-[12px] font-semibold text-[#43A047]"
+            className="inline-flex h-9 w-full items-center justify-center rounded-[10px] border border-[#8FD6A3] bg-white text-[12px] font-bold text-[#2E7D32] shadow-sm transition hover:-translate-y-0.5 hover:border-[#43A047] hover:bg-[#EAF7EE] hover:shadow-md active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#43A047]"
           >
-            챕터관리
+            챕터 관리
           </button>
           {onQuizManage && (
             <button
               type="button"
               onClick={onQuizManage}
               aria-label={`${displayTitle} 퀴즈 관리`}
-              className="whitespace-nowrap rounded-full border border-[#B7D7E8] bg-[#ECF7FC] px-2.5 py-1.5 text-[12px] font-semibold text-[#1570EF]"
+              className="inline-flex h-9 w-full items-center justify-center rounded-[10px] border border-[#9CC9F5] bg-white text-[12px] font-bold text-[#175CD3] shadow-sm transition hover:-translate-y-0.5 hover:border-[#1570EF] hover:bg-[#ECF7FC] hover:shadow-md active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1570EF]"
             >
-              퀴즈관리
+              퀴즈 관리
             </button>
           )}
         </div>
@@ -106,7 +106,7 @@ export default function LectureCard({
             aria-label={`${displayTitle} 수강생 보기`}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] transition hover:bg-[#F2F4F7]"
           >
-            <img src="/images/users.svg" alt="사람" aria-hidden="true" className="h-[18px] w-[18px]" />
+            <Image src="/images/users.svg" alt="" width={18} height={18} aria-hidden="true" />
           </button>
 
           <button
@@ -115,7 +115,7 @@ export default function LectureCard({
             aria-label={`${displayTitle} 강의 수정`}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] transition hover:bg-[#F2F4F7]"
           >
-            <img src="/images/edit.svg" alt="연필" aria-hidden="true" className="h-[18px] w-[18px]" />
+            <Image src="/images/edit.svg" alt="" width={18} height={18} aria-hidden="true" />
           </button>
 
           <button
@@ -124,10 +124,11 @@ export default function LectureCard({
             aria-label={`${displayTitle} 강의 삭제`}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] transition hover:bg-[#F2F4F7]"
           >
-            <img src="/images/delete.svg" alt="쓰레기통" aria-hidden="true" className="h-[18px] w-[18px]" />
+            <Image src="/images/delete.svg" alt="" width={18} height={18} aria-hidden="true" />
           </button>
         </div>
       </td>
     </tr>
   );
 }
+

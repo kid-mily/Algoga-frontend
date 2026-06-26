@@ -18,19 +18,25 @@ export default function PaymentSummary({ price, couponDiscount, usedMileage, fin
                 {/* 원금 */}
                 <div className="flex items-center justify-between mb-2">
                     <p className="text-[#0A1628] font-medium">강의 금액</p>
-                    <p className="font-bold text-[#0A1628]">{price.toLocaleString()}원</p>
+                    <p className="font-bold text-[#0A1628]">
+                        {price.toLocaleString()}원
+                    </p>
                 </div>
                 
                 {/* 쿠폰 할인 */}
                 <div className="flex items-center justify-between mb-2">
                     <p className="text-[#0A1628] font-medium">쿠폰 할인</p>
-                    <p className="font-bold text-[#E74C3C]">-{couponDiscount.toLocaleString()}원</p>
+                    <p className="font-bold text-[#E74C3C]">
+                        -{couponDiscount.toLocaleString()}원
+                    </p>
                 </div>
 
                 {/* 마일리지 */}
                 <div className="flex items-center justify-between mb-2">
                     <p className="text-[#0A1628] font-medium">마일리지 사용</p>
-                    <p className="font-bold text-[#E74C3C]">-{usedMileage.toLocaleString()}원</p>
+                    <p className="font-bold text-[#E74C3C]">
+                        -{usedMileage.toLocaleString()}원
+                    </p>
                 </div>
 
                 <hr className="border-[#EEF1F5] mt-3 mb-3" />
@@ -38,7 +44,9 @@ export default function PaymentSummary({ price, couponDiscount, usedMileage, fin
                 {/* 결제 금액 */}
                 <div className="flex items-center justify-between mb-3">
                     <p className="text-2xl font-bold text-[#0A1628]">최종 결제 금액</p>
-                    <p className="text-2xl font-bold text-[#5E908D]">{finalAmount.toLocaleString()}원</p>
+                    <p className="text-2xl font-bold text-[#5E908D]">
+                        {finalAmount.toLocaleString()}원
+                    </p>
                 </div>
                 <CanclelationPolicy/>
             </div>

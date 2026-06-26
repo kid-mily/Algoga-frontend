@@ -8,7 +8,7 @@ export const getCountries = async (
     const response = await api.get<ApiResponse<Country[]>>(
       `/api/v1/maps/continents/${continentCode}/countries`,
       {
-        next: { revalidate: 1800 },
+        // next: { revalidate: 1800 },
       }
     );
 

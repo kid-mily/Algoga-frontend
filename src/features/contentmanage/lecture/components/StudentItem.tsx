@@ -31,7 +31,7 @@ export default function StudentItem({
         <div className="flex items-center gap-3">
           <div
             aria-hidden="true"
-            className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#439A97] text-[18px] text-white"
+            className="flex h-[44px] w-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-[#439A97] text-[18px] text-white"
           >
             {displayName[0]}
           </div>

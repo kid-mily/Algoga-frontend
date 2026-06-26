@@ -5,8 +5,6 @@ import LecturePageHeader from "@/features/classroom/components/LecturePageHeader
 import EvaluationBanner from "@/features/classroom/components/EvaluationBanner";
 import { getCourses } from "@/features/services/lectureSelect.service";
 
-export const revalidate = 1800;
-
 interface LectureListPageProps {
   params: Promise<{
     continentCode: string;
@@ -23,7 +21,7 @@ export default async function LectureListPage({
 
   return (
     <main className="min-h-screen w-full bg-[#f5f6f8] p-10">
-      <section className="mx-auto w-full max-w-4xl px-4 pt-4">
+      <section className="mx-auto w-full max-w-3xl px-4">
         <LecturePageHeader continentCode={continentCode} />
 
         <EvaluationBanner continentCode={continentCode} countryId={countryid} />

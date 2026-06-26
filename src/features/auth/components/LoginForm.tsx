@@ -1,16 +1,12 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { login } from "@/features/services/auth.service";
-import CompleteModal from "@/features/common/CompleteModal";
-
 export default function LoginForm() {
   const router = useRouter();
-  const apiBaseUrl = (
-    process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr"
-  ).replace(/\/$/, "");
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -18,7 +14,6 @@ export default function LoginForm() {
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [modal, setModal] = useState({ open: false, title: "", description: "" });
 
   const validateUsername = (value: string) => {
     if (!value.trim()) {
@@ -64,37 +59,39 @@ export default function LoginForm() {
 
       window.dispatchEvent(new Event("auth-state-changed"));
 
-      if (data?.requiresPasswordChange) {
+      const normalizedUsername = username.trim();
+      const pendingPasswordResetUsername = sessionStorage.getItem(
+        "pendingPasswordResetUsername"
+      );
+      const shouldChangePassword =
+        data?.requiresPasswordChange ||
+        pendingPasswordResetUsername === normalizedUsername;
+
+      if (shouldChangePassword) {
         router.push("/auth/login/newpw");
         return;
       }
 
       router.push("/");
-    } catch (error: unknown) {
-      console.error("로그인 에러:", error);
-      const message =
-        error instanceof Error
-          ? error.message
-          : "아이디 또는 비밀번호를 확인해주세요.";
-
-      // 🌟 alert 제거 후 모달 호출로 변경
-      setModal({
-        open: true,
-        title: "로그인 실패",
-        description: message,
-      });
+    } catch {
+      setUsernameError("아이디 또는 비밀번호가 틀렸습니다.");
+      setPasswordError("아이디 또는 비밀번호가 틀렸습니다.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const socialLoginUrls = {
-    kakao: `${apiBaseUrl}/oauth2/authorization/kakao`,
-    google: `${apiBaseUrl}/oauth2/authorization/google`,
-  };
+  const hasSocialLoginConfig = Boolean(apiBaseUrl);
+  const socialLoginUrls = hasSocialLoginConfig
+    ? {
+        kakao: `${apiBaseUrl}/oauth2/authorization/kakao`,
+        google: `${apiBaseUrl}/oauth2/authorization/google`,
+      }
+    : null;
 
   return (
     <>
+    {/* 로그인폼 */}
       <div className="w-[400px]">
         <h1 className="text-[32px] font-bold text-[#111827]">로그인</h1>
         <p className="mt-2 text-[15px] text-[#98A2B3]">계정에 로그인하세요</p>
@@ -163,13 +160,15 @@ export default function LoginForm() {
 
           {/* 로그인 버튼 */}
           <button
-            type="submit"
-            disabled={!isValid || isLoading}
-            className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition ${
-              isValid && !isLoading ? "bg-[#439A97] hover:bg-[#367c79]" : "cursor-not-allowed bg-[#D0D5DD]"
-            }`}
-          >
-            {isLoading ? "로그인 중..." : "로그인"}
+              type="submit"
+              disabled={isLoading}
+              className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition ${
+                isLoading
+                  ? "cursor-not-allowed bg-[#D0D5DD]"
+                  : "bg-[#439A97] hover:bg-[#367c79]"
+              }`}
+            >
+              {isLoading ? "로그인 중..." : "로그인"}
           </button>
 
           <Link
@@ -186,18 +185,26 @@ export default function LoginForm() {
             <div className="h-px flex-1 bg-[#E4E7EC]" />
           </div>
 
-          <a
-            href={socialLoginUrls.kakao}
-            className="mt-5 flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#FEE500] text-[17px] font-semibold text-black"
-          >
-            카카오로 계속하기
-          </a>
-          <a
-            href={socialLoginUrls.google}
-            className="mt-4 flex h-[56px] w-full items-center justify-center rounded-[16px] border border-[#D0D5DD] bg-[#F2F4F7] text-[17px] font-semibold text-[#344054]"
-          >
-            구글로 계속하기
-          </a>
+          {socialLoginUrls ? (
+            <>
+              <a
+                href={socialLoginUrls.kakao}
+                className="mt-5 flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#FEE500] text-[17px] font-semibold text-black"
+              >
+                카카오로 계속하기
+              </a>
+              <a
+                href={socialLoginUrls.google}
+                className="mt-4 flex h-[56px] w-full items-center justify-center rounded-[16px] border border-[#D0D5DD] bg-[#F2F4F7] text-[17px] font-semibold text-[#344054]"
+              >
+                구글로 계속하기
+              </a>
+            </>
+          ) : (
+            <p className="mt-5 text-center text-[13px] text-[#DC2626]">
+              소셜 로그인 설정이 필요합니다.
+            </p>
+          )}
 
           <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
             계정이 없으신가요?{" "}
@@ -205,15 +212,6 @@ export default function LoginForm() {
           </div>
         </form>
       </div>
-
-      <CompleteModal
-        open={modal.open}
-        title={modal.title}
-        description={modal.description}
-        buttonText="확인"
-        onConfirm={() => setModal((prev) => ({ ...prev, open: false }))}
-      />
     </>
   );
 }
-

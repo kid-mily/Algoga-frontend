@@ -1,7 +1,8 @@
 'use client';
 
+import SubHeader from '@/features/common/components/SubHeader';
 import { useParams } from 'next/navigation';
-import SubHeader from '@/features/contentmanage/common/SubHeader';
+
 
 const CLASS_INFO = {
   title: '미국 동부 여행 준비',

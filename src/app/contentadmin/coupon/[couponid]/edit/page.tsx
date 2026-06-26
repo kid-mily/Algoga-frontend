@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import EditCouponClient from "@/features/contentmanage/coupon/components/EditCouponClient";
 
 export const metadata: Metadata = {
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
 
 type EditCouponPageProps = {
   params: Promise<{ couponid: string }>;
-  searchParams: Promise<{ courseId?: string }>;
+  searchParams: Promise<{ courseId?: string | string[] }>;
 };
 
 export default async function EditCouponPage({
@@ -16,12 +17,23 @@ export default async function EditCouponPage({
   searchParams,
 }: EditCouponPageProps) {
   const { couponid } = await params;
-  const { courseId } = await searchParams;
+  const { courseId: rawCourseId } = await searchParams;
+  const courseIdValue = Array.isArray(rawCourseId) ? rawCourseId[0] : rawCourseId;
+  const couponId = Number(couponid);
+  const courseId = Number(courseIdValue);
 
-  return (
-    <EditCouponClient
-      couponId={Number(couponid)}
-      courseId={Number(courseId)}
-    />
-  );
+  // 주소값이 이상하면 404 페이지로 보내는 검사 코드
+  if (
+    !courseIdValue ||
+    isNaN(couponId) ||
+    isNaN(courseId) ||
+    !Number.isSafeInteger(couponId) ||
+    !Number.isSafeInteger(courseId) ||
+    couponId <= 0 ||
+    courseId <= 0
+  ) {
+    notFound();
+  }
+
+  return <EditCouponClient couponId={couponId} courseId={courseId} />;
 }

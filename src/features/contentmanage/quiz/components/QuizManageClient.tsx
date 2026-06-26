@@ -1,12 +1,12 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import LoadingSpinner from "@/features/common/LoadingSpinner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import QuizList from "./QuizList";
 import QuizToolbar from "./QuizToolbar";
 import { useAdminQuizList } from "../hooks/useAdminQuizList";
 import { QuizManageClientProps } from "../types";
-import SubHeader from "../../common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 
 export default function QuizManageClient({
   initialCourseId = "all",
@@ -54,7 +54,7 @@ export default function QuizManageClient({
           aria-live="polite"
           className="mt-6 flex justify-center rounded-[18px] border border-[#E4E7EC] bg-white p-8"
         >
-          <LoadingSpinner text="?? ??? ???? ????..." />
+          <LoadingSpinner text="로딩중입니다" />
         </section>
       )}
 

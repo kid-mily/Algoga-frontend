@@ -15,7 +15,9 @@ const getNumber = (
   keys: string[],
   fallback = 0
 ) => {
-  const value = keys.map((key) => record[key]).find((item) => item !== undefined);
+  const value = keys
+    .map((key) => record[key])
+    .find((item) => item !== null && item !== undefined);
 
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : fallback;
@@ -31,7 +33,14 @@ const getString = (
   keys: string[],
   fallback = ""
 ) => {
-  const value = keys.map((key) => record[key]).find((item) => item !== undefined);
+  const value = keys
+    .map((key) => record[key])
+    .find(
+      (item) =>
+        item !== null &&
+        item !== undefined &&
+        !(typeof item === "string" && !item.trim())
+    );
 
   return typeof value === "string" ? value : fallback;
 };
@@ -40,7 +49,9 @@ const getNestedRecord = (
   record: RawReportRecord,
   keys: string[]
 ): RawReportRecord => {
-  const value = keys.map((key) => record[key]).find((item) => item !== undefined);
+  const value = keys
+    .map((key) => record[key])
+    .find((item) => item !== null && item !== undefined);
 
   return getRecord(value);
 };
@@ -95,23 +106,52 @@ const formatReportReason = (value: string) => {
 export const normalizeReport = (item: unknown, fallbackId = 0): AdminReport => {
   const record = getRecord(item);
   const reporter = getNestedRecord(record, ["reporter", "reporterUser", "reportingUser", "user"]);
+  const reportedUser = getNestedRecord(record, [
+    "reportedUser",
+    "targetUser",
+    "reported",
+    "targetMember",
+  ]);
+  const post = getNestedRecord(record, ["post", "targetPost"]);
   const targetType = getString(record, ["targetType", "type"], "POST").toUpperCase();
-  const status = getString(record, ["status", "reportStatus"], "PENDING").toUpperCase();
+  const status = getString(record, ["status", "reportStatus"], "RECEIVED").toUpperCase();
 
   return {
     reportId: getNumber(record, ["reportId", "id"], fallbackId),
     reporterId: getNumber(record, ["reporterId", "reporterUserId", "reportingUserId"], getNumber(reporter, ["userId", "memberId", "id"])),
     reporterName: getString(record, ["reporterName", "reporterNickname", "reportingUserName", "userName", "nickname"], getString(reporter, ["name", "userName", "nickname", "email"], "-")),
+    reportedUserId: getNumber(
+      record,
+      ["reportedUserId", "targetUserId", "reportedMemberId"],
+      getNumber(reportedUser, ["userId", "memberId", "id"])
+    ),
+    reportedUserName: getString(
+      record,
+      [
+        "reportedUserName",
+        "reportedUserNickname",
+        "targetUserName",
+        "targetUserNickname",
+        "reportedNickname",
+        "targetNickname",
+      ],
+      getString(reportedUser, ["nickname", "name", "userName", "email"], "-")
+    ),
     targetType: targetType === "COMMENT" ? "COMMENT" : "POST",
     targetId: getNumber(record, ["targetId", "postId", "commentId"]),
+    postTitle: getString(
+      record,
+      ["postTitle", "targetPostTitle", "targetTitle", "title"],
+      getString(post, ["title", "postTitle"], "-")
+    ),
     reason: formatReportReason(
       getString(record, ["reasonType", "reason", "reportReason", "reportReasonType"], "-")
     ),
     content: getString(record, ["content", "targetContent", "description"], "-"),
     status:
-      status === "REJECTED" || status === "COMPLETED"
+      status === "REJECTED" || status === "COMPLETED" || status === "RECEIVED"
         ? (status as ReportStatus)
-        : "PENDING",
+        : "RECEIVED",
     createdAt: formatDateTime(getString(record, ["createdAt", "reportedAt"])),
     processedAt: getString(record, ["processedAt", "updatedAt"]) || null,
   };
@@ -137,16 +177,28 @@ export const normalizeReportPage = (data: unknown): AdminReportPage => {
 export const getAdminReports = async ({
   page = 0,
   size = 10,
+  status,
+  targetType,
+  keyword,
   signal,
 }: {
   page?: number;
   size?: number;
+  status?: ReportStatus | "ALL";
+  targetType?: ReportTargetType | "ALL";
+  keyword?: string;
   signal?: AbortSignal;
 } = {}): Promise<AdminReportPage> => {
   const response = await adminApi.get<ApiResult<unknown>>(
     "/api/v1/reports/admin",
     {
-      params: { page, size },
+      params: {
+        page,
+        size,
+        status: status && status !== "ALL" ? status : undefined,
+        targetType: targetType && targetType !== "ALL" ? targetType : undefined,
+        keyword: keyword?.trim() || undefined,
+      },
       suppressGlobalError: true,
       signal,
     }

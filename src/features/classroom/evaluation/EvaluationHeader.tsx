@@ -1,5 +1,5 @@
 import type { EvaluationFormQuestion } from "./types";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import SubHeader from "@/features/common/components/SubHeader";
 
 interface EvaluationHeaderProps {
   continentCode: string;
@@ -30,24 +30,26 @@ export default function EvaluationHeader({
         <div className="flex items-start justify-between gap-6">
           {/* 진단평가 제목 */}
           <div>
-            <h1 className="text-2xl font-bold text-[#0A1628]">
+            <h1 className="text-xl font-bold text-[#0A1628]">
               여행 진단평가
             </h1>
 
-            <p className="mt-3 text-lg font-medium text-[#8A94A6]">
+            <p className="mt-3 text-sm font-medium text-[#8A94A6]">
               나에게 맞는 강의를 추천받아보세요.
             </p>
           </div>
         </div>
 
+        <div className="border border-dashed border-gray-100 mt-5"></div>
+
         {/* 진행률 영역 */}
         <section
-          className="mt-10"
+          className="mt-5"
           aria-labelledby="evaluation-progress"
         >
           <div className="flex items-center justify-between">
             <h2
-              className="text-2xl font-bold text-[#0A1628]"
+              className="text-xl font-bold text-[#0A1628]"
             >
               문제 {currentStep + 1} / {questions.length}
             </h2>
@@ -59,7 +61,7 @@ export default function EvaluationHeader({
 
           {/* 진행률 막대 */}
           <div
-            className="mt-5 h-3 w-full rounded-full bg-[#E8EEF5]"
+            className="mt-3 h-3 w-full rounded-full bg-[#E8EEF5]"
             aria-hidden="true"
           >
             <div
@@ -70,7 +72,7 @@ export default function EvaluationHeader({
 
           {/* 문제 번호 목록 */}
           <ol
-            className="mt-8 flex flex-wrap gap-3"
+            className="mt-5 flex flex-wrap gap-3"
             aria-label="문제 진행 상태"
           >
             {questions.map((question, index) => {

@@ -2,10 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
-import CompleteModal from "@/features/common/CompleteModal";
-import Modal from "@/features/common/Modal";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import Modal from "@/features/common/components/Modal";
+import SubHeader from "@/features/common/components/SubHeader";
 import { useBannerForm } from "../hooks/useBannerForm";
 import BannerMediaPreview from "./BannerMediaPreview";
 
@@ -162,7 +162,7 @@ export default function BannerFormClient({ mode, bannerId }: BannerFormClientPro
               {file ? `선택한 파일: ${file.name}` : mode === "edit" ? "새 파일을 선택하지 않으면 기존 미디어를 유지합니다." : "이미지 또는 영상을 선택하세요."}
             </p>
             <p className="mt-1 text-[13px] text-[#667085]">
-              이미지 필수 해상도: 896x200
+              이미지 필수 해상도: 2928x352
             </p>
             {visibleFileError && (
               <p className="mt-2 text-[13px] font-semibold text-[#DC2626]">

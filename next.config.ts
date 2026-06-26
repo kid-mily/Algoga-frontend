@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "algoga-bucket.kro.kr", pathname: "/algoga-community/posts/**" },
       { protocol: "https", hostname: "algoga-bucket.kro.kr", pathname: "/algoga-accommodation/accommodation/images/**" },
       { protocol: "https", hostname: "algoga-bucket.kro.kr", pathname: "/algoga-lms/lms/course-thumbnails/**" },
+      { protocol: "https", hostname: "algoga-bucket.kro.kr", pathname: "/algoga-accommodation/accommodation/images/**" },
+      { protocol: "https", hostname: "algoga-bucket.kro.kr", pathname: "/algoga-package/package/images/**" },
     ],
   },
 

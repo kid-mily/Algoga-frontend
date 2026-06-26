@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import CompleteModal from "@/features/common/CompleteModal";
+import CompleteModal from "@/features/common/components/CompleteModal";
 
 interface Comment {
   id: number;

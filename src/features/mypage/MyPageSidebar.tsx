@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 interface MyPageSidebarProps {
-  name: string;
+  nickname: string;
   initial: string;
   profileImageUrl?: string | null;
 }
@@ -20,7 +20,7 @@ const menuItems = [
 ];
 
 export default function MyPageSidebar({
-  name,
+  nickname,
   initial,
   profileImageUrl,
 }: MyPageSidebarProps) {
@@ -42,7 +42,7 @@ export default function MyPageSidebar({
             {profileImageUrl ? (
               <Image
                 src={profileImageUrl}
-                alt={`${name} 프로필 이미지`}
+                alt={`${nickname} 프로필 이미지`}
                 width={48}
                 height={48}
                 className="h-full w-full object-cover"
@@ -54,7 +54,7 @@ export default function MyPageSidebar({
 
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-[#0A1628]">
-              {name}
+              {nickname}
             </p>
             <p className="mt-1 text-xs text-[#8A9BB0]">
               마이페이지

@@ -1,9 +1,11 @@
-﻿import { api, adminApi, ApiResponse } from "@/lib/api";
+import { api, adminApi, ApiResponse } from "@/lib/api";
 import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 import {
   AdminCourse,
+  AdminDeletedCoursePage,
   CourseCountry,
   CreateAdminCoursePayload,
+  DeletedCourseQueryParams,
   UpdateLecturePayload,
 } from "../contentmanage/lecture/types";
 
@@ -76,6 +78,26 @@ const supportedCountryCodes = new Set([
 const normalizeCountryKey = (value?: string) =>
   value?.replace(/\s/g, "").toUpperCase() ?? "";
 
+const normalizeContinentCode = (value: string) => {
+  const normalized = value.trim().toUpperCase();
+
+  if (normalized === "EURPOE") return "EUROPE";
+
+  return normalized;
+};
+const getValidMaxRewardMileage = (payload: {
+  maxRewardMileage?: number;
+  mileage?: number;
+}) => {
+  const maxRewardMileage = payload.maxRewardMileage ?? payload.mileage ?? 0;
+
+  if (!Number.isFinite(maxRewardMileage) || maxRewardMileage < 0) {
+    throw new Error("최대 지급 마일리지는 0 이상의 숫자로 입력해주세요.");
+  }
+
+  return maxRewardMileage;
+};
+
 const isSupportedCountry = (country: CourseCountry) => {
   const countryName = country.countryName.replace(/\s/g, "");
   const countryCode = normalizeCountryKey(country.countryCode);
@@ -126,6 +148,35 @@ export const getAdminCourses = async (
   }
 };
 
+
+export const getAdminDeletedCourses = async (
+  params: DeletedCourseQueryParams = {},
+  signal?: AbortSignal
+): Promise<AdminDeletedCoursePage> => {
+  try {
+    const response = await adminApi.get<ApiResponse<AdminDeletedCoursePage>>(
+      "/api/v1/admin/courses/deleted",
+      {
+        params: {
+          countryId: params.countryId,
+          countryName: params.countryName,
+          page: params.page ?? 0,
+          size: params.size ?? 10,
+          sort: params.sort,
+          t: Date.now(),
+        },
+        signal,
+        suppressGlobalError: true,
+      }
+    );
+
+    return response.data;
+  } catch (error: unknown) {
+    throw new Error(
+      getErrorMessage(error, "삭제 강의 목록 조회에 실패했습니다.")
+    );
+  }
+};
 export const getCourseCountries = async (
   signal?: AbortSignal
 ): Promise<CourseCountry[]> => {
@@ -143,19 +194,26 @@ export const getCourseCountries = async (
 
     const countryGroups = await Promise.all(
       continents.map(async (continent) => {
-        const continentCode =
+        const rawContinentCode =
           continent.continentCode ?? continent.continent_code ?? "";
+        const continentCode = normalizeContinentCode(rawContinentCode);
 
         if (!continentCode) return [];
 
-        const countryResponse = await api.get<ApiResponse<CountryRecord[]>>(
-          `/api/v1/maps/continents/${continentCode}/countries`,
-          {
-            params: { t: Date.now() },
-            signal,
-        suppressGlobalError: true,
-          }
-        );
+        const countryResponse = await api
+          .get<ApiResponse<CountryRecord[]>>(
+            `/api/v1/maps/continents/${continentCode}/countries`,
+            {
+              params: { t: Date.now() },
+              signal,
+              suppressGlobalError: true,
+            }
+          )
+          .catch((error: unknown) => {
+            if (signal?.aborted) throw error;
+
+            return { data: [] } as ApiResponse<CountryRecord[]>;
+          });
 
         const countries = countryResponse.data ?? [];
 
@@ -184,13 +242,15 @@ export const createAdminCourse = async (
 ): Promise<AdminCourse> => {
   try {
     const formData = new FormData();
+    const maxRewardMileage = getValidMaxRewardMileage(payload);
 
     const request = {
       countryId: payload.countryId,
       title: payload.title.trim(),
       description: payload.description.trim(),
       price: payload.price,
-      mileage: payload.mileage ?? 0,
+      mileage: maxRewardMileage,
+      maxRewardMileage,
       level: payload.level,
       status: payload.status,
       isPublic: payload.status === "PUBLISHED",
@@ -262,12 +322,15 @@ export const updateAdminCourse = async (
   try {
     const formData = new FormData();
 
+    const maxRewardMileage = getValidMaxRewardMileage(payload);
+
     const requestData = {
       countryId: payload.countryId,
       title: payload.title?.trim(),
       description: payload.description?.trim(),
       price: payload.price,
-      mileage: payload.mileage ?? 0,
+      mileage: maxRewardMileage,
+      maxRewardMileage,
       level: payload.level,
       status: payload.status,
       isPublic: payload.status === "PUBLISHED",
@@ -306,4 +369,3 @@ export const deleteAdminCourse = async (courseId: number) => {
     throw new Error(getErrorMessage(error, "강의 삭제에 실패했습니다."));
   }
 };
-

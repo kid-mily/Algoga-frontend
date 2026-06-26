@@ -1,16 +1,16 @@
 "use client";
 
-import AdminErrorBanner from "@/features/common/AdminErrorBanner";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import CompleteModal from "@/features/common/CompleteModal";
-import LoadingSpinner from "@/features/common/LoadingSpinner";
-import SubHeader from "@/features/contentmanage/common/SubHeader";
+import CompleteModal from "@/features/common/components/CompleteModal";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
+import SubHeader from "@/features/common/components/SubHeader";
+import type { AdminQnaBase } from "../types";
 import {
-  createCourseQnaComment,
+  createAdminCourseQnaAnswer,
   getCourseQna,
 } from "@/features/services/courseQna.service";
-import { CourseQna } from "@/features/classroom/qna/types";
 
 interface AdminQnaAnswerClientProps {
   courseId: string;
@@ -24,7 +24,7 @@ export default function AdminQnaAnswerClient({
   mode = "answer",
 }: AdminQnaAnswerClientProps) {
   const router = useRouter();
-  const [qna, setQna] = useState<CourseQna | null>(null);
+  const [qna, setQna] = useState<AdminQnaBase | null>(null);
   const [answer, setAnswer] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,7 +71,7 @@ export default function AdminQnaAnswerClient({
     try {
       setIsSubmitting(true);
       setError("");
-      await createCourseQnaComment(courseId, qnaId, { content: answer.trim() });
+      await createAdminCourseQnaAnswer(courseId, qnaId, { answer: answer.trim() });
       setCompleteOpen(true);
     } catch (submitError: unknown) {
       setError(

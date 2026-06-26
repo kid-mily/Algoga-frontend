@@ -1,6 +1,9 @@
-﻿import { api, ApiResponse } from "@/lib/api";
+import { api, ApiRequestError, ApiResponse } from "@/lib/api";
 
-type UserProfileResponse = {
+export interface UserProfileResponse {
+  userId: number;
+  id?: number;
+  memberId?: number;
   username: string;
   name: string;
   nickname: string;
@@ -9,7 +12,7 @@ type UserProfileResponse = {
   phone: string;
   gender: string;
   birthDate: string;
-};
+}
 
 type UserMeResponse = ApiResponse<UserProfileResponse> | UserProfileResponse;
 
@@ -21,11 +24,29 @@ const unwrapData = <T>(response: ApiResponse<T> | T): T => {
   return response as T;
 };
 
-export const getMe = async (): Promise<UserProfileResponse> => {
-  const response = await api.get<UserMeResponse>("/api/v1/users/me", {
-    suppressGlobalError: true,
-  });
+const normalizeUserProfile = (profile: UserProfileResponse | null): UserProfileResponse | null => {
+  if (!profile) return null;
 
-  return unwrapData<UserProfileResponse>(response);
+  const normalizedUserId = Number(profile.userId ?? profile.id ?? profile.memberId);
+
+  return {
+    ...profile,
+    userId: Number.isFinite(normalizedUserId) ? normalizedUserId : 0,
+  };
 };
 
+export const getMe = async (): Promise<UserProfileResponse | null> => {
+  try {
+    const response = await api.get<UserMeResponse>("/api/v1/users/me", {
+      suppressGlobalError: true,
+    });
+
+    return normalizeUserProfile(unwrapData(response));
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.status === 401) {
+      return null;
+    }
+
+    throw error;
+  }
+};

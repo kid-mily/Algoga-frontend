@@ -1,7 +1,3 @@
-// src/features/auth/components/findpwcomplete.tsx
-
-"use client";
-
 import Link from "next/link";
 
 export default function FindPwComplete() {
@@ -15,11 +11,9 @@ export default function FindPwComplete() {
         이메일 전송 완료
       </h1>
 
-
       <p className="mt-2 text-[15px] text-[#98A2B3]">
         임시 비밀번호가 이메일로 전송되었습니다
       </p>
-
 
       <div className="mt-8 w-full rounded-[20px] border border-[#D8E1F0] bg-[#F3F6FC] px-6 py-6">
         <p className="text-[15px] leading-[1.8] text-[#667085]">

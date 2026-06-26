@@ -1,3 +1,6 @@
+export type CouponDiscountType = "RATE" | "AMOUNT";
+import { CourseItem } from "../classroom/components/types";
+
 // 결제 요청
 export interface CreateLecturePaymentPayload {
     courseId: number;
@@ -7,6 +10,23 @@ export interface CreateLecturePaymentPayload {
     portonePaymentId: string | null;
 }
 
+export interface CreateLecturePaymentPayload {
+    courseId: number;
+    amount: number;
+    usedMileage: number;
+    usedCouponId: number | null;
+    portonePaymentId: string | null;
+}
+
+export type SinglePaymentPayload = CreateLecturePaymentPayload;
+
+export interface SingleLecturePaymentClientProps {
+    continentCode: string;
+    countryId: string;
+    courseId: number;
+    initialCourse: CourseItem;    
+}
+
 // 내 쿠폰
 export interface MyCoupon {
     userCouponId: number;
@@ -14,7 +34,7 @@ export interface MyCoupon {
     courseTitle?: string;
     couponPolicyId: number;
     couponName: string;
-    discountType: "RATE" | "AMOUNT" | string;
+    discountType: CouponDiscountType;
     discountValue: number;
     status: string;
     usable: boolean;
@@ -28,7 +48,7 @@ export interface MyCoupon {
     totalMileage: number;
     totalEarnedMileage?: number;
     totalUsedMileage?: number;
-    histories?: any[];
+    histories?: unknown[];
 }
 
 // 내 강의
