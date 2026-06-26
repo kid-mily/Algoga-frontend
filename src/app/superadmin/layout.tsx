@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import AdminAuthGuard from "@/features/admin/auth/AdminAuthGuard";
-import ContentHeader from "@/features/admin/common/dkdk";
 import SuperAdminSidebar from "@/features/admin/common/SuperAdminSidebar";
+import ContentHeader from "@/features/admin/common/ContentHeader";
 
 export default function SuperAdminLayout({
   children,

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import AdminAuthGuard from "@/features/admin/auth/AdminAuthGuard";
-import ContentHeader from "@/features/admin/common/dkdk";
 import CsSidebar from "@/features/admin/common/CsSidebar";
+import ContentHeader from "@/features/admin/common/ContentHeader";
 
 export default function CsAdminLayout({
   children,
