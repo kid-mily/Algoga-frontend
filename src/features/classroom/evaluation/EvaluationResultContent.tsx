@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { api, ApiResponse } from "@/lib/api";
 import {
   DiagnosisAttempt,
@@ -29,6 +30,8 @@ type RecommendedCourse = DiagnosisRecommendedCourse & {
   fileUrls?: string[];
   files?: RecommendedCourseFile[];
 };
+
+const SELECTED_RECOMMENDED_COURSE_KEY = "selected-diagnosis-recommended-course";
 
 const LEVEL_STYLES: Record<
   DiagnosisLevel,
@@ -59,15 +62,15 @@ const LEVEL_STYLES: Record<
   },
 };
 
-const getCourseLevelStyle = (levelName?: string) => {
-  if (levelName === "초급") {
+const getCourseLevelStyle = (level?: DiagnosisLevel) => {
+  if (level === "BEGINNER") {
     return {
       background: "bg-[#EAF7F6]",
       text: "text-[#357A78]",
     };
   }
 
-  if (levelName === "고급") {
+  if (level === "ADVANCED") {
     return {
       background: "bg-[#FDECEC]",
       text: "text-[#B54747]",
@@ -91,34 +94,65 @@ const getRecommendedCourses = async (
   level: DiagnosisLevel
 ): Promise<RecommendedCourse[]> => {
   const response = await api.get<ApiResponse<RecommendedCourse[]>>(
-    `/api/v1/diagnosis/recommendations?countryId=${countryId}&level=${level}`
+    "/api/v1/diagnosis/recommendations",
+    {
+      params: {
+        countryId,
+        level,
+      },
+      cache: "no-store",
+      suppressGlobalError: true,
+    }
   );
 
-  return response.data;
+  return response.data ?? [];
 };
 
 const getRecommendedCoursesFromResult = async (
   countryId: string,
   result: DiagnosisResult
 ): Promise<RecommendedCourse[]> => {
-  if (Array.isArray(result.recommendedCourses)) {
+  if (
+    Array.isArray(result.recommendedCourses) &&
+    result.recommendedCourses.length > 0
+  ) {
     return result.recommendedCourses;
   }
 
   return getRecommendedCourses(countryId, result.level);
 };
 
+const saveSelectedCourse = (
+  course: RecommendedCourse,
+  continentCode: string,
+  countryId: string
+) => {
+  sessionStorage.setItem(
+    SELECTED_RECOMMENDED_COURSE_KEY,
+    JSON.stringify({
+      courseId: course.courseId,
+      countryId,
+      continentCode,
+      title: course.title,
+      level: course.level,
+      levelName: course.levelName,
+      selectedAt: new Date().toISOString(),
+    })
+  );
+};
+
 export default function EvaluationResultContent({
   continentCode,
   countryId,
 }: EvaluationResultContentProps) {
+  const router = useRouter();
+
   const [result, setResult] = useState<DiagnosisResult | null>(null);
-
   const [questions, setQuestions] = useState<EvaluationFormQuestion[]>([]);
-
   const [recommendedCourses, setRecommendedCourses] = useState<
     RecommendedCourse[]
   >([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isRecommendationLoading, setIsRecommendationLoading] =
@@ -137,7 +171,6 @@ export default function EvaluationResultContent({
 
           setResult(attempt.result);
           setQuestions(attempt.questions ?? []);
-
           setIsRecommendationLoading(true);
 
           const courses = await getRecommendedCoursesFromResult(
@@ -149,7 +182,6 @@ export default function EvaluationResultContent({
           return;
         }
 
-        // 이전 방식으로 저장된 결과도 처리
         const storedResult = sessionStorage.getItem(
           DIAGNOSIS_RESULT_STORAGE_KEY
         );
@@ -158,7 +190,6 @@ export default function EvaluationResultContent({
           const parsedResult = JSON.parse(storedResult) as DiagnosisResult;
 
           setResult(parsedResult);
-
           setIsRecommendationLoading(true);
 
           const courses = await getRecommendedCoursesFromResult(
@@ -173,7 +204,6 @@ export default function EvaluationResultContent({
         setErrorMessage("저장된 진단평가 결과가 없습니다.");
       } catch (error) {
         console.error("[diagnosis-result] 결과 파싱 실패:", error);
-
         setErrorMessage("진단평가 결과를 읽을 수 없습니다.");
       } finally {
         setIsLoading(false);
@@ -181,31 +211,45 @@ export default function EvaluationResultContent({
       }
     };
 
-    loadResult();
+    void loadResult();
   }, [countryId]);
 
   const courseListHref = `/classroom/${continentCode}/${countryId}`;
-  const recommendedCourse = recommendedCourses[0];
 
-  const packageLoungeHref = recommendedCourse
-    ? `/packagelounge` +
-      `?countryId=${countryId}` +
-      `&courseId=${recommendedCourse.courseId}` +
-      `&continentCode=${encodeURIComponent(continentCode)}`
-    : courseListHref;
+  const levelMatchedCourses = useMemo(() => {
+    if (!result) return [];
+
+    return recommendedCourses.filter((course) => course.level === result.level);
+  }, [recommendedCourses, result]);
+
+  const handleSingleCourseClick = (course: RecommendedCourse) => {
+    setSelectedCourseId(course.courseId);
+    saveSelectedCourse(course, continentCode, countryId);
+
+    const lectureHref = `/classroom/${continentCode}/${countryId}/lecture/${course.courseId}`;
+    const nextHref = course.enrolled || course.paid ? `${lectureHref}/study` : lectureHref;
+
+    router.push(nextHref);
+  };
+
+  const handlePackageClick = (course: RecommendedCourse) => {
+    setSelectedCourseId(course.courseId);
+    saveSelectedCourse(course, continentCode, countryId);
+
+    const packageLoungeHref =
+      `/packagelounge?countryId=${course.countryId || countryId}` +
+      `&courseId=${course.courseId}` +
+      `&continentCode=${encodeURIComponent(continentCode)}`;
+
+    router.push(packageLoungeHref);
+  };
 
   if (isLoading) {
     return (
       <main className="flex min-h-[calc(100dvh-64px)] items-center justify-center bg-[#F4F7FB] px-4">
         <section className="w-full max-w-sm rounded-[24px] border border-[#E1EAF0] bg-white px-6 py-8 text-center shadow-sm">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF7F6]">
-            <span className="text-xl" aria-hidden="true">
-              ✈
-            </span>
-          </div>
-
-          <p className="mt-4 text-sm font-bold text-[#0A1628]">
-            진단평가 결과를 불러오는 중입니다
+          <p className="text-sm font-bold text-[#0A1628]">
+            진단평가 결과를 불러오는 중입니다.
           </p>
         </section>
       </main>
@@ -253,18 +297,12 @@ export default function EvaluationResultContent({
   return (
     <main className="min-h-[calc(100dvh-64px)] bg-[#F4F7FB] px-4 py-8">
       <div className="mx-auto w-full max-w-4xl">
-        {/* 결과 티켓 */}
         <section className="overflow-hidden rounded-[32px] border border-[#D7E3EA] bg-white shadow-[0_18px_45px_rgba(52,79,98,0.12)]">
-          {/* 티켓 상단 */}
           <div className="grid md:grid-cols-[1fr_260px]">
             <div className="px-6 py-7 sm:px-9">
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-[#EAF7F6] px-3 py-1 text-[11px] font-extrabold tracking-[0.14em] text-[#357A78]">
                   ALGO BOARDING PASS
-                </span>
-
-                <span className="text-lg" aria-hidden="true">
-                  ✈
                 </span>
               </div>
 
@@ -277,7 +315,6 @@ export default function EvaluationResultContent({
               </p>
             </div>
 
-            {/* 오른쪽 ALGOGA 카드 */}
             <div className="flex min-h-[180px] items-center justify-center border-t border-[#E1EAF0] bg-[#F8FBFC] px-6 py-6 md:border-l md:border-t-0">
               <div className="text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
@@ -300,13 +337,11 @@ export default function EvaluationResultContent({
             </div>
           </div>
 
-          {/* 티켓 절취선 */}
           <div className="relative border-t border-dashed border-[#D7E3EA]">
             <span className="absolute -left-4 -top-4 h-8 w-8 rounded-full bg-[#F4F7FB]" />
             <span className="absolute -right-4 -top-4 h-8 w-8 rounded-full bg-[#F4F7FB]" />
           </div>
 
-          {/* 티켓 하단 */}
           <div className="grid md:grid-cols-[1fr_260px]">
             <div className="flex min-h-[180px] items-center px-6 py-7 sm:px-9">
               <div>
@@ -315,7 +350,7 @@ export default function EvaluationResultContent({
                 </p>
 
                 <h2 className="mt-2 text-lg font-extrabold text-[#0A1628]">
-                  여행 학습 준비가 완료되었습니다
+                  여행 학습 준비가 완료되었습니다.
                 </h2>
 
                 <p className="mt-2 text-sm font-medium text-[#7C8A9A]">
@@ -330,7 +365,6 @@ export default function EvaluationResultContent({
               </div>
             </div>
 
-            {/* 오른쪽 수준 카드 */}
             <div
               className={`flex min-h-[180px] items-center justify-center border-t px-6 py-7 text-center md:border-l md:border-t-0 ${levelStyle.background} ${levelStyle.border}`}
             >
@@ -348,14 +382,13 @@ export default function EvaluationResultContent({
                 <p
                   className={`mx-auto mt-4 inline-flex rounded-full border px-4 py-1.5 text-xs font-bold ${levelStyle.border} ${levelStyle.text}`}
                 >
-                  맞춤 강의 추천 완료
+                  {result.levelName || levelStyle.label} 강의 추천
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 추천 강의 */}
         <section className="mt-8">
           <div className="mb-4 flex items-end justify-between gap-4">
             <div>
@@ -364,8 +397,12 @@ export default function EvaluationResultContent({
               </p>
 
               <h2 className="mt-1 text-xl font-extrabold text-[#0A1628]">
-                지금 듣기 좋은 추천 강의
+                {result.levelName || levelStyle.label} 레벨 추천 강의
               </h2>
+
+              <p className="mt-1 text-sm text-[#8A9BB0]">
+                진단 결과와 같은 레벨의 강의를 모두 보여드려요.
+              </p>
             </div>
           </div>
 
@@ -373,7 +410,7 @@ export default function EvaluationResultContent({
             <div className="rounded-[24px] border border-[#E1EAF0] bg-white px-6 py-12 text-center text-sm font-bold text-[#8A9BB0] shadow-sm">
               추천 강의를 불러오는 중입니다.
             </div>
-          ) : recommendedCourses.length === 0 ? (
+          ) : levelMatchedCourses.length === 0 ? (
             <div className="rounded-[24px] border border-[#E1EAF0] bg-white px-6 py-12 text-center shadow-sm">
               <p className="text-sm font-bold text-[#0A1628]">
                 현재 추천할 수 있는 강의가 없습니다.
@@ -385,18 +422,24 @@ export default function EvaluationResultContent({
             </div>
           ) : (
             <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {recommendedCourses.map((course) => {
+              {levelMatchedCourses.map((course) => {
                 const purchased = course.enrolled || course.paid;
-
-                const courseHref = `/classroom/${continentCode}/${countryId}/lecture/${course.courseId}`;
-
-                const courseLevelStyle = getCourseLevelStyle(course.levelName);
+                const selected = selectedCourseId === course.courseId;
+                const courseLevelStyle = getCourseLevelStyle(course.level);
 
                 return (
-                  <li key={course.courseId}>
-                    <Link
-                      href={purchased ? `${courseHref}/study` : courseHref}
-                      className="group block h-full overflow-hidden rounded-[26px] border border-[#E1EAF0] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                  <li
+                    key={course.courseId}
+                    className={`overflow-hidden rounded-[26px] border bg-white shadow-sm transition ${
+                      selected
+                        ? "border-[#439A97] ring-2 ring-[#439A97]/20"
+                        : "border-[#E1EAF0]"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleSingleCourseClick(course)}
+                      className="group block w-full text-left"
                     >
                       <div className="relative aspect-[16/10] overflow-hidden bg-[#EAF2F5]">
                         {course.thumbnailUrl ? (
@@ -440,43 +483,38 @@ export default function EvaluationResultContent({
                             {formatPrice(course.price)}
                           </strong>
 
-                          <span className="text-xs font-extrabold text-[#439A97]">
-                            {purchased ? "강의 듣기" : "상세 보기"}
-                          </span>
+                          
                         </div>
                       </div>
-                    </Link>
-                    <Link
-                      href= "/"
-                      className="mt-2 flex min-h-11 items-center justify-center rounded-2xl bg-[#439A97] px-4 text-xs font-extrabold text-white transition hover:bg-[#377F7C]"
-                    >
-                      이 강의로 패키지 선택
-                    </Link>
+                    </button>
+
+                    <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+                      <button
+                        type="button"
+                        onClick={() => handleSingleCourseClick(course)}
+                        className="flex min-h-11 items-center justify-center rounded-2xl border border-[#DCE5F0] bg-white px-3 text-xs font-extrabold text-[#243247] transition hover:bg-[#F8FAFC]"
+                      >
+                        단과 선택
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handlePackageClick(course)}
+                        className="flex min-h-11 items-center justify-center rounded-2xl bg-[#439A97] px-3 text-xs font-extrabold text-white transition hover:bg-[#377F7C]"
+                      >
+                        패키지 선택
+                      </button>
+                    </div>
                   </li>
                 );
               })}
             </ul>
           )}
         </section>
-
-        {/* 하단 버튼 */}
         <nav
           className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2"
           aria-label="진단평가 결과 이동"
         >
-          <Link
-            href={courseListHref}
-            className="flex min-h-12 items-center justify-center rounded-2xl border border-[#DCE5F0] bg-white px-4 text-sm font-extrabold text-[#0A1628] shadow-sm transition hover:bg-[#F8FAFC]"
-          >
-            단과 강의실에서 자유롭게 선택
-          </Link>
-
-          <Link
-            href={packageLoungeHref}
-            className="flex min-h-12 items-center justify-center rounded-2xl bg-[#D85F25] px-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#C9551F]"
-          >
-            패키지 라운지로 이동
-          </Link>
         </nav>
       </div>
     </main>

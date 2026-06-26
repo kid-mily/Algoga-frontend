@@ -16,7 +16,7 @@ export default function PaymentCompletePage() {
   const countryId = getParam(params.countryid);
   const courseId = getParam(params.courseId);
 
-  const studyHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}/study`;
+  const studyHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}`;
 
   useEffect(() => {
     if (!continentCode || !countryId || !courseId) {

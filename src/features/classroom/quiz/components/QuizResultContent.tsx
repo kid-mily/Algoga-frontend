@@ -9,6 +9,8 @@ interface QuizResultContentProps {
   courseId: string;
   result: CourseQuizSavedResult;
   attempt: CourseQuizAttempt | null;
+  reviewWritten: boolean;
+  reviewHref: string;
   onReview: () => void;
   onClose: () => void;
 }
@@ -17,6 +19,8 @@ export default function QuizResultContent({
   courseId,
   result,
   attempt,
+  reviewWritten,
+  reviewHref,
   onReview,
   onClose,
 }: QuizResultContentProps) {
@@ -33,8 +37,9 @@ export default function QuizResultContent({
           <strong className="block text-sm text-[#367C47]">
             강의 수료 완료
           </strong>
+
           <p className="mt-1 text-xs leading-5 text-[#667085]">
-            퀴즈 제출과 함께 수료가 완료되었습니다. 보상은 자동 지급됩니다.
+            퀴즈 제출과 강의 수료가 완료되었습니다. 보상은 자동 지급됩니다.
           </p>
 
           <div className="mt-2 flex gap-2">
@@ -58,7 +63,9 @@ export default function QuizResultContent({
           ✓
         </div>
 
-        <h2 className="mt-2 text-xl font-bold text-[#0A1628]">퀴즈 완료!</h2>
+        <h2 className="mt-2 text-xl font-bold text-[#0A1628]">
+          퀴즈 완료!
+        </h2>
 
         <p className="mt-1 text-xs text-[#8A9BB0]">
           퀴즈 제출과 채점이 완료되었습니다.
@@ -91,6 +98,7 @@ export default function QuizResultContent({
                   style={{ width: `${score}%` }}
                 />
               </div>
+
               <strong className="text-lg text-[#439A97]">{score}%</strong>
             </div>
           </div>
@@ -105,13 +113,22 @@ export default function QuizResultContent({
           {canShowExplanation ? "해설 보기" : "해설 정보 없음"}
         </button>
 
-        <button
-          type="button"
-          onClick={onReview}
-          className="mt-2 h-10 w-full rounded-xl bg-[#5E9F9B] text-sm font-bold text-white"
-        >
-          수강 후기 작성하기
-        </button>
+        {reviewWritten ? (
+          <Link
+            href={reviewHref}
+            className="mt-2 flex h-10 w-full items-center justify-center rounded-xl bg-[#5E9F9B] text-sm font-bold text-white"
+          >
+            수강 후기 보기
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={onReview}
+            className="mt-2 h-10 w-full rounded-xl bg-[#5E9F9B] text-sm font-bold text-white"
+          >
+            수강 후기 작성하기
+          </button>
+        )}
 
         <button
           type="button"

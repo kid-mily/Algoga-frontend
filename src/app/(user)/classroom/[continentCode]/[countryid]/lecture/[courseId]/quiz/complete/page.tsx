@@ -9,6 +9,7 @@ import type { CourseQuizAttempt } from "@/features/classroom/quiz/types";
 import type { CourseStudyChapter } from "@/features/services/courseStudy.service";
 import { getCourseStudyDetail } from "@/features/services/courseStudy.service";
 import { getCourseQuizResult } from "@/features/services/courseQuiz.service";
+import { getMyCourses } from "@/features/services/myCourse.service";
 import { useCourseCompletionStatus } from "@/features/classroom/completion/hooks/useCourseCompletionStatus";
 
 const getParam = (value: string | string[] | undefined) => {
@@ -28,6 +29,7 @@ export default function QuizCompletePage() {
   const studyHref = `${lectureHref}/study`;
   const quizHref = `${lectureHref}/quiz`;
   const quizResultHref = `${quizHref}/complete`;
+  const reviewHref = `${lectureHref}/review`;
   const qnaHref = `${lectureHref}/qna`;
   const certificateHref = `/mypage/coursedetails/${courseId}/certificate`;
 
@@ -36,6 +38,7 @@ export default function QuizCompletePage() {
   const [courseTitle, setCourseTitle] = useState("");
   const [chapters, setChapters] = useState<CourseStudyChapter[]>([]);
   const [attempt, setAttempt] = useState<CourseQuizAttempt | null>(null);
+  const [reviewWritten, setReviewWritten] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -51,9 +54,10 @@ export default function QuizCompletePage() {
         setErrorMessage("");
         setAttempt(null);
 
-        const [course, savedResult] = await Promise.all([
+        const [course, savedResult, myCourses] = await Promise.all([
           getCourseStudyDetail(courseId),
           getCourseQuizResult(courseId),
+          getMyCourses(0, 100).catch(() => null),
         ]);
 
         if (!active) return;
@@ -81,8 +85,13 @@ export default function QuizCompletePage() {
           ])
         );
 
+        const currentCourse = myCourses?.content.find(
+          (course) => String(course.courseId) === String(courseId)
+        );
+
         setCourseTitle(course.title);
         setChapters(orderedChapters);
+        setReviewWritten(currentCourse?.reviewWritten === true);
 
         setAttempt({
           result: {
@@ -216,6 +225,8 @@ export default function QuizCompletePage() {
                   courseId={courseId}
                   result={attempt.result}
                   attempt={attempt}
+                  reviewWritten={reviewWritten}
+                  reviewHref={reviewHref}
                   onReview={() => setIsReviewModalOpen(true)}
                   onClose={() => router.replace(studyHref)}
                 />
@@ -231,6 +242,7 @@ export default function QuizCompletePage() {
         onClose={() => setIsReviewModalOpen(false)}
         onSuccess={(review) => {
           setIsReviewModalOpen(false);
+          setReviewWritten(true);
 
           window.dispatchEvent(
             new CustomEvent("course-review-created", {

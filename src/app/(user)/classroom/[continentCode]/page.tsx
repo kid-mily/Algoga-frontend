@@ -1,7 +1,18 @@
-// 나라 선택
+import { notFound } from "next/navigation";
 import CountrySelectHeader from "@/features/classroom/components/CountrySelectHeader";
 import CountrySelectSection from "@/features/classroom/components/CountrySelectSection";
+import type { Country } from "@/features/classroom/components/types";
 import { getCountries } from "@/features/services/countrySelect.service";
+
+const ALLOWED_CONTINENTS = new Set([
+  "ASIA",
+  "EUROPE",
+  "NORTH_AMERICA",
+  "SOUTH_AMERICA",
+  "AFRICA",
+  "OCEANIA",
+  "ANTARCTICA",
+]);
 
 interface CountrySelectPageProps {
   params: Promise<{
@@ -13,8 +24,23 @@ export default async function CountrySelectPage({
   params,
 }: CountrySelectPageProps) {
   const { continentCode } = await params;
+  const normalizedContinentCode = continentCode?.trim().toUpperCase();
 
-  const countries = await getCountries(continentCode.toUpperCase());
+  if (
+    !normalizedContinentCode ||
+    !ALLOWED_CONTINENTS.has(normalizedContinentCode)
+  ) {
+    notFound();
+  }
+
+  let countries: Country[] = [];
+
+  try {
+    countries = await getCountries(normalizedContinentCode);
+  } catch (error) {
+    console.error("[country-select] 국가 목록 조회 실패:", error);
+    countries = [];
+  }
 
   return (
     <main className="min-h-screen w-full bg-[#f5f6f8] p-10">

@@ -3,24 +3,25 @@ import NoticeSection from "@/features/main/components/NoticeSection";
 import AiSchedule from "@/features/main/components/AiSchedule";
 import Banner from "@/features/main/components/Banner";
 import MapSection from "./main/MapSection";
-
 import { getMainNotices } from "@/features/services/notice.service";
 import ScheduleCalendar from "@/features/main/components/ScheduleCalendar";
 
 export default async function Home() {
-  const notices = await getMainNotices();
+  try {
+    await getMainNotices();
+  } catch (error) {
+    console.error("[home] 메인 공지 조회 실패:", error);
+  }
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#F3F8FC] px-4 pb-6 pt-4 sm:px-6 lg:px-8">
       <h1 className="sr-only">알고가 메인 페이지</h1>
 
-      {/* 배경 장식 */}
       <div className="pointer-events-none absolute -left-28 top-40 h-72 w-72 rounded-full bg-[#DDEFF3]/60" />
       <div className="pointer-events-none absolute -right-32 top-[720px] h-80 w-80 rounded-full bg-[#E8F3E8]/70" />
       <div className="pointer-events-none absolute -left-28 top-[1200px] h-72 w-72 rounded-full bg-[#DDEFF3]/60" />
 
       <div className="relative">
-        {/* 여행 지도 */}
         <section className="mx-auto flex h-[calc(100dvh-88px)] w-full max-w-6xl flex-col">
           <header className="mb-3 flex shrink-0 flex-col justify-between gap-3 px-1 sm:flex-row sm:items-end">
             <div>
@@ -39,12 +40,10 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* 메인 배너 */}
         <section className="mx-auto mt-5 w-full max-w-6xl">
           <Banner />
         </section>
 
-        {/* 여행 학습 대시보드 */}
         <section className="mx-auto mt-5 w-full max-w-6xl">
           <header className="mb-3 flex items-end justify-between gap-4">
             <div>
@@ -57,7 +56,7 @@ export default async function Home() {
               </h2>
 
               <p className="mt-1 text-sm text-[#8A94A6]">
-                여행 준비와 학습 일정을 한곳에서 관리해 보세요.
+                여행 준비와 학습 일정을 한눈에 관리해 보세요.
               </p>
             </div>
           </header>
@@ -72,7 +71,6 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* 학습 방법 */}
         <section className="mx-auto mt-5 w-full max-w-6xl">
           <LearnMethod />
         </section>

@@ -2,7 +2,6 @@ import QnaLayout from "@/features/classroom/qna/components/QnaLayout";
 import QnaListContent from "@/features/classroom/qna/components/QnaListContent";
 import { getCourseQnas } from "@/features/services/userQna.service";
 
-
 interface QnaPageProps {
   params: Promise<{
     continentCode: string;
@@ -14,7 +13,10 @@ interface QnaPageProps {
 export default async function QnaPage({ params }: QnaPageProps) {
   const { continentCode, countryid, courseId } = await params;
 
-  const qnas = await getCourseQnas(courseId);
+  const qnas = await getCourseQnas(courseId).catch((error) => {
+    console.error("[qna-page] Q&A 목록 조회 실패:", error);
+    return [];
+  });
 
   return (
     <QnaLayout
@@ -22,7 +24,7 @@ export default async function QnaPage({ params }: QnaPageProps) {
       countryid={countryid}
       courseId={courseId}
       title="강의 Q&A"
-      description="여행 강의를 들으며 궁금한 점을 질문하고 답변을 확인하세요."
+      description="여행 강의를 들으며 궁금했던 점을 질문하고 답변을 확인하세요."
     >
       <QnaListContent
         qnas={qnas}
