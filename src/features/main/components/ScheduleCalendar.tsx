@@ -22,6 +22,10 @@ export default function ScheduleCalendar() {
     () => new Date(today.getFullYear(), today.getMonth(), 1)
   );
 
+  const [selectedDate, setSelectedDate] = useState(() =>
+    formatDate(today.getFullYear(), today.getMonth() + 1, today.getDate())
+  );
+
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,10 +35,6 @@ export default function ScheduleCalendar() {
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
-
-  const [selectedDate, setSelectedDate] = useState(() =>
-    formatDate(today.getFullYear(), today.getMonth() + 1, 1)
-  );
 
   const selectedSchedules = useMemo(() => {
     return schedules.filter((schedule) => schedule.eventDate === selectedDate);

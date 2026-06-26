@@ -16,17 +16,11 @@ export default function CalendarHeader({
   return (
     <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E8EEF3] bg-white px-5 py-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EAF5F4] text-lg">
-          🗓️
-        </span>
 
         <div>
           <h2 className="text-base font-bold text-[#0A1628]">
-            여행 학습 캘린더
+            캘린더
           </h2>
-          <p className="mt-0.5 text-xs text-[#8A94A6]">
-            강의와 여행 일정을 확인하세요.
-          </p>
         </div>
       </div>
 

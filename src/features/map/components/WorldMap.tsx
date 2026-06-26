@@ -1,10 +1,8 @@
-// 지도 
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { GeoJSON, MapContainer, TileLayer } from "react-leaflet";
+import { GeoJSON, MapContainer, TileLayer, ZoomControl } from "react-leaflet";
 import type { Feature, GeoJsonProperties, Geometry } from "geojson";
 import L, { type Layer } from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -70,9 +68,18 @@ export default function WorldMap() {
     layersByContinentRef.current = {};
   }, [selectedContinent]);
 
-  const styleFeature = (
-    feature?: Feature<Geometry, GeoJsonProperties>
-  ) => getCountryStyle(feature, selectedContinent, selectedCountry);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      mapRef.current?.invalidateSize();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, []);
+
+  const styleFeature = (feature?: Feature<Geometry, GeoJsonProperties>) =>
+    getCountryStyle(feature, selectedContinent, selectedCountry);
 
   const onEachCountry = (
     feature: Feature<Geometry, GeoJsonProperties>,
@@ -92,14 +99,15 @@ export default function WorldMap() {
       ];
     }
 
-    const tooltipText = selectedContinent
-      ? countryName
-      : CONTINENT_NAME_KO[continent] ?? continent;
-
-    pathLayer.bindTooltip(tooltipText, {
-      direction: "top",
-      sticky: true,
-    });
+    pathLayer.bindTooltip(
+      selectedContinent
+        ? countryName
+        : CONTINENT_NAME_KO[continent] ?? continent,
+      {
+        direction: "top",
+        sticky: true,
+      }
+    );
 
     pathLayer.on({
       mouseover: () => {
@@ -109,7 +117,7 @@ export default function WorldMap() {
 
           continentLayers.forEach((continentLayer) => {
             continentLayer.setStyle({
-              fillOpacity: 0.7,
+              fillOpacity: 0.72,
             });
           });
 
@@ -118,7 +126,7 @@ export default function WorldMap() {
 
         if (continent === selectedContinent) {
           pathLayer.setStyle({
-            fillOpacity: 0.85,
+            fillOpacity: 0.88,
           });
         }
       },
@@ -130,7 +138,7 @@ export default function WorldMap() {
 
           continentLayers.forEach((continentLayer) => {
             continentLayer.setStyle({
-              fillOpacity: 0.5,
+              fillOpacity: 0.52,
             });
           });
 
@@ -141,8 +149,8 @@ export default function WorldMap() {
           const isSelected = selectedCountry === countryName;
 
           pathLayer.setStyle({
-            fillOpacity: isSelected ? 0.85 : 0.6,
-            weight: isSelected ? 1.5 : 0.4,
+            fillOpacity: isSelected ? 0.88 : 0.62,
+            weight: isSelected ? 1.6 : 0.5,
             color: isSelected ? "#2C3E50" : getContinentColor(continent),
           });
         }
@@ -159,12 +167,14 @@ export default function WorldMap() {
 
           mapRef.current?.fitBounds(polygonLayer.getBounds(), {
             padding: [40, 40],
+            maxZoom: 4,
           });
 
           return;
         }
 
         if (continent !== selectedContinent) {
+          setNoticeMessage("선택한 대륙 안의 국가를 선택해 주세요.");
           return;
         }
 
@@ -179,15 +189,14 @@ export default function WorldMap() {
 
         const supportedCountry = findSupportedCountry(countries, countryFeature);
 
-        if (supportedCountry && supportedCountry.active !== false) {
-          router.push(
-            `/classroom/${supportedCountry.continentCode.toLowerCase()}/${supportedCountry.countryId}`
-          );
-
+        if (!supportedCountry || supportedCountry.active === false) {
+          setNoticeMessage(`${countryName}은(는) 아직 준비 중인 국가입니다.`);
           return;
         }
 
-        setNoticeMessage(`${countryName}은 아직 준비중인 국가입니다.`);
+        router.push(
+          `/classroom/${supportedCountry.continentCode.toLowerCase()}/${supportedCountry.countryId}`
+        );
       },
     });
   };
@@ -198,25 +207,28 @@ export default function WorldMap() {
     setNoticeMessage("");
 
     layersByContinentRef.current = {};
-
     mapRef.current?.setView(INITIAL_POSITION, INITIAL_ZOOM);
   };
 
   return (
-    <section className="flex h-full w-full flex-col" aria-label="세계 지도">
+    <section className="h-full min-h-0 w-full" aria-label="세계 지도">
       <style jsx global>{`
         .leaflet-interactive:focus {
           outline: none;
         }
+
+        .leaflet-container {
+          background: #edf6fa;
+        }
       `}</style>
 
-      <MapHeader
-        selectedContinent={selectedContinent}
-        selectedCountry={selectedCountry}
-        onReset={handleResetMap}
-      />
+      <div className="relative h-full min-h-0 w-full overflow-hidden">
+        <MapHeader
+          selectedContinent={selectedContinent}
+          selectedCountry={selectedCountry}
+          onReset={handleResetMap}
+        />
 
-      <div className="relative h-[500px] w-full flex-1 overflow-hidden">
         <MapNotice message={noticeMessage} />
 
         {!geoJson ? (
@@ -226,12 +238,15 @@ export default function WorldMap() {
             ref={mapRef}
             center={INITIAL_POSITION}
             zoom={INITIAL_ZOOM}
-            minZoom={2}
+            minZoom={2.2}
             maxBounds={MAP_BOUNDS}
             maxBoundsViscosity={1}
             scrollWheelZoom
+            zoomControl={false}
             className="z-10 h-full w-full"
           >
+            <ZoomControl position="bottomleft" />
+
             <TileLayer
               attribution="&copy; OpenStreetMap contributors"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

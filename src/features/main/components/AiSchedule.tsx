@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function AiSchedule() {
   return (
-    <section className="h-full flex-1 rounded-2xl border border-gray-100 bg-[#439A97] p-5 shadow-sm">
+    <section className="rounded-2xl border border-gray-100 bg-[#439A97] p-5 shadow-sm">
         <header className="flex items-center">
             <Image
             src="/images/AiIcon.svg"

@@ -7,6 +7,7 @@ import { api, ApiResponse } from "@/lib/api";
 import {
   DiagnosisAttempt,
   DiagnosisLevel,
+  DiagnosisRecommendedCourse,
   DiagnosisResult,
   EvaluationFormQuestion,
   DIAGNOSIS_ATTEMPT_STORAGE_KEY,
@@ -24,21 +25,10 @@ interface RecommendedCourseFile {
   fileOrder: number;
 }
 
-interface RecommendedCourse {
-  courseId: number;
-  countryId: number;
-  title: string;
-  description: string;
-  price: number;
-  thumbnailUrl: string;
-  fileUrls: string[];
-  files: RecommendedCourseFile[];
-  level: DiagnosisLevel;
-  levelName: string;
-  status: string;
-  enrolled: boolean;
-  paid: boolean;
-}
+type RecommendedCourse = DiagnosisRecommendedCourse & {
+  fileUrls?: string[];
+  files?: RecommendedCourseFile[];
+};
 
 const LEVEL_STYLES: Record<
   DiagnosisLevel,
@@ -107,6 +97,17 @@ const getRecommendedCourses = async (
   return response.data;
 };
 
+const getRecommendedCoursesFromResult = async (
+  countryId: string,
+  result: DiagnosisResult
+): Promise<RecommendedCourse[]> => {
+  if (Array.isArray(result.recommendedCourses)) {
+    return result.recommendedCourses;
+  }
+
+  return getRecommendedCourses(countryId, result.level);
+};
+
 export default function EvaluationResultContent({
   continentCode,
   countryId,
@@ -139,9 +140,9 @@ export default function EvaluationResultContent({
 
           setIsRecommendationLoading(true);
 
-          const courses = await getRecommendedCourses(
+          const courses = await getRecommendedCoursesFromResult(
             countryId,
-            attempt.result.level
+            attempt.result
           );
 
           setRecommendedCourses(courses);
@@ -160,9 +161,9 @@ export default function EvaluationResultContent({
 
           setIsRecommendationLoading(true);
 
-          const courses = await getRecommendedCourses(
+          const courses = await getRecommendedCoursesFromResult(
             countryId,
-            parsedResult.level
+            parsedResult
           );
 
           setRecommendedCourses(courses);
