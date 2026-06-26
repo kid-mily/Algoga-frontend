@@ -32,7 +32,9 @@ export interface Friend {
 
 export interface ReadEvent {
   roomId: number;
-  readerId: number;
+  readerId?: number;
+  messageId?: number;
+  unreadCount?: number;
 }
 
 export interface RoomNotification {
