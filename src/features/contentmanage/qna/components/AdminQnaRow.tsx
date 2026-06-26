@@ -44,7 +44,7 @@ export default function AdminQnaRow({ qna, onAnswer }: AdminQnaRowProps) {
             />
           </span>
           <span className="text-[14px] font-medium text-[#667085]">
-            {qna.userId > 0 ? qna.userId : "-"}
+            {qna.writer || "-"}
           </span>
         </span>
       </td>
@@ -71,7 +71,7 @@ export default function AdminQnaRow({ qna, onAnswer }: AdminQnaRowProps) {
         <button
           type="button"
           onClick={() => onAnswer(qna)}
-          className="text-[13px] font-semibold text-[#439A97] transition hover:opacity-70"
+          className="inline-flex h-[34px] min-w-[64px] items-center justify-center rounded-[10px] border border-[#439A97] bg-white px-3 text-[13px] font-semibold text-[#439A97] transition hover:bg-[#EAF7F6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#439A97]"
         >
           답변
         </button>

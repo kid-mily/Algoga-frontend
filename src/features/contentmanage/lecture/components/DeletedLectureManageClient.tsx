@@ -16,12 +16,12 @@ export default function DeletedLectureManageClient() {
     totalPages,
     totalElements,
     selectedCountryId,
-    countryNameKeyword,
+    lectureTitleKeyword,
     isLoading,
     errorMessage,
     setCurrentPage,
     changeSelectedCountryId,
-    changeCountryNameKeyword,
+    changeLectureTitleKeyword,
   } = useAdminDeletedLectureList();
 
   return (
@@ -39,9 +39,9 @@ export default function DeletedLectureManageClient() {
         <DeletedLectureToolbar
           countries={countries}
           selectedCountryId={selectedCountryId}
-          countryNameKeyword={countryNameKeyword}
+          lectureTitleKeyword={lectureTitleKeyword}
           onSelectedCountryIdChange={changeSelectedCountryId}
-          onCountryNameKeywordChange={changeCountryNameKeyword}
+          onLectureTitleKeywordChange={changeLectureTitleKeyword}
         />
       </section>
 

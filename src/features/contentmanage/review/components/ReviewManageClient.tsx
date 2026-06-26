@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import { useReviewList } from "../hooks/useReviewList";
@@ -11,7 +11,6 @@ export default function ReviewManageClient() {
   const {
     courses,
     selectedCourseId,
-    searchKeyword,
     selectedScore,
     filteredReviews,
     deleteTarget,
@@ -22,7 +21,6 @@ export default function ReviewManageClient() {
     isProcessing,
     error,
     setSelectedCourseId,
-    setSearchKeyword,
     setSelectedScore,
     setDeleteTarget,
     setDeleteCompleteOpen,
@@ -52,10 +50,8 @@ export default function ReviewManageClient() {
       <ReviewToolbar
         courses={courses}
         selectedCourseId={selectedCourseId}
-        searchKeyword={searchKeyword}
         selectedScore={selectedScore}
         onSelectedCourseChange={setSelectedCourseId}
-        onSearchKeywordChange={setSearchKeyword}
         onSelectedScoreChange={setSelectedScore}
       />
 
@@ -83,3 +79,4 @@ export default function ReviewManageClient() {
     </main>
   );
 }
+

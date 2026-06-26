@@ -22,6 +22,15 @@ export default function CreateChapterClient({
   const handleCreate = async (data: ChapterSubmitPayload) => {
     const durationSeconds = Number(data.duration);
 
+    if (!data.video) {
+      setAlertModal({
+        open: true,
+        title: "입력 오류",
+        description: "챕터 영상을 업로드해주세요.",
+      });
+      return false;
+    }
+
     if (Number.isNaN(durationSeconds) || durationSeconds < 1) {
       setAlertModal({
         open: true,
@@ -96,4 +105,5 @@ export default function CreateChapterClient({
     </main>
   );
 }
+
 

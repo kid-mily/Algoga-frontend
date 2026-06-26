@@ -4,17 +4,17 @@ import type { CourseCountry } from "../types";
 type DeletedLectureToolbarProps = {
   countries: CourseCountry[];
   selectedCountryId: string;
-  countryNameKeyword: string;
+  lectureTitleKeyword: string;
   onSelectedCountryIdChange: (value: string) => void;
-  onCountryNameKeywordChange: (value: string) => void;
+  onLectureTitleKeywordChange: (value: string) => void;
 };
 
 export default function DeletedLectureToolbar({
   countries,
   selectedCountryId,
-  countryNameKeyword,
+  lectureTitleKeyword,
   onSelectedCountryIdChange,
-  onCountryNameKeywordChange,
+  onLectureTitleKeywordChange,
 }: DeletedLectureToolbarProps) {
   return (
     <form
@@ -49,15 +49,15 @@ export default function DeletedLectureToolbar({
             height={15}
             aria-hidden="true"
           />
-          <label htmlFor="deleted-lecture-country-name" className="sr-only">
-            국가명 검색
+          <label htmlFor="deleted-lecture-title" className="sr-only">
+            강의명 검색
           </label>
           <input
-            id="deleted-lecture-country-name"
+            id="deleted-lecture-title"
             type="search"
-            value={countryNameKeyword}
-            onChange={(event) => onCountryNameKeywordChange(event.target.value)}
-            placeholder="국가명 검색"
+            value={lectureTitleKeyword}
+            onChange={(event) => onLectureTitleKeywordChange(event.target.value)}
+            placeholder="강의명 검색"
             className="ml-2 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-[#98A2B3]"
           />
         </div>
