@@ -6,6 +6,7 @@ import { checkUsernameDuplicate, sendSignupEmailCode, verifySignupEmailCode } fr
 import FormLabel from "@/features/common/components/FormLabel";
 
 import { RegisterFormData } from "../types";
+import { validateRegisterInfoForm } from "../utils/registerValidators";
 
 interface RegisterInfoFormProps {
   formData: RegisterFormData;
@@ -54,47 +55,11 @@ export default function RegisterInfoForm({
   }, []);
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) newErrors.name = "이름은 필수입니다.";
-
-    if (!isSocialSignup && (!formData.username || formData.username.length < 4 || formData.username.length > 20)) {
-      newErrors.username = "아이디는 4자 이상 20자 이하로 입력해주세요.";
-    }
-
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    if (!isSocialSignup && (!formData.password || !passwordRegex.test(formData.password))) {
-      newErrors.password = "비밀번호는 영문, 숫자 조합 8자 이상이어야 합니다.";
-    }
-
-    if (!isSocialSignup && formData.password !== formData.passwordConfirm) {
-      newErrors.passwordConfirm = "비밀번호가 일치하지 않습니다.";
-    }
-
-    if (!formData.email || !emailRegex.test(formData.email)) {
-      newErrors.email = "올바른 이메일 형식을 입력해주세요.";
-    }
-
-    if (!isSocialSignup && !newErrors.username && !isUsernameChecked) {
-      newErrors.username = "아이디 중복 확인을 완료해주세요.";
-    }
-
-    if (!isSocialSignup && !newErrors.email && !isEmailVerified) {
-      newErrors.email = "이메일 인증을 완료해주세요.";
-    }
-
-    const phoneRegex = /^\d{2,3}-\d{3,4}-\d{4}$/;
-    if (!formData.phone || !phoneRegex.test(formData.phone)) {
-      newErrors.phone = "올바른 전화번호 형식을 입력해주세요. (예: 010-1234-5678)";
-    }
-
-    if (!formData.birthDate) newErrors.birthDate = "생년월일은 필수입니다.";
-
-    if (!formData.gender) newErrors.gender = "성별은 필수입니다.";
-
-    if (!formData.nickname || formData.nickname.length > 50) {
-      newErrors.nickname = "닉네임은 필수이며 50자 이내여야 합니다.";
-    }
+    const newErrors = validateRegisterInfoForm(formData, {
+      isSocialSignup,
+      isUsernameChecked,
+      isEmailVerified,
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
