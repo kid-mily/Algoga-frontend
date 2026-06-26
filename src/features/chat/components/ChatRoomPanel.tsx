@@ -27,6 +27,28 @@ const mergeMessage = (messages: ChatMessage[], nextMessage: ChatMessage) => {
   return [...messages, nextMessage];
 };
 
+const ChatRoomHeaderAvatar = ({ room, roomName }: { room: ChatRoom; roomName: string }) => {
+  const shouldShowProfileImage = room.type === "DIRECT" && Boolean(room.profileImageUrl);
+
+  if (shouldShowProfileImage) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={room.profileImageUrl ?? ""}
+        alt=""
+        aria-hidden="true"
+        className="h-10 w-10 shrink-0 rounded-full border border-[#E4E7EC] object-cover"
+      />
+    );
+  }
+
+  return (
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E7F4F3] text-[15px] font-bold text-[#287875]">
+      {roomName.slice(0, 1)}
+    </span>
+  );
+};
+
 export default function ChatRoomPanel({
   room,
   onBack,
@@ -56,28 +78,34 @@ export default function ChatRoomPanel({
   );
 
   const handleReadEvent = useCallback(
-    (event: { roomId: number; readerId: number }) => {
+    (event: { roomId: number; readerId?: number; messageId?: number; unreadCount?: number }) => {
       if (!currentUserId || event.roomId !== room.roomId || event.readerId === currentUserId) return;
 
       setMessages((prev) =>
         prev.map((message) => {
-          const isMyMessage = Boolean(
-            message.isMine ||
-              message.senderId === currentUserId ||
-              message.senderNickname === currentUserNickname
+          const isReaderMessage = Boolean(
+            event.readerId && message.senderId === event.readerId
           );
 
-          if (!isMyMessage || !message.unreadCount) return message;
+          if (isReaderMessage || !message.unreadCount) return message;
+
+          if (event.messageId && message.messageId !== event.messageId) {
+            return message;
+          }
 
           return {
             ...message,
             unreadCount:
-              room.type === "GROUP" ? Math.max(message.unreadCount - 1, 0) : 0,
+              typeof event.unreadCount === "number"
+                ? Math.max(event.unreadCount, 0)
+                : room.type === "GROUP"
+                  ? Math.max(message.unreadCount - 1, 0)
+                  : 0,
           };
         })
       );
     },
-    [currentUserId, currentUserNickname, room.roomId, room.type]
+    [currentUserId, room.roomId, room.type]
   );
 
   const { isConnected, sendMessage, sendRead } = useChatSocket({
@@ -160,9 +188,7 @@ export default function ChatRoomPanel({
           >
             <ArrowLeft size={19} />
           </button>
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E7F4F3] text-[15px] font-bold text-[#287875]">
-            {roomName.slice(0, 1)}
-          </span>
+          <ChatRoomHeaderAvatar room={room} roomName={roomName} />
           <div className="min-w-0">
             <h2 className="truncate text-[17px] font-bold text-[#111827]">{roomName}</h2>
             <p className="mt-0.5 text-[12px] text-[#98A2B3]">

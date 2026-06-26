@@ -30,6 +30,29 @@ const formatRoomTime = (value: string | null) => {
   });
 };
 
+const ChatRoomAvatar = ({ room }: { room: ChatRoom }) => {
+  const roomName = room.roomName ?? (room.type === "GROUP" ? "그룹 채팅" : "알 수 없는 상대");
+  const shouldShowProfileImage = room.type === "DIRECT" && Boolean(room.profileImageUrl);
+
+  if (shouldShowProfileImage) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={room.profileImageUrl ?? ""}
+        alt=""
+        aria-hidden="true"
+        className="h-12 w-12 shrink-0 rounded-full border border-[#E4E7EC] object-cover"
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#6FA7A3] text-lg font-bold text-white">
+      {roomName.slice(0, 1)}
+    </div>
+  );
+};
+
 export default function ChatListPanel({
   rooms,
   isLoading,
@@ -155,9 +178,7 @@ export default function ChatListPanel({
                 }}
                 className="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-gray-50"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#6FA7A3] text-lg font-bold text-white">
-                  {(room.roomName ?? "?").slice(0, 1)}
-                </div>
+                <ChatRoomAvatar room={room} />
 
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[17px] font-bold text-gray-900">
