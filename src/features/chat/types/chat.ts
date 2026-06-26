@@ -8,6 +8,7 @@ export interface ChatRoom {
   lastMessage: string | null;
   lastMessageAt: string | null;
   unreadCount?: number;
+  memberCount?: number;
   isMine?: boolean;
 }
 
@@ -30,11 +31,23 @@ export interface Friend {
   profileImageUrl: string | null;
 }
 
+export interface ChatRoomMember {
+  userId: number;
+  nickname: string;
+  profileImageUrl: string | null;
+}
+
 export interface ReadEvent {
   roomId: number;
   readerId?: number;
   messageId?: number;
   unreadCount?: number;
+}
+
+export interface TypingEvent {
+  userId: number;
+  nickname: string;
+  isTyping: boolean;
 }
 
 export interface RoomNotification {

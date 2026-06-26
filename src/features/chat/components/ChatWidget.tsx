@@ -319,6 +319,23 @@ export default function ChatWidget() {
     [updateRoomPreview]
   );
 
+  const handleRoomUpdated = useCallback(
+    (room: ChatRoom) => {
+      setSelectedRoom(room);
+      setView("room");
+      setRooms((prev) => {
+        const hasRoom = prev.some((item) => item.roomId === room.roomId);
+        const nextRooms = hasRoom
+          ? prev.map((item) => (item.roomId === room.roomId ? { ...item, ...room } : item))
+          : [room, ...prev];
+
+        return sortRoomsByRecentMessage(nextRooms);
+      });
+      void loadRooms(undefined, { showLoading: false });
+    },
+    [loadRooms]
+  );
+
   const handleRoomNotification = useCallback(
     (notification: RoomNotification) => {
       const isCurrentRoomOpen =
@@ -417,12 +434,14 @@ export default function ChatWidget() {
 
           {view === "room" && selectedRoom && (
             <ChatRoomPanel
+              key={selectedRoom.roomId}
               room={selectedRoom}
               onBack={() => setView("list")}
               onClose={handleClose}
               onReadRoom={markRoomAsRead}
               onRoomMessage={handleCurrentRoomMessage}
               onLeaveRoom={requestLeaveRoom}
+              onRoomUpdated={handleRoomUpdated}
               isLeaving={isProcessing}
             />
           )}

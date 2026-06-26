@@ -1,12 +1,14 @@
 ﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { Client, type IMessage } from "@stomp/stompjs";
 import { normalizeChatMessage } from "../services/chatService";
-import type { ChatMessage, ReadEvent } from "../types/chat";
+import type { ChatMessage, ReadEvent, TypingEvent } from "../types/chat";
 
 type UseChatSocketOptions = {
   roomId?: number;
+  userId?: number;
   onMessage?: (message: ChatMessage) => void;
   onRead?: (event: ReadEvent) => void;
+  onTyping?: (event: TypingEvent) => void;
 };
 
 type SocketEnvelope = {
@@ -92,7 +94,37 @@ const parseReadEvent = (body: unknown, fallbackRoomId?: number): ReadEvent | nul
   };
 };
 
-export const useChatSocket = ({ roomId, onMessage, onRead }: UseChatSocketOptions) => {
+const parseTypingEvent = (body: unknown): TypingEvent | null => {
+  const unwrappedBody = unwrapBody(body);
+  if (!unwrappedBody || typeof unwrappedBody !== "object") return null;
+
+  const record = getNestedRecord(unwrappedBody as RawRecord, [
+    "typing",
+    "typingEvent",
+    "payload",
+    "message",
+    "body",
+  ]);
+  const userId = getNumber(record, ["userId", "senderId", "memberId"]);
+  const nicknameValue = record.nickname ?? record.senderNickname ?? record.name;
+  const isTypingValue = record.isTyping ?? record.typing;
+
+  if (userId <= 0 || typeof nicknameValue !== "string") return null;
+
+  return {
+    userId,
+    nickname: nicknameValue,
+    isTyping: Boolean(isTypingValue),
+  };
+};
+
+export const useChatSocket = ({
+  roomId,
+  userId,
+  onMessage,
+  onRead,
+  onTyping,
+}: UseChatSocketOptions) => {
   const clientRef = useRef<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
@@ -119,6 +151,20 @@ export const useChatSocket = ({ roomId, onMessage, onRead }: UseChatSocketOption
       });
 
       return true;
+    },
+    [roomId]
+  );
+
+  const sendTyping = useCallback(
+    (isTyping: boolean) => {
+      const client = clientRef.current;
+
+      if (!roomId || !client?.connected) return;
+
+      client.publish({
+        destination: `/app/chat/rooms/${roomId}/typing`,
+        body: JSON.stringify({ isTyping }),
+      });
     },
     [roomId]
   );
@@ -154,6 +200,15 @@ export const useChatSocket = ({ roomId, onMessage, onRead }: UseChatSocketOption
           onRead?.(parsedEvent);
         });
 
+        if (userId) {
+          client.subscribe(`/topic/users/${userId}/typing`, (message) => {
+            const parsedEvent = parseTypingEvent(parseBody(message));
+            if (!parsedEvent) return;
+
+            onTyping?.(parsedEvent);
+          });
+        }
+
         client.publish({
           destination: `/app/chat/rooms/${roomId}/read`,
           body: "",
@@ -178,12 +233,13 @@ export const useChatSocket = ({ roomId, onMessage, onRead }: UseChatSocketOption
       clientRef.current = null;
       void client.deactivate();
     };
-  }, [onMessage, onRead, roomId]);
+  }, [onMessage, onRead, onTyping, roomId, userId]);
 
   return {
     isConnected,
     sendMessage,
     sendRead,
+    sendTyping,
   };
 };
 

@@ -1,5 +1,11 @@
 ﻿import { api, type ApiResult, unwrapData } from "@/lib/api";
-import type { ChatMessage, ChatRoom, ChatRoomType, Friend } from "../types/chat";
+import type {
+  ChatMessage,
+  ChatRoom,
+  ChatRoomMember,
+  ChatRoomType,
+  Friend,
+} from "../types/chat";
 
 type RawRecord = Record<string, unknown>;
 
@@ -71,6 +77,7 @@ const normalizeChatRoom = (item: unknown): ChatRoom => {
     lastMessage: getNullableString(record, ["lastMessage", "latestMessage", "message"]),
     lastMessageAt: getNullableString(record, ["lastMessageAt", "latestMessageAt", "updatedAt", "createdAt"]),
     unreadCount: getNumber(record, ["unreadCount", "unreadMessageCount"], 0),
+    memberCount: getNumber(record, ["memberCount", "memberCnt"], type === "GROUP" ? 0 : 2),
   };
 };
 
@@ -99,6 +106,16 @@ const normalizeFriend = (item: unknown): Friend => {
     friendId: getNumber(record, ["targetUserId", "friendUserId", "friendId", "userId", "id"]),
     nickname: getString(record, ["nickname", "friendNickname", "name"], "알 수 없는 친구"),
     profileImageUrl: getNullableString(record, ["profileImageUrl", "friendProfileImageUrl", "imageUrl"]),
+  };
+};
+
+const normalizeChatRoomMember = (item: unknown): ChatRoomMember => {
+  const record = asRecord(item);
+
+  return {
+    userId: getNumber(record, ["userId", "memberId", "id"]),
+    nickname: getString(record, ["nickname", "name"], "알 수 없음"),
+    profileImageUrl: getNullableString(record, ["profileImageUrl", "imageUrl"]),
   };
 };
 
@@ -155,6 +172,51 @@ export const createGroupChatRoom = async (roomName: string, targetUserIds: numbe
   });
 
   return normalizeChatRoom(unwrapData(response));
+};
+
+export const getChatRoomMembers = async (
+  roomId: number,
+  signal?: AbortSignal
+): Promise<ChatRoomMember[]> => {
+  const response = await api.get<ApiResult<unknown>>(
+    `/api/v1/chat/rooms/${roomId}/members`,
+    {
+      signal,
+      suppressGlobalError: true,
+    }
+  );
+
+  return getItems(unwrapData(response))
+    .map(normalizeChatRoomMember)
+    .filter((member) => member.userId > 0);
+};
+
+export const addChatRoomMembers = async (
+  roomId: number,
+  targetUserIds: number[]
+): Promise<ChatRoom> => {
+  const response = await api.post<ApiResult<unknown>>(
+    `/api/v1/chat/rooms/${roomId}/members`,
+    { targetUserIds },
+    {
+      suppressGlobalError: true,
+    }
+  );
+
+  return normalizeChatRoom(unwrapData(response));
+};
+
+export const renameChatRoom = async (
+  roomId: number,
+  roomName: string
+): Promise<void> => {
+  await api.patch<ApiResult<null>>(
+    `/api/v1/chat/rooms/${roomId}/name`,
+    { roomName },
+    {
+      suppressGlobalError: true,
+    }
+  );
 };
 
 
