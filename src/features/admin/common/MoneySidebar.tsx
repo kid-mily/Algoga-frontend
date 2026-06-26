@@ -3,9 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { getCurrentAdminPayload } from "@/lib/adminToken";
 import { adminLogout } from "@/features/services/adminAuth.service";
 import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
+import { getCurrentAdminDisplayInfo } from "@/features/admin/auth/adminDisplay";
 
 const menus = [
   {
@@ -30,9 +30,7 @@ const menus = [
 
 export default function MoneySidebar() {
   const pathname = usePathname();
-  const adminPayload = getCurrentAdminPayload();
-  const adminName = adminPayload?.sub ?? "정산 관리자";
-  const adminEmail = adminPayload?.role ?? adminPayload?.authority ?? "SETTLEMENT_MANAGER";
+  const adminInfo = getCurrentAdminDisplayInfo("SETTLEMENT_MANAGER");
 
   const handleLogout = async () => {
     try {
@@ -103,8 +101,8 @@ export default function MoneySidebar() {
             <Image src="/images/profile.svg" alt="" aria-hidden="true" width={18} height={18} />
           </div>
           <div>
-            <p className="text-[14px] font-semibold text-[#111827]">{adminName}</p>
-            <p className="text-[13px] text-[#98A2B3]">{adminEmail}</p>
+            <p className="text-[14px] font-semibold text-[#111827]">{adminInfo.name}</p>
+            <p className="text-[13px] text-[#98A2B3]">{adminInfo.email}</p>
           </div>
         </div>
       </div>

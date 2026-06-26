@@ -4,13 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { adminLogout } from "@/features/services/adminAuth.service";
 import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
+import { getCurrentAdminDisplayInfo } from "@/features/admin/auth/adminDisplay";
 
 export default function ContentSidebar() {
   const pathname = usePathname();
-  const adminInfo = {
-    loginId: "관리자",
-    role: "",
-  };
+  const adminInfo = getCurrentAdminDisplayInfo("CONTENT_MANAGER");
 
   const handleAdminLogout = async () => {
     try {
@@ -21,18 +19,16 @@ export default function ContentSidebar() {
     }
   };
 
-  const adminInitial = adminInfo.loginId ? adminInfo.loginId[0].toUpperCase() : "?";
-
   return (
     <aside className="flex w-[240px] flex-col border-r border-[#E4E7EC] bg-white">
       {/* 상단 관리자 */}
       <div className="flex items-center gap-3 border-b border-[#E4E7EC] px-6 py-5">
         <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#439A97] text-[14px] font-semibold text-white">
-          {adminInitial}
+          {adminInfo.initial}
         </div>
 
         <span className="truncate text-[20px] font-semibold text-[#111827]">
-          {adminInfo.loginId || "관리자"}
+          Content Admin
         </span>
       </div>
 
@@ -226,11 +222,11 @@ export default function ContentSidebar() {
 
           <div className="min-w-0">
             <p className="truncate text-[14px] font-semibold text-[#111827]">
-              {adminInfo.loginId}
+              {adminInfo.name}
             </p>
 
             <p className="truncate text-[13px] text-[#98A2B3]">
-              {adminInfo.role || "관리자"}
+              {adminInfo.email}
             </p>
           </div>
         </div>
