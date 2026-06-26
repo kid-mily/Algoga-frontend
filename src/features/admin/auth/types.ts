@@ -20,6 +20,7 @@ export interface AdminLoginResponse {
   id?: number;
   loginId?: string;
   name?: string;
+  email?: string;
   role?: AdminRole;
   managerRole?: AdminRole;
   authority?: AdminRole;

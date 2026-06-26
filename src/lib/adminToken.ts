@@ -2,6 +2,10 @@ import { getCookie } from "./cookie";
 
 export type AdminTokenPayload = {
   sub?: string;
+  name?: string;
+  email?: string;
+  loginId?: string;
+  username?: string;
   role?: string;
   type?: string;
   authority?: string;

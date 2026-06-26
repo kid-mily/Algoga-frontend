@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { adminLogout } from "@/features/services/adminAuth.service";
 import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
+import { getCurrentAdminDisplayInfo } from "@/features/admin/auth/adminDisplay";
 
 const menus = [
   {
@@ -46,6 +47,7 @@ const menus = [
 
 export default function CsSidebar() {
   const pathname = usePathname();
+  const adminInfo = getCurrentAdminDisplayInfo("CS_MANAGER");
 
   const handleLogout = async () => {
     try {
@@ -126,9 +128,9 @@ export default function CsSidebar() {
 
           <div>
             <p className="text-[14px] font-semibold text-[#111827]">
-              김관리자
+              {adminInfo.name}
             </p>
-            <p className="text-[13px] text-[#98A2B3]">cs@algoga.kr</p>
+            <p className="text-[13px] text-[#98A2B3]">{adminInfo.email}</p>
           </div>
         </div>
       </footer>
