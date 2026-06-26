@@ -94,6 +94,7 @@ export default function NewPwForm() {
       await resetPassword({
         newPassword: password,
       });
+      sessionStorage.removeItem("pendingPasswordResetUsername");
 
       // 성공 시
       setModal({

@@ -59,7 +59,15 @@ export default function LoginForm() {
 
       window.dispatchEvent(new Event("auth-state-changed"));
 
-      if (data?.requiresPasswordChange) {
+      const normalizedUsername = username.trim();
+      const pendingPasswordResetUsername = sessionStorage.getItem(
+        "pendingPasswordResetUsername"
+      );
+      const shouldChangePassword =
+        data?.requiresPasswordChange ||
+        pendingPasswordResetUsername === normalizedUsername;
+
+      if (shouldChangePassword) {
         router.push("/auth/login/newpw");
         return;
       }
