@@ -23,6 +23,7 @@ jest.mock("next/navigation", () => ({
 describe("LoginForm 컴포넌트 테스트", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    sessionStorage.clear();
     process.env.NEXT_PUBLIC_API_URL = "https://kidmily.kro.kr";
   });
 
@@ -68,6 +69,29 @@ describe("LoginForm 컴포넌트 테스트", () => {
     await user.type(screen.getByPlaceholderText("아이디를 입력해주세요"), "testuser");
 
     await user.click(screen.getByRole("button", { name: "로그인" }));
+
+    expect(screen.getByText("비밀번호를 입력해주세요.")).toBeVisible();
+  });
+
+  test("아이디 입력값이 공백이면 아이디 입력 안내 문구가 보인다", async () => {
+    const user = userEvent.setup();
+
+    render(<LoginForm />);
+
+    await user.type(screen.getByPlaceholderText("아이디를 입력해주세요"), "   ");
+
+    expect(screen.getByText("아이디를 입력해주세요.")).toBeVisible();
+  });
+
+  test("비밀번호를 입력했다가 비우면 비밀번호 입력 안내 문구가 보인다", async () => {
+    const user = userEvent.setup();
+
+    render(<LoginForm />);
+
+    const passwordInput = screen.getByPlaceholderText("비밀번호를 입력해주세요");
+
+    await user.type(passwordInput, "password123");
+    await user.clear(passwordInput);
 
     expect(screen.getByText("비밀번호를 입력해주세요.")).toBeVisible();
   });
@@ -121,5 +145,48 @@ describe("LoginForm 컴포넌트 테스트", () => {
         password: "password123",
       });
     });
+  });
+
+  test("임시 비밀번호 변경이 필요하면 새 비밀번호 페이지로 이동한다", async () => {
+    const user = userEvent.setup();
+
+    (login as jest.Mock).mockResolvedValueOnce({
+      requiresPasswordChange: true,
+    });
+
+    render(<LoginForm />);
+
+    await user.type(screen.getByPlaceholderText("아이디를 입력해주세요"), "testuser");
+    await user.type(
+      screen.getByPlaceholderText("비밀번호를 입력해주세요"),
+      "password123"
+    );
+
+    await user.click(screen.getByRole("button", { name: "로그인" }));
+
+    await waitFor(() => {
+      expect(login).toHaveBeenCalledWith({
+        username: "testuser",
+        password: "password123",
+      });
+      expect(pushMock).toHaveBeenCalledWith("/auth/login/newpw");
+      expect(pushMock).not.toHaveBeenCalledWith("/");
+    });
+  });
+
+  test("비밀번호 보기 버튼을 누르면 비밀번호 입력 타입이 바뀐다", async () => {
+    const user = userEvent.setup();
+
+    render(<LoginForm />);
+
+    const passwordInput = screen.getByPlaceholderText("비밀번호를 입력해주세요");
+    const showPasswordButton = screen.getByRole("button", { name: "비밀번호 보기" });
+
+    expect(passwordInput).toHaveAttribute("type", "password");
+
+    await user.click(showPasswordButton);
+
+    expect(passwordInput).toHaveAttribute("type", "text");
+    expect(screen.getByRole("button", { name: "비밀번호 숨기기" })).toBeVisible();
   });
 });

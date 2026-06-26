@@ -32,6 +32,7 @@ export default function FindPwForm() {
         email: email.trim(),
       });
 
+      sessionStorage.setItem("pendingPasswordResetUsername", userId.trim());
       router.push("/auth/login/findpwcomplete");
     } catch (error: unknown) {
       // 에러 발생 시 빨간색 글자 출력

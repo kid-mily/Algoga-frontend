@@ -8,6 +8,27 @@
 } from "@/features/auth/types";
 import { api, ApiResult, unwrapData } from "@/lib/api";
 
+const normalizeLoginResponse = (value: unknown): LoginResponse => {
+  if (typeof value === "boolean") {
+    return { requiresPasswordChange: value };
+  }
+
+  if (!value || typeof value !== "object") return {};
+
+  const record = value as Record<string, unknown>;
+  const requiresPasswordChange =
+    record.requiresPasswordChange ??
+    record.passwordChangeRequired ??
+    record.needPasswordChange ??
+    record.mustChangePassword ??
+    record.temporaryPassword;
+
+  return {
+    ...record,
+    requiresPasswordChange: Boolean(requiresPasswordChange),
+  };
+};
+
 // 로그인 요청
 export const login = async (user: LoginRequest): Promise<LoginResponse> => {
   const response = await api.post<ApiResult<LoginResponse | null>>(
@@ -16,7 +37,7 @@ export const login = async (user: LoginRequest): Promise<LoginResponse> => {
     { skipAuth: true, suppressGlobalError: true }
   );
 
-  return unwrapData<LoginResponse | null>(response) ?? {};
+  return normalizeLoginResponse(unwrapData<LoginResponse | null>(response));
 };
 
 // id 찾기 요청
