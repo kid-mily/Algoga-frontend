@@ -118,22 +118,58 @@ export default function ChatRoomPanel({
   const [typingUsers, setTypingUsers] = useState<Record<number, string>>({});
   const typingTimersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
+  const loadMessages = useCallback(
+    async (
+      signal?: AbortSignal,
+      options: { showLoading?: boolean } = {}
+    ) => {
+      const shouldShowLoading = options.showLoading ?? true;
+
+      try {
+        if (shouldShowLoading) {
+          setIsLoading(true);
+        }
+        setErrorMessage("");
+
+        const data = await getChatMessages(room.roomId, signal);
+        setMessages(data);
+      } catch (error) {
+        if (signal?.aborted) return;
+
+        setErrorMessage(error instanceof Error ? error.message : "채팅 내역을 불러오지 못했습니다.");
+      } finally {
+        if (!signal?.aborted && shouldShowLoading) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [room.roomId]
+  );
+
   const handleSocketMessage = useCallback(
     (message: ChatMessage) => {
       setMessages((prev) => mergeMessage(prev, message));
       onRoomMessage?.(message);
 
-      if (!message.isSystem && currentUserId && message.senderId !== currentUserId) {
-        sendReadRef.current();
+      if (!message.isSystem) {
+        window.setTimeout(() => {
+          sendReadRef.current();
+          void loadMessages(undefined, { showLoading: false });
+        }, 0);
       }
     },
-    [currentUserId, onRoomMessage]
+    [loadMessages, onRoomMessage]
   );
 
   const handleReadEvent = useCallback(
     (event: { roomId: number; readerId?: number; messageId?: number; unreadCount?: number }) => {
       if (!currentUserId || event.roomId !== room.roomId || event.readerId === currentUserId) return;
-      if (!event.messageId || typeof event.unreadCount !== "number") return;
+      if (!event.messageId || typeof event.unreadCount !== "number") {
+        void loadMessages(undefined, { showLoading: false });
+        return;
+      }
+
+      const nextUnreadCount = Math.max(event.unreadCount, 0);
 
       setMessages((prev) =>
         prev.map((message) => {
@@ -149,12 +185,12 @@ export default function ChatRoomPanel({
 
           return {
             ...message,
-            unreadCount: Math.max(event.unreadCount, 0),
+            unreadCount: nextUnreadCount,
           };
         })
       );
     },
-    [currentUserId, room.roomId]
+    [currentUserId, loadMessages, room.roomId]
   );
 
   const handleTypingEvent = useCallback(
@@ -224,31 +260,15 @@ export default function ChatRoomPanel({
 
   useEffect(() => {
     const controller = new AbortController();
-
-    const loadMessages = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-
-        const data = await getChatMessages(room.roomId, controller.signal);
-        setMessages(data);
-      } catch (error) {
-        if (controller.signal.aborted) return;
-
-        setErrorMessage(error instanceof Error ? error.message : "채팅 내역을 불러오지 못했습니다.");
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadMessages();
+    const timeoutId = window.setTimeout(() => {
+      void loadMessages(controller.signal);
+    }, 0);
 
     return () => {
+      window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [room.roomId]);
+  }, [loadMessages]);
 
   useEffect(() => {
     if (!isConnected) return;
@@ -256,6 +276,13 @@ export default function ChatRoomPanel({
     sendRead();
     onReadRoom?.(room.roomId);
   }, [isConnected, onReadRoom, room.roomId, sendRead]);
+
+  useEffect(() => {
+    if (!isConnected || isLoading || messages.length === 0) return;
+
+    sendRead();
+    onReadRoom?.(room.roomId);
+  }, [isConnected, isLoading, messages.length, onReadRoom, room.roomId, sendRead]);
 
   useEffect(() => {
     const timers = typingTimersRef.current;
@@ -408,14 +435,14 @@ export default function ChatRoomPanel({
                 onClick={openMembersPanel}
                 className="block w-full px-4 py-3 text-left text-[14px] font-semibold text-[#344054] transition hover:bg-[#F9FAFB]"
               >
-                친구 목록 조회
+                멤버 목록
               </button>
               <button
                 type="button"
                 onClick={openAddPanel}
                 className="block w-full px-4 py-3 text-left text-[14px] font-semibold text-[#344054] transition hover:bg-[#F9FAFB]"
               >
-                친구 추가
+                멤버 추가
               </button>
               {room.type === "GROUP" && (
                 <button
