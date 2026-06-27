@@ -186,6 +186,9 @@ export default function ChatListPanel({
                   </p>
 
                   <p className="mt-1 truncate text-[15px] text-gray-500">
+                    {room.type === "GROUP" && room.memberCount
+                      ? `멤버 ${room.memberCount}명 · `
+                      : ""}
                     {room.lastMessage ?? "아직 메시지가 없습니다."}
                   </p>
                 </div>

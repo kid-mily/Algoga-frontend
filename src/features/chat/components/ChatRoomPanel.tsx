@@ -1,11 +1,23 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, LogOut, X } from "lucide-react";
+import { ArrowLeft, MoreVertical, X } from "lucide-react";
 import { getMe } from "@/features/services/user.service";
-import { getChatMessages } from "../services/chatService";
+import {
+  addChatRoomMembers,
+  getChatMessages,
+  getChatRoomMembers,
+  getFriends,
+  renameChatRoom,
+} from "../services/chatService";
 import { useChatSocket } from "../hooks/useChatSocket";
-import type { ChatMessage, ChatRoom } from "../types/chat";
+import type {
+  ChatMessage,
+  ChatRoom,
+  ChatRoomMember,
+  Friend,
+  TypingEvent,
+} from "../types/chat";
 import ChatInput from "./ChatInput";
 import ChatMessageList from "./ChatMessageList";
 
@@ -16,6 +28,7 @@ type ChatRoomPanelProps = {
   onReadRoom?: (roomId: number) => void;
   onRoomMessage?: (message: ChatMessage) => void;
   onLeaveRoom?: (room: ChatRoom) => void;
+  onRoomUpdated?: (room: ChatRoom) => void;
   isLeaving?: boolean;
 };
 
@@ -28,6 +41,8 @@ const mergeMessage = (messages: ChatMessage[], nextMessage: ChatMessage) => {
 };
 
 const ChatRoomHeaderAvatar = ({ room, roomName }: { room: ChatRoom; roomName: string }) => {
+  if (room.type === "GROUP") return null;
+
   const shouldShowProfileImage = room.type === "DIRECT" && Boolean(room.profileImageUrl);
 
   if (shouldShowProfileImage) {
@@ -49,6 +64,32 @@ const ChatRoomHeaderAvatar = ({ room, roomName }: { room: ChatRoom; roomName: st
   );
 };
 
+const MemberAvatar = ({
+  name,
+  imageUrl,
+}: {
+  name: string;
+  imageUrl: string | null;
+}) => {
+  if (imageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={imageUrl}
+        alt=""
+        aria-hidden="true"
+        className="h-8 w-8 shrink-0 rounded-full border border-[#E4E7EC] object-cover"
+      />
+    );
+  }
+
+  return (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E7F4F3] text-[13px] font-bold text-[#287875]">
+      {name.slice(0, 1)}
+    </span>
+  );
+};
+
 export default function ChatRoomPanel({
   room,
   onBack,
@@ -56,6 +97,7 @@ export default function ChatRoomPanel({
   onReadRoom,
   onRoomMessage,
   onLeaveRoom,
+  onRoomUpdated,
   isLeaving,
 }: ChatRoomPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -64,6 +106,17 @@ export default function ChatRoomPanel({
   const sendReadRef = useRef<() => void>(() => undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [panelMode, setPanelMode] = useState<"none" | "members" | "add" | "rename">("none");
+  const [members, setMembers] = useState<ChatRoomMember[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [selectedFriendIds, setSelectedFriendIds] = useState<number[]>([]);
+  const [draftRoomName, setDraftRoomName] = useState(room.roomName ?? "");
+  const [panelError, setPanelError] = useState("");
+  const [isPanelLoading, setIsPanelLoading] = useState(false);
+  const [isPanelProcessing, setIsPanelProcessing] = useState(false);
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<Record<number, string>>({});
+  const typingTimersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
   const handleSocketMessage = useCallback(
     (message: ChatMessage) => {
@@ -80,6 +133,7 @@ export default function ChatRoomPanel({
   const handleReadEvent = useCallback(
     (event: { roomId: number; readerId?: number; messageId?: number; unreadCount?: number }) => {
       if (!currentUserId || event.roomId !== room.roomId || event.readerId === currentUserId) return;
+      if (!event.messageId || typeof event.unreadCount !== "number") return;
 
       setMessages((prev) =>
         prev.map((message) => {
@@ -89,29 +143,61 @@ export default function ChatRoomPanel({
 
           if (isReaderMessage || !message.unreadCount) return message;
 
-          if (event.messageId && message.messageId !== event.messageId) {
+          if (message.messageId !== event.messageId) {
             return message;
           }
 
           return {
             ...message,
-            unreadCount:
-              typeof event.unreadCount === "number"
-                ? Math.max(event.unreadCount, 0)
-                : room.type === "GROUP"
-                  ? Math.max(message.unreadCount - 1, 0)
-                  : 0,
+            unreadCount: Math.max(event.unreadCount, 0),
           };
         })
       );
     },
-    [currentUserId, room.roomId, room.type]
+    [currentUserId, room.roomId]
   );
 
-  const { isConnected, sendMessage, sendRead } = useChatSocket({
+  const handleTypingEvent = useCallback(
+    (event: TypingEvent) => {
+      if (!currentUserId || event.userId === currentUserId) return;
+
+      if (typingTimersRef.current[event.userId]) {
+        clearTimeout(typingTimersRef.current[event.userId]);
+        delete typingTimersRef.current[event.userId];
+      }
+
+      if (!event.isTyping) {
+        setTypingUsers((prev) => {
+          const next = { ...prev };
+          delete next[event.userId];
+          return next;
+        });
+        return;
+      }
+
+      setTypingUsers((prev) => ({
+        ...prev,
+        [event.userId]: event.nickname,
+      }));
+
+      typingTimersRef.current[event.userId] = setTimeout(() => {
+        setTypingUsers((prev) => {
+          const next = { ...prev };
+          delete next[event.userId];
+          return next;
+        });
+        delete typingTimersRef.current[event.userId];
+      }, 2500);
+    },
+    [currentUserId]
+  );
+
+  const { isConnected, sendMessage, sendRead, sendTyping } = useChatSocket({
     roomId: room.roomId,
+    userId: currentUserId,
     onMessage: handleSocketMessage,
     onRead: handleReadEvent,
+    onTyping: handleTypingEvent,
   });
 
   useEffect(() => {
@@ -171,7 +257,119 @@ export default function ChatRoomPanel({
     onReadRoom?.(room.roomId);
   }, [isConnected, onReadRoom, room.roomId, sendRead]);
 
+  useEffect(() => {
+    const timers = typingTimersRef.current;
+
+    return () => {
+      Object.values(timers).forEach(clearTimeout);
+      typingTimersRef.current = {};
+    };
+  }, []);
+
   const roomName = room.roomName ?? (room.type === "GROUP" ? "그룹 채팅" : "알 수 없는 상대");
+  const typingNames = Object.values(typingUsers);
+  const typingMessage =
+    typingNames.length === 1
+      ? `${typingNames[0]}님이 입력 중입니다.`
+      : typingNames.length > 1
+        ? `${typingNames[0]}님 외 ${typingNames.length - 1}명이 입력 중입니다.`
+        : "";
+  const memberIdSet = new Set(members.map((member) => member.userId));
+  const addableFriends = friends.filter((friend) => !memberIdSet.has(friend.friendId));
+
+  const loadMembers = async () => {
+    try {
+      setIsPanelLoading(true);
+      setPanelError("");
+      const data = await getChatRoomMembers(room.roomId);
+      setMembers(data);
+    } catch (error) {
+      setPanelError(error instanceof Error ? error.message : "멤버 목록을 불러오지 못했습니다.");
+    } finally {
+      setIsPanelLoading(false);
+    }
+  };
+
+  const openMembersPanel = () => {
+    setIsActionMenuOpen(false);
+    setPanelMode("members");
+    void loadMembers();
+  };
+
+  const openAddPanel = async () => {
+    setIsActionMenuOpen(false);
+    setPanelMode("add");
+    setSelectedFriendIds([]);
+
+    try {
+      setIsPanelLoading(true);
+      setPanelError("");
+      const [nextMembers, nextFriends] = await Promise.all([
+        getChatRoomMembers(room.roomId),
+        getFriends(),
+      ]);
+      setMembers(nextMembers);
+      setFriends(nextFriends);
+    } catch (error) {
+      setPanelError(error instanceof Error ? error.message : "친구 목록을 불러오지 못했습니다.");
+    } finally {
+      setIsPanelLoading(false);
+    }
+  };
+
+  const toggleFriend = (friendId: number) => {
+    setSelectedFriendIds((prev) =>
+      prev.includes(friendId)
+        ? prev.filter((id) => id !== friendId)
+        : [...prev, friendId]
+    );
+  };
+
+  const handleAddMembers = async () => {
+    if (!selectedFriendIds.length || isPanelProcessing) return;
+
+    try {
+      setIsPanelProcessing(true);
+      setPanelError("");
+      const nextRoom = await addChatRoomMembers(room.roomId, selectedFriendIds);
+      onRoomUpdated?.(nextRoom);
+      setSelectedFriendIds([]);
+      setPanelMode("members");
+      await loadMembers();
+    } catch (error) {
+      setPanelError(error instanceof Error ? error.message : "멤버를 추가하지 못했습니다.");
+    } finally {
+      setIsPanelProcessing(false);
+    }
+  };
+
+  const handleRenameRoom = async () => {
+    const nextName = draftRoomName.trim();
+    if (room.type !== "GROUP" || !nextName || nextName.length > 20 || isPanelProcessing) return;
+
+    try {
+      setIsPanelProcessing(true);
+      setPanelError("");
+      await renameChatRoom(room.roomId, nextName);
+      onRoomUpdated?.({ ...room, roomName: nextName });
+      setPanelMode("none");
+    } catch (error) {
+      setPanelError(error instanceof Error ? error.message : "채팅방 이름을 변경하지 못했습니다.");
+    } finally {
+      setIsPanelProcessing(false);
+    }
+  };
+
+  const openRenamePanel = () => {
+    setIsActionMenuOpen(false);
+    setDraftRoomName(room.roomName ?? "");
+    setPanelMode("rename");
+  };
+
+  const handleLeaveRoomClick = () => {
+    setIsActionMenuOpen(false);
+    onLeaveRoom?.(room);
+  };
 
   return (
     <section
@@ -191,23 +389,54 @@ export default function ChatRoomPanel({
           <ChatRoomHeaderAvatar room={room} roomName={roomName} />
           <div className="min-w-0">
             <h2 className="truncate text-[17px] font-bold text-[#111827]">{roomName}</h2>
-            <p className="mt-0.5 text-[12px] text-[#98A2B3]">
-              {isConnected ? "실시간 연결됨" : "연결 중"}
-            </p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          {onLeaveRoom && (
-            <button
-              type="button"
-              onClick={() => onLeaveRoom(room)}
-              disabled={isLeaving}
-              aria-label="채팅방 나가기"
-              title="채팅방 나가기"
-              className="flex h-9 w-9 items-center justify-center rounded-full text-[#667085] transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EF4444]"
-            >
-              <LogOut size={18} />
-            </button>
+        <div className="relative flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setIsActionMenuOpen((prev) => !prev)}
+            aria-label="채팅방 메뉴 열기"
+            aria-expanded={isActionMenuOpen}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[#667085] transition hover:bg-[#F2F4F7] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#439A97]"
+          >
+            <MoreVertical size={20} />
+          </button>
+          {isActionMenuOpen && (
+            <div className="absolute right-10 top-10 z-30 w-[180px] overflow-hidden rounded-[14px] border border-[#E4E7EC] bg-white py-1 shadow-[0_12px_30px_rgba(16,24,40,0.16)]">
+              <button
+                type="button"
+                onClick={openMembersPanel}
+                className="block w-full px-4 py-3 text-left text-[14px] font-semibold text-[#344054] transition hover:bg-[#F9FAFB]"
+              >
+                친구 목록 조회
+              </button>
+              <button
+                type="button"
+                onClick={openAddPanel}
+                className="block w-full px-4 py-3 text-left text-[14px] font-semibold text-[#344054] transition hover:bg-[#F9FAFB]"
+              >
+                친구 추가
+              </button>
+              {room.type === "GROUP" && (
+                <button
+                  type="button"
+                  onClick={openRenamePanel}
+                  className="block w-full px-4 py-3 text-left text-[14px] font-semibold text-[#344054] transition hover:bg-[#F9FAFB]"
+                >
+                  채팅방 이름 수정
+                </button>
+              )}
+              {onLeaveRoom && (
+                <button
+                  type="button"
+                  onClick={handleLeaveRoomClick}
+                  disabled={isLeaving}
+                  className="block w-full px-4 py-3 text-left text-[14px] font-semibold text-[#D92D20] transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  나가기
+                </button>
+              )}
+            </div>
           )}
           <button
             type="button"
@@ -219,6 +448,125 @@ export default function ChatRoomPanel({
           </button>
         </div>
       </header>
+
+      {panelMode !== "none" && (
+        <section className="border-b border-[#EEF2F6] bg-[#F9FAFB] px-4 py-3">
+          {panelMode === "members" && (
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-[13px] font-bold text-[#111827]">멤버 목록</p>
+                <button
+                  type="button"
+                  onClick={() => setPanelMode("none")}
+                  className="text-[12px] font-semibold text-[#667085]"
+                >
+                  닫기
+                </button>
+              </div>
+              {isPanelLoading ? (
+                <p className="text-[13px] text-[#98A2B3]">멤버를 불러오는 중입니다...</p>
+              ) : (
+                <ul className="max-h-[132px] space-y-2 overflow-y-auto">
+                  {members.map((member) => (
+                    <li key={member.userId} className="flex items-center gap-2">
+                      <MemberAvatar name={member.nickname} imageUrl={member.profileImageUrl} />
+                      <span className="truncate text-[13px] font-semibold text-[#344054]">
+                        {member.nickname}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {panelMode === "add" && (
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-[13px] font-bold text-[#111827]">멤버 추가</p>
+                <button
+                  type="button"
+                  onClick={() => setPanelMode("none")}
+                  className="text-[12px] font-semibold text-[#667085]"
+                >
+                  닫기
+                </button>
+              </div>
+              {isPanelLoading ? (
+                <p className="text-[13px] text-[#98A2B3]">친구를 불러오는 중입니다...</p>
+              ) : addableFriends.length > 0 ? (
+                <ul className="max-h-[132px] space-y-2 overflow-y-auto">
+                  {addableFriends.map((friend) => {
+                    const isSelected = selectedFriendIds.includes(friend.friendId);
+
+                    return (
+                      <li key={friend.friendId}>
+                        <button
+                          type="button"
+                          onClick={() => toggleFriend(friend.friendId)}
+                          aria-pressed={isSelected}
+                          className={`flex w-full items-center gap-2 rounded-[12px] px-2 py-2 text-left ${
+                            isSelected ? "bg-[#E7F4F3]" : "bg-white"
+                          }`}
+                        >
+                          <MemberAvatar name={friend.nickname} imageUrl={friend.profileImageUrl} />
+                          <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#344054]">
+                            {friend.nickname}
+                          </span>
+                          <span className={`h-4 w-4 rounded-full border ${
+                            isSelected ? "border-[#439A97] bg-[#439A97]" : "border-[#D0D5DD]"
+                          }`} />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="text-[13px] text-[#98A2B3]">추가할 수 있는 친구가 없습니다.</p>
+              )}
+              <button
+                type="button"
+                onClick={handleAddMembers}
+                disabled={!selectedFriendIds.length || isPanelProcessing}
+                className="mt-3 h-9 w-full rounded-[10px] bg-[#439A97] text-[13px] font-bold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+              >
+                {isPanelProcessing ? "추가 중" : "선택한 멤버 추가"}
+              </button>
+            </div>
+          )}
+
+          {panelMode === "rename" && (
+            <div>
+              <label htmlFor="chat-room-name" className="text-[13px] font-bold text-[#111827]">
+                채팅방 이름 변경
+              </label>
+              <div className="mt-2 flex gap-2">
+                <input
+                  id="chat-room-name"
+                  value={draftRoomName}
+                  onChange={(event) => setDraftRoomName(event.target.value)}
+                  maxLength={20}
+                  className="h-9 min-w-0 flex-1 rounded-[10px] border border-[#D0D5DD] bg-white px-3 text-[13px] outline-none focus:border-[#439A97] focus:ring-2 focus:ring-[#C7E6E4]"
+                />
+                <button
+                  type="button"
+                  onClick={handleRenameRoom}
+                  disabled={!draftRoomName.trim() || isPanelProcessing}
+                  className="h-9 rounded-[10px] bg-[#439A97] px-3 text-[13px] font-bold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+                >
+                  저장
+                </button>
+              </div>
+            </div>
+          )}
+
+          {panelError ? (
+            <p className="mt-2 text-[12px] font-semibold text-red-500" role="alert">
+              {panelError}
+            </p>
+          ) : null}
+        </section>
+      )}
 
       {errorMessage ? (
         <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] text-red-500" role="alert">
@@ -234,7 +582,17 @@ export default function ChatRoomPanel({
         />
       )}
 
-      <ChatInput disabled={!isConnected} onSend={sendMessage} />
+      {typingMessage ? (
+        <p className="border-t border-[#EEF2F6] bg-white px-4 pt-2 text-[12px] font-semibold text-[#667085]">
+          {typingMessage}
+        </p>
+      ) : null}
+
+      <ChatInput
+        disabled={!isConnected}
+        onSend={sendMessage}
+        onTypingChange={sendTyping}
+      />
     </section>
   );
 }
