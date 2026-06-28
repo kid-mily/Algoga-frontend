@@ -72,12 +72,12 @@ export default function Header() {
 
   if (isLoading) {
     return (
-      <header className="flex h-16 w-full items-center justify-between bg-white px-5" />
+      <header className="relative z-[3000] flex h-16 w-full items-center justify-between bg-white px-5" />
     );
   }
 
   return (
-    <header className="flex h-16 w-full items-center justify-between bg-white px-5">
+    <header className="relative z-[3000] flex h-16 w-full items-center justify-between bg-white px-5">
       <Link href="/">
         <Image
           src="/images/algoga-logo.png"

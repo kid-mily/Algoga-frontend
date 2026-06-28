@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { GeoJSON, MapContainer, TileLayer, ZoomControl } from "react-leaflet";
+import { GeoJSON, MapContainer, ZoomControl } from "react-leaflet";
 import type { Feature, GeoJsonProperties, Geometry } from "geojson";
 import L, { type Layer } from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -12,18 +12,8 @@ import MapLoading from "./MapLoading";
 import MapNotice from "./MapNotice";
 import { useWorldGeoJson } from "../hooks/useWorldGeoJson";
 import { useContinentCountries } from "../hooks/useContinentCountries";
-import {
-  CONTINENT_NAME_KO,
-  INITIAL_POSITION,
-  INITIAL_ZOOM,
-  MAP_BOUNDS,
-} from "../constants/mapConstants";
-import {
-  findSupportedCountry,
-  getContinentColor,
-  getCountryStyle,
-  getFeatureCountryName,
-} from "../utils/mapUtils";
+import { continent_name_ko, intial_position, intial_zoom, map_bounds } from "../constants/mapConstants";
+import { findSupportedCountry, getContinentColor, getCountryStyle, getFeatureCountryName } from "../utils/mapUtils";
 import type { CountryFeature } from "../types";
 
 export default function WorldMap() {
@@ -40,6 +30,22 @@ export default function WorldMap() {
     isLoading: isCountryLoading,
     errorMessage: countryErrorMessage,
   } = useContinentCountries(selectedContinent);
+
+  const countriesRef = useRef(countries);
+  const isCountryLoadingRef = useRef(isCountryLoading);
+  const countryErrorMessageRef = useRef(countryErrorMessage);
+
+  useEffect(() => {
+    countriesRef.current = countries;
+  }, [countries]);
+
+  useEffect(() => {
+    isCountryLoadingRef.current = isCountryLoading;
+  }, [isCountryLoading]);
+
+  useEffect(() => {
+    countryErrorMessageRef.current = countryErrorMessage;
+  }, [countryErrorMessage]);
 
   const layersByContinentRef = useRef<Record<string, L.Path[]>>({});
   const mapRef = useRef<L.Map | null>(null);
@@ -102,7 +108,7 @@ export default function WorldMap() {
     pathLayer.bindTooltip(
       selectedContinent
         ? countryName
-        : CONTINENT_NAME_KO[continent] ?? continent,
+        : continent_name_ko[continent] ?? continent,
       {
         direction: "top",
         sticky: true,
@@ -174,20 +180,34 @@ export default function WorldMap() {
         }
 
         if (continent !== selectedContinent) {
-          setNoticeMessage("선택한 대륙 안의 국가를 선택해 주세요.");
+          setNoticeMessage("선택한 대륙의 국가를 선택해 주세요.");
           return;
         }
 
         setSelectedCountry(countryName);
 
-        if (isCountryLoading) {
+        const latestCountries = countriesRef.current;
+
+        if (isCountryLoadingRef.current) {
           setNoticeMessage(
             "국가 정보를 불러오는 중입니다. 잠시 후 다시 선택해 주세요."
           );
           return;
         }
 
-        const supportedCountry = findSupportedCountry(countries, countryFeature);
+        if (countryErrorMessageRef.current) {
+          setNoticeMessage("국가 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+          return;
+        }
+
+        if (latestCountries.length === 0) {
+          setNoticeMessage(
+            "국가 정보를 확인하는 중입니다. 잠시 후 다시 선택해 주세요."
+          );
+          return;
+        }
+
+        const supportedCountry = findSupportedCountry(latestCountries, countryFeature);
 
         if (!supportedCountry || supportedCountry.active === false) {
           setNoticeMessage(`${countryName}은(는) 아직 준비 중인 국가입니다.`);
@@ -207,7 +227,7 @@ export default function WorldMap() {
     setNoticeMessage("");
 
     layersByContinentRef.current = {};
-    mapRef.current?.setView(INITIAL_POSITION, INITIAL_ZOOM);
+    mapRef.current?.setView(intial_position, intial_zoom);
   };
 
   return (
@@ -218,7 +238,18 @@ export default function WorldMap() {
         }
 
         .leaflet-container {
-          background: #edf6fa;
+          background: #dff3fb;
+        }
+
+        .leaflet-control-zoom {
+          border: 0 !important;
+          box-shadow: 0 10px 24px rgba(52, 79, 98, 0.16);
+        }
+
+        .leaflet-control-zoom a {
+          border: 0 !important;
+          color: #357a78 !important;
+          font-weight: 800;
         }
       `}</style>
 
@@ -236,22 +267,17 @@ export default function WorldMap() {
         ) : (
           <MapContainer
             ref={mapRef}
-            center={INITIAL_POSITION}
-            zoom={INITIAL_ZOOM}
+            center={intial_position}
+            zoom={intial_zoom}
             minZoom={2.2}
-            maxBounds={MAP_BOUNDS}
+            maxZoom={6}
+            maxBounds={map_bounds}
             maxBoundsViscosity={1}
             scrollWheelZoom
             zoomControl={false}
             className="z-10 h-full w-full"
           >
             <ZoomControl position="bottomleft" />
-
-            <TileLayer
-              attribution="&copy; OpenStreetMap contributors"
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              noWrap
-            />
 
             <GeoJSON
               key={`${selectedContinent}-${selectedCountry}`}

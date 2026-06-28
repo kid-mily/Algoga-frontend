@@ -34,12 +34,14 @@ export default async function CountrySelectPage({
   }
 
   let countries: Country[] = [];
+  let errorMessage = "";
 
   try {
     countries = await getCountries(normalizedContinentCode);
   } catch (error) {
     console.error("[country-select] 국가 목록 조회 실패:", error);
     countries = [];
+    errorMessage = "국가 데이터를 불러오지 못했습니다.";
   }
 
   return (
@@ -48,7 +50,10 @@ export default async function CountrySelectPage({
         <CountrySelectHeader />
 
         <section className="w-full">
-          <CountrySelectSection countries={countries} />
+          <CountrySelectSection
+            countries={countries}
+            errorMessage={errorMessage}
+          />
         </section>
       </section>
     </main>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ScheduleSidebarProps } from "./Types";
+import type { ScheduleSidebarProps } from "../types";
 
 const SCHEDULE_COLOR: Record<string, string> = {
   LECTURE_START: "bg-[#FDD33B]",
@@ -41,11 +41,11 @@ export default function ScheduleSidebar({
       ) : !isLoggedIn ? (
         <div className="text-center">
           <p className="font-semibold text-[#0A1628]">
-            로그인 후 일정을 확인할 수 있습니다.
+            로그인하면 나의 일정을 확인할 수 있습니다.
           </p>
 
           <p className="mt-2 text-sm leading-6 text-[#64748B]">
-            강의 신청 내역과 여행 구매 내역이 선택한 날짜별로 표시됩니다.
+            강의 신청 내역과 여행 준비 일정을 날짜별로 확인해 보세요.
           </p>
 
           <Link
@@ -73,9 +73,7 @@ export default function ScheduleSidebar({
               className="relative rounded-xl border border-[#EEF2F6] bg-white p-4 pl-5 shadow-sm"
             >
               <span
-                className={`absolute left-0 top-0 h-full w-1 rounded-l-xl ${getScheduleColor(
-                  schedule.type
-                )}`}
+                className={`absolute left-0 top-0 h-full w-1 rounded-l-xl ${getScheduleColor(schedule.type)}`}
               />
 
               <div className="flex items-start justify-between gap-3">

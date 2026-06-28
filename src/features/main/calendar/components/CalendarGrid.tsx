@@ -1,15 +1,15 @@
-import { CalendarGridProps } from "./Types";
+import type { CalendarGridProps } from "../types";
 
-const week_days = ["일", "월", "화", "수", "목", "금", "토"];
+const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
 
-const day_color = [
+const dayColor = [
   "text-red-400",
   "text-[#475569]",
   "text-[#475569]",
   "text-[#475569]",
   "text-[#475569]",
   "text-[#475569]",
-  "text-blue-500",  
+  "text-blue-500",
 ];
 
 const SCHEDULE_COLOR: Record<string, string> = {
@@ -17,6 +17,7 @@ const SCHEDULE_COLOR: Record<string, string> = {
   LECTURE_END: "bg-[#FDD33B]",
   TRIP: "bg-[#A8DCCF]",
   FLIGHT: "bg-[#60A5FA]",
+  HOTEL: "bg-[#E57A36]",
 };
 
 const getScheduleColor = (type?: string) => {
@@ -24,10 +25,7 @@ const getScheduleColor = (type?: string) => {
 };
 
 const formatDate = (year: number, month: number, date: number) => {
-  return `${year}-${String(month).padStart(2, "0")}-${String(date).padStart(
-    2,
-    "0"
-  )}`;
+  return `${year}-${String(month).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
 };
 
 export default function CalendarGrid({
@@ -57,10 +55,10 @@ export default function CalendarGrid({
   return (
     <div className="p-2">
       <div className="mb-5 grid grid-cols-7 rounded-xl bg-[#F8FAFC] py-3">
-        {week_days.map((day, index) => (
+        {weekDays.map((day, index) => (
           <span
             key={day}
-            className={`text-center text-sm font-bold ${day_color[index]}`}
+            className={`text-center text-sm font-bold ${dayColor[index]}`}
           >
             {day}
           </span>
@@ -92,7 +90,7 @@ export default function CalendarGrid({
             >
               <time
                 dateTime={fullDate}
-                className={`text-sm font-semibold ${day_color[dayIndex]}`}
+                className={`text-sm font-semibold ${dayColor[dayIndex]}`}
               >
                 {date}
               </time>
@@ -102,9 +100,7 @@ export default function CalendarGrid({
                   <span
                     key={`${schedule.scheduleId}-${schedule.title}`}
                     title={schedule.title}
-                    className={`h-1.5 w-full rounded-full ${getScheduleColor(
-                      schedule.type
-                    )}`}
+                    className={`h-1.5 w-full rounded-full ${getScheduleColor(schedule.type)}`}
                   />
                 ))}
 

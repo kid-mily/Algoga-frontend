@@ -3,9 +3,9 @@ import { PathOptions } from "leaflet";
 import { Country } from "@/features/classroom/components/types";
 import { CountryFeature } from "../types";
 import {
-  CONTINENT_COLOR_MAP,
-  DEFAULT_MAP_COLOR,
-  DISABLED_MAP_COLOR,
+  continent_color_map,
+  default_map_color,
+  disabled_map_color,
 } from "../constants/mapConstants";
 
 export const normalizeName = (value?: string | null) =>
@@ -23,9 +23,9 @@ const isSameNonEmpty = (a?: string | null, b?: string | null) => {
 };
 
 export const getContinentColor = (continent?: string) => {
-  if (!continent) return DEFAULT_MAP_COLOR;
+  if (!continent) return default_map_color;
 
-  return CONTINENT_COLOR_MAP[continent] ?? DEFAULT_MAP_COLOR;
+  return continent_color_map[continent] ?? default_map_color;
 };
 
 export const getFeatureCountryName = (feature: CountryFeature) =>
@@ -73,8 +73,8 @@ export const getCountryStyle = (
 
   if (continent !== selectedContinent) {
     return {
-      fillColor: DISABLED_MAP_COLOR,
-      color: DISABLED_MAP_COLOR,
+      fillColor: disabled_map_color,
+      color: disabled_map_color,
       weight: 0.1,
       fillOpacity: 0.08,
     };

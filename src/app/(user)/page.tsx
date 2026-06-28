@@ -1,18 +1,28 @@
-import LearnMethod from "@/features/main/components/LearningMethod";
-import NoticeSection from "@/features/main/components/NoticeSection";
-import AiSchedule from "@/features/main/components/AiSchedule";
-import Banner from "@/features/main/components/Banner";
+import dynamic from "next/dynamic";
+import Banner from "@/features/main/banner/components/Banner";
 import MapSection from "./main/MapSection";
-import { getMainNotices } from "@/features/services/notice.service";
-import ScheduleCalendar from "@/features/main/components/ScheduleCalendar";
+import ScheduleCalendar from "@/features/main/calendar/components/ScheduleCalendar";
+import NoticeSection from "@/features/main/notice/components/NoticeSection";
+
+const AiSchedule = dynamic(
+  () => import("@/features/main/AiSchedule/components/AiSchedule"),
+  {
+    loading: () => (
+      <div className="h-32 animate-pulse rounded-2xl bg-white/70" />
+    ),
+  }
+);
+
+const LearnMethod = dynamic(
+  () => import("@/features/main/learningmethod/LearningMethod"),
+  {
+    loading: () => (
+      <div className="h-40 animate-pulse rounded-2xl bg-white/70" />
+    ),
+  }
+);
 
 export default async function Home() {
-  try {
-    await getMainNotices();
-  } catch (error) {
-    console.error("[home] 메인 공지 조회 실패:", error);
-  }
-
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#F3F8FC] px-4 pb-6 pt-4 sm:px-6 lg:px-8">
       <h1 className="sr-only">알고가 메인 페이지</h1>
