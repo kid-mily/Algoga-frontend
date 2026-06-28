@@ -3,14 +3,16 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import SearchBar from "./SearchBar";
-import { Country } from "./types";
+import type { Country } from "./types";
 
 interface CountrySelectSectionProps {
   countries?: Country[];
+  errorMessage?: string;
 }
 
 export default function CountrySelectSection({
   countries = [],
+  errorMessage = "",
 }: CountrySelectSectionProps) {
   const [searchInput, setSearchInput] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -22,9 +24,7 @@ export default function CountrySelectSection({
   const filteredCountries = useMemo(() => {
     const keyword = searchKeyword.toLowerCase();
 
-    if (!keyword) {
-      return countries;
-    }
+    if (!keyword) return countries;
 
     return countries.filter((country) =>
       country.countryName.toLowerCase().includes(keyword)
@@ -43,7 +43,11 @@ export default function CountrySelectSection({
         onSearch={handleSearch}
       />
 
-      {countries.length === 0 ? (
+      {errorMessage ? (
+        <p className="mt-8 rounded-2xl bg-white p-10 text-center text-sm text-red-500">
+          {errorMessage}
+        </p>
+      ) : countries.length === 0 ? (
         <p className="mt-8 rounded-2xl bg-white p-10 text-center text-sm text-gray-500">
           등록된 국가가 없습니다.
         </p>

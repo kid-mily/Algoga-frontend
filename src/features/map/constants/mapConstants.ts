@@ -1,12 +1,12 @@
 import L from "leaflet";
 
-export const INITIAL_POSITION: [number, number] = [30, 10];
+export const intial_position: [number, number] = [30, 10];
 
-export const INITIAL_ZOOM = 2.3;
+export const intial_zoom = 2.3;
 
-export const MAP_BOUNDS = L.latLngBounds([-85, -180], [85, 180]);
+export const map_bounds = L.latLngBounds([-85, -180], [85, 180]);
 
-export const CONTINENT_NAME_KO: Record<string, string> = {
+export const continent_name_ko: Record<string, string> = {
   Asia: "아시아",
   Europe: "유럽",
   Africa: "아프리카",
@@ -16,7 +16,7 @@ export const CONTINENT_NAME_KO: Record<string, string> = {
   Antarctica: "남극",
 };
 
-export const CONTINENT_CODE_MAP: Record<string, string> = {
+export const continent_code_map: Record<string, string> = {
   Asia: "ASIA",
   Europe: "EUROPE",
   Africa: "AFRICA",
@@ -26,7 +26,7 @@ export const CONTINENT_CODE_MAP: Record<string, string> = {
   Antarctica: "ANTARCTICA",
 };
 
-export const CONTINENT_COLOR_MAP: Record<string, string> = {
+export const continent_color_map: Record<string, string> = {
   Asia: "#439A97",
   Europe: "#3A86FF",
   Africa: "#D88C3A",
@@ -36,5 +36,5 @@ export const CONTINENT_COLOR_MAP: Record<string, string> = {
   Antarctica: "#94A3B8",
 };
 
-export const DEFAULT_MAP_COLOR = "#94A3B8";
-export const DISABLED_MAP_COLOR = "#CBD5E1";
+export const default_map_color = "#94A3B8";
+export const disabled_map_color = "#CBD5E1";

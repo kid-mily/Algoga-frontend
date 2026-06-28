@@ -1,5 +1,5 @@
 import { ChevronLeft } from "lucide-react";
-import { CONTINENT_NAME_KO } from "../constants/mapConstants";
+import { continent_name_ko } from "../constants/mapConstants";
 
 interface MapHeaderProps {
   selectedContinent: string;
@@ -16,7 +16,7 @@ export default function MapHeader({
     ? "어디로 떠나시나요?"
     : selectedCountry
       ? selectedCountry
-      : `${CONTINENT_NAME_KO[selectedContinent] ?? selectedContinent} 국가 선택`;
+      : `${continent_name_ko[selectedContinent] ?? selectedContinent} 국가 선택`;
 
   return (
     <div className="absolute left-5 top-5 z-[1000] flex items-start gap-3">
