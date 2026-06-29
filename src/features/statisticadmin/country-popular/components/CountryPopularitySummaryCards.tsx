@@ -1,4 +1,4 @@
-import { CountryPopularitySummary } from "../types";
+﻿import { CountryPopularitySummary } from "../types";
 import { formatNumber, formatPercent, formatWon } from "../utils";
 
 type CountryPopularitySummaryCardsProps = {
@@ -15,8 +15,8 @@ export default function CountryPopularitySummaryCards({
       tone: "text-[#344054]",
     },
     {
-      title: "총 조회 수",
-      value: `${formatNumber(summary.totalViewCount)}건`,
+      title: "가입 수",
+      value: `${formatNumber(summary.totalSignupCount)}명`,
       tone: "text-[#439A97]",
     },
     {
@@ -25,13 +25,13 @@ export default function CountryPopularitySummaryCards({
       tone: "text-[#111827]",
     },
     {
-      title: "총 수익",
-      value: formatWon(summary.totalRevenueAmount),
+      title: "총 매출",
+      value: formatWon(summary.totalRevenue),
       tone: "text-[#344054]",
     },
     {
-      title: "평균 전환율",
-      value: formatPercent(summary.averageConversionRate),
+      title: "평균 점유율",
+      value: formatPercent(summary.averageShareRate),
       tone: "text-[#111827]",
     },
   ];

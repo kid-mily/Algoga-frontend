@@ -48,16 +48,12 @@ const parseReadEvent = (body: unknown, fallbackRoomId?: number): ReadEvent | nul
   const record = body as RawRecord;
   const roomId = getNumber(record, ["roomId"], fallbackRoomId ?? 0);
   const readerId = getNumber(record, ["readerId"]);
-  const messageId = getNumber(record, ["messageId"]);
-  const unreadCount = getNumber(record, ["unreadCount"], -1);
 
-  if (roomId <= 0 || (readerId <= 0 && messageId <= 0)) return null;
+  if (roomId <= 0 || readerId <= 0) return null;
 
   return {
     roomId,
-    readerId: readerId > 0 ? readerId : undefined,
-    messageId: messageId > 0 ? messageId : undefined,
-    unreadCount: unreadCount >= 0 ? unreadCount : undefined,
+    readerId,
   };
 };
 
@@ -203,6 +199,7 @@ export const useChatSocket = ({
     sendTyping,
   };
 };
+
 
 
 

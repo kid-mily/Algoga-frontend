@@ -39,9 +39,7 @@ export interface ChatRoomMember {
 
 export interface ReadEvent {
   roomId: number;
-  readerId?: number;
-  messageId?: number;
-  unreadCount?: number;
+  readerId: number;
 }
 
 export interface TypingEvent {
@@ -58,5 +56,6 @@ export interface RoomNotification {
 }
 
 export type ChatPanelView = "list" | "room" | "direct-create" | "group-create";
+
 
 

@@ -1,4 +1,4 @@
-import { getErrorMessage } from "@/features/services/error.service";
+﻿import { getErrorMessage } from "@/features/services/error.service";
 import { CountryPopularityStat, CountryPopularitySummary } from "./types";
 
 export const formatCountryPopularityError = (
@@ -38,29 +38,29 @@ export const getDefaultCountryPopularityDateRange = () => {
 export const getCountryPopularitySummary = (
   countries: CountryPopularityStat[]
 ): CountryPopularitySummary => {
-  const totalViewCount = countries.reduce(
-    (sum, country) => sum + country.viewCount,
+  const totalSignupCount = countries.reduce(
+    (sum, country) => sum + country.signupCount,
     0
   );
   const totalBookingCount = countries.reduce(
     (sum, country) => sum + country.bookingCount,
     0
   );
-  const totalRevenueAmount = countries.reduce(
-    (sum, country) => sum + country.revenueAmount,
+  const totalRevenue = countries.reduce(
+    (sum, country) => sum + country.revenue,
     0
   );
-  const averageConversionRate =
+  const averageShareRate =
     countries.length > 0
-      ? countries.reduce((sum, country) => sum + country.conversionRate, 0) /
+      ? countries.reduce((sum, country) => sum + country.shareRate, 0) /
         countries.length
       : 0;
 
   return {
     totalCountryCount: countries.length,
-    totalViewCount,
+    totalSignupCount,
     totalBookingCount,
-    totalRevenueAmount,
-    averageConversionRate,
+    totalRevenue,
+    averageShareRate,
   };
 };

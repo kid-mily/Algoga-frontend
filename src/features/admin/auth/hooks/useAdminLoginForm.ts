@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { markAdminSessionActive, saveAdminDisplayInfo } from "@/features/admin/auth/services/adminSession";
@@ -102,7 +102,6 @@ export const useAdminLoginForm = () => {
 
       markAdminSessionActive(role);
       saveAdminDisplayInfo(admin, role, trimmedLoginId);
-      window.dispatchEvent(new Event("auth-state-changed"));
       window.location.replace(
         getSafeNextPath() ?? getAdminRedirectPathByRole(role)
       );
@@ -130,3 +129,4 @@ export const useAdminLoginForm = () => {
     handleLogin,
   };
 };
+

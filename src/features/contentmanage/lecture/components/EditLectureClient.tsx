@@ -6,7 +6,6 @@ import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import AdminLoadingState from "@/features/admin/common/AdminLoadingState";
 import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 import { toNumberOrZero } from "@/features/common/utils/number";
-
 import { updateLectureAction } from "../actions";
 import { useAdminLectureDetail } from "../hooks/useAdminLectureDetail";
 import { getIsPublic } from "../utils/lectureFormatters";

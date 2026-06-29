@@ -10,6 +10,7 @@ import FriendSelectPanel from "./FriendSelectPanel";
 import GroupChatCreatePanel from "./GroupChatCreatePanel";
 
 const adminPathPrefixes = [
+  "/auth/adminlogin",
   "/contentadmin",
   "/csadmin",
   "/moneyadmin",
@@ -148,3 +149,4 @@ export default function ChatWidget() {
     </>
   );
 }
+

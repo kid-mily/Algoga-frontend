@@ -1,15 +1,12 @@
-"use client";
+﻿"use client";
 
-import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
-import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-import ChapterCard from "./ChapterCard";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import CompleteModal from "@/features/common/components/CompleteModal";
 import Modal from "@/features/common/components/Modal";
-
-import { deleteChapterAction, getChapterListAction } from "../actions";
-import { AdminChapter, ChapterListProps } from "../types";
+import ChapterCard from "./ChapterCard";
+import { useChapterList } from "../hooks/useChapterList";
+import type { ChapterListProps } from "../types";
 
 const formatDuration = (durationSeconds: number) => {
   if (!durationSeconds || durationSeconds <= 0) return "-";
@@ -25,59 +22,17 @@ export default function ChapterList({
   hideEdit = false,
 }: ChapterListProps) {
   const router = useRouter();
-
-  const [chapters, setChapters] = useState<AdminChapter[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openDeleteCompleteModal, setOpenDeleteCompleteModal] = useState(false);
-  const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
-
-  const fetchChapters = useCallback(async () => {
-    await Promise.resolve();
-
-    if (!lectureId) {
-      setChapters([]);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
-      const data = await getChapterListAction(lectureId);
-      setChapters(data);
-    } catch {
-      setErrorMessage("챕터 목록을 불러오지 못했습니다.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [lectureId]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchChapters();
-  }, [fetchChapters]);
-
-  const handleDeleteConfirm = async () => {
-    if (!selectedChapterId) return;
-
-    try {
-      setErrorMessage("");
-      await deleteChapterAction(lectureId, selectedChapterId);
-      setChapters((prev) =>
-        prev.filter((chapter) => chapter.chapterId !== selectedChapterId)
-      );
-      setOpenDeleteModal(false);
-      setOpenDeleteCompleteModal(true);
-      setSelectedChapterId(null);
-    } catch (error: unknown) {
-      setOpenDeleteModal(false);
-      setErrorMessage(
-        error instanceof Error ? error.message : "챕터 삭제에 실패했습니다."
-      );
-    }
-  };
+  const {
+    chapters,
+    errorMessage,
+    isLoading,
+    openDeleteCompleteModal,
+    openDeleteModal,
+    closeDeleteComplete,
+    closeDeleteConfirm,
+    handleDeleteConfirm,
+    openDeleteConfirm,
+  } = useChapterList(lectureId);
 
   if (isLoading) {
     return (
@@ -123,10 +78,7 @@ export default function ChapterList({
                             `/contentadmin/lecture/${lectureId}/chapter/${currentChapterId}/edit`
                           )
                   }
-                  onDelete={() => {
-                    setSelectedChapterId(currentChapterId);
-                    setOpenDeleteModal(true);
-                  }}
+                  onDelete={() => openDeleteConfirm(currentChapterId)}
                 />
               </div>
             );
@@ -141,17 +93,14 @@ export default function ChapterList({
         confirmText="삭제"
         cancelText="취소"
         onConfirm={handleDeleteConfirm}
-        onCancel={() => {
-          setOpenDeleteModal(false);
-          setSelectedChapterId(null);
-        }}
+        onCancel={closeDeleteConfirm}
       />
       <CompleteModal
         open={openDeleteCompleteModal}
         title="삭제 완료"
         description="챕터가 삭제되었습니다."
         buttonText="확인"
-        onConfirm={() => setOpenDeleteCompleteModal(false)}
+        onConfirm={closeDeleteComplete}
       />
     </section>
   );

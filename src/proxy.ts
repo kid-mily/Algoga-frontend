@@ -12,41 +12,36 @@ const ADMIN_PATHS = [
 
 const ADMIN_ROLES = new Set([
   "CONTENT_MANAGER",
-  "ROLE_CONTENT_MANAGER",
   "CS_MANAGER",
-  "ROLE_CS_MANAGER",
   "SETTLEMENT_MANAGER",
-  "ROLE_SETTLEMENT_MANAGER",
   "STATISTICS_MANAGER",
-  "ROLE_STATISTICS_MANAGER",
   "SUPER_ADMIN",
-  "ROLE_SUPER_ADMIN",
 ]);
 
 const PATH_ROLE_RULES = [
   {
     path: "/contentadmin",
-    roles: ["CONTENT_MANAGER", "ROLE_CONTENT_MANAGER"],
+    roles: ["CONTENT_MANAGER"],
   },
   {
     path: "/csadmin",
-    roles: ["CS_MANAGER", "ROLE_CS_MANAGER"],
+    roles: ["CS_MANAGER"],
   },
   {
     path: "/moneyadmin",
-    roles: ["SETTLEMENT_MANAGER", "ROLE_SETTLEMENT_MANAGER"],
+    roles: ["SETTLEMENT_MANAGER"],
   },
   {
     path: "/statisticadmin",
-    roles: ["STATISTICS_MANAGER", "ROLE_STATISTICS_MANAGER"],
+    roles: ["STATISTICS_MANAGER"],
   },
   {
     path: "/superadmin",
-    roles: ["SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: ["SUPER_ADMIN"],
   },
 ] as const;
 
-const SUPER_ADMIN_ROLES = new Set(["SUPER_ADMIN", "ROLE_SUPER_ADMIN"]);
+const SUPER_ADMIN_ROLES = new Set(["SUPER_ADMIN"]);
 
 const AUTH_COOKIE_NAMES = [
   "adminAccessToken",

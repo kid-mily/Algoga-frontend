@@ -143,7 +143,19 @@ export type LectureFilterParams = {
   statusFilter: string;
 };
 
-export type ChapterFormMode = "create" | "edit";
+export type LectureFilters = {
+  status: string;
+  keyword: string;
+  country: string;
+};
+
+export type LectureModalState =
+  | { type: null }
+  | { type: "delete"; courseId: number }
+  | { type: "complete" }
+  | { type: "students"; course: { id: number; title: string } };
+
+  export type ChapterFormMode = "create" | "edit";
 
 export interface ChapterFormData {
   id: number;
@@ -167,6 +179,23 @@ export interface ChapterFormProps {
   onClose?: () => void;
   onSubmit?: (data: ChapterSubmitPayload) => Promise<boolean> | boolean | void;
 }
+
+export type ChapterFormState = {
+  title: string;
+  description: string;
+  duration: string;
+  video: File | null;
+  preview: string;
+};
+
+export type ChapterFormErrors = {
+  title: string;
+  description: string;
+  video: string;
+};
+
+export type ChapterFormModalType = "complete" | "videoDelete" | null;
+
 
 export interface ChapterItemErrors {
   title?: string;

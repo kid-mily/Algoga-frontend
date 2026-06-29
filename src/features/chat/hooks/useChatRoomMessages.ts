@@ -1,9 +1,9 @@
-// 채팅방 내부 메시지와 WebSocket을 담당
+﻿// 채팅방 내부 메시지와 WebSocket을 담당
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMe } from "@/features/services/user.service";
 import { getChatMessages } from "../../services/chat.service";
 import { useChatSocket } from "./useChatSocket";
-import type { ChatMessage, ChatRoom, TypingEvent } from "../types";
+import type { ChatMessage, ChatRoom, ReadEvent, TypingEvent } from "../types";
 
 type UseChatRoomMessagesOptions = {
   room: ChatRoom;
@@ -79,12 +79,7 @@ export const useChatRoomMessages = ({
   );
 
   const handleReadEvent = useCallback(
-    (event: {
-      roomId: number;
-      readerId?: number;
-      messageId?: number;
-      unreadCount?: number;
-    }) => {
+    (event: ReadEvent) => {
       if (
         !currentUserId ||
         event.roomId !== room.roomId ||
@@ -93,28 +88,7 @@ export const useChatRoomMessages = ({
         return;
       }
 
-      if (!event.messageId || typeof event.unreadCount !== "number") {
-        void loadMessages(undefined, { showLoading: false });
-        return;
-      }
-
-      const nextUnreadCount = Math.max(event.unreadCount, 0);
-
-      setMessages((prev) =>
-        prev.map((message) => {
-          const isReaderMessage = Boolean(
-            event.readerId && message.senderId === event.readerId
-          );
-
-          if (isReaderMessage || !message.unreadCount) return message;
-          if (message.messageId !== event.messageId) return message;
-
-          return {
-            ...message,
-            unreadCount: nextUnreadCount,
-          };
-        })
-      );
+      void loadMessages(undefined, { showLoading: false });
     },
     [currentUserId, loadMessages, room.roomId]
   );
@@ -239,3 +213,4 @@ export const useChatRoomMessages = ({
     sendTyping,
   };
 };
+
