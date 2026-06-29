@@ -6,6 +6,9 @@ import PackPaymentButton from "@/features/payment/PackPaymentButton";
 import SecondCouponForm from "@/features/payment/SecondCouponForm";
 import SecondPaymentSummary from "@/features/payment/SecondPaymentSummary";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function SecondPayment() {
     
     return (

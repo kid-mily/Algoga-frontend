@@ -12,17 +12,27 @@ import MapLoading from "./MapLoading";
 import MapNotice from "./MapNotice";
 import { useWorldGeoJson } from "../hooks/useWorldGeoJson";
 import { useContinentCountries } from "../hooks/useContinentCountries";
-import { continent_name_ko, intial_position, intial_zoom, map_bounds } from "../constants/mapConstants";
-import { findSupportedCountry, getContinentColor, getCountryStyle, getFeatureCountryName } from "../utils/mapUtils";
+import {
+  continent_name_ko,
+  intial_position,
+  intial_zoom,
+  map_bounds,
+} from "../constants/mapConstants";
+import {
+  findSupportedCountry,
+  getContinentColor,
+  getCountryStyle,
+  getFeatureCountryName,
+} from "../utils/mapUtils";
 import type { CountryFeature } from "../types";
 
 export default function WorldMap() {
   const router = useRouter();
-
   const { geoJson, errorMessage: geoJsonErrorMessage } = useWorldGeoJson();
 
   const [selectedContinent, setSelectedContinent] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
+  const [hoverLabel, setHoverLabel] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
 
   const {
@@ -34,6 +44,8 @@ export default function WorldMap() {
   const countriesRef = useRef(countries);
   const isCountryLoadingRef = useRef(isCountryLoading);
   const countryErrorMessageRef = useRef(countryErrorMessage);
+  const layersByContinentRef = useRef<Record<string, L.Path[]>>({});
+  const mapRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     countriesRef.current = countries;
@@ -46,9 +58,6 @@ export default function WorldMap() {
   useEffect(() => {
     countryErrorMessageRef.current = countryErrorMessage;
   }, [countryErrorMessage]);
-
-  const layersByContinentRef = useRef<Record<string, L.Path[]>>({});
-  const mapRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     const nextMessage = geoJsonErrorMessage || countryErrorMessage;
@@ -72,6 +81,7 @@ export default function WorldMap() {
 
   useEffect(() => {
     layersByContinentRef.current = {};
+    setHoverLabel("");
   }, [selectedContinent]);
 
   useEffect(() => {
@@ -83,6 +93,26 @@ export default function WorldMap() {
       window.clearTimeout(timer);
     };
   }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) return;
+
+    const clearHover = () => {
+      setHoverLabel("");
+    };
+
+    map.on("dragstart", clearHover);
+    map.on("zoomstart", clearHover);
+    map.on("movestart", clearHover);
+
+    return () => {
+      map.off("dragstart", clearHover);
+      map.off("zoomstart", clearHover);
+      map.off("movestart", clearHover);
+    };
+  }, [geoJson]);
 
   const styleFeature = (feature?: Feature<Geometry, GeoJsonProperties>) =>
     getCountryStyle(feature, selectedContinent, selectedCountry);
@@ -96,6 +126,8 @@ export default function WorldMap() {
     const continent = countryFeature.properties.continent ?? "기타";
     const countryName = getFeatureCountryName(countryFeature);
 
+    pathLayer.unbindTooltip();
+
     if (!selectedContinent) {
       const continentLayers = layersByContinentRef.current[continent] ?? [];
 
@@ -105,18 +137,14 @@ export default function WorldMap() {
       ];
     }
 
-    pathLayer.bindTooltip(
-      selectedContinent
-        ? countryName
-        : continent_name_ko[continent] ?? continent,
-      {
-        direction: "top",
-        sticky: true,
-      }
-    );
-
     pathLayer.on({
       mouseover: () => {
+        const nextLabel = selectedContinent
+          ? countryName
+          : continent_name_ko[continent] ?? continent;
+
+        setHoverLabel(nextLabel);
+
         if (!selectedContinent) {
           const continentLayers =
             layersByContinentRef.current[continent] ?? [];
@@ -138,6 +166,8 @@ export default function WorldMap() {
       },
 
       mouseout: () => {
+        setHoverLabel("");
+
         if (!selectedContinent) {
           const continentLayers =
             layersByContinentRef.current[continent] ?? [];
@@ -164,6 +194,7 @@ export default function WorldMap() {
 
       click: () => {
         setNoticeMessage("");
+        setHoverLabel("");
 
         if (!selectedContinent) {
           setSelectedContinent(continent);
@@ -196,7 +227,9 @@ export default function WorldMap() {
         }
 
         if (countryErrorMessageRef.current) {
-          setNoticeMessage("국가 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+          setNoticeMessage(
+            "국가 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."
+          );
           return;
         }
 
@@ -207,10 +240,13 @@ export default function WorldMap() {
           return;
         }
 
-        const supportedCountry = findSupportedCountry(latestCountries, countryFeature);
+        const supportedCountry = findSupportedCountry(
+          latestCountries,
+          countryFeature
+        );
 
         if (!supportedCountry || supportedCountry.active === false) {
-          setNoticeMessage(`${countryName}은(는) 아직 준비 중인 국가입니다.`);
+          setNoticeMessage(`${countryName}은 아직 준비 중인 국가입니다.`);
           return;
         }
 
@@ -224,11 +260,16 @@ export default function WorldMap() {
   const handleResetMap = () => {
     setSelectedContinent("");
     setSelectedCountry("");
+    setHoverLabel("");
     setNoticeMessage("");
 
     layersByContinentRef.current = {};
     mapRef.current?.setView(intial_position, intial_zoom);
   };
+
+  const mapModeKey = selectedContinent
+    ? `country-${selectedContinent}-${selectedCountry}`
+    : "continent-mode";
 
   return (
     <section className="h-full min-h-0 w-full" aria-label="세계 지도">
@@ -251,6 +292,10 @@ export default function WorldMap() {
           color: #357a78 !important;
           font-weight: 800;
         }
+
+        .leaflet-tooltip {
+          display: none !important;
+        }
       `}</style>
 
       <div className="relative h-full min-h-0 w-full overflow-hidden">
@@ -261,6 +306,12 @@ export default function WorldMap() {
         />
 
         <MapNotice message={noticeMessage} />
+
+        {hoverLabel ? (
+          <div className="pointer-events-none absolute left-1/2 top-20 z-[500] -translate-x-1/2 rounded-full border border-[#DDE8EF] bg-white/95 px-4 py-2 text-sm font-bold text-[#0A1628] shadow-[0_10px_24px_rgba(52,79,98,0.14)]">
+            {hoverLabel}
+          </div>
+        ) : null}
 
         {!geoJson ? (
           <MapLoading />
@@ -280,7 +331,7 @@ export default function WorldMap() {
             <ZoomControl position="bottomleft" />
 
             <GeoJSON
-              key={`${selectedContinent}-${selectedCountry}`}
+              key={mapModeKey}
               data={geoJson}
               style={styleFeature}
               onEachFeature={onEachCountry}

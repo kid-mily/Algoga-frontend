@@ -4,14 +4,17 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCourseQna } from "@/features/services/userQna.service";
 
-
 interface QnaWriteFormProps {
     continentCode: string;
     countryid: string;
     courseId: string;
 }
 
-export default function QnaWriteForm({ continentCode, countryid, courseId }: QnaWriteFormProps) {
+export default function QnaWriteForm({
+    continentCode,
+    countryid,
+    courseId,
+}: QnaWriteFormProps) {
     const router = useRouter();
 
     const [title, setTitle] = useState("");
@@ -25,34 +28,34 @@ export default function QnaWriteForm({ continentCode, countryid, courseId }: Qna
         event.preventDefault();
 
         if (!title.trim()) {
-            setErrorMessage("질문 제목을 입력해 주세요.");
-            return;
+        setErrorMessage("질문 제목을 입력해 주세요.");
+        return;
         }
 
         if (!question.trim()) {
-            setErrorMessage("질문 내용을 입력해 주세요.");
-            return;
+        setErrorMessage("질문 내용을 입력해 주세요.");
+        return;
         }
 
         try {
-            setIsSubmitting(true);
-            setErrorMessage("");
+        setIsSubmitting(true);
+        setErrorMessage("");
 
-            await createCourseQna(courseId, {
-                title: title.trim(),
-                question: question.trim(),
-            });
+        await createCourseQna(courseId, {
+            title: title.trim(),
+            question: question.trim(),
+        });
 
-            router.push(listHref);
-            router.refresh();
+        router.push(listHref);
+        router.refresh();
         } catch (error) {
-            setErrorMessage(
-                error instanceof Error
-                ? error.message
-                : "질문 등록 중 오류가 발생했습니다."
-            );
+        setErrorMessage(
+            error instanceof Error
+            ? error.message
+            : "질문 등록 중 오류가 발생했습니다."
+        );
         } finally {
-            setIsSubmitting(false);
+        setIsSubmitting(false);
         }
     };
 
@@ -63,14 +66,14 @@ export default function QnaWriteForm({ continentCode, countryid, courseId }: Qna
         >
         <div className="mb-8 flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6FA7A1] text-sm font-bold text-white">
-                Q
+            Q
             </div>
 
             <div>
-                <p className="text-sm font-bold text-[#0A1628]">여행 강의 질문</p>
-                <p className="text-xs text-slate-400">
-                    강의, 여행 준비, 자료 이용에 대해 질문할 수 있어요.
-                </p>
+            <p className="text-sm font-bold text-[#0A1628]">강의 질문</p>
+            <p className="text-xs text-slate-400">
+                강의, 여행 준비, 자료 내용에 대해 질문할 수 있습니다.
+            </p>
             </div>
         </div>
 
@@ -100,9 +103,11 @@ export default function QnaWriteForm({ continentCode, countryid, courseId }: Qna
             </label>
         </div>
 
-        {errorMessage && (
-            <p className="mt-4 text-sm font-medium text-red-500">{errorMessage}</p>
-        )}
+        {errorMessage ? (
+            <p className="mt-4 text-sm font-medium text-red-500">
+            {errorMessage}
+            </p>
+        ) : null}
 
         <div className="mt-10 flex justify-end gap-3">
             <button

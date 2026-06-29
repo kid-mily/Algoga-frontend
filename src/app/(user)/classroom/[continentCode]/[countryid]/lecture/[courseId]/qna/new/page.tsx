@@ -1,6 +1,9 @@
 import QnaLayout from "@/features/classroom/qna/components/QnaLayout";
 import QnaWriteForm from "@/features/classroom/qna/components/QnaWriteForm";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface QnaWritePageProps {
   params: Promise<{
     continentCode: string;
@@ -18,7 +21,7 @@ export default async function QnaWritePage({ params }: QnaWritePageProps) {
       countryid={countryid}
       courseId={courseId}
       title="질문하기"
-      description="여행 강의와 관련된 궁금한 내용을 자유롭게 질문해 주세요."
+      description="강의와 관련된 궁금한 내용을 자유롭게 질문해 주세요."
     >
       <QnaWriteForm
         continentCode={continentCode}

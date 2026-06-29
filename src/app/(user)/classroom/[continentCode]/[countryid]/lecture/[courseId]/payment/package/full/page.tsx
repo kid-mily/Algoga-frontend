@@ -9,6 +9,9 @@ import PackMileageForm from "@/features/payment/PackMileageForm";
 import PackPaymentButton from "@/features/payment/PackPaymentButton";
 import PassportForm from "@/features/payment/PassportForm";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function FullPayment() {
     
     return (

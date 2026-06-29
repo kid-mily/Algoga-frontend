@@ -1,33 +1,44 @@
+import { getCountryTicketStyle } from "@/features/classroom/components/countryTicketStyle";
+
 interface Props {
     finalAmount: number;
     isPaying: boolean;
     onBack: () => void;
     onPay: () => void;
+    continentCode: string;
 }
 
-export function PaymentButtons({ finalAmount, isPaying, onBack, onPay }: Props) {
+export function PaymentButtons({
+    finalAmount,
+    isPaying,
+    onBack,
+    onPay,
+    continentCode,
+}: Props) {
+    const style = getCountryTicketStyle(continentCode);
+
     return (
-        <div className="flex gap-3 w-full">
-            <button
-                type="button"
-                onClick={onBack}
-                className="h-16 px-6 rounded-3xl border border-[#DCE3EA] bg-white font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-                이전
-            </button>
-            <button
-                type="button"
-                disabled={isPaying} 
-                onClick={onPay}
-                className="h-16 flex-1 rounded-3xl bg-[#5E908D] font-bold text-white disabled:opacity-50 hover:bg-[#4d7875] transition-colors"
-            >
-                {isPaying
-                    ? "결제 처리 중..."
-                    : finalAmount === 0 
-                    ? "전액 할인 결제하기" 
-                    : `${finalAmount.toLocaleString()}원 토스페이 결제`
-                }
-            </button>
+        <div className="grid gap-3 sm:grid-cols-[112px_1fr]">
+        <button
+            type="button"
+            onClick={onBack}
+            className="h-14 rounded-2xl border border-[#DCE3EA] bg-white text-sm font-bold text-[#667085] transition hover:bg-[#F8FAFC]"
+        >
+            이전
+        </button>
+
+        <button
+            type="button"
+            disabled={isPaying}
+            onClick={onPay}
+            className={`h-14 rounded-2xl px-5 text-sm font-bold text-white cursor-pointer ${style.accent}`}
+        >
+            {isPaying
+            ? "결제 처리 중..."
+            : finalAmount === 0
+                ? "전액 할인 결제하기"
+                : "토스페이로 결제하기"}
+        </button>
         </div>
     );
 }
