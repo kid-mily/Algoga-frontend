@@ -1,9 +1,8 @@
-﻿"use client";
-
+﻿// 채팅방 내부 화면, 메시지 조회/전송/읽음/맴버 관리
 import { useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 import ChatCreateMenu from "./ChatCreateMenu";
-import type { ChatRoom } from "../types/chat";
+import type { ChatRoom } from "../types";
 
 type ChatListPanelProps = {
   rooms: ChatRoom[];
@@ -36,7 +35,6 @@ const ChatRoomAvatar = ({ room }: { room: ChatRoom }) => {
 
   if (shouldShowProfileImage) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={room.profileImageUrl ?? ""}
         alt=""
@@ -186,6 +184,9 @@ export default function ChatListPanel({
                   </p>
 
                   <p className="mt-1 truncate text-[15px] text-gray-500">
+                    {room.type === "GROUP" && room.memberCount
+                      ? `멤버 ${room.memberCount}명 · `
+                      : ""}
                     {room.lastMessage ?? "아직 메시지가 없습니다."}
                   </p>
                 </div>

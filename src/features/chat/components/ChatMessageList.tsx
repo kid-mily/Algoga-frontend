@@ -1,7 +1,6 @@
-﻿"use client";
-
+﻿// 메시지 목록 렌더링
 import { useLayoutEffect, useRef } from "react";
-import type { ChatMessage, ChatRoomType } from "../types/chat";
+import type { ChatMessage, ChatRoomType } from "../types";
 
 type ChatMessageListProps = {
   messages: ChatMessage[];
@@ -21,6 +20,31 @@ const formatMessageTime = (value: string) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+const MessageAvatar = ({
+  nickname,
+  imageUrl,
+}: {
+  nickname: string;
+  imageUrl: string | null;
+}) => {
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt=""
+        aria-hidden="true"
+        className="mt-5 h-8 w-8 shrink-0 rounded-full border border-[#E4E7EC] object-cover"
+      />
+    );
+  }
+
+  return (
+    <span className="mt-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E7F4F3] text-[12px] font-bold text-[#287875]">
+      {nickname.slice(0, 1)}
+    </span>
+  );
 };
 
 export default function ChatMessageList({
@@ -95,23 +119,31 @@ export default function ChatMessageList({
 
         return (
           <div key={message.messageId} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-            <div className={`flex max-w-[86%] flex-col ${isMine ? "items-end" : "items-start"}`}>
+            <div className={`flex max-w-[90%] gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
               {!isMine && (
-                <span className="mb-1 text-[12px] font-semibold text-[#667085]">
-                  {message.senderNickname}
-                </span>
+                <MessageAvatar
+                  nickname={message.senderNickname}
+                  imageUrl={message.senderProfileImageUrl}
+                />
               )}
-              <div className={`flex max-w-full items-end gap-1.5 ${isMine ? "flex-row" : "flex-row-reverse"}`}>
-                {messageMeta}
-                <p
-                  className={`min-w-0 break-words rounded-[16px] px-4 py-2 text-[14px] leading-6 ${
-                    isMine
-                      ? "rounded-br-[4px] bg-[#439A97] text-white"
-                      : "rounded-bl-[4px] bg-white text-[#344054] shadow-sm"
-                  }`}
-                >
-                  {message.content}
-                </p>
+              <div className={`flex min-w-0 flex-col ${isMine ? "items-end" : "items-start"}`}>
+                {!isMine && (
+                  <span className="mb-1 text-[12px] font-semibold text-[#667085]">
+                    {message.senderNickname}
+                  </span>
+                )}
+                <div className={`flex max-w-full items-end gap-1.5 ${isMine ? "flex-row" : "flex-row-reverse"}`}>
+                  {messageMeta}
+                  <p
+                    className={`min-w-0 break-words rounded-[16px] px-4 py-2 text-[14px] leading-6 ${
+                      isMine
+                        ? "rounded-br-[4px] bg-[#439A97] text-white"
+                        : "rounded-bl-[4px] bg-white text-[#344054] shadow-sm"
+                    }`}
+                  >
+                    {message.content}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

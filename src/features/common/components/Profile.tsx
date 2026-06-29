@@ -42,7 +42,6 @@ export default function Profile({ user }: Props) {
     };
   }, []);
 
-
   useEffect(() => {
     const handleChatUnreadCountChange = (event: Event) => {
       const unreadEvent = event as CustomEvent<number>;
@@ -66,7 +65,13 @@ export default function Profile({ user }: Props) {
     } finally {
       setIsOpen(false);
 
-      window.dispatchEvent(new Event("auth-state-changed"));
+      window.dispatchEvent(
+        new CustomEvent("auth-state-changed", {
+          detail: {
+            isLoggedIn: false,
+          },
+        })
+      );
 
       router.replace("/");
     }
@@ -81,6 +86,7 @@ export default function Profile({ user }: Props) {
         height={24}
         className="cursor-pointer"
       />
+
       <button
         type="button"
         onClick={() => window.dispatchEvent(new Event("chat-widget-toggle"))}
@@ -95,6 +101,7 @@ export default function Profile({ user }: Props) {
           aria-hidden="true"
           className="cursor-pointer"
         />
+
         {chatUnreadCount > 0 && (
           <span className="absolute -right-2 -top-2 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#EF4444] px-1 text-[10px] font-bold leading-none text-white">
             {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
@@ -128,7 +135,7 @@ export default function Profile({ user }: Props) {
           </div>
 
           {isOpen && (
-            <div className="absolute right-0 top-10 z-10 flex w-40 flex-col gap-3 rounded-lg border bg-white p-3 shadow-lg">
+            <div className="absolute right-0 top-10 z-[3100] flex w-40 flex-col gap-3 rounded-lg border bg-white p-3 shadow-lg">
               <Link
                 href="/mypage"
                 className="cursor-pointer hover:text-[#286E6B]"
@@ -159,5 +166,3 @@ export default function Profile({ user }: Props) {
     </div>
   );
 }
-
-

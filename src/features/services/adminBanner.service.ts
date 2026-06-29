@@ -125,7 +125,7 @@ export const registerAdminBanner = async (
   file: File | null
 ): Promise<void> => {
   await adminApi.post<ApiResult<{ bannerId: number }>>(
-    "/api/v1/banner/register",
+    "/api/v1/banner/admin/register",
     createBannerFormData(formData, file)
   );
 };
@@ -136,13 +136,13 @@ export const modifyAdminBanner = async (
   file: File | null
 ): Promise<void> => {
   await adminApi.put<ApiResult<{ bannerId: number }>>(
-    "/api/v1/banner/modify",
+    "/api/v1/banner/admin/modify",
     createBannerFormData(formData, file, bannerId)
   );
 };
 
 export const deleteAdminBanner = async (bannerId: number): Promise<void> => {
-  await adminApi.delete<ApiResult<null>>(`/api/v1/banner/delete/${bannerId}`);
+  await adminApi.delete<ApiResult<null>>(`/api/v1/banner/admin/delete/${bannerId}`);
 };
 
 export const getMainBanners = async (): Promise<AdminBanner[]> => {

@@ -2,6 +2,8 @@ import QnaLayout from "@/features/classroom/qna/components/QnaLayout";
 import QnaListContent from "@/features/classroom/qna/components/QnaListContent";
 import { getCourseQnas } from "@/features/services/userQna.service";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface QnaPageProps {
   params: Promise<{
@@ -13,7 +15,6 @@ interface QnaPageProps {
 
 export default async function QnaPage({ params }: QnaPageProps) {
   const { continentCode, countryid, courseId } = await params;
-
   const qnas = await getCourseQnas(courseId);
 
   return (
@@ -22,7 +23,7 @@ export default async function QnaPage({ params }: QnaPageProps) {
       countryid={countryid}
       courseId={courseId}
       title="강의 Q&A"
-      description="여행 강의를 들으며 궁금한 점을 질문하고 답변을 확인하세요."
+      description="강의를 들으며 궁금했던 점을 질문하고 답변을 확인해 보세요."
     >
       <QnaListContent
         qnas={qnas}

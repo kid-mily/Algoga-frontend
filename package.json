@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev -p 17000",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 17000",
+    "analyze": "cross-env ANALYZE=true next build --webpack",
     "lint": "eslint",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
@@ -13,6 +14,7 @@
     "test:unit:watch": "jest --watch"
   },
   "dependencies": {
+    "@next/bundle-analyzer": "^16.2.9",
     "@portone/browser-sdk": "^0.1.8",
     "@stomp/stompjs": "^7.3.0",
     "@svgr/webpack": "^8.1.0",
@@ -37,6 +39,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "jest": "^30.4.2",

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { adminLogout } from "@/features/services/adminAuth.service";
-import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
-import { getCurrentAdminDisplayInfo } from "@/features/admin/auth/adminDisplay";
+import { getCurrentAdminDisplayInfo } from "@/features/admin/auth/services/adminDisplay";
+import { clearAdminSessionActive } from "@/features/admin/auth/services/adminSession";
 
 export default function ContentSidebar() {
   const pathname = usePathname();

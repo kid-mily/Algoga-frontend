@@ -1,7 +1,5 @@
-import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
-
+import { clearAdminSessionActive } from "@/features/admin/auth/services/adminSession";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const USER_LOGIN_PATH = "/auth/login";
 const ADMIN_LOGIN_PATH = "/auth/adminlogin";
 
@@ -19,7 +17,6 @@ export const unwrapData = <T>(response: ApiResult<T>): T => {
   if (response && typeof response === "object" && "data" in response) {
     return (response as ApiResponse<T>).data;
   }
-
   return response as T;
 };
 
@@ -31,7 +28,7 @@ export type ApiRequestOptions = RequestInit & {
   next?: { revalidate?: number | false; tags?: string[] };
 };
 
-let refreshPromise: Promise<boolean> | null = null;
+const refreshPromises = new Map<string, Promise<boolean>>();
 const logoutPromises = new Map<string, Promise<void>>();
 
 export class ApiRequestError extends Error {
@@ -79,20 +76,24 @@ const buildUrl = (path: string, params?: ApiRequestOptions["params"]) => {
 const refreshAccessToken = async (refreshPath: string) => {
   if (typeof window === "undefined") return false;
 
-  refreshPromise ??= fetch(buildUrl(refreshPath), {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      Accept: "application/json",
-    },
-  })
-    .then((response) => response.ok)
-    .catch(() => false)
-    .finally(() => {
-      refreshPromise = null;
-    });
+  if (!refreshPromises.has(refreshPath)) {
+    const refreshPromise = fetch(buildUrl(refreshPath), {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+      },
+    })
+      .then((response) => response.ok)
+      .catch(() => false)
+      .finally(() => {
+        refreshPromises.delete(refreshPath);
+      });
 
-  return refreshPromise;
+    refreshPromises.set(refreshPath, refreshPromise);
+  }
+
+  return refreshPromises.get(refreshPath) ?? false;
 };
 
 const getLogoutPath = (refreshPath: string) => {
@@ -191,7 +192,7 @@ async function request<T>(
     });
 
     const shouldRefresh =
-      (response.status === 401 || response.status === 403) &&
+      response.status === 401 &&
       !skipAuth &&
       path !== refreshPath &&
       typeof window !== "undefined";

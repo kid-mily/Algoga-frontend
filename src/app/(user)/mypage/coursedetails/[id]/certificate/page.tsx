@@ -9,17 +9,12 @@ import CertificatePdfViewer from "@/features/mypage/coursedetails/CertificatePdf
 import { openCertificatePdf } from "@/features/mypage/coursedetails/certificate.action";
 import CertificateDownloadButton from "@/features/mypage/coursedetails/CertificateDownloadButton";
 
-
-
 export default function CertificateCompletionPage() {
   const params = useParams<{ id: string }>();
   const courseId = Number(params.id);
 
-  const {
-    certificatePdf,
-    isLoading,
-    errorMessage,
-  } = useCertificatePdf(courseId);
+  const { certificatePdf, isLoading, errorMessage } =
+    useCertificatePdf(courseId);
 
   if (isLoading) {
     return (
@@ -48,46 +43,46 @@ export default function CertificateCompletionPage() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-64px)] bg-[#F5F7FA] px-4 py-8">
-      <div className="mx-auto w-full max-w-3xl">
+    <main className="min-h-[calc(100vh-64px)] bg-[#F5F7FA] px-4 py-6">
+      <div className="mx-auto w-full max-w-4xl">
         <SubHeader
-          backHref="/mypage/courses"
-          backText="수강 내역으로 돌아가기"
+          backHref="/mypage/coursedetails"
+          backText="수강 강좌로 돌아가기"
           title=""
           description=""
         />
 
-        <section className="mt-5 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
+        <section className="mt-3 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
             <Image
               src="/images/check-active.svg"
               alt=""
-              width={32}
-              height={32}
+              width={28}
+              height={28}
             />
           </div>
 
-          <h1 className="mt-4 text-2xl font-bold text-[#0A1628]">
+          <h1 className="mt-3 text-xl font-bold text-[#0A1628]">
             강의 이수 완료!
           </h1>
 
-          <p className="mt-2 text-sm text-[#8A9BB0]">
+          <p className="mt-1 text-sm text-[#8A9BB0]">
             축하합니다. 수료증이 발급되었습니다.
           </p>
         </section>
 
-        <div className="mt-7">
+        <div className="mt-5">
           <CertificatePdfViewer
             pdfUrl={certificatePdf.url}
             title="강의 수료증"
           />
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mx-auto mt-4 grid w-full max-w-[520px] grid-cols-1 gap-3 sm:grid-cols-2">
           <button
             type="button"
             onClick={() => openCertificatePdf(certificatePdf.url)}
-            className="h-12 rounded-xl border border-[#5F9C98] bg-white text-sm font-bold text-[#5F9C98] transition hover:bg-[#F0F7F6]"
+            className="h-11 rounded-xl border border-[#5F9C98] bg-white text-sm font-bold text-[#5F9C98] transition hover:bg-[#F0F7F6]"
           >
             새 창에서 보기
           </button>
@@ -98,18 +93,14 @@ export default function CertificateCompletionPage() {
           />
         </div>
 
-        <section className="mt-6 rounded-xl border border-[#E5EDF5] bg-white px-7 py-6 shadow-sm">
+        <section className="mx-auto mt-4 w-full max-w-[520px] rounded-xl border border-[#E5EDF5] bg-white px-5 py-4 shadow-sm">
           <h2 className="text-sm font-bold text-[#0A1628]">
-            추가 혜택
+            안내
           </h2>
 
-          <ul className="mt-4 space-y-2 text-sm leading-6 text-[#4A5568]">
-            <li>✓ 마이페이지 지도에 뱃지가 추가되었습니다.</li>
-            <li>
-              ✓ 진도율과 정답률 기준을 충족하면 페이백 포인트가
-              지급됩니다.
-            </li>
-            <li>✓ 패키지 수강 시 쿠폰과 마일리지가 지급됩니다.</li>
+          <ul className="mt-3 space-y-1.5 text-xs leading-5 text-[#4A5568]">
+            <li>수료증은 마이페이지에서 다시 확인할 수 있습니다.</li>
+            <li>PDF 다운로드 버튼으로 수료증을 저장할 수 있습니다.</li>
           </ul>
         </section>
       </div>

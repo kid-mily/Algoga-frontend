@@ -1,46 +1,24 @@
-"use client";
-
-import { useState } from "react";
-import Image from "next/image";
-import SearchBar from "./SearchBar";
-
 export default function ContinentHeader() {
-  const [searchValue, setSearchValue] = useState("");
-
-  const handleSearch = () => {
-    const keyword = searchValue.trim();
-
-    if (!keyword) return;
-
-    console.log("검색어:", keyword);
-  };
-
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 pb-12">
-      {/* 상단 안내 */}
-      <div className="mt-3 mb-10 flex flex-col items-center gap-5 text-center">
-        <Image
-          src="/images/Earth.svg"
-          alt="지구"
-          width={120}
-          height={120}
-          priority
-        />
+    <header className="relative overflow-hidden rounded-[28px] border border-[#DDE8EF] bg-white px-6 py-7 shadow-[0_12px_32px_rgba(55,88,110,0.08)]">
+      <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#EEF8F7]" />
+      <div className="pointer-events-none absolute right-10 bottom-6 h-12 w-12 rounded-full bg-[#FDD33B]/30" />
 
-        <h1 className="text-4xl font-bold text-[#0A1628]">
-          어디로 떠나시나요?
-        </h1>
+      <div className="relative flex items-center justify-between gap-6">
+        <div className="min-w-0">
+          <h1 className="mt-2 text-2xl font-bold tracking-[-0.03em] text-[#0A1628]">
+            떠나고 싶은 대륙을 선택하세요
+          </h1>
 
-        <p className="text-lg text-[#8A9BB0]">
-          대륙을 선택하여 여행을 시작하세요
-        </p>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-[#718096]">
+            여행지를 고르듯 대륙을 선택하고, 국가별 강의실에서 여행 표현을 학습해 보세요.
+          </p>
+        </div>
+
+        <div className="hidden h-20 w-20 shrink-0 items-center justify-center text-3xl sm:flex">
+          🧭
+        </div>
       </div>
-
-      <SearchBar
-        value={searchValue}
-        onChange={setSearchValue}
-        onSearch={handleSearch}
-      />
-    </div>
+    </header>
   );
 }

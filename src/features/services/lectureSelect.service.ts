@@ -1,5 +1,5 @@
 import { api, ApiResponse } from "@/lib/api";
-import { CourseItem } from "../classroom/components/types";
+import type { CourseItem } from "../classroom/components/types";
 
 export const getCourses = async (
   countryId: string | number
@@ -8,13 +8,14 @@ export const getCourses = async (
     const response = await api.get<ApiResponse<CourseItem[]>>(
       `/api/v1/courses/countries/${countryId}`,
       {
-        // next: { revalidate: 1800 },
+        next: { revalidate: 600 },
+        suppressGlobalError: true,
       }
     );
 
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
-    console.error("강의 데이터를 불러오는데 실패했습니다:", error);
+    console.error("[lecture-list] 강의 데이터 조회 실패:", error);
     return [];
   }
 };

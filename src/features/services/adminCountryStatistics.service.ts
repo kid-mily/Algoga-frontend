@@ -1,4 +1,4 @@
-import { adminApi, ApiRequestError, ApiResult, unwrapData } from "@/lib/api";
+﻿import { adminApi, ApiRequestError, ApiResult, unwrapData } from "@/lib/api";
 import {
   CountryPopularityData,
   CountryPopularityStat,
@@ -23,40 +23,21 @@ const getRecord = (value: unknown): UnknownRecord =>
     ? (value as UnknownRecord)
     : {};
 
-const getItems = (data: unknown, key?: string) => {
-  if (Array.isArray(data)) return data;
-
-  const record = getRecord(data);
-
-  if (key && Array.isArray(record[key])) return record[key] as unknown[];
-  if (Array.isArray(record.content)) return record.content;
-  if (Array.isArray(record.items)) return record.items;
-  if (Array.isArray(record.countries)) return record.countries;
-  if (Array.isArray(record.data)) return record.data;
-
-  return [];
+const getItems = (value: unknown) => {
+  return Array.isArray(value) ? value : [];
 };
 
-const getString = (record: UnknownRecord, keys: string[], fallback = "-") => {
-  const value = keys
-    .map((key) => record[key])
-    .find(
-      (item) =>
-        item !== null &&
-        item !== undefined &&
-        !(typeof item === "string" && !item.trim())
-    );
+const getString = (record: UnknownRecord, key: string, fallback = "-") => {
+  const value = record[key];
 
-  if (typeof value === "string") return value;
+  if (typeof value === "string" && value.trim()) return value;
   if (typeof value === "number") return String(value);
 
   return fallback;
 };
 
-const getNumber = (record: UnknownRecord, keys: string[], fallback = 0) => {
-  const value = keys
-    .map((key) => record[key])
-    .find((item) => item !== null && item !== undefined);
+const getNumber = (record: UnknownRecord, key: string, fallback = 0) => {
+  const value = record[key];
 
   if (typeof value === "number" && Number.isFinite(value)) return value;
 
@@ -84,80 +65,15 @@ export const normalizeCountryPopularityStat = (
   const record = getRecord(item);
 
   return {
-    countryId: getNumber(record, ["countryId", "country_id", "id"]),
-    countryName: getString(record, ["countryName", "name", "country"], "-"),
-    viewCount: getNumber(record, [
-      "viewCount",
-      "views",
-      "entryCount",
-      "visitCount",
-      "pageViewCount",
-    ]),
-    bookingCount: getNumber(record, [
-      "bookingCount",
-      "reservationCount",
-      "completedCount",
-      "bookings",
-    ]),
-    revenueAmount: getNumber(record, [
-      "revenueAmount",
-      "totalAmount",
-      "salesAmount",
-      "amount",
-    ]),
-    popularityScore: getNumber(record, [
-      "popularityScore",
-      "score",
-      "popularity",
-      "rate",
-    ]),
-    conversionRate: getNumber(record, [
-      "conversionRate",
-      "bookingRate",
-      "reservationRate",
-    ]),
-    rank: getNumber(record, ["rank", "ranking"], fallbackRank),
+    countryId: getNumber(record, "countryId"),
+    countryName: getString(record, "countryName", "-"),
+    countryCode: getString(record, "countryCode", "-"),
+    signupCount: getNumber(record, "signupCount"),
+    bookingCount: getNumber(record, "bookingCount"),
+    revenue: getNumber(record, "revenue"),
+    shareRate: getNumber(record, "shareRate"),
+    rank: fallbackRank,
   };
-};
-
-export const getCountryStatistics = async ({
-  from,
-  to,
-  signal,
-}: CountryStatisticsQuery
-): Promise<CountryPopularityStat[]> => {
-  const response = await adminApi.get<ApiResult<unknown>>(
-    "/api/v1/admin/stats/countries",
-    {
-      params: { from, to },
-      suppressGlobalError: true,
-      signal,
-    }
-  );
-
-  return getItems(unwrapData(response)).map((item, index) =>
-    normalizeCountryPopularityStat(item, index + 1)
-  );
-};
-
-export const getTopCountryStatistics = async ({
-  from,
-  to,
-  signal,
-}: CountryStatisticsQuery
-): Promise<CountryPopularityStat[]> => {
-  const response = await adminApi.get<ApiResult<unknown>>(
-    "/api/v1/admin/stats/countries/top10",
-    {
-      params: { from, to },
-      suppressGlobalError: true,
-      signal,
-    }
-  );
-
-  return getItems(unwrapData(response)).map((item, index) =>
-    normalizeCountryPopularityStat(item, index + 1)
-  );
 };
 
 export const getCountryPopularityData = async ({
@@ -166,12 +82,24 @@ export const getCountryPopularityData = async ({
   signal,
 }: CountryStatisticsQuery
 ): Promise<CountryPopularityData> => {
-  const [countries, topCountries] = await Promise.all([
-    getCountryStatistics({ from, to, signal }),
-    getTopCountryStatistics({ from, to, signal }),
-  ]);
+  const response = await adminApi.get<ApiResult<unknown>>(
+    "/api/v1/admin/stats/countries/top10",
+    {
+      params: { from, to },
+      suppressGlobalError: true,
+      signal,
+    }
+  );
+  const data = getRecord(unwrapData(response));
 
-  return { countries, topCountries };
+  return {
+    bookingTop10: getItems(data.bookingTop10).map((item, index) =>
+      normalizeCountryPopularityStat(item, index + 1)
+    ),
+    revenueTop10: getItems(data.revenueTop10).map((item, index) =>
+      normalizeCountryPopularityStat(item, index + 1)
+    ),
+  };
 };
 
 export const downloadCountryStatisticsCsv = async ({

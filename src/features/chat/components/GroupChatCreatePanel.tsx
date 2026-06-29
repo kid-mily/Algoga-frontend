@@ -1,8 +1,7 @@
-﻿"use client";
-
+﻿// 그룹 채팅방을 만드는 화면
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import type { Friend } from "../types/chat";
+import type { Friend } from "../types";
 
 type GroupChatCreatePanelProps = {
   friends: Friend[];
@@ -10,6 +9,26 @@ type GroupChatCreatePanelProps = {
   errorMessage?: string;
   onBack: () => void;
   onCreateGroup: (roomName: string, friendIds: number[]) => void;
+};
+
+const FriendAvatar = ({ friend }: { friend: Friend }) => {
+  if (friend.profileImageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={friend.profileImageUrl}
+        alt=""
+        aria-hidden="true"
+        className="h-11 w-11 shrink-0 rounded-full border border-[#E4E7EC] object-cover"
+      />
+    );
+  }
+
+  return (
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F3F6F8] text-[15px] font-bold text-[#287875]">
+      {friend.nickname.slice(0, 1)}
+    </span>
+  );
 };
 
 export default function GroupChatCreatePanel({
@@ -58,6 +77,7 @@ export default function GroupChatCreatePanel({
             id="group-room-name"
             value={roomName}
             onChange={(event) => setRoomName(event.target.value)}
+            maxLength={20}
             placeholder="예: 여행 친구방"
             className="mt-2 h-11 w-full rounded-2xl border border-gray-200 px-4 text-[14px] outline-none focus:border-[#439A97] focus:ring-2 focus:ring-[#C7E6E4]"
           />
@@ -87,9 +107,7 @@ export default function GroupChatCreatePanel({
                         isSelected ? "bg-[#E7F4F3]" : "hover:bg-gray-50"
                       }`}
                     >
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F3F6F8] text-[15px] font-bold text-[#287875]">
-                        {friend.nickname.slice(0, 1)}
-                      </span>
+                      <FriendAvatar friend={friend} />
                       <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-gray-900">{friend.nickname}</span>
                       <span className={`h-5 w-5 rounded-full border ${isSelected ? "border-[#439A97] bg-[#439A97]" : "border-gray-300"}`} />
                     </button>

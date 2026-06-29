@@ -1,14 +1,12 @@
+﻿// 채팅방 목록/ 실시간 알림 담당
+
 import { useEffect, useRef, useState } from "react";
 import { Client, type IMessage } from "@stomp/stompjs";
-import type { RoomNotification } from "../types/chat";
+import type { RoomNotification } from "../types";
 
 type UseChatNotificationSocketOptions = {
   userId?: number;
   onNotification?: (notification: RoomNotification) => void;
-};
-
-type SocketEnvelope = {
-  data?: unknown;
 };
 
 const getWebSocketUrl = () => {
@@ -29,19 +27,10 @@ const parseBody = (message: IMessage): unknown => {
   }
 };
 
-const unwrapBody = (body: unknown) => {
-  if (body && typeof body === "object" && "data" in body) {
-    return (body as SocketEnvelope).data;
-  }
-
-  return body;
-};
-
 const parseNotification = (body: unknown): RoomNotification | null => {
-  const unwrappedBody = unwrapBody(body);
-  if (!unwrappedBody || typeof unwrappedBody !== "object") return null;
+  if (!body || typeof body !== "object") return null;
 
-  const record = unwrappedBody as Record<string, unknown>;
+  const record = body as Record<string, unknown>;
   const roomId = Number(record.roomId);
   const unreadCount = Number(record.unreadCount);
   const lastMessage = typeof record.lastMessage === "string" ? record.lastMessage : "";
@@ -110,3 +99,4 @@ export const useChatNotificationSocket = ({
 
   return { isConnected };
 };
+

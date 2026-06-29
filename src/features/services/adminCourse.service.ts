@@ -1,4 +1,4 @@
-import { api, adminApi, ApiResponse } from "@/lib/api";
+﻿import { api, adminApi, ApiResponse } from "@/lib/api";
 import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 import {
   AdminCourse,
@@ -25,59 +25,6 @@ type CountryRecord = {
   country_code?: string;
 };
 
-const supportedCountryNames = new Set([
-  "남아프리카공화국",
-  "이집트",
-  "콩고민주공화국",
-  "남극",
-  "남극연구기지",
-  "한국",
-  "대한민국",
-  "일본",
-  "이탈리아",
-  "프랑스",
-  "미국",
-  "캐나다",
-  "뉴질랜드",
-  "호주",
-  "브라질",
-  "아르헨티나",
-]);
-
-const supportedCountryCodes = new Set([
-  "ZA",
-  "ZAF",
-  "EG",
-  "EGY",
-  "CD",
-  "COD",
-  "AQ",
-  "ATA",
-  "KR",
-  "KOR",
-  "JP",
-  "JPN",
-  "IT",
-  "ITA",
-  "FR",
-  "FRA",
-  "US",
-  "USA",
-  "CA",
-  "CAN",
-  "NZ",
-  "NZL",
-  "AU",
-  "AUS",
-  "BR",
-  "BRA",
-  "AR",
-  "ARG",
-]);
-
-const normalizeCountryKey = (value?: string) =>
-  value?.replace(/\s/g, "").toUpperCase() ?? "";
-
 const normalizeContinentCode = (value: string) => {
   const normalized = value.trim().toUpperCase();
 
@@ -96,16 +43,6 @@ const getValidMaxRewardMileage = (payload: {
   }
 
   return maxRewardMileage;
-};
-
-const isSupportedCountry = (country: CourseCountry) => {
-  const countryName = country.countryName.replace(/\s/g, "");
-  const countryCode = normalizeCountryKey(country.countryCode);
-
-  return (
-    supportedCountryNames.has(countryName) ||
-    supportedCountryCodes.has(countryCode)
-  );
 };
 
 type CourseIdRecord = {
@@ -230,8 +167,7 @@ export const getCourseCountries = async (
 
     return countryGroups
       .flat()
-      .filter((country) => country.countryId && country.countryName)
-      .filter(isSupportedCountry);
+      .filter((country) => country.countryId && country.countryName);
   } catch (error: unknown) {
     throw new Error(getErrorMessage(error, "국가 목록 조회에 실패했습니다."));
   }
@@ -369,3 +305,4 @@ export const deleteAdminCourse = async (courseId: number) => {
     throw new Error(getErrorMessage(error, "강의 삭제에 실패했습니다."));
   }
 };
+

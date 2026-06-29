@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
@@ -14,7 +14,7 @@ export default function CountryPopularityManageClient() {
     fromDate,
     toDate,
     filteredCountries,
-    topCountries,
+    revenueTop10,
     summary,
     searchKeyword,
     isLoading,
@@ -30,7 +30,7 @@ export default function CountryPopularityManageClient() {
     <main aria-label="나라별 인기도">
       <SimpleSubHeader
         title="나라별 인기도"
-        description={`국가 ${formatNumber(summary.totalCountryCount)}개 | 조회 ${formatNumber(summary.totalViewCount)}건 | 예약 ${formatNumber(summary.totalBookingCount)}건 | 평균 전환율 ${formatPercent(summary.averageConversionRate)}`}
+        description={`국가 ${formatNumber(summary.totalCountryCount)}개 | 가입 ${formatNumber(summary.totalSignupCount)}명 | 예약 ${formatNumber(summary.totalBookingCount)}건 | 평균 점유율 ${formatPercent(summary.averageShareRate)}`}
       />
 
       <AdminErrorBanner message={error} className="mb-4" />
@@ -39,23 +39,25 @@ export default function CountryPopularityManageClient() {
 
       <div className="mb-5 grid grid-cols-[minmax(0,1fr)_360px] gap-5">
         <CountryPopularityTopChart
-          countries={topCountries}
+          title="매출 Top 10"
+          countries={revenueTop10}
           isLoading={isLoading}
+          metric="revenue"
         />
 
         <section className="rounded-[16px] border border-[#E4E7EC] bg-white p-5">
           <h2 className="text-[16px] font-bold text-[#111827]">요약</h2>
           <dl className="mt-4 space-y-3 text-[14px]">
             <div className="flex justify-between gap-4">
-              <dt className="text-[#667085]">총 수익</dt>
+              <dt className="text-[#667085]">총 매출</dt>
               <dd className="font-bold text-[#111827]">
-                {formatWon(summary.totalRevenueAmount)}
+                {formatWon(summary.totalRevenue)}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-[#667085]">평균 전환율</dt>
+              <dt className="text-[#667085]">평균 점유율</dt>
               <dd className="font-bold text-[#111827]">
-                {formatPercent(summary.averageConversionRate)}
+                {formatPercent(summary.averageShareRate)}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
@@ -86,3 +88,4 @@ export default function CountryPopularityManageClient() {
     </main>
   );
 }
+

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import  { Country } from "@/features/classroom/components/types";
+import type { Country } from "@/features/classroom/types";
 import { getCountries } from "@/features/services/countrySelect.service";
-import { CONTINENT_CODE_MAP } from "../constants/mapConstants";
+import { continent_code_map } from "../constants/mapConstants";
 
 export function useContinentCountries(selectedContinent: string) {
     const [countries, setCountries] = useState<Country[]>([]);
@@ -14,37 +14,40 @@ export function useContinentCountries(selectedContinent: string) {
         if (!selectedContinent) {
         setCountries([]);
         setErrorMessage("");
+        setIsLoading(false);
         return;
         }
 
-        const continentCode = CONTINENT_CODE_MAP[selectedContinent];
+        const continentCode = continent_code_map[selectedContinent];
 
         if (!continentCode) {
         setCountries([]);
         setErrorMessage("지원하지 않는 대륙입니다.");
+        setIsLoading(false);
         return;
         }
 
-        let active = true;
+        const controller = new AbortController();
 
         const loadCountries = async () => {
         try {
             setIsLoading(true);
             setErrorMessage("");
 
-            const countryList = await getCountries(continentCode);
+            const countryList = await getCountries(
+            continentCode,
+            controller.signal
+            );
 
-            if (!active) return;
-
-            setCountries(Array.isArray(countryList) ? countryList : []);
+            setCountries(countryList);
         } catch (error) {
-            if (!active) return;
+            if (controller.signal.aborted) return;
 
             console.error("[map] 국가 목록 조회 실패:", error);
             setCountries([]);
-            setErrorMessage("국가 정보를 불러오지 못했습니다.");
+            setErrorMessage("국가 데이터를 불러오지 못했습니다.");
         } finally {
-            if (active) {
+            if (!controller.signal.aborted) {
             setIsLoading(false);
             }
         }
@@ -53,7 +56,7 @@ export function useContinentCountries(selectedContinent: string) {
         void loadCountries();
 
         return () => {
-        active = false;
+        controller.abort();
         };
     }, [selectedContinent]);
 

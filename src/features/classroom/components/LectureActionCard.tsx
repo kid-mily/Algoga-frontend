@@ -111,14 +111,20 @@ export default function LectureActionCard({
 
   return (
     <>
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
+      <section className="rounded-2xl border border-[#E1E8EF] bg-white p-6 shadow-[0_8px_24px_rgba(55,88,110,0.07)]">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[#0A1628]">강의 듣기</h2>
+            <p className="text-sm font-semibold tracking-[0.16em] text-[#439A97]">
+              COURSE
+            </p>
 
-            <p className="mt-1 flex items-center gap-2 text-sm text-gray-400">
+            <h2 className="mt-1 text-lg font-bold text-[#0A1628]">
+              강의 수강
+            </h2>
+
+            <p className="mt-1 flex items-center gap-2 text-sm text-[#718096]">
               <span className="font-semibold text-[#439A97]">
-                {course.levelName}
+                {course.levelName || course.level}
               </span>
               <span>|</span>
               <span>{course.price.toLocaleString()}원</span>
@@ -129,7 +135,7 @@ export default function LectureActionCard({
             type="button"
             disabled={isCheckingAccess}
             onClick={handleActionClick}
-            className="rounded-2xl bg-[#439A97] px-6 py-3 font-semibold text-white transition hover:bg-[#357A78] disabled:opacity-50"
+            className="h-12 rounded-2xl bg-[#439A97] px-6 text-sm font-bold text-white transition hover:bg-[#357A78] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isCheckingAccess ? "확인 중..." : canStudy ? "강의 듣기" : "결제하기"}
           </button>
@@ -139,7 +145,7 @@ export default function LectureActionCard({
       <Modal
         open={isLoginModalOpen}
         title="로그인이 필요합니다"
-        description="결제를 진행하려면 로그인이 필요합니다. 로그인 후 다시 시도해 주세요."
+        description="결제 또는 수강을 진행하려면 로그인이 필요합니다. 로그인 후 다시 시도해 주세요."
         confirmText="로그인하기"
         cancelText="취소"
         onConfirm={handleLoginConfirm}

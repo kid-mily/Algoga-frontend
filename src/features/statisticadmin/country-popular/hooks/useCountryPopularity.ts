@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   downloadCountryStatisticsCsv,
   getCountryPopularityData,
@@ -14,8 +14,8 @@ export const useCountryPopularity = () => {
   const defaultRange = useMemo(() => getDefaultCountryPopularityDateRange(), []);
   const [fromDate, setFromDate] = useState(defaultRange.from);
   const [toDate, setToDate] = useState(defaultRange.to);
-  const [countries, setCountries] = useState<CountryPopularityStat[]>([]);
-  const [topCountries, setTopCountries] = useState<CountryPopularityStat[]>([]);
+  const [bookingTop10, setBookingTop10] = useState<CountryPopularityStat[]>([]);
+  const [revenueTop10, setRevenueTop10] = useState<CountryPopularityStat[]>([]);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -35,8 +35,8 @@ export const useCountryPopularity = () => {
 
         if (signal?.aborted) return;
 
-        setCountries(data.countries);
-        setTopCountries(data.topCountries);
+        setBookingTop10(data.bookingTop10);
+        setRevenueTop10(data.revenueTop10);
       } catch (loadError: unknown) {
         if (signal?.aborted) return;
 
@@ -69,19 +69,19 @@ export const useCountryPopularity = () => {
   const filteredCountries = useMemo(() => {
     const keyword = searchKeyword.trim().toLowerCase();
 
-    if (!keyword) return countries;
+    if (!keyword) return bookingTop10;
 
-    return countries.filter((country) =>
+    return bookingTop10.filter((country) =>
       [country.countryName, String(country.countryId)]
         .join(" ")
         .toLowerCase()
         .includes(keyword)
     );
-  }, [countries, searchKeyword]);
+  }, [bookingTop10, searchKeyword]);
 
   const summary = useMemo(
-    () => getCountryPopularitySummary(countries),
-    [countries]
+    () => getCountryPopularitySummary(bookingTop10),
+    [bookingTop10]
   );
 
   const handleCsvDownload = useCallback(async () => {
@@ -131,9 +131,9 @@ export const useCountryPopularity = () => {
   return {
     fromDate,
     toDate,
-    countries,
+    bookingTop10,
+    revenueTop10,
     filteredCountries,
-    topCountries,
     summary,
     searchKeyword,
     isLoading,
@@ -145,3 +145,4 @@ export const useCountryPopularity = () => {
     downloadCsv: handleCsvDownload,
   };
 };
+

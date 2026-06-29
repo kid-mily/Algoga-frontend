@@ -36,7 +36,7 @@ export default async function NoticeDetailPage({
 
   return (
     <main className="min-h-screen bg-[#F4F7FB] px-5 py-10 sm:px-6">
-      <section className="mx-auto w-full max-w-3xl">
+      <section className="mx-auto w-full max-w-4xl">
         <Link
           href="/notice?tag=ALL&page=1"
           className="mb-7 inline-flex text-sm font-semibold text-[#439A97] transition hover:text-[#62B6B7]"

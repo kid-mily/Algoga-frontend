@@ -1,6 +1,4 @@
-﻿"use client";
-
-import { MessageCircle, X } from "lucide-react";
+﻿import { MessageCircle, X } from "lucide-react";
 
 type FloatingChatButtonProps = {
   isOpen: boolean;

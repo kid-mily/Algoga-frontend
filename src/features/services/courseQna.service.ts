@@ -1,55 +1,217 @@
-import {
-  CourseQna,
-  CreateCourseQnaCommentPayload,
-  CreateCourseQnaPayload,
-  normalizeCourseQna,
-} from "@/features/classroom/qna/types";
 import { adminApi, api, ApiResponse } from "@/lib/api";
+import type {
+  AdminQnaBase,
+  AdminQnaComment,
+} from "@/features/contentmanage/qna/types";
 
 type CourseQnaApiResponse<T> = ApiResponse<T> | T;
 
-type CreateAdminCourseQnaAnswerPayload = {
+type RawRecord = Record<string, unknown>;
+
+interface CreateCourseQnaPayload {
+  title: string;
+  question?: string;
+  content?: string;
+}
+
+interface CreateCourseQnaCommentPayload {
+  content: string;
+  parentCommentId?: number | null;
+}
+
+interface CreateAdminCourseQnaAnswerPayload {
   answer: string;
+}
+
+const isRecord = (value: unknown): value is RawRecord => {
+  return typeof value === "object" && value !== null;
 };
 
 const unwrapData = <T>(response: CourseQnaApiResponse<T>): T => {
-  if (response && typeof response === "object" && "data" in response) {
-    return (response as ApiResponse<T>).data;
+  if (isRecord(response) && "data" in response) {
+    return response.data as T;
   }
 
   return response as T;
 };
 
-const unwrapList = (data: unknown) => {
-  if (Array.isArray(data)) return data;
+const unwrapList = (data: unknown): unknown[] => {
+  if (Array.isArray(data)) {
+    return data;
+  }
 
-  if (data && typeof data === "object") {
-    const record = data as Record<string, unknown>;
-
-    if (Array.isArray(record.content)) return record.content;
-    if (Array.isArray(record.qnas)) return record.qnas;
-    if (Array.isArray(record.items)) return record.items;
+  if (isRecord(data)) {
+    if (Array.isArray(data.content)) return data.content;
+    if (Array.isArray(data.qnas)) return data.qnas;
+    if (Array.isArray(data.items)) return data.items;
   }
 
   return [];
 };
 
-export const getCourseQnas = async (courseId: string | number): Promise<CourseQna[]> => {
-  const response = await api.get<CourseQnaApiResponse<unknown>>(
-    `/api/v1/courses/${courseId}/qnas`
+const numberOf = (
+  record: RawRecord,
+  keys: string[],
+  fallback = 0
+): number => {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const parsed = Number(value);
+
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+
+  return fallback;
+};
+
+const stringOf = (
+  record: RawRecord,
+  keys: string[],
+  fallback = ""
+): string => {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
+  }
+
+  return fallback;
+};
+
+const booleanOf = (
+  record: RawRecord,
+  keys: string[],
+  fallback = false
+): boolean => {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (typeof value === "boolean") {
+      return value;
+    }
+  }
+
+  return fallback;
+};
+
+const getWriterName = (
+  record: RawRecord,
+  fallback = "익명"
+): string => {
+  return stringOf(
+    record,
+    [
+      "userNickname",
+      "writerNickname",
+      "nickname",
+      "writer",
+      "name",
+      "userName",
+      "username",
+    ],
+    fallback
   );
+};
+
+const normalizeComment = (
+  item: unknown,
+  fallbackId: number
+): AdminQnaComment => {
+  const record = isRecord(item) ? item : {};
+
+  const writerType = stringOf(record, ["writerType"], "USER");
+  const fallbackWriter = writerType === "MANAGER" ? "관리자" : "익명";
+
+  return {
+    id: numberOf(record, ["commentId", "id"], fallbackId),
+    writer: getWriterName(record, fallbackWriter),
+    content: stringOf(record, ["content", "comment", "reply"]),
+    createdAt: stringOf(record, ["createdAt", "updatedAt"]),
+  };
+};
+
+const normalizeQna = (
+  item: unknown,
+  fallbackId: number
+): AdminQnaBase => {
+  const record = isRecord(item) ? item : {};
+
+  const qnaId = numberOf(record, ["qnaId", "id"], fallbackId);
+  const question = stringOf(record, ["question", "content"]);
+  const answer = stringOf(record, ["answer"]);
+  const status = stringOf(record, ["status"]);
+
+  const rawComments = unwrapList(record.comments);
+  const comments = rawComments.map((comment, index) =>
+    normalizeComment(comment, index + 1)
+  );
+
+  if (answer) {
+    comments.unshift({
+      id: -1,
+      writer: "관리자",
+      content: answer,
+      createdAt: stringOf(record, ["answeredAt", "createdAt"]),
+    });
+  }
+
+  return {
+    id: qnaId,
+    userId: numberOf(record, ["userId", "writerId"]),
+    title: stringOf(record, ["title"], question.slice(0, 30) || "제목 없음"),
+    content: question,
+    writer: getWriterName(record),
+    createdAt: stringOf(record, ["createdAt"]),
+    isAnswered:
+      status === "ANSWERED" ||
+      booleanOf(record, ["isAnswered"], false) ||
+      Boolean(answer),
+    comments,
+  };
+};
+
+export const getCourseQnas = async (
+  courseId: string | number
+): Promise<AdminQnaBase[]> => {
+  const response = await api.get<CourseQnaApiResponse<unknown>>(
+    `/api/v1/courses/${courseId}/qnas`,
+    {
+      cache: "no-store",
+      suppressGlobalError: true,
+    }
+  );
+
   const data = unwrapData(response);
 
-  return unwrapList(data).map((item, index) => normalizeCourseQna(item, index + 1));
+  return unwrapList(data).map((item, index) =>
+    normalizeQna(item, index + 1)
+  );
 };
 
 export const createCourseQna = async (
   courseId: string | number,
   payload: CreateCourseQnaPayload
-) => {
+): Promise<unknown> => {
   const response = await api.post<CourseQnaApiResponse<unknown>>(
     `/api/v1/courses/${courseId}/qnas`,
-    payload
+    {
+      title: payload.title,
+      question: payload.question ?? payload.content ?? "",
+    },
+    {
+      suppressGlobalError: true,
+    }
   );
 
   return unwrapData(response);
@@ -58,25 +220,33 @@ export const createCourseQna = async (
 export const getCourseQna = async (
   courseId: string | number,
   qnaId: string | number
-): Promise<CourseQna> => {
+): Promise<AdminQnaBase> => {
   const response = await api.get<CourseQnaApiResponse<unknown>>(
-    `/api/v1/courses/${courseId}/qnas/${qnaId}`
+    `/api/v1/courses/${courseId}/qnas/${qnaId}`,
+    {
+      cache: "no-store",
+      suppressGlobalError: true,
+    }
   );
+
   const data = unwrapData(response);
 
-  return normalizeCourseQna(data, Number(qnaId));
+  return normalizeQna(data, Number(qnaId));
 };
 
 export const createCourseQnaComment = async (
   courseId: string | number,
   qnaId: string | number,
   payload: CreateCourseQnaCommentPayload
-) => {
+): Promise<unknown> => {
   const response = await api.post<CourseQnaApiResponse<unknown>>(
     `/api/v1/courses/${courseId}/qnas/${qnaId}/comments`,
     {
-      parentCommentId: payload.parentCommentId ?? null,
       content: payload.content,
+      parentCommentId: payload.parentCommentId ?? null,
+    },
+    {
+      suppressGlobalError: true,
     }
   );
 
@@ -87,10 +257,13 @@ export const createAdminCourseQnaAnswer = async (
   courseId: string | number,
   qnaId: string | number,
   payload: CreateAdminCourseQnaAnswerPayload
-) => {
+): Promise<unknown> => {
   const response = await adminApi.post<CourseQnaApiResponse<unknown>>(
     `/api/v1/admin/courses/${courseId}/qnas/${qnaId}/answer`,
-    payload
+    payload,
+    {
+      suppressGlobalError: true,
+    }
   );
 
   return unwrapData(response);

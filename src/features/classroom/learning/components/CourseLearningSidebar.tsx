@@ -43,7 +43,7 @@ export default function CourseLearningSidebar({
             // 백엔드 응답을 활성화 기준으로 사용
             const quizUnlocked = quizAvailable === true;
 
-    // 💡 스타일 추출: 버튼 활성화/비활성화 상태에 따른 스타일
+    // 스타일 추출: 버튼 활성화/비활성화 상태에 따른 스타일
     const getButtonStyles = (isActive: boolean) => {
         const base = "flex w-full items-start gap-3 rounded-[18px] border px-4 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-40";
         const state = isActive
@@ -52,7 +52,7 @@ export default function CourseLearningSidebar({
         return `${base} ${state}`;
     };
 
-    // 💡 스타일 추출: 배지 컬러 분기 처리
+    // 스타일 추출: 배지 컬러 분기 처리
     const getBadgeStyles = (isChapterCompleted: boolean, isActive: boolean) => {
         const base = "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold";
         if (isChapterCompleted) return `${base} bg-[#2F9E6F] text-white`;

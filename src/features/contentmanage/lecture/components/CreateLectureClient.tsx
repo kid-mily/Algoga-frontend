@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
 import LectureHeader from "@/features/common/components/LectureHeader";
 import LectureForm from "@/features/contentmanage/lecture/components/LectureForm";
 import LectureChapterForm from "@/features/contentmanage/lecture/components/LectureChapterForm";

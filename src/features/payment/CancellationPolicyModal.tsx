@@ -6,7 +6,7 @@ export default function CanclelationPolicyModal({ onClose }: Props) {
     return (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             {/* 모달 창 */}
-            <div className="relative w-full max-w-3xl bg-white rounded-3xl p-8 max-h-[90vh] overflow-y-auto">
+            <div className="relative w-full max-w-4xl bg-white rounded-3xl p-8 max-h-[90vh] overflow-y-auto">
                 
                 {/* 닫기 버튼 */}
                 <button onClick={onClose} className="absolute top-6 right-6 text-2xl text-gray-400 hover:text-gray-600">

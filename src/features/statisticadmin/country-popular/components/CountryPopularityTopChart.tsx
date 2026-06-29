@@ -1,24 +1,28 @@
-import { CountryPopularityStat } from "../types";
-import { formatNumber, formatPercent } from "../utils";
+﻿import { CountryPopularityStat } from "../types";
+import { formatNumber, formatPercent, formatWon } from "../utils";
 
 type CountryPopularityTopChartProps = {
   countries: CountryPopularityStat[];
   isLoading: boolean;
+  title: string;
+  metric: "booking" | "revenue";
 };
 
 export default function CountryPopularityTopChart({
   countries,
   isLoading,
+  title,
+  metric,
 }: CountryPopularityTopChartProps) {
-  const maxScore = Math.max(
+  const maxShareRate = Math.max(
     1,
-    ...countries.map((country) => country.popularityScore)
+    ...countries.map((country) => country.shareRate)
   );
 
   return (
     <section className="rounded-[16px] border border-[#E4E7EC] bg-white">
       <header className="border-b border-[#EEF0F3] px-6 py-4">
-        <h2 className="text-[18px] font-bold text-[#111827]">나라별 Top 10</h2>
+        <h2 className="text-[18px] font-bold text-[#111827]">{title}</h2>
       </header>
 
       <div className="p-6">
@@ -43,7 +47,7 @@ export default function CountryPopularityTopChart({
             {countries.slice(0, 10).map((country, index) => {
               const width = `${Math.max(
                 3,
-                (country.popularityScore / maxScore) * 100
+                (country.shareRate / maxShareRate) * 100
               )}%`;
 
               return (
@@ -53,7 +57,7 @@ export default function CountryPopularityTopChart({
                       {country.rank || index + 1}. {country.countryName}
                     </p>
                     <p className="shrink-0 font-bold text-[#111827]">
-                      {formatPercent(country.conversionRate)}
+                      {formatPercent(country.shareRate)}
                     </p>
                   </div>
                   <div className="h-[12px] overflow-hidden rounded-full bg-[#F2F4F7]">
@@ -63,8 +67,9 @@ export default function CountryPopularityTopChart({
                     />
                   </div>
                   <p className="mt-1 text-[12px] text-[#98A2B3]">
-                    조회 {formatNumber(country.viewCount)}건 · 예약{" "}
-                    {formatNumber(country.bookingCount)}건
+                    가입 {formatNumber(country.signupCount)}명 · 예약{" "}
+                    {formatNumber(country.bookingCount)}건 · {metric === "revenue" ? "매출" : "매출"}{" "}
+                    {formatWon(country.revenue)}
                   </p>
                 </li>
               );

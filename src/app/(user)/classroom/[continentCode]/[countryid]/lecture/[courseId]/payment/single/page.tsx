@@ -1,9 +1,9 @@
-﻿// 단과 결제 페이지
-
-import { notFound } from "next/navigation";
+﻿import { notFound } from "next/navigation";
 import { getCourseDetail } from "@/features/services/lectureDetail.service";
 import SingleLecturePaymentClient from "@/features/payment/SingleLecturePaymentClient";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{
@@ -15,7 +15,6 @@ interface PageProps {
 
 export default async function SingleLecturePaymentPage({ params }: PageProps) {
   const { continentCode, countryid, courseId } = await params;
-
   const numericCourseId = Number(courseId);
 
   if (!countryid || !Number.isInteger(numericCourseId) || numericCourseId <= 0) {

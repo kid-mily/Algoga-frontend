@@ -1,19 +1,31 @@
 "use client";
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
+import { preloadWorldGeoJson } from "@/features/map/hooks/useWorldGeoJson";
 
-const WorldMap = dynamic(() => import("@/features/map/components/WorldMap"), {
+const loadWorldMap = () => import("@/features/map/components/WorldMap");
+
+const WorldMap = dynamic(loadWorldMap, {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-medium text-gray-400">
-      지도를 로딩 중입니다...
+    <div className="flex h-full w-full items-center justify-center bg-[#EDF6FA] text-sm font-medium text-[#7C8A9A]">
+      지도를 불러오는 중입니다...
     </div>
   ),
 });
 
 export default function MapSection() {
+  useEffect(() => {
+    void loadWorldMap();
+    void preloadWorldGeoJson();
+  }, []);
+
   return (
-    <section className="h-full w-full overflow-hidden">
+    <section
+      className="h-full w-full overflow-hidden"
+      aria-label="세계 지도"
+    >
       <WorldMap />
     </section>
   );
