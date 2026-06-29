@@ -11,21 +11,34 @@ type BannerApiRecord = {
   visible?: boolean;
 };
 
-const unwrapBannerList = (data: unknown): BannerApiRecord[] => {
-  if (Array.isArray(data)) return data as BannerApiRecord[];
+const isBannerApiRecord = (value: unknown): value is BannerApiRecord => {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+};
 
-  if (data && typeof data === "object") {
+const unwrapBannerList = (data: unknown): BannerApiRecord[] => {
+  const toBannerRecords = (items: unknown[]) =>
+    items.filter(isBannerApiRecord);
+
+  if (Array.isArray(data)) {
+    return toBannerRecords(data);
+  }
+
+  if (isBannerApiRecord(data)) {
     const record = data as Record<string, unknown>;
 
-    if (Array.isArray(record.content)) return record.content as BannerApiRecord[];
-    if (Array.isArray(record.banners)) return record.banners as BannerApiRecord[];
-    if (Array.isArray(record.items)) return record.items as BannerApiRecord[];
+    if (Array.isArray(record.content)) return toBannerRecords(record.content);
+    if (Array.isArray(record.banners)) return toBannerRecords(record.banners);
+    if (Array.isArray(record.items)) return toBannerRecords(record.items);
   }
 
   return [];
 };
 
-const normalizeBanner = (item: BannerApiRecord): Banner | null => {
+const normalizeBanner = (item: unknown): Banner | null => {
+  if (!isBannerApiRecord(item)) {
+    return null;
+  }
+
   const bannerId = item.bannerId ?? item.id;
 
   if (
@@ -36,7 +49,7 @@ const normalizeBanner = (item: BannerApiRecord): Banner | null => {
     return null;
   }
 
-  if (!item.imageUrl) {
+  if (typeof item.imageUrl !== "string" || item.imageUrl.trim().length === 0) {
     return null;
   }
 

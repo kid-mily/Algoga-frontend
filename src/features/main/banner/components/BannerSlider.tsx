@@ -61,8 +61,8 @@ export default function BannerSlider({
                     <BannerSlide
                         key={banner.bannerId}
                         banner={banner}
-                        index={index}
-                        isActive={currentIndex === index}
+                        isActive={index === currentIndex}
+                        isPriority={index === 0}
                     />
                 ))}
             </div>

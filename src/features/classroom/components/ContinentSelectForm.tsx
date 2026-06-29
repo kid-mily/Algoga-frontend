@@ -8,15 +8,16 @@ import type { Continent } from "./types";
 
 interface Props {
   continents: Continent[];
-  countryKeywordsByContinent?: Record<string, string[]>;
 }
 
-export default function ContinentSelectForm({
-  continents,
-  countryKeywordsByContinent = {},
-}: Props) {
-  const { searchInput, setSearchInput, filteredContinents, handleSearch } =
-    useContinentSearch({ continents, countryKeywordsByContinent });
+export default function ContinentSelectForm({ continents }: Props) {
+  const {
+    searchInput,
+    setSearchInput,
+    filteredContinents,
+    isSearching,
+    handleSearch,
+  } = useContinentSearch({ continents });
 
   return (
     <section aria-labelledby="continent-select-title" className="w-full">
@@ -25,20 +26,31 @@ export default function ContinentSelectForm({
           <p className="text-sm font-semibold tracking-[0.16em] text-[#439A97]">
             SELECT DESTINATION
           </p>
-          <h2 id="continent-select-title" className="mt-1 text-2xl font-bold text-[#0A1628]">
+
+          <h2
+            id="continent-select-title"
+            className="mt-1 text-2xl font-bold text-[#0A1628]"
+          >
             대륙별 여행 강의
           </h2>
+
           <p className="mt-1 text-sm text-[#8A94A6]">
             대륙명이나 나라 이름을 검색해 원하는 여행지를 찾아보세요.
           </p>
         </div>
 
         <div className="w-full sm:max-w-sm">
-          <SearchBar value={searchInput} onChange={setSearchInput} onSearch={handleSearch} />
+          <SearchBar
+            value={searchInput}
+            onChange={setSearchInput}
+            onSearch={handleSearch}
+          />
         </div>
       </div>
 
-      {continents.length === 0 ? (
+      {isSearching ? (
+        <ContinentEmptyState message="나라 정보를 검색하는 중입니다." />
+      ) : continents.length === 0 ? (
         <ContinentEmptyState message="대륙 데이터를 불러오지 못했습니다." />
       ) : filteredContinents.length === 0 ? (
         <ContinentEmptyState message="검색 결과가 없습니다." />

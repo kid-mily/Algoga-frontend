@@ -1,16 +1,13 @@
 import NoticeItem from "./NoticeItem";
 import { getMainNoticeViewModel } from "../utils/notice.utils";
-import type { Notice } from "@/features/notice/components/types";
+import type { MainNoticeSourceNotice } from "../types";
 
 interface NoticeListProps {
-    notices: Notice[];
+    notices: MainNoticeSourceNotice[];
 }
 
 export default function NoticeList({ notices }: NoticeListProps) {
-    const items = notices.flatMap((notice) => {
-        const item = getMainNoticeViewModel(notice);
-        return item ? [item] : [];
-    });
+    const items = notices.map(getMainNoticeViewModel);
 
     if (items.length === 0) {
         return (

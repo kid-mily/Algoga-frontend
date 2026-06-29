@@ -1,7 +1,7 @@
-import { Feature, GeoJsonProperties, Geometry } from "geojson";
-import { PathOptions } from "leaflet";
-import { Country } from "@/features/classroom/components/types";
-import { CountryFeature } from "../types";
+import type { Feature, GeoJsonProperties, Geometry } from "geojson";
+import type { PathOptions } from "leaflet";
+import type { Country } from "@/features/classroom/types";
+import type { CountryFeature } from "../types";
 import {
   continent_color_map,
   default_map_color,
@@ -12,7 +12,7 @@ export const normalizeName = (value?: string | null) =>
   (value ?? "")
     .trim()
     .replace(/\s/g, "")
-    .replace(/[().,'’]/g, "")
+    .replace(/[().,'"]/g, "")
     .toLowerCase();
 
 const isSameNonEmpty = (a?: string | null, b?: string | null) => {
@@ -66,8 +66,9 @@ export const getCountryStyle = (
     return {
       fillColor: continentColor,
       color: continentColor,
-      weight: 0.3,
-      fillOpacity: 0.52,
+      weight: 0.35,
+      opacity: 0.95,
+      fillOpacity: 0.58,
     };
   }
 
@@ -75,8 +76,9 @@ export const getCountryStyle = (
     return {
       fillColor: disabled_map_color,
       color: disabled_map_color,
-      weight: 0.1,
-      fillOpacity: 0.08,
+      weight: 0.15,
+      opacity: 0.45,
+      fillOpacity: 0.1,
     };
   }
 
@@ -84,8 +86,9 @@ export const getCountryStyle = (
 
   return {
     fillColor: continentColor,
-    color: isSelected ? "#2C3E50" : continentColor,
-    weight: isSelected ? 1.6 : 0.5,
-    fillOpacity: isSelected ? 0.88 : 0.62,
+    color: isSelected ? "#233044" : continentColor,
+    weight: isSelected ? 1.7 : 0.65,
+    opacity: isSelected ? 1 : 0.95,
+    fillOpacity: isSelected ? 0.9 : 0.68,
   };
 };

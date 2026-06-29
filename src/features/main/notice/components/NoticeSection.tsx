@@ -1,10 +1,10 @@
 import Link from "next/link";
 import NoticeList from "./NoticeList";
 import { getMainNotices } from "@/features/services/notice.service";
-import type { Notice } from "@/features/notice/components/types";
+import type { MainNoticeSourceNotice } from "../types";
 
 export default async function NoticeSection() {
-  let notices: Notice[] = [];
+  let notices: MainNoticeSourceNotice[] = [];
 
   try {
     notices = await getMainNotices();

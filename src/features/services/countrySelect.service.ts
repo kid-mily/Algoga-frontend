@@ -1,4 +1,4 @@
-import type { Country } from "../classroom/components/types";
+import type { Country } from "@/features/classroom/types";
 
 type ApiResponse<T> = {
   data?: T;
