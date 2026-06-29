@@ -1,9 +1,8 @@
-﻿"use client";
-
+﻿// 채팅방 내부 화면, 메시지 조회/전송/읽음/맴버 관리
 import { useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 import ChatCreateMenu from "./ChatCreateMenu";
-import type { ChatRoom } from "../types/chat";
+import type { ChatRoom } from "../types";
 
 type ChatListPanelProps = {
   rooms: ChatRoom[];
@@ -36,7 +35,6 @@ const ChatRoomAvatar = ({ room }: { room: ChatRoom }) => {
 
   if (shouldShowProfileImage) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={room.profileImageUrl ?? ""}
         alt=""

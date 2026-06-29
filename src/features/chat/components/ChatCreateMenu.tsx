@@ -1,5 +1,3 @@
-// src/features/chat/components/ChatCreateMenu.tsx
-
 import { MessageCircle, Users } from "lucide-react";
 
 interface ChatCreateMenuProps {

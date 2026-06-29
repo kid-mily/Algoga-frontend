@@ -1,23 +1,8 @@
-﻿"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿// 실제 채팅방 화면
 import { ArrowLeft, MoreVertical, X } from "lucide-react";
-import { getMe } from "@/features/services/user.service";
-import {
-  addChatRoomMembers,
-  getChatMessages,
-  getChatRoomMembers,
-  getFriends,
-  renameChatRoom,
-} from "../services/chatService";
-import { useChatSocket } from "../hooks/useChatSocket";
-import type {
-  ChatMessage,
-  ChatRoom,
-  ChatRoomMember,
-  Friend,
-  TypingEvent,
-} from "../types/chat";
+import { useChatRoomMembersPanel } from "../hooks/useChatRoomMembersPanel";
+import { useChatRoomMessages } from "../hooks/useChatRoomMessages";
+import type { ChatMessage, ChatRoom } from "../types";
 import ChatInput from "./ChatInput";
 import ChatMessageList from "./ChatMessageList";
 
@@ -30,14 +15,6 @@ type ChatRoomPanelProps = {
   onLeaveRoom?: (room: ChatRoom) => void;
   onRoomUpdated?: (room: ChatRoom) => void;
   isLeaving?: boolean;
-};
-
-const mergeMessage = (messages: ChatMessage[], nextMessage: ChatMessage) => {
-  if (messages.some((message) => message.messageId === nextMessage.messageId)) {
-    return messages;
-  }
-
-  return [...messages, nextMessage];
 };
 
 const ChatRoomHeaderAvatar = ({ room, roomName }: { room: ChatRoom; roomName: string }) => {
@@ -91,8 +68,7 @@ const MemberAvatar = ({
 };
 
 export default function ChatRoomPanel({
-  room,
-  onBack,
+  room,onBack,
   onClose,
   onReadRoom,
   onRoomMessage,
@@ -100,304 +76,52 @@ export default function ChatRoomPanel({
   onRoomUpdated,
   isLeaving,
 }: ChatRoomPanelProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<number>();
-  const [currentUserNickname, setCurrentUserNickname] = useState("");
-  const sendReadRef = useRef<() => void>(() => undefined);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [panelMode, setPanelMode] = useState<"none" | "members" | "add" | "rename">("none");
-  const [members, setMembers] = useState<ChatRoomMember[]>([]);
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [selectedFriendIds, setSelectedFriendIds] = useState<number[]>([]);
-  const [draftRoomName, setDraftRoomName] = useState(room.roomName ?? "");
-  const [panelError, setPanelError] = useState("");
-  const [isPanelLoading, setIsPanelLoading] = useState(false);
-  const [isPanelProcessing, setIsPanelProcessing] = useState(false);
-  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
-  const [typingUsers, setTypingUsers] = useState<Record<number, string>>({});
-  const typingTimersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
-
-  const loadMessages = useCallback(
-    async (
-      signal?: AbortSignal,
-      options: { showLoading?: boolean } = {}
-    ) => {
-      const shouldShowLoading = options.showLoading ?? true;
-
-      try {
-        if (shouldShowLoading) {
-          setIsLoading(true);
-        }
-        setErrorMessage("");
-
-        const data = await getChatMessages(room.roomId, signal);
-        setMessages(data);
-      } catch (error) {
-        if (signal?.aborted) return;
-
-        setErrorMessage(error instanceof Error ? error.message : "채팅 내역을 불러오지 못했습니다.");
-      } finally {
-        if (!signal?.aborted && shouldShowLoading) {
-          setIsLoading(false);
-        }
-      }
-    },
-    [room.roomId]
-  );
-
-  const handleSocketMessage = useCallback(
-    (message: ChatMessage) => {
-      setMessages((prev) => mergeMessage(prev, message));
-      onRoomMessage?.(message);
-
-      if (!message.isSystem) {
-        window.setTimeout(() => {
-          sendReadRef.current();
-          void loadMessages(undefined, { showLoading: false });
-        }, 0);
-      }
-    },
-    [loadMessages, onRoomMessage]
-  );
-
-  const handleReadEvent = useCallback(
-    (event: { roomId: number; readerId?: number; messageId?: number; unreadCount?: number }) => {
-      if (!currentUserId || event.roomId !== room.roomId || event.readerId === currentUserId) return;
-      if (!event.messageId || typeof event.unreadCount !== "number") {
-        void loadMessages(undefined, { showLoading: false });
-        return;
-      }
-
-      const nextUnreadCount = Math.max(event.unreadCount, 0);
-
-      setMessages((prev) =>
-        prev.map((message) => {
-          const isReaderMessage = Boolean(
-            event.readerId && message.senderId === event.readerId
-          );
-
-          if (isReaderMessage || !message.unreadCount) return message;
-
-          if (message.messageId !== event.messageId) {
-            return message;
-          }
-
-          return {
-            ...message,
-            unreadCount: nextUnreadCount,
-          };
-        })
-      );
-    },
-    [currentUserId, loadMessages, room.roomId]
-  );
-
-  const handleTypingEvent = useCallback(
-    (event: TypingEvent) => {
-      if (!currentUserId || event.userId === currentUserId) return;
-
-      if (typingTimersRef.current[event.userId]) {
-        clearTimeout(typingTimersRef.current[event.userId]);
-        delete typingTimersRef.current[event.userId];
-      }
-
-      if (!event.isTyping) {
-        setTypingUsers((prev) => {
-          const next = { ...prev };
-          delete next[event.userId];
-          return next;
-        });
-        return;
-      }
-
-      setTypingUsers((prev) => ({
-        ...prev,
-        [event.userId]: event.nickname,
-      }));
-
-      typingTimersRef.current[event.userId] = setTimeout(() => {
-        setTypingUsers((prev) => {
-          const next = { ...prev };
-          delete next[event.userId];
-          return next;
-        });
-        delete typingTimersRef.current[event.userId];
-      }, 2500);
-    },
-    [currentUserId]
-  );
-
-  const { isConnected, sendMessage, sendRead, sendTyping } = useChatSocket({
-    roomId: room.roomId,
-    userId: currentUserId,
-    onMessage: handleSocketMessage,
-    onRead: handleReadEvent,
-    onTyping: handleTypingEvent,
+  const {
+    messages,
+    currentUserId,
+    currentUserNickname,
+    isLoading,
+    errorMessage,
+    typingMessage,
+    isConnected,
+    sendMessage,
+    sendTyping,
+  } = useChatRoomMessages({
+    room,
+    onReadRoom,
+    onRoomMessage,
   });
 
-  useEffect(() => {
-    sendReadRef.current = sendRead;
-  }, [sendRead]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadCurrentUser = async () => {
-      const user = await getMe();
-      if (!isMounted || !user) return;
-
-      setCurrentUserId(user.userId);
-      setCurrentUserNickname(user.nickname);
-    };
-
-    loadCurrentUser();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => {
-      void loadMessages(controller.signal);
-    }, 0);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
-    };
-  }, [loadMessages]);
-
-  useEffect(() => {
-    if (!isConnected) return;
-
-    sendRead();
-    onReadRoom?.(room.roomId);
-  }, [isConnected, onReadRoom, room.roomId, sendRead]);
-
-  useEffect(() => {
-    if (!isConnected || isLoading || messages.length === 0) return;
-
-    sendRead();
-    onReadRoom?.(room.roomId);
-  }, [isConnected, isLoading, messages.length, onReadRoom, room.roomId, sendRead]);
-
-  useEffect(() => {
-    const timers = typingTimersRef.current;
-
-    return () => {
-      Object.values(timers).forEach(clearTimeout);
-      typingTimersRef.current = {};
-    };
-  }, []);
-
-  const roomName = room.roomName ?? (room.type === "GROUP" ? "그룹 채팅" : "알 수 없는 상대");
-  const typingNames = Object.values(typingUsers);
-  const typingMessage =
-    typingNames.length === 1
-      ? `${typingNames[0]}님이 입력 중입니다.`
-      : typingNames.length > 1
-        ? `${typingNames[0]}님 외 ${typingNames.length - 1}명이 입력 중입니다.`
-        : "";
-  const memberIdSet = new Set(members.map((member) => member.userId));
-  const addableFriends = friends.filter((friend) => !memberIdSet.has(friend.friendId));
-
-  const loadMembers = async () => {
-    try {
-      setIsPanelLoading(true);
-      setPanelError("");
-      const data = await getChatRoomMembers(room.roomId);
-      setMembers(data);
-    } catch (error) {
-      setPanelError(error instanceof Error ? error.message : "멤버 목록을 불러오지 못했습니다.");
-    } finally {
-      setIsPanelLoading(false);
-    }
-  };
-
-  const openMembersPanel = () => {
-    setIsActionMenuOpen(false);
-    setPanelMode("members");
-    void loadMembers();
-  };
-
-  const openAddPanel = async () => {
-    setIsActionMenuOpen(false);
-    setPanelMode("add");
-    setSelectedFriendIds([]);
-
-    try {
-      setIsPanelLoading(true);
-      setPanelError("");
-      const [nextMembers, nextFriends] = await Promise.all([
-        getChatRoomMembers(room.roomId),
-        getFriends(),
-      ]);
-      setMembers(nextMembers);
-      setFriends(nextFriends);
-    } catch (error) {
-      setPanelError(error instanceof Error ? error.message : "친구 목록을 불러오지 못했습니다.");
-    } finally {
-      setIsPanelLoading(false);
-    }
-  };
-
-  const toggleFriend = (friendId: number) => {
-    setSelectedFriendIds((prev) =>
-      prev.includes(friendId)
-        ? prev.filter((id) => id !== friendId)
-        : [...prev, friendId]
-    );
-  };
-
-  const handleAddMembers = async () => {
-    if (!selectedFriendIds.length || isPanelProcessing) return;
-
-    try {
-      setIsPanelProcessing(true);
-      setPanelError("");
-      const nextRoom = await addChatRoomMembers(room.roomId, selectedFriendIds);
-      onRoomUpdated?.(nextRoom);
-      setSelectedFriendIds([]);
-      setPanelMode("members");
-      await loadMembers();
-    } catch (error) {
-      setPanelError(error instanceof Error ? error.message : "멤버를 추가하지 못했습니다.");
-    } finally {
-      setIsPanelProcessing(false);
-    }
-  };
-
-  const handleRenameRoom = async () => {
-    const nextName = draftRoomName.trim();
-    if (room.type !== "GROUP" || !nextName || nextName.length > 20 || isPanelProcessing) return;
-
-    try {
-      setIsPanelProcessing(true);
-      setPanelError("");
-      await renameChatRoom(room.roomId, nextName);
-      onRoomUpdated?.({ ...room, roomName: nextName });
-      setPanelMode("none");
-    } catch (error) {
-      setPanelError(error instanceof Error ? error.message : "채팅방 이름을 변경하지 못했습니다.");
-    } finally {
-      setIsPanelProcessing(false);
-    }
-  };
-
-  const openRenamePanel = () => {
-    setIsActionMenuOpen(false);
-    setDraftRoomName(room.roomName ?? "");
-    setPanelMode("rename");
-  };
+  const {
+    panelMode,
+    setPanelMode,
+    members,
+    selectedFriendIds,
+    draftRoomName,
+    setDraftRoomName,
+    panelError,
+    isPanelLoading,
+    isPanelProcessing,
+    isActionMenuOpen,
+    setIsActionMenuOpen,
+    addableFriends,
+    openMembersPanel,
+    openAddPanel,
+    toggleFriend,
+    handleAddMembers,
+    handleRenameRoom,
+    openRenamePanel,
+  } = useChatRoomMembersPanel({
+    room,
+    onRoomUpdated,
+  });
 
   const handleLeaveRoomClick = () => {
     setIsActionMenuOpen(false);
     onLeaveRoom?.(room);
   };
 
+  const roomName = room.roomName ?? (room.type === "GROUP" ? "그룹 채팅" : "알 수 없는 상대");
   return (
     <section
       aria-label={`${roomName} 채팅방`}

@@ -1,11 +1,5 @@
 ﻿import { api, type ApiResult, unwrapData } from "@/lib/api";
-import type {
-  ChatMessage,
-  ChatRoom,
-  ChatRoomMember,
-  ChatRoomType,
-  Friend,
-} from "../types/chat";
+import type { ChatMessage, ChatRoom, ChatRoomMember, ChatRoomType, Friend } from "../chat/types";
 
 type RawRecord = Record<string, unknown>;
 
@@ -103,9 +97,9 @@ const normalizeFriend = (item: unknown): Friend => {
   const record = asRecord(item);
 
   return {
-    friendId: getNumber(record, ["targetUserId", "friendUserId", "friendId", "userId", "id"]),
-    nickname: getString(record, ["nickname", "friendNickname", "name"], "알 수 없는 친구"),
-    profileImageUrl: getNullableString(record, ["profileImageUrl", "friendProfileImageUrl", "imageUrl"]),
+    friendId: getNumber(record, ["userId"]),
+    nickname: getString(record, ["nickname"], "알 수 없는 친구"),
+    profileImageUrl: getNullableString(record, ["profileImageUrl"]),
   };
 };
 
@@ -119,6 +113,7 @@ const normalizeChatRoomMember = (item: unknown): ChatRoomMember => {
   };
 };
 
+// 채팅방 목록 가져오기
 export const getChatRooms = async (signal?: AbortSignal): Promise<ChatRoom[]> => {
   const response = await api.get<ApiResult<unknown>>("/api/v1/chat/rooms", {
     params: { t: Date.now() },
@@ -218,6 +213,7 @@ export const renameChatRoom = async (
     }
   );
 };
+
 
 
 

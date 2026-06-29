@@ -1,7 +1,6 @@
-﻿"use client";
-
+﻿// 1:1 채팅 시작할 친구를 선택
 import { ArrowLeft } from "lucide-react";
-import type { Friend } from "../types/chat";
+import type { Friend } from "../types";
 
 type FriendSelectPanelProps = {
   friends: Friend[];

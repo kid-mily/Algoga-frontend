@@ -1,8 +1,7 @@
-﻿"use client";
-
+﻿// 그룹 채팅방을 만드는 화면
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import type { Friend } from "../types/chat";
+import type { Friend } from "../types";
 
 type GroupChatCreatePanelProps = {
   friends: Friend[];

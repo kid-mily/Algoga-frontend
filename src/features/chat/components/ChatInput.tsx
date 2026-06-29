@@ -1,5 +1,4 @@
-﻿"use client";
-
+﻿// 메시지 입력, 입력 중 이벤트 전송
 import { useEffect, useRef, useState } from "react";
 
 type ChatInputProps = {
@@ -10,23 +9,17 @@ type ChatInputProps = {
 
 export default function ChatInput({ disabled, onSend, onTypingChange }: ChatInputProps) {
   const [message, setMessage] = useState("");
-  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTypingRef = useRef(false);
 
-  const stopTyping = () => {
-    if (typingTimerRef.current) {
-      clearTimeout(typingTimerRef.current);
-      typingTimerRef.current = null;
-    }
+  const setTypingState = (isTyping: boolean) => {
+    if (isTypingRef.current === isTyping) return;
 
-    onTypingChange?.(false);
+    isTypingRef.current = isTyping;
+    onTypingChange?.(isTyping);
   };
 
   useEffect(() => {
     return () => {
-      if (typingTimerRef.current) {
-        clearTimeout(typingTimerRef.current);
-      }
-
       onTypingChange?.(false);
     };
   }, [onTypingChange]);
@@ -41,27 +34,12 @@ export default function ChatInput({ disabled, onSend, onTypingChange }: ChatInpu
     if (sent === false) return;
 
     setMessage("");
-    stopTyping();
+    setTypingState(false);
   };
 
   const handleMessageChange = (value: string) => {
     setMessage(value);
-
-    if (!value.trim()) {
-      stopTyping();
-      return;
-    }
-
-    onTypingChange?.(true);
-
-    if (typingTimerRef.current) {
-      clearTimeout(typingTimerRef.current);
-    }
-
-    typingTimerRef.current = setTimeout(() => {
-      onTypingChange?.(false);
-      typingTimerRef.current = null;
-    }, 1500);
+    setTypingState(Boolean(value.trim()));
   };
 
   return (
