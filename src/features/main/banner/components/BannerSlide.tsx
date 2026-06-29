@@ -1,37 +1,36 @@
 import Image from "next/image";
-import Link from "next/link";
-import type { Banner } from "../types";
+import { Banner } from "../types";
 
 interface BannerSlideProps {
   banner: Banner;
-  index: number;
   isActive: boolean;
+  isPriority: boolean;
 }
 
 export default function BannerSlide({
   banner,
-  index,
   isActive,
+  isPriority,
 }: BannerSlideProps) {
-  const bannerText = banner.text || "메인 배너";
-
   return (
-    <Link
+    <a
       href={banner.linkUrl || "/"}
+      className={`absolute inset-0 block transition-opacity duration-500 ${
+        isActive
+          ? "pointer-events-auto opacity-100"
+          : "pointer-events-none opacity-0"
+      }`}
       aria-hidden={!isActive}
       tabIndex={isActive ? 0 : -1}
-      className={`absolute inset-0 block transition-opacity duration-500 ${
-        isActive ? "opacity-100" : "pointer-events-none opacity-0"
-      }`}
     >
       <Image
         src={banner.imageUrl}
-        alt={bannerText}
+        alt={banner.text || "메인 배너"}
         fill
-        priority={index === 0}
+        priority={isPriority}
         sizes="(max-width: 768px) 100vw, 1152px"
         className="object-cover"
       />
-    </Link>
+    </a>
   );
 }

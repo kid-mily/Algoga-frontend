@@ -12,7 +12,7 @@ export default function ContinentTicketCard({ continent }: Props) {
     return (
         <Link
             href={`/classroom/${continent.continentCode}`.toLowerCase()}
-            className="group relative block overflow-hidden rounded-2xl border border-[#E1E8EF] bg-white shadow-[0_8px_24px_rgba(55,88,110,0.07)] transition hover:-translate-y-0.5 hover:border-[#B7DAD7]"
+            className="group relative block overflow-hidden rounded-2xl border border-[#E1E8EF] bg-white shadow-[0_8px_24px_rgba(55,88,110,0.07)] transition hover:-translate-y-0.5 hover:border-cyan-800"
             >
             <div className={`absolute left-0 top-0 h-full w-1 ${style.accent}`} />
 

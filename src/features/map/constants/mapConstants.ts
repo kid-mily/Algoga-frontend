@@ -1,8 +1,8 @@
 import L from "leaflet";
 
-export const intial_position: [number, number] = [30, 10];
+export const initial_position: [number, number] = [30, 10];
 
-export const intial_zoom = 2.3;
+export const initial_zoom = 2.3;
 
 export const map_bounds = L.latLngBounds([-85, -180], [85, 180]);
 

@@ -35,9 +35,12 @@ const normalizeUserProfile = (profile: UserProfileResponse | null): UserProfileR
   };
 };
 
-export const getMe = async (): Promise<UserProfileResponse | null> => {
+export const getMe = async (
+  signal?: AbortSignal
+): Promise<UserProfileResponse | null> => {
   try {
     const response = await api.get<UserMeResponse>("/api/v1/users/me", {
+      signal,
       suppressGlobalError: true,
     });
 
