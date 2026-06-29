@@ -8,7 +8,6 @@ type DeletedLectureTableProps = {
   children?: React.ReactNode;
 };
 
-
 export default function DeletedLectureTable({
   courses,
   totalCount,

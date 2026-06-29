@@ -2,33 +2,10 @@
 
 import Image from "next/image";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
-import { FormEvent, useRef, useState } from "react";
 import CompleteModal from "@/features/common/components/CompleteModal";
 import Modal from "@/features/common/components/Modal";
-import { ChapterFormProps } from "../types";
-
-const getVideoDurationSeconds = (file: File): Promise<number> => {
-  return new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const video = document.createElement("video");
-
-    video.preload = "metadata";
-    video.onloadedmetadata = () => {
-      URL.revokeObjectURL(objectUrl);
-      const duration = Math.floor(video.duration);
-      if (!duration || Number.isNaN(duration) || !Number.isFinite(duration)) {
-        reject(new Error("영상 길이를 확인할 수 없습니다."));
-        return;
-      }
-      resolve(duration);
-    };
-    video.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error("영상 정보를 불러오지 못했습니다."));
-    };
-    video.src = objectUrl;
-  });
-};
+import { useChapterForm } from "../hooks/useChapterForm";
+import type { ChapterFormProps } from "../types";
 
 export default function ChapterForm({
   mode = "create",
@@ -43,97 +20,22 @@ export default function ChapterForm({
   onClose,
   onSubmit,
 }: ChapterFormProps) {
-  const [title, setTitle] = useState(initialChapter.title);
-  const [description, setDescription] = useState(initialChapter.description);
-  const [duration, setDuration] = useState(initialChapter.duration);
-  const [video, setVideo] = useState<File | null>(initialChapter.video);
-  const [preview, setPreview] = useState(initialChapter.preview);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [openCompleteModal, setOpenCompleteModal] = useState(false);
-  const [openVideoDeleteModal, setOpenVideoDeleteModal] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState({ title: "", description: "", video: "" });
-  const [globalError, setGlobalError] = useState("");
-
+  const {
+    errors,
+    fileInputRef,
+    form,
+    hasVideo,
+    isSubmitting,
+    modalType,
+    submitError,
+    clearFieldError,
+    handleSubmit,
+    handleVideoRemove,
+    handleVideoUpload,
+    setModalType,
+    updateForm,
+  } = useChapterForm({ initialChapter, onSubmit });
   const isCreateMode = mode === "create";
-  const hasVideo = Boolean(video || preview);
-
-  const handleVideoUpload = async (file: File) => {
-    if (!file.type.startsWith("video/")) {
-      setErrors((prev) => ({ ...prev, video: "영상 파일만 업로드할 수 있습니다." }));
-      return;
-    }
-
-    if (preview.startsWith("blob:")) {
-      URL.revokeObjectURL(preview);
-    }
-
-    setVideo(file);
-    setPreview(URL.createObjectURL(file));
-
-    try {
-      const durationSeconds = await getVideoDurationSeconds(file);
-      setDuration(String(durationSeconds));
-      if (errors.video) setErrors((prev) => ({ ...prev, video: "" }));
-    } catch {
-      setErrors((prev) => ({ ...prev, video: "영상 길이를 확인할 수 없습니다." }));
-    }
-  };
-
-  const handleVideoRemove = () => {
-    if (preview.startsWith("blob:")) {
-      URL.revokeObjectURL(preview);
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-
-    setVideo(null);
-    setPreview("");
-    setDuration("");
-    setErrors((prev) => ({ ...prev, video: "" }));
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (isSubmitting) return;
-
-    let hasError = false;
-    const newErrors = { title: "", description: "", video: "" };
-
-    if (!title.trim()) {
-      newErrors.title = "챕터 제목을 입력해주세요.";
-      hasError = true;
-    }
-    if (!description.trim()) {
-      newErrors.description = "챕터 설명을 입력해주세요.";
-      hasError = true;
-    }
-    if (!video && !preview) {
-      newErrors.video = "강의 영상을 업로드해주세요.";
-      hasError = true;
-    }
-
-    if (hasError) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setIsSubmitting(true);
-    setGlobalError("");
-
-    try {
-      if (onSubmit) {
-        const isSuccess = await onSubmit({ title, description, duration, video });
-        if (isSuccess === false) return;
-      }
-      setOpenCompleteModal(true);
-    } catch (error) {
-      setGlobalError(error instanceof Error ? error.message : "챕터 저장에 실패했습니다.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <form
@@ -162,7 +64,7 @@ export default function ChapterForm({
         )}
       </header>
 
-      <AdminErrorBanner message={globalError} className="mt-4" />
+      <AdminErrorBanner message={submitError} className="mt-4" />
 
       <fieldset className="mt-6 space-y-4" disabled={isSubmitting}>
         <legend className="sr-only">챕터 정보 입력 영역</legend>
@@ -174,10 +76,10 @@ export default function ChapterForm({
           <input
             id="chapter-title"
             type="text"
-            value={title}
+            value={form.title}
             onChange={(event) => {
-              setTitle(event.target.value);
-              if (errors.title) setErrors((prev) => ({ ...prev, title: "" }));
+              updateForm("title", event.target.value);
+              clearFieldError("title");
             }}
             placeholder="챕터 제목 입력"
             aria-invalid={Boolean(errors.title)}
@@ -199,10 +101,10 @@ export default function ChapterForm({
           </label>
           <textarea
             id="chapter-description"
-            value={description}
+            value={form.description}
             onChange={(event) => {
-              setDescription(event.target.value);
-              if (errors.description) setErrors((prev) => ({ ...prev, description: "" }));
+              updateForm("description", event.target.value);
+              clearFieldError("description");
             }}
             placeholder="챕터 설명 입력"
             aria-invalid={Boolean(errors.description)}
@@ -229,13 +131,13 @@ export default function ChapterForm({
           >
             {hasVideo ? (
               <span className="flex flex-col items-center">
-                <video src={preview} controls className="h-[65px] rounded-[8px]" aria-label="챕터 영상 미리보기" />
+                <video src={form.preview} controls className="h-[65px] rounded-[8px]" aria-label="챕터 영상 미리보기" />
                 <span className="mt-2 max-w-[260px] truncate text-[12px] font-medium text-[#111827]">
-                  {video ? video.name : "기존 영상"}
+                  {form.video ? form.video.name : "기존 영상"}
                 </span>
                 <button
                   type="button"
-                  onClick={() => setOpenVideoDeleteModal(true)}
+                  onClick={() => setModalType("videoDelete")}
                   className="absolute right-3 top-3 flex h-[32px] w-[32px] items-center justify-center rounded-full border border-[#FCA5A5] bg-white shadow-sm transition hover:bg-[#FEF2F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#DC2626]"
                   aria-label="챕터 영상 삭제"
                 >
@@ -292,29 +194,28 @@ export default function ChapterForm({
       </footer>
 
       <CompleteModal
-        open={openCompleteModal}
+        open={modalType === "complete"}
         title={isCreateMode ? "등록 완료" : "수정 완료"}
         description={isCreateMode ? "챕터가 등록되었습니다." : "챕터가 수정되었습니다."}
         buttonText="확인"
         onConfirm={() => {
-          setOpenCompleteModal(false);
+          setModalType(null);
           if (isCreateMode) window.location.reload();
           else onClose?.();
         }}
       />
       <Modal
-        open={openVideoDeleteModal}
+        open={modalType === "videoDelete"}
         title="영상 삭제"
         description="선택한 영상을 삭제하시겠습니까?"
         confirmText="삭제"
         cancelText="취소"
-        onCancel={() => setOpenVideoDeleteModal(false)}
+        onCancel={() => setModalType(null)}
         onConfirm={() => {
           handleVideoRemove();
-          setOpenVideoDeleteModal(false);
+          setModalType(null);
         }}
       />
     </form>
   );
 }
-

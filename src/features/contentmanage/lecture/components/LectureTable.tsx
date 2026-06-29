@@ -1,10 +1,6 @@
 import LectureCard from "./LectureCard";
 import { LectureTableProps } from "../types";
-import {
-  formatPrice,
-  getIsPublic,
-  getLectureId,
-} from "../utils/lectureFormatters";
+import { formatPrice, getIsPublic, getLectureId } from "../utils/lectureFormatters";
 
 export default function LectureTable({
   lectures,

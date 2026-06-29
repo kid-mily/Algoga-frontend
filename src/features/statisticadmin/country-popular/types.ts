@@ -1,23 +1,23 @@
-export type CountryPopularityStat = {
+﻿export type CountryPopularityStat = {
   countryId: number;
   countryName: string;
-  viewCount: number;
+  countryCode: string;
+  signupCount: number;
   bookingCount: number;
-  revenueAmount: number;
-  popularityScore: number;
-  conversionRate: number;
+  revenue: number;
+  shareRate: number;
   rank: number;
 };
 
 export type CountryPopularitySummary = {
   totalCountryCount: number;
-  totalViewCount: number;
+  totalSignupCount: number;
   totalBookingCount: number;
-  totalRevenueAmount: number;
-  averageConversionRate: number;
+  totalRevenue: number;
+  averageShareRate: number;
 };
 
 export type CountryPopularityData = {
-  countries: CountryPopularityStat[];
-  topCountries: CountryPopularityStat[];
+  bookingTop10: CountryPopularityStat[];
+  revenueTop10: CountryPopularityStat[];
 };
