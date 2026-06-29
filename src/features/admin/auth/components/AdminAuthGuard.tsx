@@ -2,32 +2,28 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import {
-  clearAdminSessionActive,
-  getAdminSessionRole,
-  isAdminSessionActive,
-} from "@/features/admin/auth/adminSession";
+import { clearAdminSessionActive, getAdminSessionRole, isAdminSessionActive } from "@/features/admin/auth/services/adminSession";
 
 const PATH_ROLE_RULES = [
   {
     path: "/contentadmin",
-    roles: ["CONTENT_MANAGER", "ROLE_CONTENT_MANAGER", "SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: ["CONTENT_MANAGER", "SUPER_ADMIN"],
   },
   {
     path: "/csadmin",
-    roles: ["CS_MANAGER", "ROLE_CS_MANAGER", "SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: ["CS_MANAGER", "SUPER_ADMIN"],
   },
   {
     path: "/moneyadmin",
-    roles: ["SETTLEMENT_MANAGER", "ROLE_SETTLEMENT_MANAGER", "SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: ["SETTLEMENT_MANAGER", "SUPER_ADMIN"],
   },
   {
     path: "/statisticadmin",
-    roles: ["STATISTICS_MANAGER", "ROLE_STATISTICS_MANAGER", "SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: ["STATISTICS_MANAGER", "SUPER_ADMIN"],
   },
   {
     path: "/superadmin",
-    roles: ["SUPER_ADMIN", "ROLE_SUPER_ADMIN"],
+    roles: ["SUPER_ADMIN"],
   },
 ] as const;
 

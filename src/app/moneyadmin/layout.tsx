@@ -1,4 +1,4 @@
-import AdminAuthGuard from "@/features/admin/auth/AdminAuthGuard";
+import AdminAuthGuard from "@/features/admin/auth/components/AdminAuthGuard";
 import ContentHeader from "@/features/admin/common/ContentHeader";
 import MoneySidebar from "@/features/admin/common/MoneySidebar";
 

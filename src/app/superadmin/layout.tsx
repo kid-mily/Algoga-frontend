@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import AdminAuthGuard from "@/features/admin/auth/AdminAuthGuard";
+import AdminAuthGuard from "@/features/admin/auth/components/AdminAuthGuard";
 import SuperAdminSidebar from "@/features/admin/common/SuperAdminSidebar";
 import ContentHeader from "@/features/admin/common/ContentHeader";
 

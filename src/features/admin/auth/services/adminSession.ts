@@ -1,20 +1,10 @@
+import type { AdminDisplayInfo, AdminDisplayInfoInput } from "../types";
+
 const ADMIN_SESSION_KEY = "algoga-admin-session-active";
 const ADMIN_ROLE_KEY = "algoga-admin-role";
 const ADMIN_DISPLAY_INFO_KEY = "algoga-admin-display-info";
 
-type AdminDisplayInfoInput = {
-  loginId?: string;
-  name?: string;
-  email?: string;
-};
-
-export type AdminDisplayInfo = {
-  name: string;
-  email: string;
-  role: string;
-  roleLabel: string;
-  initial: string;
-};
+const canUseSessionStorage = () => typeof window !== "undefined";
 
 const roleLabels: Record<string, string> = {
   CONTENT_MANAGER: "콘텐츠 매니저",
@@ -39,8 +29,9 @@ const getInitial = (name: string) => {
 };
 
 export const markAdminSessionActive = (role?: string) => {
-  sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
+  if (!canUseSessionStorage()) return;
 
+  sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
   if (role) {
     sessionStorage.setItem(ADMIN_ROLE_KEY, normalizeRole(role));
   }
@@ -51,6 +42,8 @@ export const saveAdminDisplayInfo = (
   role: string,
   fallbackLoginId = "관리자"
 ) => {
+  if (!canUseSessionStorage()) return;
+
   const normalizedRole = normalizeRole(role);
   const name = admin.name?.trim() || admin.loginId?.trim() || fallbackLoginId;
   const email = admin.email?.trim() || admin.loginId?.trim() || fallbackLoginId;
@@ -66,20 +59,28 @@ export const saveAdminDisplayInfo = (
 };
 
 export const clearAdminSessionActive = () => {
+  if (!canUseSessionStorage()) return;
+
   sessionStorage.removeItem(ADMIN_SESSION_KEY);
   sessionStorage.removeItem(ADMIN_ROLE_KEY);
   sessionStorage.removeItem(ADMIN_DISPLAY_INFO_KEY);
 };
 
 export const isAdminSessionActive = () => {
+  if (!canUseSessionStorage()) return false;
+
   return sessionStorage.getItem(ADMIN_SESSION_KEY) === "true";
 };
 
 export const getAdminSessionRole = () => {
+  if (!canUseSessionStorage()) return null;
+
   return sessionStorage.getItem(ADMIN_ROLE_KEY);
 };
 
 export const getStoredAdminDisplayInfo = (): AdminDisplayInfo | null => {
+  if (!canUseSessionStorage()) return null;
+
   const rawInfo = sessionStorage.getItem(ADMIN_DISPLAY_INFO_KEY);
 
   if (!rawInfo) return null;

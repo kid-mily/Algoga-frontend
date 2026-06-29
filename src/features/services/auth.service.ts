@@ -38,7 +38,7 @@ export const login = async (user: LoginRequest): Promise<LoginResponse> => {
   );
 
   return normalizeLoginResponse(unwrapData<LoginResponse | null>(response));
-};
+}; // 응답 데이터 꺼내기
 
 // id 찾기 요청
 export const findId = async (

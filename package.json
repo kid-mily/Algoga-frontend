@@ -13,6 +13,7 @@
     "test:unit:watch": "jest --watch"
   },
   "dependencies": {
+    "@next/bundle-analyzer": "^16.2.9",
     "@portone/browser-sdk": "^0.1.8",
     "@stomp/stompjs": "^7.3.0",
     "@svgr/webpack": "^8.1.0",
