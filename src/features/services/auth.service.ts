@@ -1,4 +1,4 @@
-﻿import {
+import {
   FindIdRequest,
   FindIdResponse,
   FindPasswordRequest,
@@ -68,5 +68,8 @@ export const resetPassword = async (payload: ResetPasswordRequest) => {
 
 // 로그아웃 요청
 export const logout = async () => {
-  return api.post("/api/v1/auth/logout");
+  return api.post("/api/v1/auth/logout", undefined, {
+    skipAuth: true,
+    suppressGlobalError: true,
+  });
 };
