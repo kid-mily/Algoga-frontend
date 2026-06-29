@@ -24,6 +24,13 @@ export default function ChatWidget() {
     () => adminPathPrefixes.some((prefix) => pathname.startsWith(prefix)),
     [pathname]
   );
+
+  if (isAdminPage) return null;
+
+  return <ChatWidgetContent />;
+}
+
+function ChatWidgetContent() {
   const {
     isOpen,
     view,
@@ -49,9 +56,7 @@ export default function ChatWidget() {
     requestLeaveRoom,
     cancelLeaveRoom,
     handleLeaveRoom,
-  } = useChatWidget({ isAdminPage });
-
-  if (isAdminPage) return null; // 관리자 경로 채팅X
+  } = useChatWidget({ isAdminPage: false });
 
   return (
     <>
@@ -149,4 +154,3 @@ export default function ChatWidget() {
     </>
   );
 }
-
