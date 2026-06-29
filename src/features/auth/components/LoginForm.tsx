@@ -52,12 +52,14 @@ export default function LoginForm() {
     try {
       setIsLoading(true);
 
+      // login servicd 함수 호출
       const data = await login({
         username: username.trim(),
         password,
       });
 
       window.dispatchEvent(new Event("auth-state-changed"));
+      // 로그인 상태 변경되었으니 정보 다시 조회
 
       const normalizedUsername = username.trim();
       const pendingPasswordResetUsername = sessionStorage.getItem(
@@ -71,8 +73,8 @@ export default function LoginForm() {
         router.push("/auth/login/newpw");
         return;
       }
-
       router.push("/");
+      
     } catch {
       setUsernameError("아이디 또는 비밀번호가 틀렸습니다.");
       setPasswordError("아이디 또는 비밀번호가 틀렸습니다.");

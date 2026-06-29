@@ -1,114 +1,26 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-import {
-  markAdminSessionActive,
-  saveAdminDisplayInfo,
-} from "@/features/admin/auth/adminSession";
-import {
-  adminLogin,
-  getAdminLoginRole,
-  getAdminRedirectPathByRole,
-} from "@/features/services/adminAuth.service";
+import { useAdminLoginForm } from "@/features/admin/auth/hooks/useAdminLoginForm";
 
-const ADMIN_PATH_PREFIXES = [
-  "/contentadmin",
-  "/csadmin",
-  "/moneyadmin",
-  "/statisticadmin",
-  "/superadmin",
-];
-
-const getSafeNextPath = () => {
-  const rawNext = new URLSearchParams(window.location.search).get("next");
-
-  if (!rawNext) return null;
-
-  try {
-    const nextUrl = new URL(rawNext, window.location.origin);
-    const isInternal = nextUrl.origin === window.location.origin;
-    const isAdminPath = ADMIN_PATH_PREFIXES.some(
-      (path) => nextUrl.pathname === path || nextUrl.pathname.startsWith(`${path}/`)
-    );
-
-    if (!isInternal || !isAdminPath) return null;
-
-    return `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
-  } catch {
-    return null;
-  }
-};
 export default function AdminLoginForm() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [loginId, setLoginId] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginIdError, setLoginIdError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [serverError, setServerError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleLogin = async () => {
-    const trimmedLoginId = loginId.trim();
-    let hasError = false;
-
-    setServerError("");
-
-    if (!trimmedLoginId) {
-      setLoginIdError("관리자 아이디를 입력해주세요.");
-      hasError = true;
-    } else {
-      setLoginIdError("");
-    }
-
-    if (!password.trim()) {
-      setPasswordError("비밀번호를 입력해주세요.");
-      hasError = true;
-    } else {
-      setPasswordError("");
-    }
-
-    if (hasError) return;
-
-    try {
-      setIsLoading(true);
-
-      const admin = await adminLogin({
-        loginId: trimmedLoginId,
-        password,
-      });
-      const role = getAdminLoginRole(admin);
-
-      if (!role) {
-        throw new Error("관리자 역할 정보를 받지 못했습니다.");
-      }
-
-      markAdminSessionActive(role);
-      saveAdminDisplayInfo(admin, role, trimmedLoginId);
-      window.dispatchEvent(new Event("auth-state-changed"));
-      window.location.replace(
-        getSafeNextPath() ?? getAdminRedirectPathByRole(role)
-      );
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "관리자 로그인에 실패했습니다.";
-
-      setServerError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    showPassword,
+    setShowPassword,
+    loginId,
+    password,
+    loginIdError,
+    passwordError,
+    serverError,
+    isLoading,
+    handleLoginIdChange,
+    handlePasswordChange,
+    handleLogin,
+  } = useAdminLoginForm();
 
   return (
     <div className="w-[400px]">
-      <h1 className="text-[32px] font-bold text-[#111827]">
-        관리자 로그인
-      </h1>
-      <p className="mt-2 text-[15px] text-[#98A2B3]">
-        매니저 계정에 로그인하세요
-      </p>
       <form
-        className="mt-5"
         onSubmit={(e) => {
           e.preventDefault();
           handleLogin();
@@ -124,15 +36,7 @@ export default function AdminLoginForm() {
             value={loginId}
             disabled={isLoading}
             onChange={(e) => {
-              setLoginId(e.target.value);
-
-              if (loginIdError) {
-                setLoginIdError("");
-              }
-
-              if (serverError) {
-                setServerError("");
-              }
+              handleLoginIdChange(e.target.value);
             }}
             placeholder="아이디를 입력해주세요"
             autoComplete="username"
@@ -159,15 +63,7 @@ export default function AdminLoginForm() {
               value={password}
               disabled={isLoading}
               onChange={(e) => {
-                setPassword(e.target.value);
-
-                if (passwordError) {
-                  setPasswordError("");
-                }
-
-                if (serverError) {
-                  setServerError("");
-                }
+                handlePasswordChange(e.target.value);
               }}
               placeholder="비밀번호를 입력해주세요"
               autoComplete="current-password"

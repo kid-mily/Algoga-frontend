@@ -1,18 +1,6 @@
 import { getCookie } from "./cookie";
+import { AdminTokenPayload } from "@/features/admin/auth/types";
 
-export type AdminTokenPayload = {
-  sub?: string;
-  name?: string;
-  email?: string;
-  loginId?: string;
-  username?: string;
-  role?: string;
-  type?: string;
-  authority?: string;
-  authorities?: string[] | string;
-  id?: number;
-  exp?: number;
-};
 
 export const decodeJwtPayload = (token: string): AdminTokenPayload | null => {
   try {
@@ -63,13 +51,8 @@ export const hasAdminRole = (
   payload: AdminTokenPayload | null,
   roles: string[]
 ) => {
-  const normalizedRoles = roles.flatMap((role) => [
-    role,
-    role.startsWith("ROLE_") ? role.replace("ROLE_", "") : `ROLE_${role}`,
-  ]);
-
   return getAdminRoleCandidates(payload).some((candidate) =>
-    normalizedRoles.includes(candidate)
+    roles.includes(candidate)
   );
 };
 
@@ -87,20 +70,24 @@ export const getCurrentAdminPayload = () => {
   return payload;
 };
 
-export const getAdminRedirectPath = (token: string) => {
-  const payload = decodeJwtPayload(token);
-
-  if (hasAdminRole(payload, ["SUPER_ADMIN"])) {
+export const getAdminRedirectPathByRole = (role: string) => {
+  if (role === "SUPER_ADMIN") {
     return "/superadmin/manage";
   }
-
-  if (hasAdminRole(payload, ["CS_MANAGER"])) {
+  if (role === "CS_MANAGER") {
     return "/csadmin/inquiry";
   }
-
-  if (hasAdminRole(payload, ["SETTLEMENT_MANAGER"])) {
+  if (role === "SETTLEMENT_MANAGER") {
     return "/moneyadmin/payments";
   }
-
+  if (role === "STATISTICS_MANAGER") {
+    return "/statisticadmin/reservation-conversion";
+  }
   return "/contentadmin/lecture";
+};
+
+export const getAdminRedirectPath = (token: string) => {
+  const payload = decodeJwtPayload(token);
+  const role = getAdminRoleCandidates(payload)[0] ?? "";
+  return getAdminRedirectPathByRole(role);
 };

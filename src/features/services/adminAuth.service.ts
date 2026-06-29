@@ -1,10 +1,7 @@
 import { adminApi, api, ApiResult, unwrapData } from "@/lib/api";
-import {
-  AdminLoginRequest,
-  AdminLoginResponse,
-  AdminRole,
-} from "@/features/admin/auth/types";
-import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
+import { AdminLoginRequest, AdminLoginResponse, AdminRole } from "@/features/admin/auth/types";
+import { clearAdminSessionActive } from "@/features/admin/auth/services/adminSession";
+export { getAdminRedirectPathByRole } from "@/lib/adminToken";
 
 const normalizeRole = (role: AdminRole | undefined) => {
   return role?.replace(/^ROLE_/, "").toUpperCase() ?? "";
@@ -26,26 +23,6 @@ export const getAdminLoginRole = (admin: AdminLoginResponse) => {
       firstRole(admin.roles) ??
       admin.type
   );
-};
-
-export const getAdminRedirectPathByRole = (role: string) => {
-  if (role === "SUPER_ADMIN") {
-    return "/superadmin/manage";
-  }
-
-  if (role === "CS_MANAGER") {
-    return "/csadmin/inquiry";
-  }
-
-  if (role === "SETTLEMENT_MANAGER") {
-    return "/moneyadmin/payments";
-  }
-
-  if (role === "STATISTICS_MANAGER") {
-    return "/statisticadmin/reservation-conversion";
-  }
-
-  return "/contentadmin/lecture";
 };
 
 export const adminLogin = async (

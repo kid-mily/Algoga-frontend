@@ -1,11 +1,7 @@
-"use client";
-
+//사이드바에 보여줄 관리자 이름, 이메일, 역할명을 계산
 import { getCurrentAdminPayload, getAdminRoleCandidates } from "@/lib/adminToken";
-import {
-  AdminDisplayInfo,
-  getAdminRoleLabel,
-  getStoredAdminDisplayInfo,
-} from "./adminSession";
+import { getAdminRoleLabel, getStoredAdminDisplayInfo } from "./adminSession";
+import type { AdminDisplayInfo } from "../types";
 
 const normalizeRole = (role?: string | null) => {
   return role?.replace(/^ROLE_/, "").toUpperCase() || "";

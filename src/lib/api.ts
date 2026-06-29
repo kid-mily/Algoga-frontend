@@ -1,7 +1,5 @@
-import { clearAdminSessionActive } from "@/features/admin/auth/adminSession";
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
-
+import { clearAdminSessionActive } from "@/features/admin/auth/services/adminSession";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const USER_LOGIN_PATH = "/auth/login";
 const ADMIN_LOGIN_PATH = "/auth/adminlogin";
 
@@ -19,7 +17,6 @@ export const unwrapData = <T>(response: ApiResult<T>): T => {
   if (response && typeof response === "object" && "data" in response) {
     return (response as ApiResponse<T>).data;
   }
-
   return response as T;
 };
 
