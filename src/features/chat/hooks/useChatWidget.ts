@@ -1,22 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { getMe } from "@/features/services/user.service";
-import { createDirectChatRoom, createGroupChatRoom, getChatRooms, getFriends, leaveChatRoom} from "../../services/chat.service";
+import { createDirectChatRoom, createGroupChatRoom, getChatRooms, getFriends, leaveChatRoom } from "../../services/chat.service";
+import { getTotalUnreadCount, sortRoomsByRecentMessage } from "../utils";
 import { useChatNotificationSocket } from "./useChatNotificationSocket";
 import type { ChatMessage, ChatPanelView, ChatRoom, Friend, RoomNotification } from "../types";
 
 const chatUnreadCountEventName = "chat-unread-count-changed";
-
-const getRoomSortTime = (room: ChatRoom) => {
-  const value = room.lastMessageAt;
-  if (!value) return 0;
-
-  const time = new Date(value).getTime();
-  return Number.isNaN(time) ? 0 : time;
-};
-
-const sortRoomsByRecentMessage = (rooms: ChatRoom[]) => {
-  return [...rooms].sort((a, b) => getRoomSortTime(b) - getRoomSortTime(a));
-};
 
 type UseChatWidgetOptions = {
   isAdminPage: boolean;
@@ -146,10 +135,7 @@ export const useChatWidget = ({ isAdminPage }: UseChatWidgetOptions) => {
   }, [isAdminPage]);
 
   useEffect(() => {
-    const totalUnreadCount = rooms.reduce(
-      (total, room) => total + (room.unreadCount ?? 0),
-      0
-    );
+    const totalUnreadCount = getTotalUnreadCount(rooms);
 
     window.dispatchEvent(
       new CustomEvent(chatUnreadCountEventName, { detail: totalUnreadCount })
