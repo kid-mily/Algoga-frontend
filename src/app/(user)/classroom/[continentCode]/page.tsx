@@ -4,7 +4,9 @@ import CountrySelectSection from "@/features/classroom/components/CountrySelectS
 import type { Country } from "@/features/classroom/components/types";
 import { getCountries } from "@/features/services/countrySelect.service";
 
-const ALLOWED_CONTINENTS = new Set([
+export const revalidate = 600;
+
+const ALLOWED_CONTINENTS = [
   "ASIA",
   "EUROPE",
   "NORTH_AMERICA",
@@ -12,7 +14,15 @@ const ALLOWED_CONTINENTS = new Set([
   "AFRICA",
   "OCEANIA",
   "ANTARCTICA",
-]);
+] as const;
+
+const ALLOWED_CONTINENT_SET = new Set<string>(ALLOWED_CONTINENTS)
+
+export function generateStaticParams() {
+  return ALLOWED_CONTINENTS.map((continentCode) => ({
+    continentCode: continentCode.toLowerCase(),
+  }));
+}
 
 interface CountrySelectPageProps {
   params: Promise<{
@@ -28,7 +38,7 @@ export default async function CountrySelectPage({
 
   if (
     !normalizedContinentCode ||
-    !ALLOWED_CONTINENTS.has(normalizedContinentCode)
+    !ALLOWED_CONTINENT_SET.has(normalizedContinentCode)
   ) {
     notFound();
   }
@@ -45,14 +55,15 @@ export default async function CountrySelectPage({
   }
 
   return (
-    <main className="min-h-screen w-full bg-[#f5f6f8] p-10">
-      <section className="mx-auto w-full max-w-3xl px-4">
+    <main className="min-h-screen w-full bg-[#F3F8FC] px-4 pb-14 pt-6 sm:px-6 lg:px-10">
+      <section className="mx-auto w-full max-w-4xl">
         <CountrySelectHeader />
 
-        <section className="w-full">
+        <section className="mt-6">
           <CountrySelectSection
             countries={countries}
             errorMessage={errorMessage}
+            continentCode={normalizedContinentCode}
           />
         </section>
       </section>

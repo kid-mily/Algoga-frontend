@@ -2,6 +2,9 @@
 import { getCourseDetail } from "@/features/services/lectureDetail.service";
 import SingleLecturePaymentClient from "@/features/payment/SingleLecturePaymentClient";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface PageProps {
   params: Promise<{
     continentCode: string;
@@ -12,21 +15,13 @@ interface PageProps {
 
 export default async function SingleLecturePaymentPage({ params }: PageProps) {
   const { continentCode, countryid, courseId } = await params;
-
   const numericCourseId = Number(courseId);
 
   if (!countryid || !Number.isInteger(numericCourseId) || numericCourseId <= 0) {
     notFound();
   }
 
-  let course = null;
-
-  try {
-    course = await getCourseDetail(countryid, numericCourseId);
-  } catch (error) {
-    console.error("[single-payment-page] 강의 상세 조회 실패:", error);
-    notFound();
-  }
+  const course = await getCourseDetail(countryid, numericCourseId);
 
   if (!course) {
     notFound();

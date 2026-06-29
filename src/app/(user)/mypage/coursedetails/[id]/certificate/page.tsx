@@ -44,7 +44,7 @@ export default function CertificateCompletionPage() {
 
   return (
     <main className="min-h-[calc(100vh-64px)] bg-[#F5F7FA] px-4 py-6">
-      <div className="mx-auto w-full max-w-3xl">
+      <div className="mx-auto w-full max-w-4xl">
         <SubHeader
           backHref="/mypage/coursedetails"
           backText="수강 강좌로 돌아가기"

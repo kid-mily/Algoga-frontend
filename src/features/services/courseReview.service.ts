@@ -1,4 +1,5 @@
 import { api, ApiResponse } from "@/lib/api";
+import { CLASSROOM_REVALIDATE_SECONDS } from "../classroom/constants/classroomCache";
 
 export interface CourseReview {
   reviewId: number;
@@ -48,57 +49,62 @@ interface CourseReviewResponse {
   updatedAt: string;
 }
 
-const getReviewNickname = (review: CourseReviewResponse) => {
-  return (
-    review.nickname?.trim() ||
-    review.userNickname?.trim() ||
-    review.writerNickname?.trim() ||
-    review.reviewerNickname?.trim() ||
-    review.userName?.trim() ||
-    review.name?.trim() ||
-    "익명"
-  );
-};
+const getReviewNickname = (review: CourseReviewResponse) =>
+  review.nickname?.trim() ||
+  review.userNickname?.trim() ||
+  review.writerNickname?.trim() ||
+  review.reviewerNickname?.trim() ||
+  review.userName?.trim() ||
+  review.name?.trim() ||
+  "익명";
 
-const normalizeCourseReview = (
-  review: CourseReviewResponse
-): CourseReview => {
-  return {
-    reviewId: review.reviewId,
-    courseId: review.courseId,
-    userId: review.userId,
-    nickname: getReviewNickname(review),
-    rating: review.rating,
-    content: review.content,
-    createdAt: review.createdAt,
-    updatedAt: review.updatedAt,
-  };
-};
+const normalizeCourseReview = (review: CourseReviewResponse): CourseReview => ({
+  reviewId: review.reviewId,
+  courseId: review.courseId,
+  userId: review.userId,
+  nickname: getReviewNickname(review),
+  rating: review.rating,
+  content: review.content,
+  createdAt: review.createdAt,
+  updatedAt: review.updatedAt,
+});
 
 export const getCourseReviews = async (
   courseId: string | number
 ): Promise<CourseReview[]> => {
-  const response = await api.get<ApiResponse<CourseReviewResponse[]>>(
-    `/api/v1/courses/${courseId}/reviews`,
-    {
-      suppressGlobalError: true,
-    }
-  );
+  try {
+    const response = await api.get<ApiResponse<CourseReviewResponse[]>>(
+      `/api/v1/courses/${courseId}/reviews`,
+      {
+        next: { revalidate: CLASSROOM_REVALIDATE_SECONDS },
+        suppressGlobalError: true,
+      }
+    );
 
-  return (response.data ?? []).map(normalizeCourseReview);
+    return (response.data ?? []).map(normalizeCourseReview);
+  } catch (error) {
+    console.error("[review] 후기 목록 조회 실패:", error);
+    return [];
+  }
 };
 
 export const getCourseReviewSummary = async (
   courseId: string | number
-): Promise<CourseReviewSummary> => {
-  const response = await api.get<ApiResponse<CourseReviewSummary>>(
-    `/api/v1/courses/${courseId}/reviews/summary`,
-    {
-      suppressGlobalError: true,
-    }
-  );
+): Promise<CourseReviewSummary | null> => {
+  try {
+    const response = await api.get<ApiResponse<CourseReviewSummary>>(
+      `/api/v1/courses/${courseId}/reviews/summary`,
+      {
+        next: { revalidate: CLASSROOM_REVALIDATE_SECONDS },
+        suppressGlobalError: true,
+      }
+    );
 
-  return response.data;
+    return response.data ?? null;
+  } catch (error) {
+    console.error("[review] 후기 요약 조회 실패:", error);
+    return null;
+  }
 };
 
 export const createCourseReview = async (

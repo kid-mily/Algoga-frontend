@@ -6,6 +6,8 @@ import {
 } from "@/features/services/courseReview.service";
 import { getCourseDetail } from "@/features/services/lectureDetail.service";
 
+export const revalidate = 1800;
+
 interface ReviewPageProps {
   params: Promise<{
     countryid: string;
@@ -32,39 +34,26 @@ const EMPTY_REVIEW_SUMMARY = {
 export default async function ReviewPage({ params }: ReviewPageProps) {
   const { countryid, courseId } = await params;
 
-  let course: Awaited<ReturnType<typeof getCourseDetail>> | null = null;
-
-  try {
-    course = await getCourseDetail(countryid, courseId);
-  } catch (error) {
-    console.error("[review-page] 강의 상세 조회 실패:", error);
-    notFound();
-  }
+  const [course, reviews, summary] = await Promise.all([
+    getCourseDetail(countryid, courseId),
+    getCourseReviews(courseId),
+    getCourseReviewSummary(courseId),
+  ]);
 
   if (!course) {
     notFound();
   }
 
-  const [reviews, summary] = await Promise.all([
-    getCourseReviews(courseId).catch((error) => {
-      console.error("[review-page] 후기 목록 조회 실패:", error);
-      return [];
-    }),
-    getCourseReviewSummary(courseId).catch((error) => {
-      console.error("[review-page] 후기 요약 조회 실패:", error);
-
-      return {
-        ...EMPTY_REVIEW_SUMMARY,
-        courseId: Number(courseId) || 0,
-      };
-    }),
-  ]);
-
   return (
     <CourseReviewsClient
       courseTitle={course.title}
       initialReviews={reviews}
-      initialSummary={summary}
+      initialSummary={
+        summary ?? {
+          ...EMPTY_REVIEW_SUMMARY,
+          courseId: Number(courseId) || 0,
+        }
+      }
     />
   );
 }

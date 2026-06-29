@@ -1,5 +1,5 @@
 import LectureCard from "./LectureCard";
-import { CourseItem } from "./types";
+import type { CourseItem } from "./types";
 
 interface Props {
   lectures?: CourseItem[];
@@ -14,20 +14,21 @@ export default function LectureGrid({
 }: Props) {
   if (lectures.length === 0) {
     return (
-      <p className="rounded-2xl bg-white p-10 text-center text-sm text-gray-500">
+      <div className="rounded-2xl border border-[#E3E8F0] bg-white p-10 text-center text-sm text-[#8A94A6]">
         등록된 강의가 없습니다.
-      </p>
+      </div>
     );
   }
 
   return (
-    <ul className="grid grid-cols-3 gap-5">
-      {lectures.map((lecture) => (
+    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {lectures.map((lecture, index) => (
         <li key={lecture.courseId} className="h-full">
           <LectureCard
             lecture={lecture}
             continentCode={continentCode}
             countryId={countryId}
+            priority={index < 3}
           />
         </li>
       ))}

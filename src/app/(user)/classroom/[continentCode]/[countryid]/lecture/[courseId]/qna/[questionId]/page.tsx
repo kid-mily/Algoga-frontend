@@ -3,6 +3,9 @@ import QnaDetailContent from "@/features/classroom/qna/components/QnaDetailConte
 import QnaLayout from "@/features/classroom/qna/components/QnaLayout";
 import { getCourseQnaDetail } from "@/features/services/userQna.service";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface QnaDetailPageProps {
   params: Promise<{
     continentCode: string;
@@ -15,25 +18,13 @@ interface QnaDetailPageProps {
 export default async function QnaDetailPage({
   params,
 }: QnaDetailPageProps) {
-  const {
-    continentCode,
-    countryid,
-    courseId,
-    questionId,
-  } = await params;
+  const { continentCode, countryid, courseId, questionId } = await params;
 
-  const qna = await getCourseQnaDetail(
-      courseId,
-      questionId
-    ).catch((error: unknown) => {
-    console.error("[course-qna] 상세 조회 실패", {
-      courseId,
-      questionId,
-      error,
-    });
+  const qna = await getCourseQnaDetail(courseId, questionId);
 
+  if (!qna) {
     notFound();
-  });
+  }
 
   return (
     <QnaLayout
@@ -41,7 +32,7 @@ export default async function QnaDetailPage({
       countryid={countryid}
       courseId={courseId}
       title="강의 Q&A"
-      description="질문 내용과 답변을 확인하세요."
+      description="질문 내용과 답변을 확인해 보세요."
     >
       <QnaDetailContent
         qna={qna}
