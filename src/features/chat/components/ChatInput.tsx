@@ -1,5 +1,6 @@
-﻿// 메시지 입력, 입력 중 이벤트 전송
+// 메시지 입력, 입력 중 이벤트 전송
 import { useEffect, useRef, useState } from "react";
+import { isBlankMessage, isValidChatMessage } from "../utils";
 
 type ChatInputProps = {
   disabled?: boolean;
@@ -28,7 +29,7 @@ export default function ChatInput({ disabled, onSend, onTypingChange }: ChatInpu
     event.preventDefault();
 
     const nextMessage = message.trim();
-    if (!nextMessage) return;
+    if (!isValidChatMessage(nextMessage)) return;
 
     const sent = onSend(nextMessage);
     if (sent === false) return;
@@ -39,7 +40,7 @@ export default function ChatInput({ disabled, onSend, onTypingChange }: ChatInpu
 
   const handleMessageChange = (value: string) => {
     setMessage(value);
-    setTypingState(Boolean(value.trim()));
+    setTypingState(!isBlankMessage(value));
   };
 
   return (
@@ -58,7 +59,7 @@ export default function ChatInput({ disabled, onSend, onTypingChange }: ChatInpu
       />
       <button
         type="submit"
-        disabled={disabled || !message.trim()}
+        disabled={disabled || isBlankMessage(message)}
         className="h-11 w-16 rounded-[14px] bg-[#439A97] text-[14px] font-semibold text-white transition hover:bg-[#367c79] disabled:bg-[#D0D5DD]"
       >
         전송
