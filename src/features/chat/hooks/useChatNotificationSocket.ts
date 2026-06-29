@@ -1,6 +1,8 @@
+// 채팅방 목록/ 실시간 알림 담당
+
 import { useEffect, useRef, useState } from "react";
 import { Client, type IMessage } from "@stomp/stompjs";
-import type { RoomNotification } from "../types/chat";
+import type { RoomNotification } from "../types";
 
 type UseChatNotificationSocketOptions = {
   userId?: number;

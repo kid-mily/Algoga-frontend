@@ -1,7 +1,6 @@
-﻿"use client";
-
+﻿// 메시지 목록 렌더링
 import { useLayoutEffect, useRef } from "react";
-import type { ChatMessage, ChatRoomType } from "../types/chat";
+import type { ChatMessage, ChatRoomType } from "../types";
 
 type ChatMessageListProps = {
   messages: ChatMessage[];
@@ -32,7 +31,6 @@ const MessageAvatar = ({
 }) => {
   if (imageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={imageUrl}
         alt=""

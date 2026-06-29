@@ -1,7 +1,8 @@
-﻿import { useCallback, useEffect, useRef, useState } from "react";
+﻿// 특정 채팅방 웹소켓 연결 담당
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Client, type IMessage } from "@stomp/stompjs";
-import { normalizeChatMessage } from "../services/chatService";
-import type { ChatMessage, ReadEvent, TypingEvent } from "../types/chat";
+import { normalizeChatMessage } from "../../services/chat.service";
+import type { ChatMessage, ReadEvent, TypingEvent } from "../types";
 
 type UseChatSocketOptions = {
   roomId?: number;
@@ -9,10 +10,6 @@ type UseChatSocketOptions = {
   onMessage?: (message: ChatMessage) => void;
   onRead?: (event: ReadEvent) => void;
   onTyping?: (event: TypingEvent) => void;
-};
-
-type SocketEnvelope = {
-  data?: unknown;
 };
 
 type RawRecord = Record<string, unknown>;
@@ -44,45 +41,15 @@ const parseBody = (message: IMessage): unknown => {
   }
 };
 
-const unwrapBody = (body: unknown) => {
-  if (body && typeof body === "object" && "data" in body) {
-    return (body as SocketEnvelope).data;
-  }
-
-  return body;
-};
-
-const getNestedRecord = (record: RawRecord, keys: string[]) => {
-  const value = keys
-    .map((key) => record[key])
-    .find((item) => item !== undefined && item !== null);
-
-  return value && typeof value === "object" ? (value as RawRecord) : record;
-};
-
+// 채팅 읽었는지 확인
 const parseReadEvent = (body: unknown, fallbackRoomId?: number): ReadEvent | null => {
-  const unwrappedBody = unwrapBody(body);
-  if (!unwrappedBody || typeof unwrappedBody !== "object") return null;
+  if (!body || typeof body !== "object") return null;
 
-  const record = getNestedRecord(unwrappedBody as RawRecord, [
-    "read",
-    "readEvent",
-    "payload",
-    "message",
-    "body",
-  ]);
-  const roomId = getNumber(record, ["roomId", "chatRoomId", "id"], fallbackRoomId ?? 0);
-  const readerId = getNumber(record, [
-    "readerId",
-    "userId",
-    "memberId",
-    "readerUserId",
-    "readUserId",
-    "readByUserId",
-    "readMemberId",
-  ]);
-  const messageId = getNumber(record, ["messageId", "chatMessageId"]);
-  const unreadCount = getNumber(record, ["unreadCount", "remainingUnreadCount"], -1);
+  const record = body as RawRecord;
+  const roomId = getNumber(record, ["roomId"], fallbackRoomId ?? 0);
+  const readerId = getNumber(record, ["readerId"]);
+  const messageId = getNumber(record, ["messageId"]);
+  const unreadCount = getNumber(record, ["unreadCount"], -1);
 
   if (roomId <= 0 || (readerId <= 0 && messageId <= 0)) return null;
 
@@ -95,19 +62,12 @@ const parseReadEvent = (body: unknown, fallbackRoomId?: number): ReadEvent | nul
 };
 
 const parseTypingEvent = (body: unknown): TypingEvent | null => {
-  const unwrappedBody = unwrapBody(body);
-  if (!unwrappedBody || typeof unwrappedBody !== "object") return null;
+  if (!body || typeof body !== "object") return null;
 
-  const record = getNestedRecord(unwrappedBody as RawRecord, [
-    "typing",
-    "typingEvent",
-    "payload",
-    "message",
-    "body",
-  ]);
-  const userId = getNumber(record, ["userId", "senderId", "memberId"]);
-  const nicknameValue = record.nickname ?? record.senderNickname ?? record.name;
-  const isTypingValue = record.isTyping ?? record.typing;
+  const record = body as RawRecord;
+  const userId = getNumber(record, ["userId"]);
+  const nicknameValue = record.nickname;
+  const isTypingValue = record.isTyping;
 
   if (userId <= 0 || typeof nicknameValue !== "string") return null;
 
@@ -138,6 +98,7 @@ export const useChatSocket = ({
     });
   }, [roomId]);
 
+  // 메시지 전송 담당
   const sendMessage = useCallback(
     (content: string) => {
       const client = clientRef.current;
@@ -181,7 +142,7 @@ export const useChatSocket = ({
         setIsConnected(true);
 
         client.subscribe(`/topic/chat/rooms/${roomId}`, (message) => {
-          const rawMessage = unwrapBody(parseBody(message));
+          const rawMessage = parseBody(message);
           if (!rawMessage || typeof rawMessage !== "object") return;
 
           const parsedMessage = normalizeChatMessage({
@@ -242,6 +203,7 @@ export const useChatSocket = ({
     sendTyping,
   };
 };
+
 
 
 
