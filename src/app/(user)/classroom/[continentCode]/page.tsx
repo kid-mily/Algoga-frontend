@@ -1,10 +1,11 @@
+﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CountrySelectHeader from "@/features/classroom/components/CountrySelectHeader";
 import CountrySelectSection from "@/features/classroom/components/CountrySelectSection";
 import type { Country } from "@/features/classroom/components/types";
 import { getCountries } from "@/features/services/countrySelect.service";
 
-export const revalidate = 600;
+export const revalidate = 3600;
 
 const ALLOWED_CONTINENTS = [
   "ASIA",
@@ -16,7 +17,40 @@ const ALLOWED_CONTINENTS = [
   "ANTARCTICA",
 ] as const;
 
-const ALLOWED_CONTINENT_SET = new Set<string>(ALLOWED_CONTINENTS)
+const CONTINENT_NAMES: Record<string, string> = {
+  ASIA: "아시아",
+  EUROPE: "유럽",
+  NORTH_AMERICA: "북아메리카",
+  SOUTH_AMERICA: "남아메리카",
+  AFRICA: "아프리카",
+  OCEANIA: "오세아니아",
+  ANTARCTICA: "남극",
+};
+
+const ALLOWED_CONTINENT_SET = new Set<string>(ALLOWED_CONTINENTS);
+
+type CountrySelectPageProps = {
+  params: Promise<{
+    continentCode: string;
+  }>;
+};
+
+const normalizeContinentCode = (continentCode?: string) => {
+  const normalizedContinentCode = continentCode?.trim().toUpperCase();
+
+  if (
+    !normalizedContinentCode ||
+    !ALLOWED_CONTINENT_SET.has(normalizedContinentCode)
+  ) {
+    return null;
+  }
+
+  return normalizedContinentCode;
+};
+
+const getContinentName = (continentCode: string) => {
+  return CONTINENT_NAMES[continentCode] ?? continentCode;
+};
 
 export function generateStaticParams() {
   return ALLOWED_CONTINENTS.map((continentCode) => ({
@@ -24,22 +58,39 @@ export function generateStaticParams() {
   }));
 }
 
-interface CountrySelectPageProps {
-  params: Promise<{
-    continentCode: string;
-  }>;
+export async function generateMetadata({
+  params,
+}: CountrySelectPageProps): Promise<Metadata> {
+  const { continentCode } = await params;
+  const normalizedContinentCode = normalizeContinentCode(continentCode);
+
+  if (!normalizedContinentCode) {
+    return {
+      title: "강의실 | 알고가",
+      description: "국가별 여행 강의를 선택하고 학습을 시작하세요.",
+    };
+  }
+
+  const continentName = getContinentName(normalizedContinentCode);
+
+  return {
+    title: `${continentName} 강의실 | 알고가`,
+    description: `${continentName} 국가별 여행 강의를 선택하고 학습을 시작하세요.`,
+    openGraph: {
+      title: `${continentName} 강의실 | 알고가`,
+      description: `${continentName} 국가별 여행 강의를 선택하고 학습을 시작하세요.`,
+      type: "website",
+    },
+  };
 }
 
 export default async function CountrySelectPage({
   params,
 }: CountrySelectPageProps) {
   const { continentCode } = await params;
-  const normalizedContinentCode = continentCode?.trim().toUpperCase();
+  const normalizedContinentCode = normalizeContinentCode(continentCode);
 
-  if (
-    !normalizedContinentCode ||
-    !ALLOWED_CONTINENT_SET.has(normalizedContinentCode)
-  ) {
+  if (!normalizedContinentCode) {
     notFound();
   }
 
@@ -50,7 +101,6 @@ export default async function CountrySelectPage({
     countries = await getCountries(normalizedContinentCode);
   } catch (error) {
     console.error("[country-select] 국가 목록 조회 실패:", error);
-    countries = [];
     errorMessage = "국가 데이터를 불러오지 못했습니다.";
   }
 
