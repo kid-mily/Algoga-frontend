@@ -40,9 +40,7 @@ export default function StudyVideoPlayer({
               onTimeUpdate={(event) => {
                 void reportProgress(event.currentTarget.currentTime);
               }}
-              onEnded={(event) =>
-                handleVideoEnded(event.currentTarget.currentTime)
-              }
+              onEnded={(event) => handleVideoEnded(event.currentTarget.currentTime)}
             />
 
             <div className="pointer-events-none absolute left-4 top-4 rounded-full bg-[#439A97]/90 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-sm">

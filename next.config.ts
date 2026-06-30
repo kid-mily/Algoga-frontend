@@ -43,6 +43,21 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  // /public/data 아래 정적 파일을 30알 동안 브라우저에 캐시
+  async headers() {
+    return [
+      {
+        source: "/data/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=2592000",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);

@@ -1,5 +1,4 @@
 ﻿import type { Metadata } from "next";
-import GlobalErrorModal from "@/features/common/components/ErrorModal";
 import ChatWidget from "@/features/chat/components/ChatWidget";
 import "./globals.css";
 
