@@ -1,10 +1,9 @@
 name: Deploy Next.js to Ubuntu Server
 
-# develop 브랜치에 코드가 push 되거나 merge 될 때 동작합니다.
+# Vercel preview를 사용하므로 develop push 시 자동 SSH 배포는 비활성화합니다.
+# 필요한 경우 GitHub Actions 화면에서 수동으로 실행합니다.
 on:
-  push:
-    branches:
-      - develop
+  workflow_dispatch:
 
 jobs:
   deploy:
