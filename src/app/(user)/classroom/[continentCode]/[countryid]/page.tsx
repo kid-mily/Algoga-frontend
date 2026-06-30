@@ -1,7 +1,8 @@
-import LectureGrid from "@/features/classroom/components/LectureGrid";
+﻿import LectureGrid from "@/features/classroom/components/LectureGrid";
 import LecturePageHeader from "@/features/classroom/components/LecturePageHeader";
 import EvaluationBanner from "@/features/classroom/components/EvaluationBanner";
 import type { Country, CourseItem } from "@/features/classroom/components/types";
+import { createCourseListJsonLd } from "@/features/seo/schema";
 import { getCountries } from "@/features/services/countrySelect.service";
 import { getCourses } from "@/features/services/lectureSelect.service";
 
@@ -42,49 +43,67 @@ export default async function LectureListPage({
   );
 
   const countryName = selectedCountry?.countryName ?? "선택한 국가";
+  const courseListJsonLd = lectures.length
+    ? createCourseListJsonLd({
+        courses: lectures,
+        continentCode: normalizedContinentCode,
+        countryId: countryid,
+      })
+    : null;
 
   return (
-    <main className="min-h-screen w-full bg-[#F3F8FC] px-4 pb-14 pt-6 sm:px-6 lg:px-10">
-      <section className="mx-auto w-full max-w-4xl">
-        <LecturePageHeader
-          continentCode={normalizedContinentCode}
-          countryName={countryName}
+    <>
+      {courseListJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(courseListJsonLd),
+          }}
         />
+      )}
 
-        <div className="mt-6">
-          <EvaluationBanner
+      <main className="min-h-screen w-full bg-[#F3F8FC] px-4 pb-14 pt-6 sm:px-6 lg:px-10">
+        <section className="mx-auto w-full max-w-4xl">
+          <LecturePageHeader
             continentCode={normalizedContinentCode}
-            countryId={countryid}
+            countryName={countryName}
           />
-        </div>
 
-        <section aria-labelledby="lecture-list-title" className="mt-8">
-          <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <h2
-                id="lecture-list-title"
-                className="mt-1 text-2xl font-bold text-[#0A1628]"
-              >
-                {countryName} 강의 목록
-              </h2>
-
-              <p className="mt-1 text-sm text-[#8A94A6]">
-                여행 전 필요한 표현과 상황별 학습 콘텐츠를 확인해 보세요.
-              </p>
-            </div>
-
-            <div className="rounded-full border border-[#DDE8EF] bg-white px-4 py-2 text-sm font-bold text-[#718096]">
-              총 {lectures.length}개 강의
-            </div>
+          <div className="mt-6">
+            <EvaluationBanner
+              continentCode={normalizedContinentCode}
+              countryId={countryid}
+            />
           </div>
 
-          <LectureGrid
-            lectures={lectures}
-            continentCode={normalizedContinentCode}
-            countryId={countryid}
-          />
+          <section aria-labelledby="lecture-list-title" className="mt-8">
+            <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <h2
+                  id="lecture-list-title"
+                  className="mt-1 text-2xl font-bold text-[#0A1628]"
+                >
+                  {countryName} 강의 목록
+                </h2>
+
+                <p className="mt-1 text-sm text-[#8A94A6]">
+                  여행 전 필요한 표현과 상황별 학습 콘텐츠를 확인해 보세요.
+                </p>
+              </div>
+
+              <div className="rounded-full border border-[#DDE8EF] bg-white px-4 py-2 text-sm font-bold text-[#718096]">
+                총 {lectures.length}개 강의
+              </div>
+            </div>
+
+            <LectureGrid
+              lectures={lectures}
+              continentCode={normalizedContinentCode}
+              countryId={countryid}
+            />
+          </section>
         </section>
-      </section>
-    </main>
+      </main>
+    </>
   );
 }
