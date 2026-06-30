@@ -1,16 +1,26 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "@/features/services/auth.service";
+import { deleteCookie } from "@/lib/cookie";
 
 type Props = {
   user: {
     nickname: string;
     profileImageUrl?: string | null;
   } | null;
+};
+
+const clearUserAuthClientState = () => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+
+  deleteCookie("accessToken");
+  deleteCookie("refreshToken");
+  deleteCookie("Authorization");
 };
 
 const getProfileImageSrc = (profileImageUrl?: string | null) => {
@@ -63,6 +73,7 @@ export default function Profile({ user }: Props) {
     } catch (error) {
       console.error("로그아웃 API 호출 실패:", error);
     } finally {
+      clearUserAuthClientState();
       setIsOpen(false);
 
       window.dispatchEvent(

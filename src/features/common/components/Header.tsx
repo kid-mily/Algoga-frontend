@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -60,12 +60,24 @@ export default function Header() {
       });
     };
 
+    const handleAuthStateChanged = (event: Event) => {
+      const authEvent = event as CustomEvent<{ isLoggedIn?: boolean }>;
+
+      if (authEvent.detail?.isLoggedIn === false) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      void fetchUser();
+    };
+
     fetchUser();
-    window.addEventListener("auth-state-changed", fetchUser);
+    window.addEventListener("auth-state-changed", handleAuthStateChanged);
     window.addEventListener("profile-updated", handleProfileUpdated);
 
     return () => {
-      window.removeEventListener("auth-state-changed", fetchUser);
+      window.removeEventListener("auth-state-changed", handleAuthStateChanged);
       window.removeEventListener("profile-updated", handleProfileUpdated);
     };
   }, []);
