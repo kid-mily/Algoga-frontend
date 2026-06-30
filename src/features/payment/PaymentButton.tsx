@@ -1,5 +1,3 @@
-import { getCountryTicketStyle } from "@/features/classroom/components/countryTicketStyle";
-
 interface Props {
     finalAmount: number;
     isPaying: boolean;
@@ -13,10 +11,7 @@ export function PaymentButtons({
     isPaying,
     onBack,
     onPay,
-    continentCode,
-}: Props) {
-    const style = getCountryTicketStyle(continentCode);
-
+    }: Props) {
     return (
         <div className="grid gap-3 sm:grid-cols-[112px_1fr]">
         <button
@@ -31,7 +26,7 @@ export function PaymentButtons({
             type="button"
             disabled={isPaying}
             onClick={onPay}
-            className={`h-14 rounded-2xl px-5 text-sm font-bold text-white cursor-pointer ${style.accent}`}
+            className="h-14 cursor-pointer rounded-2xl bg-[#439A97] px-5 text-sm font-bold text-white transition hover:bg-[#357F7C] disabled:cursor-not-allowed disabled:bg-[#A8C8C6]"
         >
             {isPaying
             ? "결제 처리 중..."
