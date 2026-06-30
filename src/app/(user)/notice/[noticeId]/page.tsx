@@ -1,6 +1,5 @@
-// 공지사항 상세 조회
-
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import NoticeDetailCard from "@/features/notice/components/NoticeDetailCard";
 import NoticeNavigationCard from "@/features/notice/components/NoticeNavigationCard";
@@ -39,10 +38,10 @@ export default async function NoticeDetailPage({
       <section className="mx-auto w-full max-w-4xl">
         <Link
           href="/notice?tag=ALL&page=1"
-          className="mb-7 inline-flex text-sm font-semibold text-[#439A97] transition hover:text-[#62B6B7]"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#439A97] transition hover:text-[#357F7C]"
         >
-          
-          ← 목록으로
+          <ArrowLeft size={16} />
+          목록으로
         </Link>
 
         <NoticeDetailCard notice={notice} />
