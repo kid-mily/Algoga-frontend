@@ -61,8 +61,7 @@ export default function CourseLearningSidebar({
     };
 
     return (
-        <aside className="flex min-h-[calc(100dvh-64px)] w-[280px] shrink-0 flex-col border-r border-[#E6ECF2] bg-white">
-        {/* 강의 정보 헤더 */}
+    <aside className="flex w-full shrink-0 flex-col border-b border-[#E6ECF2] bg-white xl:min-h-[calc(100dvh-64px)] xl:w-[300px] xl:border-b-0 xl:border-r">        {/* 강의 정보 헤더 */}
         <header className="shrink-0 bg-[#EFF6FF] px-4 pb-5 pt-4">
             <Link href={lectureHref} className="text-xs font-semibold text-[#6B9DCC]">
             &lt; 클래스룸으로
