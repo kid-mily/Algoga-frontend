@@ -1,9 +1,10 @@
-import { notFound } from "next/navigation";
+﻿import { notFound } from "next/navigation";
 import Image from "next/image";
 import SubHeader from "@/features/common/components/SubHeader";
 import LectureActionCard from "@/features/classroom/components/LectureActionCard";
 import LectureAttachments from "@/features/classroom/components/LectureAttachments";
 import LectureReviews from "@/features/classroom/components/LectureReviews";
+import { createCourseJsonLd } from "@/features/seo/schema";
 import {
   getCourseDetail,
   getCourseReviewSummary,
@@ -106,92 +107,117 @@ export default async function LectureDetailPage({
     notFound();
   }
 
-  return (
-    <main className="min-h-screen w-full bg-[#F3F8FC] px-4 pb-14 pt-6 sm:px-6 lg:px-10">
-      <section className="mx-auto w-full max-w-5xl space-y-6">
-        <SubHeader
-          backHref={`/classroom/${normalizedContinentCode}/${countryid}`}
-          backText="강의 목록으로 돌아가기"
-          title=""
-          description=""
-        />
+  const safeReviewSummary = reviewSummary ?? {
+    ...EMPTY_REVIEW_SUMMARY,
+    courseId: Number(courseId) || 0,
+  };
 
-        <section className="relative overflow-hidden rounded-[28px] border border-[#E1E8EF] bg-white shadow-[0_12px_32px_rgba(55,88,110,0.08)]">
-          <div
-            className={`absolute left-0 top-0 h-full w-1.5 ${style.accent}`}
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://algoga.kro.kr";
+
+  // 리치스니펫
+  const jsonLd = createCourseJsonLd({
+    title: course.title,
+    description: course.description,
+    url: `${siteUrl}/classroom/${normalizedContinentCode.toLowerCase()}/${countryid}/lecture/${courseId}`,
+    price: course.price,
+    averageRating: safeReviewSummary.averageRating,
+    reviewCount: safeReviewSummary.totalReviewCount,
+  });
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{__html: JSON.stringify(jsonLd),}}
+      />
+
+      <main className="min-h-screen w-full bg-[#F3F8FC] px-4 pb-14 pt-6 sm:px-6 lg:px-10">
+        <section className="mx-auto w-full max-w-5xl space-y-6">
+          <SubHeader
+            backHref={`/classroom/${normalizedContinentCode}/${countryid}`}
+            backText="강의 목록으로 돌아가기"
+            title=""
+            description=""
           />
 
-          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_340px]">
-            <div className="px-6 py-6 pl-8">
-              <p
-                className={`text-sm font-semibold tracking-[0.16em] ${style.text}`}
-              >
-                COURSE TICKET
-              </p>
+          <section className="relative overflow-hidden rounded-[28px] border border-[#E1E8EF] bg-white shadow-[0_12px_32px_rgba(55,88,110,0.08)]">
+            <div
+              className={`absolute left-0 top-0 h-full w-1.5 ${style.accent}`}
+            />
 
-              <h1 className="mt-2 text-2xl font-bold leading-snug text-[#0A1628]">
-                {course.title}
-              </h1>
-
-              <p className="mt-3 text-sm leading-6 text-[#718096]">
-                {course.description}
-              </p>
-
-              <div className="mt-6 border-t border-dashed border-[#D6E0E8] pt-4">
-                <p className="text-[10px] font-bold tracking-[0.18em] text-[#A0AEC0]">
-                  TRAVEL CLASSROOM
+            <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_340px]">
+              <div className="px-6 py-6 pl-8">
+                <p
+                  className={`text-sm font-semibold tracking-[0.16em] ${style.text}`}
+                >
+                  COURSE TICKET
                 </p>
-                <p className="mt-1 text-sm font-medium text-[#718096]">
-                  강의 상세를 확인하고 결제 또는 학습을 이어가세요.
+
+                <h1 className="mt-2 text-2xl font-bold leading-snug text-[#0A1628]">
+                  {course.title}
+                </h1>
+
+                <p className="mt-3 text-sm leading-6 text-[#718096]">
+                  {course.description}
                 </p>
+
+                <div className="mt-6 border-t border-dashed border-[#D6E0E8] pt-4">
+                  <p className="text-[10px] font-bold tracking-[0.18em] text-[#A0AEC0]">
+                    TRAVEL CLASSROOM
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-[#718096]">
+                    강의 상세를 확인하고 결제 또는 학습을 이어가세요.
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative min-h-[220px] border-t border-dashed border-[#D6E0E8] bg-[#FAFCFE] lg:border-l lg:border-t-0">
+                <span className="absolute -left-3 top-1/2 hidden h-6 w-6 -translate-y-1/2 rounded-full border border-[#E1E8EF] bg-[#F3F8FC] lg:block" />
+
+                {course.thumbnailUrl ? (
+                  <Image
+                    src={course.thumbnailUrl}
+                    alt={course.title}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 340px"
+                    quality={75}
+                    className="object-cover"
+                  />
+                ) : (
+                  <div
+                    className={`flex h-full min-h-[220px] items-center justify-center ${style.soft}`}
+                  >
+                    <span className={`text-sm font-bold ${style.text}`}>
+                      COURSE
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
+          </section>
 
-            <div className="relative min-h-[220px] border-t border-dashed border-[#D6E0E8] bg-[#FAFCFE] lg:border-l lg:border-t-0">
-              <span className="absolute -left-3 top-1/2 hidden h-6 w-6 -translate-y-1/2 rounded-full border border-[#E1E8EF] bg-[#F3F8FC] lg:block" />
+          <LectureActionCard
+            course={course}
+            continentCode={normalizedContinentCode}
+            countryId={countryid}
+            courseId={courseId}
+          />
 
-              {course.thumbnailUrl ? (
-                <Image
-                  src={course.thumbnailUrl}
-                  alt={course.title}
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 340px"
-                  quality={75}
-                  className="object-cover"
-                />
-              ) : (
-                <div
-                  className={`flex h-full min-h-[220px] items-center justify-center ${style.soft}`}
-                >
-                  <span className={`text-sm font-bold ${style.text}`}>
-                    COURSE
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+          <LectureAttachments
+            courseId={courseId}
+            fileUrls={course.fileUrls ?? []}
+          />
+
+          <LectureReviews
+            summary={safeReviewSummary}
+            continentCode={normalizedContinentCode}
+            countryId={countryid}
+            courseId={courseId}
+          />
         </section>
-
-        <LectureActionCard
-          course={course}
-          continentCode={normalizedContinentCode}
-          countryId={countryid}
-          courseId={courseId}
-        />
-
-        <LectureAttachments
-          courseId={courseId}
-          fileUrls={course.fileUrls ?? []}
-        />
-
-        <LectureReviews
-          summary={reviewSummary}
-          continentCode={normalizedContinentCode}
-          countryId={countryid}
-          courseId={courseId}
-        />
-      </section>
-    </main>
+      </main>
+    </>
   );
 }
+
