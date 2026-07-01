@@ -54,7 +54,7 @@ export async function generateMetadata({
       locale: "ko_KR",
       images: [
         {
-          url: "/images/og-image.png",
+          url: "/images/og-image-v2.png",
           width: 1100,
           height: 740,
           alt: `${countryName} ALGOGA 강의 목록`,
@@ -65,7 +65,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: `${title} | ALGOGA`,
       description,
-      images: ["/images/og-image.png"],
+      images: ["/images/og-image-v2.png"],
       creator: "@ALGOGA",
     },
   };

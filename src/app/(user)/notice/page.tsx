@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     url: "/notice",
     images: [
       {
-        url: "/images/og-image.png",
+        url: "/images/og-image-v2.png",
         width: 1100,
         height: 740,
         alt: "ALGOGA 공지사항",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "공지사항 | ALGOGA",
     description: "ALGOGA의 새로운 소식과 공지사항을 확인하세요.",
-    images: ["/images/og-image.png"],
+    images: ["/images/og-image-v2.png"],
   },
 };
 
