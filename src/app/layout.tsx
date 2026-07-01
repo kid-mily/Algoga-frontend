@@ -1,25 +1,38 @@
 ﻿import type { Metadata } from "next";
 import ChatWidget from "@/features/chat/components/ChatWidget";
+import { getSiteUrl } from "@/features/seo/site";
 import "./globals.css";
 
-const title = "여행을 떠나기 전, 제대로 알고 가자! ALGOGA"
-const description = "여행지를 직접 선택하고, 그 나라의 문화·역사·언어를 강의로 배운 뒤 퀴즈로 확인하고, 항공권과 숙소까지 한 번에 예약할 수 있는 여행 학습 통합 플랫폼입니다.";
+const SITE_URL = getSiteUrl();
+
+const title = "여행을 떠나기 전, 제대로 알고 가자! ALGOGA";
+const description =
+  "여행지를 직접 선택하고, 그 나라의 문화·역사·언어를 강의로 배운 뒤 퀴즈로 확인하고, 항공권과 숙소까지 한 번에 예약할 수 있는 여행 학습 통합 플랫폼입니다.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://algoga.kro.kr'),
+  metadataBase: new URL(SITE_URL),
 
   title: {
     default: "ALGOGA",
-    template: "%s | ALGOGA"
+    template: "%s | ALGOGA",
   },
 
   description,
 
-  // 카톡, 슬랙, 페이스북 등 링크 공유 시 뜨는 미리보기 카드
-    openGraph: {
+  keywords: [
+    "알고가",
+    "ALGOGA",
+    "여행 LMS",
+    "여행 강의",
+    "국가별 강의",
+    "AI 여행 일정",
+  ],
+
+  openGraph: {
     type: "website",
     title,
     description,
+    url: SITE_URL,
     siteName: "ALGOGA",
     locale: "ko_KR",
     images: [
@@ -32,14 +45,13 @@ export const metadata: Metadata = {
     ],
   },
 
-  // 트위터
   twitter: {
     card: "summary_large_image",
     title,
     description,
     images: ["/images/og-image.png"],
     creator: "@ALGOGA",
-  }
+  },
 };
 
 export default function RootLayout({

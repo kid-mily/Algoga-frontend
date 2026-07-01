@@ -1,6 +1,6 @@
 ﻿// 강의 상세 페이지
 
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import SubHeader from "@/features/common/components/SubHeader";
@@ -8,7 +8,11 @@ import LectureActionCard from "@/features/classroom/components/LectureActionCard
 import LectureAttachments from "@/features/classroom/components/LectureAttachments";
 import LectureReviews from "@/features/classroom/components/LectureReviews";
 import { createCourseJsonLd } from "@/features/seo/schema";
-import { getCourseDetail, getCourseReviewSummary } from "@/features/services/lectureDetail.service";
+import { getSiteUrl } from "@/features/seo/site";
+import {
+  getCourseDetail,
+  getCourseReviewSummary,
+} from "@/features/services/lectureDetail.service";
 
 export const revalidate = 600;
 
@@ -20,7 +24,8 @@ interface LectureDetailPageProps {
   }>;
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://algoga.kro.kr";
+const SITE_URL = getSiteUrl();
+
 const DEFAULT_DESCRIPTION =
   "알고가에서 국가별 여행 강의를 확인하고 여행 전 필요한 표현과 상황별 학습을 시작하세요.";
 
@@ -104,6 +109,7 @@ const normalizeDescription = (description?: string) => {
     : trimmedDescription;
 };
 
+// 메타데이터
 export async function generateMetadata({
   params,
 }: LectureDetailPageProps): Promise<Metadata> {
@@ -111,39 +117,63 @@ export async function generateMetadata({
   const normalizedContinentCode = continentCode.trim().toLowerCase();
   const canonicalUrl = `${SITE_URL}/classroom/${normalizedContinentCode}/${countryid}/lecture/${courseId}`;
 
-  const course = await getCourseDetail(countryid, courseId);
+  try {
+    const course = await getCourseDetail(countryid, courseId);
 
-  if (!course) {
+    if (!course) {
+      return {
+        title: "강의 상세",
+        description: DEFAULT_DESCRIPTION,
+        alternates: {
+          canonical: canonicalUrl,
+        },
+        openGraph: {
+          title: "강의 상세 | ALGOGA",
+          description: DEFAULT_DESCRIPTION,
+          url: canonicalUrl,
+          type: "website",
+        },
+      };
+    }
+
+    const description = normalizeDescription(course.description);
+
+    return {
+      title: course.title,
+      description,
+      alternates: {
+        canonical: canonicalUrl,
+      },
+      openGraph: {
+        title: `${course.title} | ALGOGA`,
+        description,
+        url: canonicalUrl,
+        type: "website",
+        images: course.thumbnailUrl
+          ? [
+              {
+                url: course.thumbnailUrl,
+                alt: course.title,
+              },
+            ]
+          : undefined,
+      },
+    };
+  } catch {
     return {
       title: "강의 상세",
       description: DEFAULT_DESCRIPTION,
+      alternates: {
+        canonical: canonicalUrl,
+      },
       openGraph: {
         title: "강의 상세 | ALGOGA",
         description: DEFAULT_DESCRIPTION,
         url: canonicalUrl,
+        type: "website",
       },
     };
   }
-
-  const description = normalizeDescription(course.description);
-
-  return {
-    title: course.title,
-    description,
-    openGraph: {
-      title: `${course.title} | ALGOGA`,
-      description,
-      url: canonicalUrl,
-      images: course.thumbnailUrl
-        ? [
-            {
-              url: course.thumbnailUrl,
-              alt: course.title,
-            },
-          ]
-        : undefined,
-    },
-  };
 }
 
 export default async function LectureDetailPage({

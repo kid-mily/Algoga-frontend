@@ -1,4 +1,6 @@
-﻿const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://algoga.kro.kr";
+import { getSiteUrl } from "./site";
+
+const SITE_URL = getSiteUrl();
 
 type CourseJsonLdInput = {
   title: string;
