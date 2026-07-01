@@ -33,20 +33,25 @@ export async function generateMetadata({
     );
 
     countryName = selectedCountry?.countryName ?? countryName;
-  } catch {
+  } catch (error) {
+    console.error("[lecture-list:metadata] 국가 정보 조회 실패:", error);
     countryName = "국가별";
   }
 
   const title = `${countryName} 강의 목록`;
   const description = `${countryName} 여행 전 필요한 표현과 상황별 학습 콘텐츠를 확인해 보세요.`;
+  const pagePath = `/classroom/${normalizedContinentCode.toLowerCase()}/${countryid}`;
 
   return {
     title,
     description,
     openGraph: {
+      type: "website",
       title: `${title} | ALGOGA`,
       description,
-      url: `/classroom/${continentCode}/${countryid}`,
+      url: pagePath,
+      siteName: "ALGOGA",
+      locale: "ko_KR",
       images: [
         {
           url: "/images/og-image.png",
@@ -61,6 +66,7 @@ export async function generateMetadata({
       title: `${title} | ALGOGA`,
       description,
       images: ["/images/og-image.png"],
+      creator: "@ALGOGA",
     },
   };
 }
