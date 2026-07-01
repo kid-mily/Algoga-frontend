@@ -1,4 +1,6 @@
-﻿import type { Metadata } from "next";
+﻿// 대륙별 국가 선택 페이지
+
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CountrySelectHeader from "@/features/classroom/components/CountrySelectHeader";
 import CountrySelectSection from "@/features/classroom/components/CountrySelectSection";
@@ -66,20 +68,21 @@ export async function generateMetadata({
 
   if (!normalizedContinentCode) {
     return {
-      title: "강의실 | 알고가",
+      title: "강의실",
       description: "국가별 여행 강의를 선택하고 학습을 시작하세요.",
     };
   }
 
   const continentName = getContinentName(normalizedContinentCode);
+  const description = `${continentName} 국가별 여행 강의를 선택하고 학습을 시작하세요.`;
 
   return {
-    title: `${continentName} 강의실 | 알고가`,
-    description: `${continentName} 국가별 여행 강의를 선택하고 학습을 시작하세요.`,
+    title: `${continentName} 강의실`,
+    description,
     openGraph: {
-      title: `${continentName} 강의실 | 알고가`,
-      description: `${continentName} 국가별 여행 강의를 선택하고 학습을 시작하세요.`,
-      type: "website",
+      title: `${continentName} 강의실 | ALGOGA`,
+      description,
+      url: `/classroom/${continentCode.trim().toLowerCase()}`,
     },
   };
 }

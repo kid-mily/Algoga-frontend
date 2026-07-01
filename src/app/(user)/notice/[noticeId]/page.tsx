@@ -3,10 +3,60 @@ import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import NoticeDetailCard from "@/features/notice/components/NoticeDetailCard";
 import NoticeNavigationCard from "@/features/notice/components/NoticeNavigationCard";
-import {
-  getNoticeDetail,
-  getNoticeNavigation,
-} from "@/features/services/notice.service";
+import { getNoticeDetail, getNoticeNavigation } from "@/features/services/notice.service";
+import { Metadata } from "next";
+
+
+export async function generateMetadata({
+  params,
+}: NoticeDetailPageProps): Promise<Metadata> {
+  const { noticeId } = await params;
+  const parsedNoticeId = Number(noticeId);
+
+  if (!Number.isInteger(parsedNoticeId) || parsedNoticeId <= 0) {
+    return {
+      title: "공지사항",
+      description: "ALGOGA의 새로운 소식과 공지사항을 확인하세요.",
+    };
+  }
+
+  const notice = await getNoticeDetail(parsedNoticeId);
+
+  if (!notice) {
+    return {
+      title: "공지사항",
+      description: "ALGOGA의 새로운 소식과 공지사항을 확인하세요.",
+    };
+  }
+
+  const description =
+    notice.content?.replace(/<[^>]*>/g, "").slice(0, 150) ||
+    "ALGOGA 공지사항을 확인하세요.";
+
+  return {
+    title: notice.title,
+    description,
+    openGraph: {
+      title: `${notice.title} | ALGOGA`,
+      description,
+      url: `/notice/${noticeId}`,
+      images: [
+        {
+          url: "/images/og-image.png",
+          width: 1100,
+          height: 740,
+          alt: notice.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${notice.title} | ALGOGA`,
+      description,
+      images: ["/images/og-image.png"],
+    },
+  };
+}
 
 interface NoticeDetailPageProps {
   params: Promise<{

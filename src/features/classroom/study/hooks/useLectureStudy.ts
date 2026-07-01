@@ -15,6 +15,10 @@ import type {
   CourseStudyDetail,
 } from "../types";
 
+const SAVE_INTERVAL_SECONDS = 5;
+const REFRESH_RETRY_COUNT = 3;
+const REFRESH_RETRY_DELAY_MS = 500;
+
 const wait = (ms: number) =>
   new Promise((resolve) => {
     window.setTimeout(resolve, ms);
@@ -64,71 +68,96 @@ export function useLectureStudy(courseId: string) {
     return previousChapter ? isChapterCompleted(previousChapter) : false;
   };
 
-  const selectChapter = (chapter: CourseStudyChapter) => {
+  const selectChapter = useCallback((chapter: CourseStudyChapter) => {
     setSelectedChapter(chapter);
     setIsPlaying(false);
+
     selectedChapterRef.current = chapter;
     lastReportedSecondsRef.current = chapter.watchedSeconds ?? 0;
     latestWatchedSecondsRef.current = chapter.watchedSeconds ?? 0;
-  };
+  }, []);
 
   useEffect(() => {
     selectedChapterRef.current = selectedChapter;
   }, [selectedChapter]);
 
-  const refreshCourseAfterProgress = async (progress: ChapterProgress) => {
+  const applyProgress = useCallback(
+    (chapterId: number, progress: ChapterProgress) => {
+      setCourse((previousCourse) => {
+        if (!previousCourse) return previousCourse;
+
+        return {
+          ...previousCourse,
+          courseProgressRate:
+            typeof progress.courseProgressRate === "number"
+              ? progress.courseProgressRate
+              : previousCourse.courseProgressRate,
+          quizAvailable:
+            typeof progress.quizAvailable === "boolean"
+              ? progress.quizAvailable
+              : previousCourse.quizAvailable,
+          chapters: previousCourse.chapters.map((chapter) => {
+            if (chapter.chapterId !== chapterId) return chapter;
+
+            return {
+              ...chapter,
+              watchedSeconds: progress.watchedSeconds,
+              progressRate: progress.progressRate,
+              completed: progress.completed,
+            };
+          }),
+        };
+      });
+
+      setSelectedChapter((previousChapter) => {
+        if (!previousChapter || previousChapter.chapterId !== chapterId) {
+          return previousChapter;
+        }
+
+        return {
+          ...previousChapter,
+          watchedSeconds: progress.watchedSeconds,
+          progressRate: progress.progressRate,
+          completed: progress.completed,
+        };
+      });
+    },
+    []
+  );
+
+  const refreshCourse = useCallback(async () => {
     const { course: refreshedCourse } = await loadLectureStudy(courseId);
-
     const refreshedChapters = sortChapters(refreshedCourse.chapters ?? []);
-    const mergedChapters = refreshedChapters.map((chapter) => {
-      if (chapter.chapterId !== progress.chapterId) return chapter;
 
-      return {
-        ...chapter,
-        watchedSeconds: progress.watchedSeconds,
-        progressRate: progress.progressRate,
-        completed: progress.completed,
+    setCourse(refreshedCourse);
+
+    return refreshedChapters;
+  }, [courseId]);
+
+  const moveToNextChapterAfterCompleted = useCallback(
+    async (currentChapterId: number, progress: ChapterProgress) => {
+      const nextChapterId = progress.nextChapterId ?? null;
+
+      const findNextChapter = (chapterList: CourseStudyChapter[]) => {
+        if (nextChapterId) {
+          return (
+            chapterList.find((chapter) => chapter.chapterId === nextChapterId) ??
+            null
+          );
+        }
+
+        const currentIndex = chapterList.findIndex(
+          (chapter) => chapter.chapterId === currentChapterId
+        );
+
+        if (currentIndex < 0) return null;
+
+        return chapterList[currentIndex + 1] ?? null;
       };
-    });
 
-    const nextCourse: CourseStudyDetail = {
-      ...refreshedCourse,
-      courseProgressRate:
-        typeof progress.courseProgressRate === "number"
-          ? progress.courseProgressRate
-          : refreshedCourse.courseProgressRate,
-      quizAvailable:
-        typeof progress.quizAvailable === "boolean"
-          ? progress.quizAvailable
-          : refreshedCourse.quizAvailable,
-      chapters: mergedChapters,
-    };
+      const optimisticNextChapter = findNextChapter(chapters);
 
-    setCourse(nextCourse);
-
-    return {
-      course: nextCourse,
-      chapters: mergedChapters,
-    };
-  };
-
-  const findNextChapterFromCurrentState = (chapterId: number) => {
-    const currentIndex = chapters.findIndex(
-      (chapter) => chapter.chapterId === chapterId
-    );
-
-    if (currentIndex < 0) return null;
-
-    return chapters[currentIndex + 1] ?? null;
-  };
-
-  const moveToNextChapter = async (progress: ChapterProgress) => {
-    try {
-      const optimisticNextChapter = findNextChapterFromCurrentState(
-        progress.chapterId
-      );
-
-      if (optimisticNextChapter?.videoUrl && progress.completed) {
+      if (optimisticNextChapter?.videoUrl) {
         selectChapter({
           ...optimisticNextChapter,
           locked: false,
@@ -136,23 +165,15 @@ export function useLectureStudy(courseId: string) {
         return;
       }
 
-      for (let attempt = 0; attempt < 5; attempt += 1) {
+      for (let attempt = 0; attempt < REFRESH_RETRY_COUNT; attempt += 1) {
         if (attempt > 0) {
-          await wait(700);
+          await wait(REFRESH_RETRY_DELAY_MS);
         }
 
-        const refreshed = await refreshCourseAfterProgress(progress);
+        const refreshedChapters = await refreshCourse();
+        const nextChapter = findNextChapter(refreshedChapters);
 
-        const currentIndex = refreshed.chapters.findIndex(
-          (chapter) => chapter.chapterId === progress.chapterId
-        );
-
-        const nextChapter =
-          currentIndex >= 0 ? refreshed.chapters[currentIndex + 1] : null;
-
-        if (!nextChapter?.videoUrl) continue;
-
-        if (!nextChapter.locked || progress.completed) {
+        if (nextChapter?.videoUrl) {
           selectChapter({
             ...nextChapter,
             locked: false,
@@ -160,10 +181,9 @@ export function useLectureStudy(courseId: string) {
           return;
         }
       }
-    } catch (error) {
-      console.error("[study] 다음 챕터 자동 이동 실패:", error);
-    }
-  };
+    },
+    [chapters, refreshCourse, selectChapter]
+  );
 
   useEffect(() => {
     if (!courseId) return;
@@ -216,77 +236,40 @@ export function useLectureStudy(courseId: string) {
     };
   }, [courseId, router]);
 
-  const reportProgress = async (
-    watchedSeconds: number,
-    force = false
-  ): Promise<ChapterProgress | null> => {
-    if (!selectedChapter || !courseId) return null;
+  const reportProgress = useCallback(
+    async (watchedSeconds: number, force = false) => {
+      const chapter = selectedChapterRef.current;
 
-    const seconds = Math.floor(watchedSeconds);
-    const difference = seconds - lastReportedSecondsRef.current;
+      if (!chapter || !courseId) return null;
 
-    latestWatchedSecondsRef.current = seconds;
+      const seconds = Math.max(0, Math.floor(watchedSeconds));
+      const difference = seconds - lastReportedSecondsRef.current;
 
-    if (!force && difference < 5) return null;
+      latestWatchedSecondsRef.current = seconds;
 
-    lastReportedSecondsRef.current = seconds;
+      if (!force && difference < SAVE_INTERVAL_SECONDS) {
+        return null;
+      }
 
-    try {
-      const progress = await saveChapterProgress(
-        courseId,
-        selectedChapter.chapterId,
-        seconds
-      );
+      lastReportedSecondsRef.current = seconds;
 
-      setCourse((previousCourse) => {
-        if (!previousCourse) return previousCourse;
+      try {
+        const progress = await saveChapterProgress(
+          courseId,
+          chapter.chapterId,
+          seconds
+        );
 
-        return {
-          ...previousCourse,
-          courseProgressRate:
-            typeof progress.courseProgressRate === "number"
-              ? progress.courseProgressRate
-              : previousCourse.courseProgressRate,
-          quizAvailable:
-            typeof progress.quizAvailable === "boolean"
-              ? progress.quizAvailable
-              : previousCourse.quizAvailable,
-          chapters: previousCourse.chapters.map((chapter) => {
-            if (chapter.chapterId !== selectedChapter.chapterId) {
-              return chapter;
-            }
+        applyProgress(chapter.chapterId, progress);
 
-            return {
-              ...chapter,
-              watchedSeconds: progress.watchedSeconds,
-              progressRate: progress.progressRate,
-              completed: progress.completed,
-            };
-          }),
-        };
-      });
-
-      setSelectedChapter((previousChapter) => {
-        if (!previousChapter) return previousChapter;
-
-        if (previousChapter.chapterId !== selectedChapter.chapterId) {
-          return previousChapter;
-        }
-
-        return {
-          ...previousChapter,
-          watchedSeconds: progress.watchedSeconds,
-          progressRate: progress.progressRate,
-          completed: progress.completed,
-        };
-      });
-
-      return progress;
-    } catch (error) {
-      console.error("[study] 진도 업데이트 실패:", error);
-      return null;
-    }
-  };
+        return progress;
+      } catch (error) {
+        console.error("[study] 진도 업데이트 실패:", error);
+        return null;
+      }
+    },
+    [applyProgress, courseId]
+  );
 
   const flushProgress = useCallback(async () => {
     const chapter = selectedChapterRef.current;
@@ -298,18 +281,24 @@ export function useLectureStudy(courseId: string) {
         ? currentTime
         : latestWatchedSecondsRef.current;
 
-    const seconds = Math.floor(watchedSeconds);
+    const seconds = Math.max(0, Math.floor(watchedSeconds));
     if (seconds <= 0) return;
 
     latestWatchedSecondsRef.current = seconds;
     lastReportedSecondsRef.current = seconds;
 
-    await saveChapterProgress(courseId, chapter.chapterId, seconds).catch(
-      (error) => {
-        console.error("[study] 마지막 진도 저장 실패:", error);
-      }
-    );
-  }, [courseId]);
+    try {
+      const progress = await saveChapterProgress(
+        courseId,
+        chapter.chapterId,
+        seconds
+      );
+
+      applyProgress(chapter.chapterId, progress);
+    } catch (error) {
+      console.error("[study] 마지막 진도 저장 실패:", error);
+    }
+  }, [applyProgress, courseId]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -322,12 +311,19 @@ export function useLectureStudy(courseId: string) {
       void flushProgress();
     };
 
+    const handlePageHide = () => {
+      void flushProgress();
+    };
+
     window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", handlePageHide);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       void flushProgress();
+
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handlePageHide);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [flushProgress]);
@@ -337,34 +333,34 @@ export function useLectureStudy(courseId: string) {
     chapterIndex: number
   ) => {
     if (!canOpenChapter(chapterIndex)) return;
+    if (selectedChapterRef.current?.chapterId === chapter.chapterId) return;
 
-    if (selectedChapter?.chapterId === chapter.chapterId) return;
-
-    const currentTime = videoRef.current?.currentTime;
-
-    if (typeof currentTime === "number" && Number.isFinite(currentTime)) {
-      await reportProgress(currentTime, true);
-    } else {
-      await flushProgress();
-    }
-
+    await flushProgress();
     selectChapter(chapter);
   };
 
   const handleVideoEnded = async (currentTime: number) => {
     setIsPlaying(false);
 
+    const currentChapter = selectedChapterRef.current;
+    if (!currentChapter || !courseId) return;
+
     const duration = videoRef.current?.duration;
+
     const endedSeconds =
       typeof duration === "number" && Number.isFinite(duration)
-        ? Math.max(currentTime, duration)
+        ? duration
         : currentTime;
 
     const progress = await reportProgress(endedSeconds, true);
 
-    if (progress?.completed) {
-      await moveToNextChapter(progress);
-    }
+    if (!progress) return;
+
+    await refreshCourse();
+
+    if (!progress.completed) return;
+
+    await moveToNextChapterAfterCompleted(currentChapter.chapterId, progress);
   };
 
   return {

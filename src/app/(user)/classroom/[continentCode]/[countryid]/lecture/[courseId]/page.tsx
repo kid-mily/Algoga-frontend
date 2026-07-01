@@ -1,10 +1,14 @@
-﻿import { notFound } from "next/navigation";
+﻿// 강의 상세 페이지
+
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Image from "next/image";
 import SubHeader from "@/features/common/components/SubHeader";
 import LectureActionCard from "@/features/classroom/components/LectureActionCard";
 import LectureAttachments from "@/features/classroom/components/LectureAttachments";
 import LectureReviews from "@/features/classroom/components/LectureReviews";
 import { createCourseJsonLd } from "@/features/seo/schema";
+import { getSiteUrl } from "@/features/seo/site";
 import {
   getCourseDetail,
   getCourseReviewSummary,
@@ -19,6 +23,11 @@ interface LectureDetailPageProps {
     courseId: string;
   }>;
 }
+
+const SITE_URL = getSiteUrl();
+
+const DEFAULT_DESCRIPTION =
+  "알고가에서 국가별 여행 강의를 확인하고 여행 전 필요한 표현과 상황별 학습을 시작하세요.";
 
 const EMPTY_REVIEW_SUMMARY = {
   courseId: 0,
@@ -88,6 +97,85 @@ const getContinentStyle = (continentCode: string) =>
     text: "text-[#64748B]",
   };
 
+const normalizeDescription = (description?: string) => {
+  const trimmedDescription = description?.trim();
+
+  if (!trimmedDescription) {
+    return DEFAULT_DESCRIPTION;
+  }
+
+  return trimmedDescription.length > 150
+    ? `${trimmedDescription.slice(0, 147)}...`
+    : trimmedDescription;
+};
+
+// 메타데이터
+export async function generateMetadata({
+  params,
+}: LectureDetailPageProps): Promise<Metadata> {
+  const { continentCode, countryid, courseId } = await params;
+  const normalizedContinentCode = continentCode.trim().toLowerCase();
+  const canonicalUrl = `${SITE_URL}/classroom/${normalizedContinentCode}/${countryid}/lecture/${courseId}`;
+
+  try {
+    const course = await getCourseDetail(countryid, courseId);
+
+    if (!course) {
+      return {
+        title: "강의 상세",
+        description: DEFAULT_DESCRIPTION,
+        alternates: {
+          canonical: canonicalUrl,
+        },
+        openGraph: {
+          title: "강의 상세 | ALGOGA",
+          description: DEFAULT_DESCRIPTION,
+          url: canonicalUrl,
+          type: "website",
+        },
+      };
+    }
+
+    const description = normalizeDescription(course.description);
+
+    return {
+      title: course.title,
+      description,
+      alternates: {
+        canonical: canonicalUrl,
+      },
+      openGraph: {
+        title: `${course.title} | ALGOGA`,
+        description,
+        url: canonicalUrl,
+        type: "website",
+        images: course.thumbnailUrl
+          ? [
+              {
+                url: course.thumbnailUrl,
+                alt: course.title,
+              },
+            ]
+          : undefined,
+      },
+    };
+  } catch {
+    return {
+      title: "강의 상세",
+      description: DEFAULT_DESCRIPTION,
+      alternates: {
+        canonical: canonicalUrl,
+      },
+      openGraph: {
+        title: "강의 상세 | ALGOGA",
+        description: DEFAULT_DESCRIPTION,
+        url: canonicalUrl,
+        type: "website",
+      },
+    };
+  }
+}
+
 export default async function LectureDetailPage({
   params,
 }: LectureDetailPageProps) {
@@ -112,13 +200,10 @@ export default async function LectureDetailPage({
     courseId: Number(courseId) || 0,
   };
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://algoga.kro.kr";
-
-  // 리치스니펫
   const jsonLd = createCourseJsonLd({
     title: course.title,
-    description: course.description,
-    url: `${siteUrl}/classroom/${normalizedContinentCode.toLowerCase()}/${countryid}/lecture/${courseId}`,
+    description: normalizeDescription(course.description),
+    url: `${SITE_URL}/classroom/${normalizedContinentCode.toLowerCase()}/${countryid}/lecture/${courseId}`,
     price: course.price,
     averageRating: safeReviewSummary.averageRating,
     reviewCount: safeReviewSummary.totalReviewCount,
@@ -128,7 +213,9 @@ export default async function LectureDetailPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{__html: JSON.stringify(jsonLd),}}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd),
+        }}
       />
 
       <main className="min-h-screen w-full bg-[#F3F8FC] px-4 pb-14 pt-6 sm:px-6 lg:px-10">
@@ -220,4 +307,3 @@ export default async function LectureDetailPage({
     </>
   );
 }
-

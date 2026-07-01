@@ -1,10 +1,13 @@
-﻿import LectureGrid from "@/features/classroom/components/LectureGrid";
+﻿// 국가별 강의 목록 페이지
+
+import LectureGrid from "@/features/classroom/components/LectureGrid";
 import LecturePageHeader from "@/features/classroom/components/LecturePageHeader";
 import EvaluationBanner from "@/features/classroom/components/EvaluationBanner";
-import type { Country, CourseItem } from "@/features/classroom/components/types";
+import { Country, CourseItem } from "@/features/classroom/components/types";
 import { createCourseListJsonLd } from "@/features/seo/schema";
 import { getCountries } from "@/features/services/countrySelect.service";
 import { getCourses } from "@/features/services/lectureSelect.service";
+import { Metadata } from "next";
 
 export const revalidate = 600;
 
@@ -13,6 +16,53 @@ interface LectureListPageProps {
     continentCode: string;
     countryid: string;
   }>;
+}
+
+export async function generateMetadata({
+  params,
+}: LectureListPageProps): Promise<Metadata> {
+  const { continentCode, countryid } = await params;
+  const normalizedContinentCode = continentCode.trim().toUpperCase();
+
+  let countryName = "국가별";
+
+  try {
+    const countries = await getCountries(normalizedContinentCode);
+    const selectedCountry = countries.find(
+      (country) => String(country.countryId) === String(countryid)
+    );
+
+    countryName = selectedCountry?.countryName ?? countryName;
+  } catch {
+    countryName = "국가별";
+  }
+
+  const title = `${countryName} 강의 목록`;
+  const description = `${countryName} 여행 전 필요한 표현과 상황별 학습 콘텐츠를 확인해 보세요.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | ALGOGA`,
+      description,
+      url: `/classroom/${continentCode}/${countryid}`,
+      images: [
+        {
+          url: "/images/og-image.png",
+          width: 1100,
+          height: 740,
+          alt: `${countryName} ALGOGA 강의 목록`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | ALGOGA`,
+      description,
+      images: ["/images/og-image.png"],
+    },
+  };
 }
 
 export default async function LectureListPage({

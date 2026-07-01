@@ -27,6 +27,7 @@ export function useCourseQuiz(
   const [quizzes, setQuizzes] = useState<CourseQuiz[]>([]);
   const [submitResult, setSubmitResult] =
     useState<CourseQuizSubmitResult | null>(null);
+  const [canTakeQuiz, setCanTakeQuiz] = useState(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>(
@@ -51,12 +52,11 @@ export function useCourseQuiz(
       try {
         setIsLoading(true);
         setErrorMessage("");
+        setCanTakeQuiz(false);
 
         const course = await getCourseStudyDetail(courseId, controller.signal);
 
-        if (controller.signal.aborted) {
-          return;
-        }
+        if (controller.signal.aborted) return;
 
         const orderedChapters = [...course.chapters].sort(
           (a, b) => a.chapterOrder - b.chapterOrder
@@ -65,16 +65,20 @@ export function useCourseQuiz(
         setCourseTitle(course.title);
         setChapters(orderedChapters);
 
-        if (!areAllChaptersCompleted(orderedChapters)) {
+        const serverCanTakeQuiz =
+          areAllChaptersCompleted(orderedChapters) ||
+          course.quizAvailable === true;
+
+        setCanTakeQuiz(serverCanTakeQuiz);
+
+        if (!serverCanTakeQuiz) {
           setErrorMessage("모든 챕터를 완료해야 퀴즈를 풀 수 있습니다.");
           return;
         }
 
         const quizList = await getCourseQuizzes(courseId);
 
-        if (controller.signal.aborted) {
-          return;
-        }
+        if (controller.signal.aborted) return;
 
         if (quizList.length === 0) {
           setErrorMessage("등록된 퀴즈가 없습니다.");
@@ -83,30 +87,33 @@ export function useCourseQuiz(
 
         setQuizzes(quizList);
       } catch (error) {
-        if (controller.signal.aborted) {
-          return;
-        }
+        if (controller.signal.aborted) return;
 
         console.error("[quiz] 퀴즈 조회 실패:", error);
 
         if (error instanceof ApiRequestError) {
-          switch (error.status) {
-            case 401:
-              router.replace("/auth/login");
-              return;
-            case 400:
-              setErrorMessage("모든 챕터를 완료해야 퀴즈를 풀 수 있습니다.");
-              return;
-            case 403:
-              setErrorMessage("수강 등록된 강의가 아닙니다.");
-              return;
-            case 404:
-              setErrorMessage("등록된 퀴즈가 없거나 강의를 찾을 수 없습니다.");
-              return;
-            default:
-              setErrorMessage(error.message);
-              return;
+          if (error.status === 401) {
+            router.replace("/auth/login");
+            return;
           }
+
+          if (error.status === 400) {
+            setErrorMessage("모든 챕터를 완료해야 퀴즈를 풀 수 있습니다.");
+            return;
+          }
+
+          if (error.status === 403) {
+            setErrorMessage("수강 등록된 강의가 아닙니다.");
+            return;
+          }
+
+          if (error.status === 404) {
+            setErrorMessage("등록된 퀴즈가 없거나 강의를 찾을 수 없습니다.");
+            return;
+          }
+
+          setErrorMessage(error.message);
+          return;
         }
 
         setErrorMessage("퀴즈를 불러오지 못했습니다.");
@@ -143,13 +150,8 @@ export function useCourseQuiz(
     : undefined;
 
   const selectAnswer = (option: number) => {
-    if (!currentQuiz || submitResult) {
-      return;
-    }
-
-    if (option < 1 || option > 4) {
-      return;
-    }
+    if (!currentQuiz || submitResult) return;
+    if (option < 1 || option > 4) return;
 
     setSelectedAnswers((previousAnswers) => ({
       ...previousAnswers,
@@ -165,9 +167,7 @@ export function useCourseQuiz(
   };
 
   const nextOrSubmit = async () => {
-    if (!currentQuiz || submitResult || isSubmitting) {
-      return;
-    }
+    if (!currentQuiz || submitResult || isSubmitting) return;
 
     if (!selectedAnswers[currentQuiz.quizId]) {
       setErrorMessage("답안을 선택해 주세요.");
@@ -195,7 +195,6 @@ export function useCourseQuiz(
       setSubmitResult(result);
 
       if (result.courseCompleted) {
-        localStorage.setItem(`course-completed-${courseId}`, "true");
         window.dispatchEvent(new CustomEvent("course-completion-changed"));
         window.dispatchEvent(new CustomEvent("learning-benefits-updated"));
       }
@@ -234,6 +233,7 @@ export function useCourseQuiz(
     isLoading,
     isSubmitting,
     errorMessage,
+    canTakeQuiz,
     selectAnswer,
     previous,
     nextOrSubmit,

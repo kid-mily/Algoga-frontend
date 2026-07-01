@@ -73,7 +73,7 @@ export default function LectureStudyClient() {
   }
 
   return (
-    <main className="flex min-h-[calc(100dvh-64px)] flex-col bg-[#F5F7FB] xl:flex-row">
+    <main className="flex min-h-[calc(100dvh-64px)] items-start bg-[#F5F7FB]">
       <CourseLearningSidebar
         courseTitle={study.course.title}
         chapters={study.chapters}
@@ -92,7 +92,7 @@ export default function LectureStudyClient() {
         onChapterSelect={study.handleChapterSelect}
       />
 
-      <section className="min-w-0 flex-1 px-4 py-5 sm:px-5 lg:px-8 lg:py-6">
+      <section className="min-w-0 flex-1 px-5 py-5 lg:px-8 lg:py-6">
         <div className="mx-auto w-full max-w-[980px]">
           {completion.isCompleted ? (
             <div className="mx-auto mb-4 flex max-w-[820px] flex-col gap-3 rounded-lg border border-[#BDE4CA] bg-[#EFFAF2] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -126,14 +126,24 @@ export default function LectureStudyClient() {
 
           <StudyVideoPlayer
             videoRef={study.videoRef}
-            selectedChapter={study.selectedChapter}
+            selectedChapter={
+              study.selectedChapter
+            }
             isPlaying={study.isPlaying}
             setIsPlaying={study.setIsPlaying}
-            reportProgress={study.reportProgress}
-            handleVideoEnded={study.handleVideoEnded}
+            reportProgress={
+              study.reportProgress
+            }
+            handleVideoEnded={
+              study.handleVideoEnded
+            }
           />
 
-          <StudyChapterInfo selectedChapter={study.selectedChapter} />
+          <StudyChapterInfo
+            selectedChapter={
+              study.selectedChapter
+            }
+          />
         </div>
       </section>
     </main>

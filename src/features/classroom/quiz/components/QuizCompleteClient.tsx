@@ -24,7 +24,7 @@ export default function QuizCompleteClient() {
   const continentCode = getParam(params.continentCode);
   const countryId = getParam(params.countryid);
   const courseId = getParam(params.courseId);
-
+ 
   const lectureHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}`;
   const studyHref = `${lectureHref}/study`;
   const quizHref = `${lectureHref}/quiz`;
