@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     url: "/classroom",
     images: [
       {
-        url: "/images/og-image.png",
+        url: "/images/og-image-v2.png",
         width: 1100,
         height: 740,
         alt: "ALGOGA 강의실",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "강의실 | ALGOGA",
     description: "국가별 여행 강의를 선택하고 여행 전 필요한 학습을 시작하세요.",
-    images: ["/images/og-image.png"],
+    images: ["/images/og-image-v2.png"],
   },
 };
 

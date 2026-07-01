@@ -136,7 +136,7 @@ export async function generateMetadata({
           locale: "ko_KR",
           images: [
             {
-              url: "/images/og-image.png",
+              url: "/images/og-image-v2.png",
               width: 1100,
               height: 740,
               alt: "ALGOGA 강의 상세",
@@ -147,7 +147,7 @@ export async function generateMetadata({
     }
 
     const description = normalizeDescription(course.description);
-    const imageUrl = course.thumbnailUrl || "/images/og-image.png";
+    const imageUrl = course.thumbnailUrl || "/images/og-image-v2.png";
 
     return {
       title: course.title,
@@ -195,7 +195,7 @@ export async function generateMetadata({
         locale: "ko_KR",
         images: [
           {
-            url: "/images/og-image.png",
+            url: "/images/og-image-v2.png",
             width: 1100,
             height: 740,
             alt: "ALGOGA 강의 상세",
