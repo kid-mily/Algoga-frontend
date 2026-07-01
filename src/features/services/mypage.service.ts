@@ -9,7 +9,6 @@ import type {
   VerifyPasswordRequest,
 } from "@/features/mypage/types";
 import { getMyCoupons } from "@/features/services/myBenefit.service";
-import { getMyPayments } from "@/features/services/SinglePayment.service";
 import { getMe } from "@/features/services/user.service";
 
 export class MyPageApiError extends Error {
@@ -100,7 +99,7 @@ export async function getMyPageUser(): Promise<MyPageUser> {
 }
 
 export async function getMyPageData(): Promise<MyPageData> {
-  const [user, coupons, payments, courseCount] = await Promise.all([
+  const [user, coupons, courseCount] = await Promise.all([
     getMyPageUser(),
 
     getMyCoupons().catch((error) => {
@@ -108,13 +107,8 @@ export async function getMyPageData(): Promise<MyPageData> {
       return [];
     }),
 
-    getMyPayments().catch((error) => {
-      console.error("결제 내역 조회 실패:", error);
-      return [];
-    }),
-
     getMyCourseCount().catch((error) => {
-      console.error("수강 강좌 개수 조회 실패:", error);
+      console.error("수강 강의 개수 조회 실패:", error);
       return 0;
     }),
   ]);
@@ -123,7 +117,7 @@ export async function getMyPageData(): Promise<MyPageData> {
     user,
     summary: {
       courseCount,
-      reservationCount: Array.isArray(payments) ? payments.length : 0,
+      reservationCount: 0,
       couponCount: Array.isArray(coupons) ? coupons.length : 0,
     },
   };
