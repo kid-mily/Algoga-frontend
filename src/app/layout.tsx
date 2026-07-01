@@ -1,8 +1,12 @@
 ﻿import type { Metadata } from "next";
 import ChatWidget from "@/features/chat/components/ChatWidget";
+import { getSiteUrl } from "@/features/seo/site";
 import "./globals.css";
 
+const SITE_URL = getSiteUrl();
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "알고가 | 여행으로 배우는 LMS",
     template: "%s | 알고가",
@@ -14,6 +18,7 @@ export const metadata: Metadata = {
     title: "알고가 | 여행으로 배우는 LMS",
     description:
       "국가를 선택하고 여행처럼 배우는 맞춤형 온라인 강의 플랫폼입니다.",
+    url: SITE_URL,
     siteName: "알고가",
     locale: "ko_KR",
     type: "website",

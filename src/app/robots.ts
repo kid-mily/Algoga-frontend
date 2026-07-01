@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/features/seo/site";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.kidmily.kro.kr";
+  const baseUrl = getSiteUrl();
 
   return {
     rules: [
