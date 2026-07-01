@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     images: [
       {
-        url: "/images/og-image-v2.png",
+        url: "/images/og-image-v3.png",
         width: 1100,
         height: 740,
         alt: "ALGOGA 여행 학습 통합 플랫폼",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title,
     description,
-    images: ["/images/og-image-v2.png"],
+    images: ["/images/og-image-v3.png"],
     creator: "@ALGOGA",
   },
 };
