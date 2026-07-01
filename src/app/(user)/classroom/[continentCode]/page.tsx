@@ -79,7 +79,7 @@ export async function generateMetadata({
         locale: "ko_KR",
         images: [
           {
-            url: "/images/og-image-v2.png",
+            url: "/images/og-image-v3.png",
             width: 1100,
             height: 740,
             alt: "ALGOGA 강의실",
@@ -105,7 +105,7 @@ export async function generateMetadata({
       locale: "ko_KR",
       images: [
         {
-          url: "/images/og-image-v2.png",
+          url: "/images/og-image-v3.png",
           width: 1100,
           height: 740,
           alt: `${continentName} ALGOGA 강의실`,
