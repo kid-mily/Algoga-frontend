@@ -3,11 +3,32 @@
 import Link from "next/link";
 import NoticeAllItem from "@/features/notice/components/NoticeAllItem";
 import { getNoticeList } from "@/features/services/notice.service";
-import {
-  isNoticeType,
-  noticeTypeConfig,
-  noticeTypes,
-} from "@/features/notice/components/types";
+import { isNoticeType, noticeTypeConfig, noticeTypes } from "@/features/notice/components/types";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "공지사항",
+  description: "ALGOGA의 새로운 소식과 공지사항을 확인하세요.",
+  openGraph: {
+    title: "공지사항 | ALGOGA",
+    description: "ALGOGA의 새로운 소식과 공지사항을 확인하세요.",
+    url: "/notice",
+    images: [
+      {
+        url: "/images/og-image.png",
+        width: 1100,
+        height: 740,
+        alt: "ALGOGA 공지사항",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "공지사항 | ALGOGA",
+    description: "ALGOGA의 새로운 소식과 공지사항을 확인하세요.",
+    images: ["/images/og-image.png"],
+  },
+};
 
 interface NoticePageProps {
   searchParams?: Promise<{

@@ -1,4 +1,6 @@
-﻿import type { Metadata } from "next";
+﻿// 강의 상세 페이지
+
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import SubHeader from "@/features/common/components/SubHeader";
@@ -6,10 +8,7 @@ import LectureActionCard from "@/features/classroom/components/LectureActionCard
 import LectureAttachments from "@/features/classroom/components/LectureAttachments";
 import LectureReviews from "@/features/classroom/components/LectureReviews";
 import { createCourseJsonLd } from "@/features/seo/schema";
-import {
-  getCourseDetail,
-  getCourseReviewSummary,
-} from "@/features/services/lectureDetail.service";
+import { getCourseDetail, getCourseReviewSummary } from "@/features/services/lectureDetail.service";
 
 export const revalidate = 600;
 
@@ -112,49 +111,39 @@ export async function generateMetadata({
   const normalizedContinentCode = continentCode.trim().toLowerCase();
   const canonicalUrl = `${SITE_URL}/classroom/${normalizedContinentCode}/${countryid}/lecture/${courseId}`;
 
-  try {
-    const course = await getCourseDetail(countryid, courseId);
+  const course = await getCourseDetail(countryid, courseId);
 
-    if (!course) {
-      return {
-        title: "강의 상세 | 알고가",
-        description: DEFAULT_DESCRIPTION,
-      };
-    }
-
-    const title = `${course.title} | 알고가`;
-    const description = normalizeDescription(course.description);
-
+  if (!course) {
     return {
-      title,
-      description,
-      alternates: {
-        canonical: canonicalUrl,
-      },
-      openGraph: {
-        title,
-        description,
-        url: canonicalUrl,
-        type: "website",
-        images: course.thumbnailUrl
-          ? [
-              {
-                url: course.thumbnailUrl,
-                alt: course.title,
-              },
-            ]
-          : undefined,
-      },
-    };
-  } catch {
-    return {
-      title: "강의 상세 | 알고가",
+      title: "강의 상세",
       description: DEFAULT_DESCRIPTION,
-      alternates: {
-        canonical: canonicalUrl,
+      openGraph: {
+        title: "강의 상세 | ALGOGA",
+        description: DEFAULT_DESCRIPTION,
+        url: canonicalUrl,
       },
     };
   }
+
+  const description = normalizeDescription(course.description);
+
+  return {
+    title: course.title,
+    description,
+    openGraph: {
+      title: `${course.title} | ALGOGA`,
+      description,
+      url: canonicalUrl,
+      images: course.thumbnailUrl
+        ? [
+            {
+              url: course.thumbnailUrl,
+              alt: course.title,
+            },
+          ]
+        : undefined,
+    },
+  };
 }
 
 export default async function LectureDetailPage({
@@ -181,7 +170,6 @@ export default async function LectureDetailPage({
     courseId: Number(courseId) || 0,
   };
 
-  // 리치스니펫
   const jsonLd = createCourseJsonLd({
     title: course.title,
     description: normalizeDescription(course.description),
