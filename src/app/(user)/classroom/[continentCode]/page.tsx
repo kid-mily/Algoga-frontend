@@ -70,19 +70,47 @@ export async function generateMetadata({
     return {
       title: "강의실",
       description: "국가별 여행 강의를 선택하고 학습을 시작하세요.",
+      openGraph: {
+        type: "website",
+        title: "강의실 | ALGOGA",
+        description: "국가별 여행 강의를 선택하고 학습을 시작하세요.",
+        url: "/classroom",
+        siteName: "ALGOGA",
+        locale: "ko_KR",
+        images: [
+          {
+            url: "/images/og-image.png",
+            width: 1100,
+            height: 740,
+            alt: "ALGOGA 강의실",
+          },
+        ],
+      },
     };
   }
 
   const continentName = getContinentName(normalizedContinentCode);
   const description = `${continentName} 국가별 여행 강의를 선택하고 학습을 시작하세요.`;
+  const pagePath = `/classroom/${normalizedContinentCode.toLowerCase()}`;
 
   return {
     title: `${continentName} 강의실`,
     description,
     openGraph: {
+      type: "website",
       title: `${continentName} 강의실 | ALGOGA`,
       description,
-      url: `/classroom/${continentCode.trim().toLowerCase()}`,
+      url: pagePath,
+      siteName: "ALGOGA",
+      locale: "ko_KR",
+      images: [
+        {
+          url: "/images/og-image.png",
+          width: 1100,
+          height: 740,
+          alt: `${continentName} ALGOGA 강의실`,
+        },
+      ],
     },
   };
 }
