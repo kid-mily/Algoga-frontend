@@ -128,15 +128,26 @@ export async function generateMetadata({
           canonical: canonicalUrl,
         },
         openGraph: {
+          type: "website",
           title: "강의 상세 | ALGOGA",
           description: DEFAULT_DESCRIPTION,
           url: canonicalUrl,
-          type: "website",
+          siteName: "ALGOGA",
+          locale: "ko_KR",
+          images: [
+            {
+              url: "/images/og-image.png",
+              width: 1100,
+              height: 740,
+              alt: "ALGOGA 강의 상세",
+            },
+          ],
         },
       };
     }
 
     const description = normalizeDescription(course.description);
+    const imageUrl = course.thumbnailUrl || "/images/og-image.png";
 
     return {
       title: course.title,
@@ -145,21 +156,30 @@ export async function generateMetadata({
         canonical: canonicalUrl,
       },
       openGraph: {
+        type: "website",
         title: `${course.title} | ALGOGA`,
         description,
         url: canonicalUrl,
-        type: "website",
-        images: course.thumbnailUrl
-          ? [
-              {
-                url: course.thumbnailUrl,
-                alt: course.title,
-              },
-            ]
-          : undefined,
+        siteName: "ALGOGA",
+        locale: "ko_KR",
+        images: [
+          {
+            url: imageUrl,
+            width: 1200,
+            height: 630,
+            alt: course.title,
+          },
+        ],
       },
     };
-  } catch {
+  } catch (error) {
+    console.error("[lecture-detail:metadata] 강의 상세 메타데이터 생성 실패:", {
+      courseId,
+      countryid,
+      canonicalUrl,
+      error,
+    });
+
     return {
       title: "강의 상세",
       description: DEFAULT_DESCRIPTION,
@@ -167,10 +187,20 @@ export async function generateMetadata({
         canonical: canonicalUrl,
       },
       openGraph: {
+        type: "website",
         title: "강의 상세 | ALGOGA",
         description: DEFAULT_DESCRIPTION,
         url: canonicalUrl,
-        type: "website",
+        siteName: "ALGOGA",
+        locale: "ko_KR",
+        images: [
+          {
+            url: "/images/og-image.png",
+            width: 1100,
+            height: 740,
+            alt: "ALGOGA 강의 상세",
+          },
+        ],
       },
     };
   }
