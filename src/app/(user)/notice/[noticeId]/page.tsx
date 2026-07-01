@@ -42,7 +42,7 @@ export async function generateMetadata({
       url: `/notice/${noticeId}`,
       images: [
         {
-          url: "/images/og-image-v2.png",
+          url: "/images/og-image-v3.png",
           width: 1100,
           height: 740,
           alt: notice.title,
@@ -53,7 +53,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: `${notice.title} | ALGOGA`,
       description,
-      images: ["/images/og-image-v2.png"],
+      images: ["/images/og-image-v3.png"],
     },
   };
 }
