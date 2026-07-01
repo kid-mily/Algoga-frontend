@@ -1,4 +1,6 @@
-﻿import type { Metadata } from "next";
+﻿// 강의 상세 페이지
+
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import SubHeader from "@/features/common/components/SubHeader";
@@ -23,6 +25,7 @@ interface LectureDetailPageProps {
 }
 
 const SITE_URL = getSiteUrl();
+
 const DEFAULT_DESCRIPTION =
   "알고가에서 국가별 여행 강의를 확인하고 여행 전 필요한 표현과 상황별 학습을 시작하세요.";
 
@@ -121,21 +124,28 @@ export async function generateMetadata({
       return {
         title: "강의 상세",
         description: DEFAULT_DESCRIPTION,
+        alternates: {
+          canonical: canonicalUrl,
+        },
+        openGraph: {
+          title: "강의 상세 | ALGOGA",
+          description: DEFAULT_DESCRIPTION,
+          url: canonicalUrl,
+          type: "website",
+        },
       };
     }
 
-    const pageTitle = course.title;
-    const socialTitle = `${course.title} | 알고가`;
     const description = normalizeDescription(course.description);
 
     return {
-      title: pageTitle,
+      title: course.title,
       description,
       alternates: {
         canonical: canonicalUrl,
       },
       openGraph: {
-        title: socialTitle,
+        title: `${course.title} | ALGOGA`,
         description,
         url: canonicalUrl,
         type: "website",
@@ -155,6 +165,12 @@ export async function generateMetadata({
       description: DEFAULT_DESCRIPTION,
       alternates: {
         canonical: canonicalUrl,
+      },
+      openGraph: {
+        title: "강의 상세 | ALGOGA",
+        description: DEFAULT_DESCRIPTION,
+        url: canonicalUrl,
+        type: "website",
       },
     };
   }
@@ -184,7 +200,6 @@ export default async function LectureDetailPage({
     courseId: Number(courseId) || 0,
   };
 
-  // 리치스니펫
   const jsonLd = createCourseJsonLd({
     title: course.title,
     description: normalizeDescription(course.description),
