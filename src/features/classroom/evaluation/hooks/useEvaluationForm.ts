@@ -27,6 +27,8 @@ export function useEvaluationForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitErrorMessage, setSubmitErrorMessage] = useState("");
 
+  const pathContinentCode = continentCode.trim().toLowerCase();
+
   const currentQuestion = questions[step] ?? null;
 
   // 현재 문항에서 선택한 답안
@@ -127,9 +129,7 @@ export function useEvaluationForm({
 
       setIsCompleteModalOpen(false);
 
-      router.replace(
-        `/classroom/${continentCode}/${countryId}/evaluation/result`
-      );
+      router.replace(`/classroom/${pathContinentCode}/${countryId}/evaluation/result`);
     } catch (error) {
       console.error("[diagnosis] 진단평가 제출 실패:", error);
 
@@ -138,13 +138,13 @@ export function useEvaluationForm({
         sessionStorage.setItem(
           PENDING_DIAGNOSIS_SUBMIT_STORAGE_KEY,
           JSON.stringify({
-            continentCode,
+            continentCode: pathContinentCode,
             countryId,
             payload,
           })
         );
 
-        const redirectUrl = `/classroom/${continentCode}/${countryId}/evaluation`;
+        const redirectUrl = `/classroom/${pathContinentCode}/${countryId}/evaluation`;
 
         router.push(`/auth/login?redirect=${encodeURIComponent(redirectUrl)}`);
         return;

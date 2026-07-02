@@ -10,6 +10,7 @@ type CountrySearchClientProps = {
   countries: Country[];
   errorMessage?: string;
   continentCode: string;
+  continentName: string;
   ticketStyle: CountryTicketStyle;
 };
 
@@ -17,6 +18,7 @@ export default function CountrySearchClient({
   countries,
   errorMessage = "",
   continentCode,
+  continentName,
   ticketStyle,
 }: CountrySearchClientProps) {
   const [searchInput, setSearchInput] = useState("");
@@ -38,12 +40,33 @@ export default function CountrySearchClient({
 
   return (
     <>
-      <div className="mb-5 w-full sm:max-w-sm">
-        <SearchBar
-          value={searchInput}
-          onChange={setSearchInput}
-          onSearch={handleSearch}
-        />
+      <div className="mb-6 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+        <div className="min-w-0">
+          <p
+            className={`text-sm font-semibold tracking-[0.16em] ${ticketStyle.text}`}
+          >
+            COUNTRY
+          </p>
+
+          <h2
+            id="country-select-title"
+            className="mt-1 text-2xl font-bold text-[#0A1628]"
+          >
+            {continentName}
+          </h2>
+
+          <p className="mt-1 text-sm text-[#8A94A6]">
+            나라 이름을 검색하거나 티켓을 선택해 국가별 강의실로 이동하세요.
+          </p>
+        </div>
+
+        <div className="w-full lg:w-[430px]">
+          <SearchBar
+            value={searchInput}
+            onChange={setSearchInput}
+            onSearch={handleSearch}
+          />
+        </div>
       </div>
 
       {errorMessage ? (
