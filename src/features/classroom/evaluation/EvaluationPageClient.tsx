@@ -22,6 +22,9 @@ export default function EvaluationPageClient({
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
 
+
+    const pathContinentCode = continentCode.trim().toLowerCase();
+
     useEffect(() => {
         const controller = new AbortController();
 
@@ -55,8 +58,7 @@ export default function EvaluationPageClient({
 
             if (error instanceof ApiRequestError) {
             if (error.status === 401) {
-                const redirectUrl =
-                `/classroom/${continentCode}/${countryId}/evaluation`;
+                const redirectUrl = `/classroom/${pathContinentCode}/${countryId}/evaluation`;
 
                 router.replace(
                 `/auth/login?redirect=${encodeURIComponent(
@@ -132,9 +134,9 @@ export default function EvaluationPageClient({
 
     return (
         <EvaluationForm
-        continentCode={continentCode}
-        countryId={countryId}
-        questions={questions}
+            continentCode={pathContinentCode}
+            countryId={countryId}
+            questions={questions}
         />
     );
 }

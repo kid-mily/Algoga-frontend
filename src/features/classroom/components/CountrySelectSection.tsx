@@ -92,29 +92,11 @@ export default function CountrySelectSection({
 
   return (
     <section aria-labelledby="country-select-title" className="w-full">
-      <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className={`text-sm font-semibold tracking-[0.16em] ${style.text}`}>
-            COUNTRY
-          </p>
-
-          <h2
-            id="country-select-title"
-            className="mt-1 text-2xl font-bold text-[#0A1628]"
-          >
-            {continentName}
-          </h2>
-
-          <p className="mt-1 text-sm text-[#8A94A6]">
-            나라 이름을 검색하거나 티켓을 선택해 국가별 강의실로 이동하세요.
-          </p>
-        </div>
-      </div>
-
       <CountrySearchClient
         countries={countries}
         errorMessage={errorMessage}
         continentCode={continentCode}
+        continentName={continentName}
         ticketStyle={style}
       />
     </section>
