@@ -32,7 +32,7 @@ export default function QuizResultContent({
 
   return (
     <>
-      <div className="flex w-full max-w-[550px] flex-col items-center text-center">
+      <div className="mx-auto flex w-full max-w-[550px] flex-col items-center text-center">
         <div className="w-full rounded-[16px] border border-[#BDE4CA] bg-[#EFFAF2] px-4 py-3 text-left">
           <strong className="block text-sm text-[#367C47]">
             강의 수료 완료

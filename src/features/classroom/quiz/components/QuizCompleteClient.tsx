@@ -21,7 +21,7 @@ export default function QuizCompleteClient() {
   const params = useParams();
   const router = useRouter();
 
-  const continentCode = getParam(params.continentCode);
+  const continentCode = getParam(params.continentCode).toLowerCase();
   const countryId = getParam(params.countryid);
   const courseId = getParam(params.courseId);
  
