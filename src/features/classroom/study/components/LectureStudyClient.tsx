@@ -21,16 +21,13 @@ const getParam = (
 export default function LectureStudyClient() {
   const params = useParams();
 
-  const continentCode = getParam(
-    params.continentCode
-  );
+  const continentCode = getParam(params.continentCode).toLowerCase();
   const countryId = getParam(params.countryid);
   const courseId = getParam(params.courseId);
 
   const study = useLectureStudy(courseId);
 
-  const completion =
-    useCourseCompletionStatus(courseId);
+  const completion = useCourseCompletionStatus(courseId);
 
   const lectureHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}`;
   const studyHref = `${lectureHref}/study`;

@@ -35,8 +35,9 @@ export default function LectureActionCard({
     Boolean(course.isPaid ?? course.purchased ?? course.paid)
   );
 
-  const studyHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}/study`;
-  const paymentHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}/payment/single`;
+  const pathContinentCode = continentCode.trim().toLowerCase();
+  const studyHref = `/classroom/${pathContinentCode}/${countryId}/lecture/${courseId}/study`;
+  const paymentHref = `/classroom/${pathContinentCode}/${countryId}/lecture/${courseId}/payment/single`;
 
   useEffect(() => {
     let isActive = true;
