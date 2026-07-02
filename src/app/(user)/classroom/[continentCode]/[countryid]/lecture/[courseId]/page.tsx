@@ -114,8 +114,8 @@ export async function generateMetadata({
   params,
 }: LectureDetailPageProps): Promise<Metadata> {
   const { continentCode, countryid, courseId } = await params;
-  const normalizedContinentCode = continentCode.trim().toLowerCase();
-  const canonicalUrl = `${SITE_URL}/classroom/${normalizedContinentCode}/${countryid}/lecture/${courseId}`;
+  const pathContinentCode = continentCode.trim().toLowerCase();
+  const canonicalUrl = `${SITE_URL}/classroom/${pathContinentCode}/${countryid}/lecture/${courseId}`;
 
   try {
     const course = await getCourseDetail(countryid, courseId);
@@ -210,8 +210,9 @@ export default async function LectureDetailPage({
   params,
 }: LectureDetailPageProps) {
   const { continentCode, countryid, courseId } = await params;
-  const normalizedContinentCode = continentCode.trim().toUpperCase();
-  const style = getContinentStyle(normalizedContinentCode);
+  const pathContinentCode = continentCode.trim().toLowerCase();
+  const apiContinentCode = continentCode.trim().toUpperCase();
+  const style = getContinentStyle(apiContinentCode);
 
   const [course, reviewSummary] = await Promise.all([
     getCourseDetail(countryid, courseId),
@@ -233,7 +234,7 @@ export default async function LectureDetailPage({
   const jsonLd = createCourseJsonLd({
     title: course.title,
     description: normalizeDescription(course.description),
-    url: `${SITE_URL}/classroom/${normalizedContinentCode.toLowerCase()}/${countryid}/lecture/${courseId}`,
+    url: `${SITE_URL}/classroom/${pathContinentCode.toLowerCase()}/${countryid}/lecture/${courseId}`,
     price: course.price,
     averageRating: safeReviewSummary.averageRating,
     reviewCount: safeReviewSummary.totalReviewCount,
@@ -251,7 +252,7 @@ export default async function LectureDetailPage({
       <main className="min-h-screen w-full bg-[#F3F8FC] px-4 pb-14 pt-6 sm:px-6 lg:px-10">
         <section className="mx-auto w-full max-w-5xl space-y-6">
           <SubHeader
-            backHref={`/classroom/${normalizedContinentCode}/${countryid}`}
+            backHref={`/classroom/${pathContinentCode}/${countryid}`}
             backText="강의 목록으로 돌아가기"
             title=""
             description=""
@@ -316,7 +317,7 @@ export default async function LectureDetailPage({
 
           <LectureActionCard
             course={course}
-            continentCode={normalizedContinentCode}
+            continentCode={pathContinentCode}
             countryId={countryid}
             courseId={courseId}
           />
@@ -328,7 +329,7 @@ export default async function LectureDetailPage({
 
           <LectureReviews
             summary={safeReviewSummary}
-            continentCode={normalizedContinentCode}
+            continentCode={pathContinentCode}
             countryId={countryid}
             courseId={courseId}
           />
