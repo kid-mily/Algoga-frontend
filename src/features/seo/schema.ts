@@ -37,6 +37,8 @@ type CourseListJsonLdInput = {
 };
 
 export const createOrganizationJsonLd = () => {
+  if (!SITE_URL) return null;
+
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -47,6 +49,8 @@ export const createOrganizationJsonLd = () => {
 };
 
 export const createWebSiteJsonLd = () => {
+  if (!SITE_URL) return null;
+
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -63,6 +67,8 @@ export const createCourseJsonLd = ({
   averageRating,
   reviewCount = 0,
 }: CourseJsonLdInput) => {
+  if (!SITE_URL) return null;
+
   return {
     "@context": "https://schema.org",
     "@type": "Course",
@@ -99,6 +105,8 @@ export const createCourseListJsonLd = ({
   continentCode,
   countryId,
 }: CourseListJsonLdInput) => {
+  if (!SITE_URL) return null;
+
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",

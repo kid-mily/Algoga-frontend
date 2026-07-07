@@ -115,7 +115,8 @@ export async function generateMetadata({
 }: LectureDetailPageProps): Promise<Metadata> {
   const { continentCode, countryid, courseId } = await params;
   const pathContinentCode = continentCode.trim().toLowerCase();
-  const canonicalUrl = `${SITE_URL}/classroom/${pathContinentCode}/${countryid}/lecture/${courseId}`;
+  const pagePath = `/classroom/${pathContinentCode}/${countryid}/lecture/${courseId}`;
+  const canonicalUrl = SITE_URL ? `${SITE_URL}${pagePath}` : pagePath;
 
   try {
     const course = await getCourseDetail(countryid, courseId);
@@ -234,7 +235,9 @@ export default async function LectureDetailPage({
   const jsonLd = createCourseJsonLd({
     title: course.title,
     description: normalizeDescription(course.description),
-    url: `${SITE_URL}/classroom/${pathContinentCode.toLowerCase()}/${countryid}/lecture/${courseId}`,
+    url: SITE_URL
+      ? `${SITE_URL}/classroom/${pathContinentCode}/${countryid}/lecture/${courseId}`
+      : "",
     price: course.price,
     averageRating: safeReviewSummary.averageRating,
     reviewCount: safeReviewSummary.totalReviewCount,
@@ -242,12 +245,14 @@ export default async function LectureDetailPage({
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: serializeJsonLd(jsonLd),
-        }}
-      />
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: serializeJsonLd(jsonLd),
+          }}
+        />
+      )}
 
       <main className="min-h-screen w-full bg-[#F3F8FC] px-4 pb-14 pt-6 sm:px-6 lg:px-10">
         <section className="mx-auto w-full max-w-5xl space-y-6">

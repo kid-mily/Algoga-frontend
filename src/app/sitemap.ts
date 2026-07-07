@@ -4,6 +4,10 @@ import { getSiteUrl } from "@/features/seo/site";
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getSiteUrl();
 
+  if (!baseUrl) {
+    return [];
+  }
+
   const staticPages = [
     {
       url: baseUrl,
