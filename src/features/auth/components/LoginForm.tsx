@@ -164,22 +164,20 @@ export default function LoginForm() {
           <button
               type="submit"
               disabled={isLoading}
-              className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition ${
+              className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition-all duration-200 ${
                 isLoading
                   ? "cursor-not-allowed bg-[#D0D5DD]"
-                  : "bg-[#439A97] hover:bg-[#367c79]"
+                  : "cursor-pointer bg-[#439A97] hover:bg-[#367c79] hover:shadow-lg hover:shadow-[#439A97]/30 active:bg-[#2f6f6d]"
               }`}
             >
               {isLoading ? "로그인 중..." : "로그인"}
           </button>
 
-          <Link
-            href="/"
-            className="mt-4 block w-full text-center text-[14px] text-[#98A2B3]"
-          >
-            메인으로 돌아가기
-          </Link>
-          
+          <div className="mt-4 text-center text-[14px] text-[#98A2B3]">
+            계정이 없으신가요?{" "}
+            <Link href="/auth/register" className="font-semibold text-[#6D9D9B]">회원가입</Link>
+          </div>
+
           {/* 소셜 로그인 */}
           <div className="mt-5 flex items-center gap-3">
             <div className="h-px flex-1 bg-[#E4E7EC]" />
@@ -208,10 +206,12 @@ export default function LoginForm() {
             </p>
           )}
 
-          <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
-            계정이 없으신가요?{" "}
-            <Link href="/auth/register" className="font-semibold text-[#6D9D9B]">회원가입</Link>
-          </div>
+          <Link
+            href="/"
+            className="mt-4 block w-full text-center text-[14px] text-[#98A2B3]"
+          >
+            메인으로 돌아가기
+          </Link>
         </form>
       </div>
     </>
