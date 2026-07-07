@@ -15,7 +15,7 @@ export default function RegisterHeader() {
           <img
             src="/images/algoga-logo-auth.png"
             alt="로고"
-            className="h-[45px] w-auto cursor-pointer"
+            className="h-[45px] w-auto"
       />
       </div>
       {/* 텍스트 */}
