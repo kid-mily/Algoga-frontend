@@ -7,7 +7,7 @@ import SubHeader from "@/features/common/components/SubHeader";
 import LectureActionCard from "@/features/classroom/components/LectureActionCard";
 import LectureAttachments from "@/features/classroom/components/LectureAttachments";
 import LectureReviews from "@/features/classroom/components/LectureReviews";
-import { createCourseJsonLd } from "@/features/seo/schema";
+import { createCourseJsonLd, serializeJsonLd } from "@/features/seo/schema";
 import { getSiteUrl } from "@/features/seo/site";
 import {
   getCourseDetail,
@@ -245,7 +245,7 @@ export default async function LectureDetailPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd),
+          __html: serializeJsonLd(jsonLd),
         }}
       />
 
