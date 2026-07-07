@@ -2,6 +2,20 @@ import { getSiteUrl } from "./site";
 
 const SITE_URL = getSiteUrl();
 
+export const serializeJsonLd = (jsonLd: unknown) =>
+  JSON.stringify(jsonLd).replace(/[<>&]/g, (character) => {
+    switch (character) {
+      case "<":
+        return "\\u003c";
+      case ">":
+        return "\\u003e";
+      case "&":
+        return "\\u0026";
+      default:
+        return character;
+    }
+  });
+
 type CourseJsonLdInput = {
   title: string;
   description: string;

@@ -6,6 +6,7 @@ import NoticeSection from "@/features/main/notice/components/NoticeSection";
 import {
   createOrganizationJsonLd,
   createWebSiteJsonLd,
+  serializeJsonLd,
 } from "@/features/seo/schema";
 
 const LoadingBox = ({ height }: { height: string }) => (
@@ -34,7 +35,7 @@ export default async function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd),
+          __html: serializeJsonLd(jsonLd),
         }}
       />
 

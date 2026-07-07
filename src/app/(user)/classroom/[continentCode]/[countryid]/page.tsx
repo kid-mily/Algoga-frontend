@@ -4,7 +4,7 @@ import LectureGrid from "@/features/classroom/components/LectureGrid";
 import LecturePageHeader from "@/features/classroom/components/LecturePageHeader";
 import EvaluationBanner from "@/features/classroom/components/EvaluationBanner";
 import { Country, CourseItem } from "@/features/classroom/components/types";
-import { createCourseListJsonLd } from "@/features/seo/schema";
+import { createCourseListJsonLd, serializeJsonLd } from "@/features/seo/schema";
 import { getCountries } from "@/features/services/countrySelect.service";
 import { getCourses } from "@/features/services/lectureSelect.service";
 import { Metadata } from "next";
@@ -113,7 +113,7 @@ export default async function LectureListPage({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(courseListJsonLd),
+            __html: serializeJsonLd(courseListJsonLd),
           }}
         />
       )}

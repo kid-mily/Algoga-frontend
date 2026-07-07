@@ -1,14 +1,12 @@
-export const DEFAULT_SITE_URL = "https://algoga.kro.kr";
-
 export const getSiteUrl = () => {
   const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
 
   if (!configuredUrl) {
-    return DEFAULT_SITE_URL;
+    throw new Error("NEXT_PUBLIC_SITE_URL is required for SEO metadata.");
   }
 
   if (configuredUrl === "https://algoga.kro.ko") {
-    return DEFAULT_SITE_URL;
+    throw new Error("NEXT_PUBLIC_SITE_URL is invalid: https://algoga.kro.ko");
   }
 
   return configuredUrl;
