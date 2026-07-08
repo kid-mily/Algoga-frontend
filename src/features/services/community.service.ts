@@ -42,6 +42,21 @@ export type CommunityPostPage = {
   hasNext: boolean;
 };
 
+export type CommunityReactionStatus = "ADDED" | "REMOVED" | "CHANGED";
+
+export type CommunityReactionResult = {
+  status: CommunityReactionStatus;
+  likeCount: number;
+  dislikeCount: number;
+};
+
+export type CommunityReportReasonType =
+  | "SPAM"
+  | "ABUSE"
+  | "INAPPROPRIATE"
+  | "ADVERTISEMENT"
+  | "ETC";
+
 export type GetCommunityPostsParams = {
   lastPostId?: number | null;
   categories?: CommunityCategoryCode[];
@@ -50,11 +65,11 @@ export type GetCommunityPostsParams = {
 };
 
 const CATEGORY_LABELS: Record<CommunityCategoryCode, string> = {
-  TRAVEL_REVIEW: "여행 후기",
+  TRAVEL_REVIEW: "여행후기",
   TIP_INFO: "팁&정보",
   QUESTION: "질문",
   COMPANION: "동행 구해요",
-  LECTURE: "강의 후기",
+  LECTURE: "수강강의",
   FREE: "자유",
 };
 
@@ -68,9 +83,11 @@ const CATEGORY_ALIASES: Record<string, CommunityCategoryCode> = {
   "질문": "QUESTION",
   "동행구해요": "COMPANION",
   "동행 구해요": "COMPANION",
+  "수강강의": "LECTURE",
   "강의후기": "LECTURE",
   "강의 후기": "LECTURE",
   "자유": "FREE",
+  "자유(커스텀태그)": "FREE",
 };
 
 const getRecord = (value: unknown): Record<string, unknown> =>
@@ -159,10 +176,10 @@ const normalizeFilter = (value: unknown): CommunityFilter | null => {
   const tagType = getString(record, ["tagType", "type"]).toUpperCase();
   const tagName = getString(record, ["tagName", "name", "label"]);
   const rawCategory = getString(record, ["category", "categoryCode", "code", "tagCode"]);
-  const category = normalizeCategoryCode(rawCategory);
+  const category = normalizeCategoryCode(rawCategory || tagType);
   const countryId = getNumber(record, ["countryId", "country_id"], 0);
 
-  if (tagType === "COUNTRY" && countryId > 0 && tagName) {
+  if ((tagType === "COUNTRY" || countryId > 0) && countryId > 0 && tagName) {
     return {
       id: `country-${countryId}`,
       tagType: "COUNTRY",
@@ -181,6 +198,21 @@ const normalizeFilter = (value: unknown): CommunityFilter | null => {
   }
 
   return null;
+};
+
+const getPostTagFilters = (record: Record<string, unknown>) => {
+  const tagCandidates = [
+    record.tags,
+    record.tagList,
+    record.postTags,
+    record.postTagList,
+    record.filters,
+  ];
+
+  return tagCandidates
+    .flatMap(getItems)
+    .map(normalizeFilter)
+    .filter(Boolean) as CommunityFilter[];
 };
 
 const getFirstImageUrl = (record: Record<string, unknown>) => {
@@ -212,9 +244,23 @@ const normalizePost = (value: unknown): CommunityPost | null => {
 
   if (postId <= 0 || !title) return null;
 
-  const categoryCode = normalizeCategoryCode(
-    getString(record, ["category", "categoryCode", "postCategory", "categoryName"])
-  );
+  const tagFilters = getPostTagFilters(record);
+  const categoryFilter = tagFilters.find((filter) => filter.tagType === "CATEGORY");
+  const countryFilter = tagFilters.find((filter) => filter.tagType === "COUNTRY");
+  const rawCategory = getString(record, [
+    "category",
+    "categoryCode",
+    "postCategory",
+    "categoryName",
+    "tagType",
+    "type",
+  ]);
+  const categoryCode = normalizeCategoryCode(rawCategory) ?? categoryFilter?.category;
+  const directCountry = getString(record, ["country", "countryName"]);
+  const countryTagName =
+    getNumber(record, ["countryId", "country_id"]) > 0
+      ? getString(record, ["tagName"])
+      : "";
   const authorName = getString(record, [
     "authorName",
     "nickname",
@@ -232,10 +278,10 @@ const normalizePost = (value: unknown): CommunityPost | null => {
     postId,
     authorName,
     authorInitial: authorName.trim().slice(0, 1) || "?",
-    country: getString(record, ["country", "countryName", "tagName"], "여행"),
+    country: countryFilter?.tagName || directCountry || countryTagName || "여행",
     category: categoryCode
       ? CATEGORY_LABELS[categoryCode]
-      : getString(record, ["categoryName", "category", "tagName"], "자유"),
+      : getString(record, ["categoryName", "category"], "자유"),
     categoryCode,
     createdAt: formatPostDate(getString(record, ["createdAt", "createdDate", "regDate"], "")),
     title,
@@ -285,5 +331,76 @@ export const getCommunityPosts = async ({
       getNumber(record, ["lastPostId", "nextLastPostId"], posts.at(-1)?.postId ?? 0) ||
       null,
     hasNext: getBoolean(record, ["hasNext", "hasMore"], false),
+  };
+};
+
+export const getCommunityPost = async (
+  postId: number,
+  signal?: AbortSignal
+): Promise<CommunityPost> => {
+  const response = await api.get<ApiResult<unknown>>(`/api/v1/posts/${postId}`, {
+    signal,
+  });
+
+  const post = normalizePost(unwrapData(response));
+  if (!post) {
+    throw new Error("게시글을 불러오지 못했습니다.");
+  }
+
+  return post;
+};
+
+export const reportCommunityPost = async ({
+  postId,
+  reasonType = "SPAM",
+  detail,
+}: {
+  postId: number;
+  reasonType?: CommunityReportReasonType;
+  detail: string;
+}) => {
+  return api.post<ApiResult<unknown>>(
+    "/api/v1/reports",
+    {
+      targetType: "POST",
+      targetId: postId,
+      reasonType,
+      detail,
+    },
+    {
+      suppressGlobalError: true,
+    }
+  );
+};
+
+export const reactToCommunityPost = async ({
+  postId,
+  isLike,
+}: {
+  postId: number;
+  isLike: boolean;
+}): Promise<CommunityReactionResult> => {
+  const response = await api.post<ApiResult<unknown>>(
+    "/api/v1/reactions",
+    {
+      targetType: "POST",
+      targetId: postId,
+      isLike,
+    },
+    {
+      suppressGlobalError: true,
+    }
+  );
+  const responseRecord = getRecord(response);
+  const data = getRecord(unwrapData(response));
+
+  return {
+    status: getString(data, ["status"], getString(responseRecord, ["status"], "ADDED")) as CommunityReactionStatus,
+    likeCount: getNumber(data, ["likeCount"], getNumber(responseRecord, ["likeCount"])),
+    dislikeCount: getNumber(
+      data,
+      ["dislikeCount"],
+      getNumber(responseRecord, ["dislikeCount"])
+    ),
   };
 };

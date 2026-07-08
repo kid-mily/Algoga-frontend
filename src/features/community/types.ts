@@ -1,4 +1,5 @@
 export type CommunityCardProps = {
+  postId: number;
   authorName: string;
   authorInitial: string;
   country: string;

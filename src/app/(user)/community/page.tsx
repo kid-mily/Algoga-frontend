@@ -3,20 +3,33 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CommunityCard from "@/features/community/components/CommunityCard";
 import CommunityHeader from "@/features/community/components/CommunityHeader";
+import { COMMUNITY_CATEGORIES } from "@/features/community/components/CommunityCategory";
+import type { CommunityCategoryOption } from "@/features/community/types";
 import {
-  COMMUNITY_CATEGORIES,
-  type CommunityCategoryOption,
-} from "@/features/community/components/CommunityCategory";
-import {
+  getCommunityFilters,
   getCommunityPosts,
   type CommunityCategoryCode,
+  type CommunityFilter,
   type CommunityPost,
 } from "@/features/services/community.service";
 
 const ALL_CATEGORY_ID = "ALL";
 
+const isVisibleCategoryFilter = (filter: CommunityFilter) =>
+  filter.tagType !== "COUNTRY" && filter.category !== "FREE";
+
+const DEFAULT_FILTERS: CommunityFilter[] = COMMUNITY_CATEGORIES.filter(
+  (category) => category.id !== "FREE"
+).map((category) => ({
+  id: category.id,
+  tagType: "CATEGORY",
+  tagName: category.label,
+  category: category.id as CommunityCategoryCode,
+}));
+
 export default function CommunityPage() {
-  const [selectedCategory, setSelectedCategory] = useState<CommunityCategoryCode>();
+  const [selectedFilterId, setSelectedFilterId] = useState<string>(ALL_CATEGORY_ID);
+  const [filters, setFilters] = useState<CommunityFilter[]>(DEFAULT_FILTERS);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [lastPostId, setLastPostId] = useState<number | null>(null);
   const [hasNext, setHasNext] = useState(true);
@@ -28,23 +41,22 @@ export default function CommunityPage() {
   const categoryOptions = useMemo<CommunityCategoryOption[]>(
     () => [
       { id: ALL_CATEGORY_ID, label: "전체" },
-      ...COMMUNITY_CATEGORIES,
+      ...filters
+        .filter(isVisibleCategoryFilter)
+        .map((filter) => ({
+          id: filter.id,
+          label: filter.tagName,
+        })),
     ],
-    []
+    [filters]
+  );
+  const selectedFilter = useMemo(
+    () => filters.find((filter) => filter.id === selectedFilterId),
+    [filters, selectedFilterId]
   );
   const selectedFilterIds = useMemo(() => {
-    const ids: string[] = [];
-
-    if (!selectedCategory) {
-      ids.push(ALL_CATEGORY_ID);
-    }
-
-    if (selectedCategory) {
-      ids.push(selectedCategory);
-    }
-
-    return ids;
-  }, [selectedCategory]);
+    return [selectedFilterId];
+  }, [selectedFilterId]);
 
   const loadPosts = useCallback(
     async ({
@@ -67,7 +79,8 @@ export default function CommunityPage() {
       try {
         const data = await getCommunityPosts({
           lastPostId: nextLastPostId,
-          categories: selectedCategory ? [selectedCategory] : undefined,
+          categories: selectedFilter?.category ? [selectedFilter.category] : undefined,
+          countryId: selectedFilter?.countryId,
           signal,
         });
 
@@ -89,8 +102,31 @@ export default function CommunityPage() {
         }
       }
     },
-    [selectedCategory]
+    [selectedFilter]
   );
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadFilters = async () => {
+      try {
+        const data = await getCommunityFilters(controller.signal);
+        const categoryFilters = data.filter(isVisibleCategoryFilter);
+
+        if (categoryFilters.length > 0) {
+          setFilters(categoryFilters);
+        }
+      } catch {
+        setFilters(DEFAULT_FILTERS);
+      }
+    };
+
+    void loadFilters();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -130,13 +166,11 @@ export default function CommunityPage() {
 
   const handleFilterChange = (filterId: string) => {
     if (filterId === ALL_CATEGORY_ID) {
-      setSelectedCategory(undefined);
+      setSelectedFilterId(ALL_CATEGORY_ID);
       return;
     }
 
-    setSelectedCategory((prev) =>
-      prev === filterId ? undefined : (filterId as CommunityCategoryCode)
-    );
+    setSelectedFilterId((prev) => (prev === filterId ? ALL_CATEGORY_ID : filterId));
   };
 
   return (
