@@ -1,8 +1,10 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import { CommunityCardProps, CommunityStatProps } from "../types"
 
 export default function CommunityCard({
+  postId,
   authorName,
   authorInitial,
   country,
@@ -12,14 +14,16 @@ export default function CommunityCard({
   content,
   imageUrl,
   imageAlt,
-  imageIndex = 1,
-  imageTotal = 1,
   likeCount,
   dislikeCount,
   commentCount,
 }: CommunityCardProps) {
   return (
-    <article className="relative w-full overflow-hidden rounded-[12px] border border-[#CFE0DE] bg-[#FFFDF8] px-6 py-5 shadow-[0_10px_24px_rgba(72,52,35,0.07)] transition duration-200 hover:-translate-y-0.5 hover:border-[#6BA19D] hover:shadow-[0_14px_30px_rgba(72,52,35,0.1)]">
+    <Link
+      href={`/community/${postId}`}
+      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6BA19D] focus-visible:ring-offset-2"
+    >
+      <article className="relative w-full overflow-hidden rounded-[12px] border border-[#CFE0DE] bg-[#FFFDF8] px-6 py-5 shadow-[0_10px_24px_rgba(72,52,35,0.07)] transition duration-200 hover:-translate-y-0.5 hover:border-[#6BA19D] hover:shadow-[0_14px_30px_rgba(72,52,35,0.1)]">
       <header className="relative flex items-start gap-3">
         <div className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-[#6BA19D] text-[19px] font-bold text-white ring-4 ring-[#EEF4F4]">
           {authorInitial}
@@ -65,12 +69,6 @@ export default function CommunityCard({
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 920px"
           />
-
-          {imageTotal > 1 && (
-            <div className="absolute bottom-3 right-3 rounded-full bg-black/45 px-2.5 py-1 text-[12px] font-semibold text-white">
-              {imageIndex} / {imageTotal}
-            </div>
-          )}
         </div>
       )}
 
@@ -79,7 +77,8 @@ export default function CommunityCard({
         <CommunityStat icon="/images/commudislike.svg" label="싫어요" count={dislikeCount} />
         <CommunityStat icon="/images/commucomment.svg" label="댓글" count={commentCount} />
       </footer>
-    </article>
+      </article>
+    </Link>
   );
 }
 
