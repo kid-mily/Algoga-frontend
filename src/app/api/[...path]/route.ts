@@ -1,10 +1,18 @@
+// 로컬에서 로그인 되게 하려고 만든 코드
 import { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const API_PROXY_TARGET =
-  process.env.API_PROXY_TARGET?.replace(/\/$/, "") ?? "https://kidmily.kro.kr";
+const getApiProxyTarget = () => {
+  const proxyTarget = process.env.API_PROXY_TARGET?.replace(/\/$/, "");
+
+  if (!proxyTarget) {
+    throw new Error("API_PROXY_TARGET 환경변수가 설정되지 않았습니다.");
+  }
+
+  return proxyTarget;
+};
 
 const HOP_BY_HOP_HEADERS = [
   "connection",
@@ -75,7 +83,7 @@ async function proxyApi(
 ) {
   const { path } = await params;
   const requestUrl = new URL(request.url);
-  const targetUrl = new URL(`${API_PROXY_TARGET}/api/${path.join("/")}`);
+  const targetUrl = new URL(`${getApiProxyTarget()}/api/${path.join("/")}`);
   targetUrl.search = requestUrl.search;
 
   const backendResponse = await fetch(targetUrl, {

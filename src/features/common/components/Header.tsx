@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { getMe } from "@/features/services/user.service";
+import AuthSessionTimer from "./AuthSessionTimer";
 import Navbar from "./Navbar";
 import Profile from "./Profile";
 
@@ -90,15 +91,18 @@ export default function Header() {
 
   return (
     <header className="relative z-[3000] flex h-16 w-full items-center justify-between bg-white px-5">
-      <Link href="/">
-        <Image
-          src="/images/algoga-logo.png"
-          alt="로고"
-          width={130}
-          height={45}
-          className="h-[45px] w-[130px] cursor-pointer"
-        />
-      </Link>
+      <div className="flex items-center gap-4">
+        <Link href="/">
+          <Image
+            src="/images/algoga-logo.png"
+            alt="로고"
+            width={130}
+            height={45}
+            className="h-[45px] w-[130px] cursor-pointer"
+          />
+        </Link>
+        {user && <AuthSessionTimer />}
+      </div>
       <Navbar />
       <Profile user={user} />
     </header>

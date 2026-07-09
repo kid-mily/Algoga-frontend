@@ -1,11 +1,6 @@
 "use client";
 
-interface RegisterAgreeFormProps {
-  formData: any;
-  onChange: (field: string, value: boolean) => void;
-  onPrev: () => void;
-  onNext: () => void;
-}
+import { RegisterAgreeFormProps } from "../types";
 
 export default function RegisterAgreeForm({
   formData,

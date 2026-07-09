@@ -20,6 +20,11 @@ export interface LoginResponse {
   requiresPasswordChange?: boolean;
 }
 
+export interface AuthSessionInfo {
+  expiresAt: string;
+  remainingSeconds: number;
+}
+
 export interface SignupRequest {
   username: string;
   email: string;
@@ -36,7 +41,7 @@ export interface SignupRequest {
   termsMarketingAgreed: boolean;
 }
 
-export type SocialType = "GOOGLE" | "KAKAO" | "NAVER";
+export type SocialType = "GOOGLE" | "KAKAO";
 
 export interface SocialSignupRequest {
   email: string;
@@ -114,4 +119,60 @@ export type RegisterFormData = {
 export type ServerError = {
   field: string;
   message: string;
+};
+
+export type RegisterCompleteFormProps = {
+  formData?: Pick<RegisterFormData, "name" | "nickname">;
+};
+
+export interface LoginSidebarProps {
+  title: {
+    normal: string;
+    accent: string;
+  };
+  description: string;
+}
+
+export interface AuthPageHeaderProps {
+  title: string;
+  description: string;
+  backText?: string;
+}
+
+export interface FindIdCompleteProps {
+  userId: string;
+}
+
+export interface RegisterStepHeaderProps {
+  currentStep: number;
+}
+
+export interface RegisterAgreeFormProps {
+  formData: any;
+  onChange: (field: string, value: boolean) => void;
+  onPrev: () => void;
+  onNext: () => void;
+}
+
+export interface RegisterInfoFormProps {
+  formData: RegisterFormData;
+  onChange: (field: string, value: string) => void;
+  onNext: () => void;
+  isLoading?: boolean;
+  serverError?: { field: string; message: string }; // 객체 형태로 변경
+  setServerError?: (err: { field: string; message: string }) => void; // 객체 형태로 변경
+  isSocialSignup?: boolean;
+}
+
+
+export type ValidateRegisterInfoOptions = {
+  isSocialSignup?: boolean;
+  isUsernameChecked?: boolean;
+  isEmailVerified?: boolean;
+};
+
+export type ActionState = {
+  success: boolean;
+  message?: string;
+  errors?: Record<string, string>;
 };

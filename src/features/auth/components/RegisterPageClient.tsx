@@ -12,14 +12,12 @@ import RegisterInfoForm from "./RegisterInfoForm";
 import RegisterStepHeader from "./RegisterStepHeader";
 import { RegisterFormData, ServerError} from '../types'
 
-
+// 소셜로그인 타입 지정
 const getSocialType = (value: string | null): SocialType | null => {
   const normalizedValue = value?.toUpperCase();
-
   if (
     normalizedValue === "GOOGLE" ||
-    normalizedValue === "KAKAO" ||
-    normalizedValue === "NAVER"
+    normalizedValue === "KAKAO"
   ) {
     return normalizedValue;
   }

@@ -24,7 +24,12 @@ const getNumber = (record: RawRecord, keys: string[], fallback = 0) => {
 };
 
 const getWebSocketUrl = () => {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  if (!apiUrl) {
+    throw new Error("NEXT_PUBLIC_API_URL 환경변수가 설정되지 않았습니다.");
+  }
+
   const url = new URL(apiUrl);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   url.pathname = "/ws/chat";

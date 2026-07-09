@@ -1,8 +1,5 @@
 import Link from "next/link";
-
-interface RegisterCompleteFormProps {
-  formData?: any; // RegisterPage에서 넘어오는 가입 정보 (API 제출 완료 후 렌더링 가정)
-}
+import type { RegisterCompleteFormProps } from "@/features/auth/types";
 
 export default function RegisterCompleteForm({ formData }: RegisterCompleteFormProps) {
   // 닉네임이나 이름이 없으면 기본 텍스트 출력

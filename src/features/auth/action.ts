@@ -1,13 +1,6 @@
-﻿'use server';
-
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { login } from "../services/auth.service";
-
-type ActionState = {
-  success: boolean;
-  message?: string;
-  errors?: Record<string, string>;
-};
+import { ActionState } from "./types";
 
 export const loginAction = async (
   prevState: ActionState,

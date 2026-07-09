@@ -5,18 +5,9 @@ import { checkUsernameDuplicate, sendSignupEmailCode, verifySignupEmailCode } fr
 
 import FormLabel from "@/features/common/components/FormLabel";
 
-import { RegisterFormData } from "../types";
+import {  RegisterInfoFormProps  } from "../types";
 import { validateRegisterInfoForm } from "../utils/registerValidators";
 
-interface RegisterInfoFormProps {
-  formData: RegisterFormData;
-  onChange: (field: string, value: string) => void;
-  onNext: () => void;
-  isLoading?: boolean;
-  serverError?: { field: string; message: string }; // 객체 형태로 변경
-  setServerError?: (err: { field: string; message: string }) => void; // 객체 형태로 변경
-  isSocialSignup?: boolean;
-}
 
 export default function RegisterInfoForm({ 
   formData, 

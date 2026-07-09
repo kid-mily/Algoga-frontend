@@ -1,10 +1,5 @@
 import Link from "next/link";
-
-interface AuthPageHeaderProps {
-  title: string;
-  description: string;
-  backText?: string;
-}
+import { AuthPageHeaderProps } from "../types"
 
 export default function AuthPageHeader({
   title,

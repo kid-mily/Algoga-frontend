@@ -8,16 +8,12 @@ import CompleteModal from "@/features/common/components/CompleteModal";
 
 export default function NewPwForm() {
   const router = useRouter();
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
-
   const [isLoading, setIsLoading] = useState(false);
 
   // 모달 상태 관리 

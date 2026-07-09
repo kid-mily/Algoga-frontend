@@ -1,11 +1,7 @@
 // id 찾기 완료 
-
 import Image from "next/image";
 import Link from "next/link";
-
-interface FindIdCompleteProps {
-  userId: string;
-}
+import { FindIdCompleteProps } from "../types";
 
 export default function FindIdComplete({
   userId,
