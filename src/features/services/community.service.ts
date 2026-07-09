@@ -86,8 +86,9 @@ export type CommunityReactionResult = {
 export type CommunityReportReasonType =
   | "SPAM"
   | "ABUSE"
+  | "FALSE_INFO"
   | "INAPPROPRIATE"
-  | "ADVERTISEMENT"
+  | "COPYRIGHT"
   | "ETC";
 
 export type GetCommunityPostsParams = {
