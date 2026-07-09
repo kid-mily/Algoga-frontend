@@ -1,10 +1,4 @@
-interface LoginSidebarProps {
-  title: {
-    normal: string;
-    accent: string;
-  };
-  description: string;
-}
+import { LoginSidebarProps } from "../types"
 
 export default function LoginSidebar({
   title,

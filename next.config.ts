@@ -6,6 +6,25 @@ const withBundleAnalyzer = bundleAnalyzer({
   openAnalyzer: true,
 });
 
+const getHostnameFromEnv = (value?: string) => {
+  if (!value) return null;
+
+  try {
+    return new URL(value).hostname;
+  } catch {
+    return value.replace(/^https?:\/\//, "").replace(/\/$/, "") || null;
+  }
+};
+
+const apiProxyHostname = getHostnameFromEnv(process.env.API_PROXY_TARGET);
+const siteHostname = getHostnameFromEnv(process.env.NEXT_PUBLIC_SITE_URL);
+const allowedDevOrigins = Array.from(
+  new Set(
+    [siteHostname, apiProxyHostname]
+      .filter((hostname): hostname is string => Boolean(hostname))
+      .flatMap((hostname) => [hostname, `https://${hostname}`])
+  )
+);
 
 const nextConfig: NextConfig = {
   compiler: {
@@ -26,10 +45,7 @@ const nextConfig: NextConfig = {
   },
 
   // 2. 로컬 개발 시 외부 도메인 접속 허용 (기존 설정 유지 ✅)
-  allowedDevOrigins: [
-    'algoga.kro.kr', 'https://algoga.kro.kr', 
-    'kidmily.kro.kr', 'https://kidmily.kro.kr'
-  ],
+  allowedDevOrigins,
 
   // /public/data 아래 정적 파일을 30알 동안 브라우저에 캐시
   async headers() {

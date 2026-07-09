@@ -1,20 +1,16 @@
 import type { RegisterFormData } from "@/features/auth/types";
+import {ValidateRegisterInfoOptions} from "../types"
 
 export const REGISTER_REQUIRED_NAME_MESSAGE = "이름은 필수입니다.";
-export const REGISTER_REQUIRED_USERNAME_MESSAGE =
-  "아이디는 4자 이상 20자 이하로 입력해주세요.";
-export const REGISTER_REQUIRED_PASSWORD_MESSAGE =
-  "비밀번호는 영문, 숫자 조합 8자 이상이어야 합니다.";
+export const REGISTER_REQUIRED_USERNAME_MESSAGE ="아이디는 4자 이상 20자 이하로 입력해주세요.";
+export const REGISTER_REQUIRED_PASSWORD_MESSAGE ="비밀번호는 영문, 숫자 조합 8자 이상이어야 합니다.";
 export const REGISTER_INVALID_EMAIL_MESSAGE = "올바른 이메일 형식을 입력해주세요.";
 export const REGISTER_REQUIRED_EMAIL_MESSAGE = REGISTER_INVALID_EMAIL_MESSAGE;
-export const REGISTER_REQUIRED_NICKNAME_MESSAGE =
-  "닉네임은 필수이며 50자 이내여야 합니다.";
+export const REGISTER_REQUIRED_NICKNAME_MESSAGE ="닉네임은 필수이며 50자 이내여야 합니다.";
 export const REGISTER_PASSWORD_CONFIRM_MESSAGE = "비밀번호가 일치하지 않습니다.";
-export const REGISTER_USERNAME_CHECK_MESSAGE =
-  "아이디 중복 확인을 완료해주세요.";
+export const REGISTER_USERNAME_CHECK_MESSAGE ="아이디 중복 확인을 완료해주세요.";
 export const REGISTER_EMAIL_VERIFY_MESSAGE = "이메일 인증을 완료해주세요.";
-export const REGISTER_INVALID_PHONE_MESSAGE =
-  "올바른 전화번호 형식을 입력해주세요. (예: 010-1234-5678)";
+export const REGISTER_INVALID_PHONE_MESSAGE ="올바른 전화번호 형식을 입력해주세요. (예: 010-1234-5678)";
 export const REGISTER_REQUIRED_BIRTH_DATE_MESSAGE = "생년월일은 필수입니다.";
 export const REGISTER_REQUIRED_GENDER_MESSAGE = "성별은 필수입니다.";
 
@@ -46,11 +42,6 @@ export const validateRegisterNickname = (nickname: string) => {
     : REGISTER_REQUIRED_NICKNAME_MESSAGE;
 };
 
-export type ValidateRegisterInfoOptions = {
-  isSocialSignup?: boolean;
-  isUsernameChecked?: boolean;
-  isEmailVerified?: boolean;
-};
 
 export const validateRegisterInfoForm = (
   formData: RegisterFormData,

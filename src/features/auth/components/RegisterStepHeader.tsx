@@ -1,6 +1,4 @@
-interface RegisterStepHeaderProps {
-  currentStep: number;
-}
+import { RegisterStepHeaderProps } from "../types";
 
 export default function RegisterStepHeader({
   currentStep,

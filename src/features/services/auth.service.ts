@@ -2,6 +2,7 @@ import {
   FindIdRequest,
   FindIdResponse,
   FindPasswordRequest,
+  AuthSessionInfo,
   LoginRequest,
   LoginResponse,
   ResetPasswordRequest,
@@ -69,6 +70,27 @@ export const resetPassword = async (payload: ResetPasswordRequest) => {
 // 로그아웃 요청
 export const logout = async () => {
   return api.post("/api/v1/auth/logout", undefined, {
+    skipAuth: true,
+    suppressGlobalError: true,
+  });
+};
+
+export const getAuthSession = async (
+  signal?: AbortSignal
+): Promise<AuthSessionInfo> => {
+  const response = await api.get<ApiResult<AuthSessionInfo>>(
+    "/api/v1/auth/session",
+    {
+      signal,
+      suppressGlobalError: true,
+    }
+  );
+
+  return unwrapData<AuthSessionInfo>(response);
+};
+
+export const refreshAuthSession = async (): Promise<void> => {
+  await api.post("/api/v1/auth/refresh", undefined, {
     skipAuth: true,
     suppressGlobalError: true,
   });
