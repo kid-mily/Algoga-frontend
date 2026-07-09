@@ -1,40 +1,103 @@
-import { MoreVertical } from "lucide-react";
-
-type CommunityCommentItemProps = {
-  author: string;
-  createdAt: string;
-  content: string;
-  profileText: string;
-};
+import { Heart, ThumbsDown } from "lucide-react";
+import { CommunityCommentItemProps } from '../types'
+import CommentDropdown from "./CommentDropdown";
 
 export default function CommunityCommentItem({
-  author,
-  createdAt,
-  content,
-  profileText,
+  currentUserId,
+  comment,
+  reactionByCommentId = {},
+  pendingCommentId = null,
+  onReact,
+  onEdit,
+  onDelete,
+  onReport,
 }: CommunityCommentItemProps) {
-  return (
-    <div className="flex gap-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-600 text-sm font-semibold text-white">
-        {profileText}
-      </div>
+  const isMine = Boolean(
+    comment.isMine || (comment.authorId && currentUserId === comment.authorId)
+  );
+  const reaction = reactionByCommentId[comment.commentId] ?? null;
+  const isPending = pendingCommentId === comment.commentId;
 
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-900">{author}</span>
-          <span className="text-xs text-slate-400">{createdAt}</span>
+  return (
+    <div>
+      <div className="flex gap-3">
+        {comment.authorProfileImageUrl ? (
+          <img
+            src={comment.authorProfileImageUrl}
+            alt={`${comment.authorName} 프로필 이미지`}
+            className="h-9 w-9 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-600 text-sm font-semibold text-white">
+            {comment.authorInitial}
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-bold text-slate-900">{comment.authorName}</span>
+            {isMine && (
+              <span className="text-xs font-semibold text-[#6BA19D]">(나)</span>
+            )}
+            <span className="text-xs text-slate-400">{comment.createdAt}</span>
+          </div>
+
+          <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-600">
+            {comment.content}
+          </p>
+
+          <div className="mt-2 flex items-center gap-4 text-xs font-bold text-[#7A6F66]">
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => onReact(comment.commentId, true)}
+              className={`flex cursor-pointer items-center gap-1 disabled:cursor-not-allowed disabled:opacity-60 ${
+                reaction === true ? "text-[#E05252]" : "hover:text-[#5F928E]"
+              }`}
+            >
+              <Heart size={16} />
+              {comment.likeCount.toLocaleString()}
+            </button>
+
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => onReact(comment.commentId, false)}
+              className={`flex cursor-pointer items-center gap-1 disabled:cursor-not-allowed disabled:opacity-60 ${
+                reaction === false ? "text-[#5F928E]" : "hover:text-[#5F928E]"
+              }`}
+            >
+              <ThumbsDown size={16} />
+              {comment.dislikeCount.toLocaleString()}
+            </button>
+          </div>
         </div>
 
-        <p className="mt-1 text-sm leading-6 text-slate-600">{content}</p>
+        <CommentDropdown
+          isMine={isMine}
+          onEdit={() => onEdit(comment.commentId, comment.content)}
+          onDelete={() => onDelete(comment.commentId)}
+          onReport={() => onReport(comment.commentId)}
+        />
       </div>
 
-      <button
-        type="button"
-        className="mt-1 text-teal-600 hover:text-teal-700"
-        aria-label="댓글 더보기"
-      >
-        <MoreVertical size={20} />
-      </button>
+      {comment.replies.length > 0 && (
+        <div className="ml-12 mt-4 space-y-4 border-l border-[#DDE8EF] pl-4">
+          {comment.replies.map((reply) => (
+            <CommunityCommentItem
+              key={reply.commentId}
+              currentUserId={currentUserId}
+              comment={reply}
+              reactionByCommentId={reactionByCommentId}
+              pendingCommentId={pendingCommentId}
+              onReact={onReact}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onReport={onReport}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,13 +1,6 @@
 import CommunityCategoryTabs from "../components/CommunityCategory";
 import CommunityWriteButton from "./CommunityWriteButton";
-import { CommunityCategoryOption } from "../types";
-
-type CommunityHeaderProps = {
-  selectedCategories: string[];
-  categories: CommunityCategoryOption[];
-  onCategoryChange: (category: string) => void;
-  onWriteClick?: () => void;
-};
+import { CommunityHeaderProps } from "../types";
 
 export default function CommunityHeader({
   selectedCategories,

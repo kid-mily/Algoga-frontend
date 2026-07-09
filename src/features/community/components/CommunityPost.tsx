@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ApiRequestError } from "@/lib/api";
 import CommunityActionModal from "@/features/community/components/CommunityActionModal";
+import CommunityCommentSection from "@/features/community/components/CommunityCommentSection";
 import { getMe } from "@/features/services/user.service";
 import {
   deleteCommunityPost,
@@ -24,12 +25,7 @@ import {
   reportCommunityPost,
   type CommunityPost,
 } from "@/features/services/community.service";
-
-type CommunityPostDetailProps = {
-  postId: number;
-};
-
-type ReactionState = true | false | null;
+import { CommunityPostDetailProps, ReactionState } from '../types'; 
 
 const getRequestErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof ApiRequestError) {
@@ -49,7 +45,9 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeleteCompleteOpen, setIsDeleteCompleteOpen] = useState(false);
+  const [isLoginRequiredOpen, setIsLoginRequiredOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [currentUserInitial, setCurrentUserInitial] = useState("?");
   const [currentUserProfileImageUrl, setCurrentUserProfileImageUrl] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
@@ -65,9 +63,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
 
   useEffect(() => {
     if (isInvalidPostId) return;
-
     const controller = new AbortController();
-
     const loadPost = async () => {
       try {
         setIsLoading(true);
@@ -80,6 +76,9 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
         setPost(data);
         setCurrentImageIndex(0);
         setCurrentUserId(user?.userId ?? null);
+        setCurrentUserInitial(
+          (user?.nickname || user?.name || user?.username || "?").trim().slice(0, 1) || "?"
+        );
         setCurrentUserProfileImageUrl(user?.profileImageUrl ?? null);
       } catch (error) {
         if (controller.signal.aborted) return;
@@ -104,6 +103,11 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
   const handleReaction = async (isLike: boolean) => {
     if (!post || isReacting) return;
 
+    if (!currentUserId) {
+      setIsLoginRequiredOpen(true);
+      return;
+    }
+
     try {
       setIsReacting(true);
 
@@ -126,8 +130,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
       console.error("[community] reaction failed", error);
 
       if (error instanceof ApiRequestError && error.status === 401) {
-        window.alert("좋아요/싫어요는 로그인 후 이용할 수 있습니다.");
-        router.push(`/auth/login?redirect=${encodeURIComponent(`/community/${post.postId}`)}`);
+        setIsLoginRequiredOpen(true);
         return;
       }
 
@@ -144,6 +147,11 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
 
   const handleReport = async () => {
     if (!post || isReporting) return;
+
+    if (!currentUserId) {
+      setIsLoginRequiredOpen(true);
+      return;
+    }
 
     const detail = window.prompt("신고 사유를 입력해 주세요.");
     if (!detail?.trim()) return;
@@ -222,6 +230,14 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
         onConfirm={() => router.push("/community")}
       />
 
+      <CommunityActionModal
+        open={isLoginRequiredOpen}
+        title="로그인 필요"
+        description="로그인이 필요한 서비스입니다."
+        confirmLabel="확인"
+        onConfirm={() => setIsLoginRequiredOpen(false)}
+      />
+
       <button
         type="button"
         onClick={() => router.push("/community")}
@@ -246,8 +262,8 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
           </div>
         ) : (
           <>
-            <header className="flex items-start justify-between border-b border-[#CFE0DE] px-7 py-6">
-              <div className="flex gap-4">
+            <header className="flex items-center justify-between gap-4 border-b border-[#CFE0DE] px-7 py-6">
+              <div className="flex min-w-0 items-center gap-4">
                 {authorProfileImageUrl ? (
                   <div className="relative h-12 w-12 overflow-hidden rounded-full ring-4 ring-[#EEF4F4]">
                     <Image
@@ -264,19 +280,19 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
                   </div>
                 )}
 
-                <div>
-                  <h2 className="text-sm font-bold text-[#2F2A26]">
+                <div className="min-w-0">
+                  <h2 className="truncate text-sm font-bold leading-5 text-[#2F2A26]">
                     {post.authorName}
                   </h2>
 
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="rounded-full bg-[#EEF4F4] px-2 py-1 font-semibold text-[#5F928E]">
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <span className="flex h-6 items-center rounded-full bg-[#EEF4F4] px-2.5 text-xs font-bold text-[#5F928E]">
                       {post.country}
                     </span>
-                    <span className="rounded-[8px] border border-[#6BA19D] bg-[#6BA19D] px-2 py-1 font-bold text-white">
+                    <span className="flex h-6 items-center rounded-full border border-[#6BA19D] bg-[#6BA19D] px-2.5 text-xs font-bold text-white">
                       {post.category}
                     </span>
-                    <span className="font-semibold text-[#9A8B7D]">
+                    <span className="text-xs font-semibold text-[#9A8B7D]">
                       {post.createdAt}
                     </span>
                   </div>
@@ -368,7 +384,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
                 onClick={() => handleReaction(true)}
                 disabled={isReacting}
                 className={`flex items-center gap-2 transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                  reaction === true ? "text-[#5F928E]" : "hover:text-[#5F928E]"
+                  reaction === true ? "text-[#E05252]" : "hover:text-[#E05252]"
                 }`}
               >
                 <Heart size={20} />
@@ -397,6 +413,24 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
                 {post.viewCount.toLocaleString()}
               </div>
             </div>
+
+            <CommunityCommentSection
+              postId={post.postId}
+              initialCommentCount={post.commentCount}
+              initialComments={post.comments}
+              currentUserId={currentUserId}
+              currentUserInitial={currentUserInitial}
+              onCommentCountChange={(count) =>
+                setPost((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        commentCount: count,
+                      }
+                    : prev
+                )
+              }
+            />
           </>
         )}
       </section>
