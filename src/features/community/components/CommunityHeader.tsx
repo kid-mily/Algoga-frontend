@@ -16,19 +16,25 @@ export default function CommunityHeader({
   onWriteClick,
 }: CommunityHeaderProps) {
   return (
-    <section className="w-full bg-[#F8F5EF] py-6">
+    <section className="w-full bg-[#F3F8FC] pb-4 pt-8">
       <div className="mx-auto w-full max-w-5xl px-6">
-        <div>
-          <h1 className="text-[28px] font-extrabold leading-none text-[#2F2A26]">
-            커뮤니티
-          </h1>
+        <div className="mb-5">
+          <div>
+            <p className="text-sm font-semibold tracking-[0.16em] text-[#439A97]">
+              TRAVEL COMMUNITY
+            </p>
 
-          <p className="mt-3 text-[14px] font-medium text-[#7A6F66]">
-            여행 경험을 나눠보세요
-          </p>
+            <h1 className="mt-1 text-2xl font-bold text-[#0A1628]">
+              여행 이야기 모아보기
+            </h1>
+
+            <p className="mt-1 text-sm text-[#8A94A6]">
+              학습한 나라의 여행 후기와 정보를 함께 나눠보세요.
+            </p>
+          </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 py-2">
           <CommunityCategoryTabs
             selectedCategories={selectedCategories}
             categories={categories}

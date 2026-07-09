@@ -3,9 +3,22 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Eye, Flag, Heart, MessageCircle, ThumbsDown } from "lucide-react";
-import { ApiRequestError } from "@/lib/api";
 import {
+  ChevronLeft,
+  ChevronRight,
+  Edit3,
+  Eye,
+  Flag,
+  Heart,
+  MessageCircle,
+  ThumbsDown,
+  Trash2,
+} from "lucide-react";
+import { ApiRequestError } from "@/lib/api";
+import CommunityActionModal from "@/features/community/components/CommunityActionModal";
+import { getMe } from "@/features/services/user.service";
+import {
+  deleteCommunityPost,
   getCommunityPost,
   reactToCommunityPost,
   reportCommunityPost,
@@ -33,8 +46,22 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
   const [isLoading, setIsLoading] = useState(true);
   const [isReacting, setIsReacting] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeleteCompleteOpen, setIsDeleteCompleteOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [currentUserProfileImageUrl, setCurrentUserProfileImageUrl] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const isInvalidPostId = !Number.isFinite(postId) || postId <= 0;
+  const isOwnPost = Boolean(
+    post && (post.isMine || (post.authorId && currentUserId === post.authorId))
+  );
+  const authorProfileImageUrl =
+    post?.authorProfileImageUrl || (isOwnPost ? currentUserProfileImageUrl : null);
+  const postImages = post?.imageUrls ?? [];
+  const currentImageUrl = postImages[currentImageIndex] ?? post?.imageUrl;
+  const hasMultipleImages = postImages.length > 1;
 
   useEffect(() => {
     if (isInvalidPostId) return;
@@ -46,8 +73,14 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
         setIsLoading(true);
         setErrorMessage("");
 
-        const data = await getCommunityPost(postId, controller.signal);
+        const [data, user] = await Promise.all([
+          getCommunityPost(postId, controller.signal),
+          getMe(controller.signal),
+        ]);
         setPost(data);
+        setCurrentImageIndex(0);
+        setCurrentUserId(user?.userId ?? null);
+        setCurrentUserProfileImageUrl(user?.profileImageUrl ?? null);
       } catch (error) {
         if (controller.signal.aborted) return;
 
@@ -131,12 +164,68 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
     }
   };
 
+  const handleEdit = () => {
+    if (!post) return;
+
+    router.push(`/community/write?postId=${post.postId}`);
+  };
+
+  const handleDelete = async () => {
+    if (!post || isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteCommunityPost(post.postId);
+      setIsDeleteConfirmOpen(false);
+      setIsDeleteCompleteOpen(true);
+    } catch (error) {
+      window.alert(getRequestErrorMessage(error, "게시글 삭제에 실패했습니다."));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (!postImages.length) return;
+
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? postImages.length - 1 : prev - 1
+    );
+  };
+
+  const handleNextImage = () => {
+    if (!postImages.length) return;
+
+    setCurrentImageIndex((prev) =>
+      prev === postImages.length - 1 ? 0 : prev + 1
+    );
+  };
+
   return (
-    <main className="min-h-screen bg-[#F8F5EF] px-4 py-7">
+    <main className="min-h-screen bg-[#F3F8FC] px-4 py-7">
+      <CommunityActionModal
+        open={isDeleteConfirmOpen}
+        title="게시글 삭제"
+        description="삭제한 게시글은 되돌릴 수 없습니다."
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        isPending={isDeleting}
+        onCancel={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleDelete}
+      />
+
+      <CommunityActionModal
+        open={isDeleteCompleteOpen}
+        title="게시글 삭제 완료"
+        description="게시글이 삭제되었습니다."
+        confirmLabel="목록으로"
+        onConfirm={() => router.push("/community")}
+      />
+
       <button
         type="button"
         onClick={() => router.push("/community")}
-        className="mx-auto mb-7 flex w-full max-w-3xl items-center gap-2 text-sm font-semibold text-[#5F928E]"
+        className="mx-auto mb-7 flex w-full max-w-3xl cursor-pointer items-center gap-2 text-sm font-semibold text-[#5F928E] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6BA19D] focus-visible:ring-offset-2"
       >
         <ChevronLeft size={18} />
         목록으로
@@ -159,9 +248,21 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
           <>
             <header className="flex items-start justify-between border-b border-[#CFE0DE] px-7 py-6">
               <div className="flex gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6BA19D] text-lg font-bold text-white ring-4 ring-[#EEF4F4]">
-                  {post.authorInitial}
-                </div>
+                {authorProfileImageUrl ? (
+                  <div className="relative h-12 w-12 overflow-hidden rounded-full ring-4 ring-[#EEF4F4]">
+                    <Image
+                      src={authorProfileImageUrl}
+                      alt={`${post.authorName} 프로필 이미지`}
+                      fill
+                      className="object-cover"
+                      sizes="48px"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6BA19D] text-lg font-bold text-white ring-4 ring-[#EEF4F4]">
+                    {post.authorInitial}
+                  </div>
+                )}
 
                 <div>
                   <h2 className="text-sm font-bold text-[#2F2A26]">
@@ -182,15 +283,37 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleReport}
-                disabled={isReporting}
-                className="flex items-center gap-1 text-xs font-semibold text-[#9A8B7D] transition hover:text-[#5F928E] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Flag size={16} />
-                신고
-              </button>
+              {isOwnPost ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleEdit}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[#CFE0DE] text-[#5F928E] transition hover:bg-[#EEF4F4]"
+                    aria-label="게시글 수정"
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteConfirmOpen(true)}
+                    disabled={isDeleting}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[#FECACA] text-[#DC2626] transition hover:bg-[#FEF2F2] disabled:cursor-not-allowed disabled:opacity-60"
+                    aria-label="게시글 삭제"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleReport}
+                  disabled={isReporting}
+                  className="flex h-9 items-center gap-1.5 rounded-full border border-[#CFE0DE] bg-white px-3 text-xs font-bold text-[#7A6F66] transition hover:border-[#6BA19D] hover:bg-[#EEF4F4] hover:text-[#5F928E] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Flag size={16} />
+                  신고
+                </button>
+              )}
             </header>
 
             <article className="px-7 py-6">
@@ -201,15 +324,41 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
               </p>
             </article>
 
-            {post.imageUrl && (
+            {currentImageUrl && (
               <div className="relative h-[350px] border-y border-[#CFE0DE] bg-[#EEF4F4]">
                 <Image
-                  src={post.imageUrl}
-                  alt={post.imageAlt}
+                  src={currentImageUrl}
+                  alt={`${post.imageAlt} 이미지 ${currentImageIndex + 1}`}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 768px"
                 />
+
+                {hasMultipleImages && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handlePrevImage}
+                      className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#5F928E] shadow-[0_6px_16px_rgba(47,42,38,0.16)] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6BA19D]"
+                      aria-label="이전 사진 보기"
+                    >
+                      <ChevronLeft size={22} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleNextImage}
+                      className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#5F928E] shadow-[0_6px_16px_rgba(47,42,38,0.16)] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6BA19D]"
+                      aria-label="다음 사진 보기"
+                    >
+                      <ChevronRight size={22} />
+                    </button>
+
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/55 px-3 py-1 text-xs font-bold text-white">
+                      {currentImageIndex + 1} / {postImages.length}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

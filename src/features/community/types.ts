@@ -2,6 +2,7 @@ export type CommunityCardProps = {
   postId: number;
   authorName: string;
   authorInitial: string;
+  authorProfileImageUrl?: string | null;
   country: string;
   category: string;
   createdAt: string;
