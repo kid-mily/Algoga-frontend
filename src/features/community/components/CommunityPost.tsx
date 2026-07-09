@@ -17,6 +17,7 @@ import {
 import { ApiRequestError } from "@/lib/api";
 import CommunityActionModal from "@/features/community/components/CommunityActionModal";
 import CommunityCommentSection from "@/features/community/components/CommunityCommentSection";
+import CommunityReportModal from "@/features/community/components/CommunityReportModal";
 import { getMe } from "@/features/services/user.service";
 import {
   deleteCommunityPost,
@@ -24,6 +25,7 @@ import {
   reactToCommunityPost,
   reportCommunityPost,
   type CommunityPost,
+  type CommunityReportReasonType,
 } from "@/features/services/community.service";
 import { CommunityPostDetailProps, ReactionState } from '../types'; 
 
@@ -33,6 +35,15 @@ const getRequestErrorMessage = (error: unknown, fallback: string) => {
   }
 
   return error instanceof Error ? error.message : fallback;
+};
+
+const isAlreadyReportedError = (error: unknown) => {
+  const message = getRequestErrorMessage(error, "");
+
+  return (
+    (error instanceof ApiRequestError && error.status === 409) ||
+    message.includes("이미 신고")
+  );
 };
 
 export default function CommunityPostDetail({ postId }: CommunityPostDetailProps) {
@@ -46,6 +57,9 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeleteCompleteOpen, setIsDeleteCompleteOpen] = useState(false);
   const [isLoginRequiredOpen, setIsLoginRequiredOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isReportCompleteOpen, setIsReportCompleteOpen] = useState(false);
+  const [isAlreadyReportedOpen, setIsAlreadyReportedOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [currentUserInitial, setCurrentUserInitial] = useState("?");
   const [currentUserProfileImageUrl, setCurrentUserProfileImageUrl] = useState<string | null>(null);
@@ -145,7 +159,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
     }
   };
 
-  const handleReport = async () => {
+  const handleOpenReport = () => {
     if (!post || isReporting) return;
 
     if (!currentUserId) {
@@ -153,19 +167,36 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
       return;
     }
 
-    const detail = window.prompt("신고 사유를 입력해 주세요.");
-    if (!detail?.trim()) return;
+    setIsReportModalOpen(true);
+  };
+
+  const handleReport = async ({
+    reasonType,
+    detail,
+  }: {
+    reasonType: CommunityReportReasonType;
+    detail: string;
+  }) => {
+    if (!post || isReporting) return;
+    if (!detail.trim()) return;
 
     try {
       setIsReporting(true);
       await reportCommunityPost({
         postId: post.postId,
-        reasonType: "SPAM",
-        detail: detail.trim(),
+        reasonType,
+        detail,
       });
-      window.alert("신고가 접수되었습니다.");
+      setIsReportModalOpen(false);
+      setIsReportCompleteOpen(true);
     } catch (error) {
       console.error("[community] report failed", error);
+      if (isAlreadyReportedError(error)) {
+        setIsReportModalOpen(false);
+        setIsAlreadyReportedOpen(true);
+        return;
+      }
+
       window.alert(getRequestErrorMessage(error, "신고 접수에 실패했습니다."));
     } finally {
       setIsReporting(false);
@@ -236,6 +267,30 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
         description="로그인이 필요한 서비스입니다."
         confirmLabel="확인"
         onConfirm={() => setIsLoginRequiredOpen(false)}
+      />
+
+      <CommunityActionModal
+        open={isReportCompleteOpen}
+        title="게시글 신고 접수"
+        description="게시글 신고가 접수되었습니다."
+        confirmLabel="확인"
+        onConfirm={() => setIsReportCompleteOpen(false)}
+      />
+
+      <CommunityActionModal
+        open={isAlreadyReportedOpen}
+        title="이미 신고한 게시글"
+        description="이미 신고한 게시글입니다."
+        confirmLabel="확인"
+        onConfirm={() => setIsAlreadyReportedOpen(false)}
+      />
+
+      <CommunityReportModal
+        open={isReportModalOpen}
+        targetType="게시글"
+        isPending={isReporting}
+        onCancel={() => setIsReportModalOpen(false)}
+        onSubmit={handleReport}
       />
 
       <button
@@ -322,7 +377,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
               ) : (
                 <button
                   type="button"
-                  onClick={handleReport}
+                  onClick={handleOpenReport}
                   disabled={isReporting}
                   className="flex h-9 items-center gap-1.5 rounded-full border border-[#CFE0DE] bg-white px-3 text-xs font-bold text-[#7A6F66] transition hover:border-[#6BA19D] hover:bg-[#EEF4F4] hover:text-[#5F928E] disabled:cursor-not-allowed disabled:opacity-60"
                 >
