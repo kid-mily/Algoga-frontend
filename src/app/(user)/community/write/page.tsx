@@ -1,7 +1,7 @@
-export default function Page() {
-    return (
-        <div>
-            글쓰기 페이지
-        </div>
-    );
+import CommunityWriteForm from "@/features/community/components/CommunityWriteForm";
+
+export const dynamic = "force-static";
+
+export default function CommunityWritePage() {
+  return <CommunityWriteForm />;
 }

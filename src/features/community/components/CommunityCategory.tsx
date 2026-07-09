@@ -25,10 +25,10 @@ export default function CommunityCategoryTabs({
               <button
                 type="button"
                 onClick={() => onCategoryChange(category.id)}
-                className={`h-[38px] rounded-[8px] border px-5 text-[14px] font-bold transition ${
+                className={`h-[38px] cursor-pointer rounded-[8px] border px-5 text-[14px] font-bold transition ${
                   isActive
                     ? "border-[#6BA19D] bg-[#6BA19D] text-white shadow-[0_8px_18px_rgba(107,161,157,0.18)]"
-                    : "border-[#E7D7C3] bg-[#FFFDF8] text-[#7A6F66] hover:border-[#D97A3A]/60 hover:bg-[#FFF4E8] hover:text-[#D97A3A]"
+                    : "border-[#DDE8EF] bg-white text-[#7A6F66] hover:border-[#6BA19D]/60 hover:bg-[#EEF4F4] hover:text-[#5F928E]"
                 }`}
               >
                 {category.label}

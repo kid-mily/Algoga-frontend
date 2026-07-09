@@ -16,10 +16,25 @@ export type CommunityFilter = {
   countryId?: number;
 };
 
+export type CommunityContinent = {
+  continentCode: string;
+  continentName: string;
+};
+
+export type CommunityCountry = {
+  countryId: number;
+  countryName: string;
+  countryCode?: string;
+  continentCode?: string;
+};
+
 export type CommunityPost = {
   postId: number;
+  authorId?: number;
   authorName: string;
   authorInitial: string;
+  authorProfileImageUrl?: string | null;
+  countryId?: number;
   country: string;
   category: string;
   categoryCode?: CommunityCategoryCode;
@@ -27,6 +42,7 @@ export type CommunityPost = {
   title: string;
   content: string;
   imageUrl: string | null;
+  imageUrls: string[];
   imageAlt: string;
   imageIndex: number;
   imageTotal: number;
@@ -34,6 +50,7 @@ export type CommunityPost = {
   dislikeCount: number;
   commentCount: number;
   viewCount: number;
+  isMine: boolean;
 };
 
 export type CommunityPostPage = {
@@ -62,6 +79,21 @@ export type GetCommunityPostsParams = {
   categories?: CommunityCategoryCode[];
   countryId?: number | null;
   signal?: AbortSignal;
+};
+
+export type CreateCommunityPostPayload = {
+  title: string;
+  content: string;
+  countryId: number;
+  tagType: CommunityCategoryCode;
+  customTags?: string[];
+  images?: File[];
+};
+
+export type UpdateCommunityPostPayload = CreateCommunityPostPayload & {
+  postId: number;
+  existingImageUrls?: string[];
+  deletedImageUrls?: string[];
 };
 
 const CATEGORY_LABELS: Record<CommunityCategoryCode, string> = {
@@ -145,6 +177,34 @@ const getBoolean = (
     .find((item) => item !== undefined && item !== null);
 
   return typeof value === "boolean" ? value : fallback;
+};
+
+const normalizeContinent = (value: unknown): CommunityContinent | null => {
+  const record = getRecord(value);
+  const continentCode = getString(record, ["continentCode", "code"]);
+  const continentName = getString(record, ["continentName", "name"]);
+
+  if (!continentCode || !continentName) return null;
+
+  return {
+    continentCode,
+    continentName,
+  };
+};
+
+const normalizeCountry = (value: unknown): CommunityCountry | null => {
+  const record = getRecord(value);
+  const countryId = getNumber(record, ["countryId", "id"]);
+  const countryName = getString(record, ["countryName", "name"]);
+
+  if (countryId <= 0 || !countryName) return null;
+
+  return {
+    countryId,
+    countryName,
+    countryCode: getString(record, ["countryCode", "code"]),
+    continentCode: getString(record, ["continentCode"]),
+  };
 };
 
 const normalizeCategoryCode = (value: string): CommunityCategoryCode | undefined => {
@@ -237,6 +297,29 @@ const getFirstImageUrl = (record: Record<string, unknown>) => {
   return "";
 };
 
+const getImageUrls = (record: Record<string, unknown>) => {
+  const images = getItems(record.images ?? record.imageUrls ?? record.files);
+  const urls = images
+    .map((image) => {
+      if (typeof image === "string") return image;
+
+      if (image && typeof image === "object") {
+        return getString(image as Record<string, unknown>, [
+          "url",
+          "imageUrl",
+          "fileUrl",
+          "thumbnailUrl",
+        ]);
+      }
+
+      return "";
+    })
+    .filter(Boolean);
+  const directImage = getFirstImageUrl(record);
+
+  return Array.from(new Set(directImage ? [directImage, ...urls] : urls));
+};
+
 const normalizePost = (value: unknown): CommunityPost | null => {
   const record = getRecord(value);
   const postId = getNumber(record, ["postId", "id"]);
@@ -256,28 +339,46 @@ const normalizePost = (value: unknown): CommunityPost | null => {
     "type",
   ]);
   const categoryCode = normalizeCategoryCode(rawCategory) ?? categoryFilter?.category;
+  const authorId = getNumber(record, ["authorId", "writerId", "userId", "memberId"]);
   const directCountry = getString(record, ["country", "countryName"]);
+  const countryId = getNumber(record, ["countryId", "country_id"]);
   const countryTagName =
-    getNumber(record, ["countryId", "country_id"]) > 0
+    countryId > 0
       ? getString(record, ["tagName"])
       : "";
   const authorName = getString(record, [
     "authorName",
+    "authorNickname",
+    "writerNickname",
+    "userNickname",
     "nickname",
     "writer",
     "writerName",
     "memberName",
+    "userName",
   ], "익명");
-  const imageUrl = getFirstImageUrl(record);
+  const authorProfileImageUrl = getString(record, [
+    "authorProfileImageUrl",
+    "writerProfileImageUrl",
+    "profileImageUrl",
+    "userProfileImageUrl",
+    "memberProfileImageUrl",
+    "profileImage",
+  ]);
+  const imageUrls = getImageUrls(record);
+  const imageUrl = imageUrls[0] ?? null;
   const imageTotal = Math.max(
-    getNumber(record, ["imageTotal", "imageCount"], imageUrl ? 1 : 0),
-    imageUrl ? 1 : 0
+    getNumber(record, ["imageTotal", "imageCount"], imageUrls.length),
+    imageUrls.length
   );
 
   return {
     postId,
+    authorId: authorId > 0 ? authorId : undefined,
     authorName,
     authorInitial: authorName.trim().slice(0, 1) || "?",
+    authorProfileImageUrl: authorProfileImageUrl || null,
+    countryId: countryId > 0 ? countryId : countryFilter?.countryId,
     country: countryFilter?.tagName || directCountry || countryTagName || "여행",
     category: categoryCode
       ? CATEGORY_LABELS[categoryCode]
@@ -286,7 +387,8 @@ const normalizePost = (value: unknown): CommunityPost | null => {
     createdAt: formatPostDate(getString(record, ["createdAt", "createdDate", "regDate"], "")),
     title,
     content: getString(record, ["content", "body", "description"], ""),
-    imageUrl: imageUrl || null,
+    imageUrl,
+    imageUrls,
     imageAlt: title,
     imageIndex: getNumber(record, ["imageIndex"], imageUrl ? 1 : 0),
     imageTotal,
@@ -294,7 +396,91 @@ const normalizePost = (value: unknown): CommunityPost | null => {
     dislikeCount: getNumber(record, ["dislikeCount", "dislikes"]),
     commentCount: getNumber(record, ["commentCount", "comments"]),
     viewCount: getNumber(record, ["viewCount", "views"]),
+    isMine: getBoolean(record, ["isMine", "mine", "isOwner", "owner", "isAuthor"]),
   };
+};
+
+export const getCommunityContinents = async (
+  signal?: AbortSignal
+): Promise<CommunityContinent[]> => {
+  const response = await api.get<ApiResult<unknown>>("/api/v1/maps/continents", {
+    signal,
+  });
+
+  return getItems(unwrapData(response))
+    .map(normalizeContinent)
+    .filter(Boolean) as CommunityContinent[];
+};
+
+export const getCommunityCountries = async (
+  continentCode: string,
+  signal?: AbortSignal
+): Promise<CommunityCountry[]> => {
+  const response = await api.get<ApiResult<unknown>>(
+    `/api/v1/maps/continents/${continentCode}/countries`,
+    { signal }
+  );
+
+  return getItems(unwrapData(response)).map(normalizeCountry).filter(Boolean) as CommunityCountry[];
+};
+
+export const getCommunityPostTags = async (
+  signal?: AbortSignal
+): Promise<CommunityFilter[]> => {
+  const response = await api.get<ApiResult<unknown>>("/api/v1/posts/tags", {
+    signal,
+  });
+
+  return getItems(unwrapData(response)).map(normalizeFilter).filter(Boolean) as CommunityFilter[];
+};
+
+export const createCommunityPost = async ({
+  title,
+  content,
+  countryId,
+  tagType,
+  customTags = [],
+  images = [],
+}: CreateCommunityPostPayload) => {
+  const formData = new FormData();
+
+  formData.append("title", title);
+  formData.append("content", content);
+  formData.append("countryId", String(countryId));
+  formData.append("category", tagType);
+  customTags.forEach((tag) => formData.append("customTags", tag));
+  images.forEach((image) => formData.append("images", image));
+
+  return api.post<ApiResult<unknown>>("/api/v1/posts", formData, {
+    suppressGlobalError: true,
+  });
+};
+
+export const updateCommunityPost = async ({
+  postId,
+  title,
+  content,
+  countryId,
+  tagType,
+  customTags = [],
+  images = [],
+  existingImageUrls = [],
+  deletedImageUrls = [],
+}: UpdateCommunityPostPayload) => {
+  const formData = new FormData();
+
+  formData.append("title", title);
+  formData.append("content", content);
+  formData.append("countryId", String(countryId));
+  formData.append("category", tagType);
+  customTags.forEach((tag) => formData.append("customTags", tag));
+  existingImageUrls.forEach((imageUrl) => formData.append("existingImageUrls", imageUrl));
+  deletedImageUrls.forEach((imageUrl) => formData.append("deletedImageUrls", imageUrl));
+  images.forEach((image) => formData.append("images", image));
+
+  return api.put<ApiResult<unknown>>(`/api/v1/posts/${postId}`, formData, {
+    suppressGlobalError: true,
+  });
 };
 
 export const getCommunityFilters = async (
@@ -371,6 +557,12 @@ export const reportCommunityPost = async ({
       suppressGlobalError: true,
     }
   );
+};
+
+export const deleteCommunityPost = async (postId: number) => {
+  return api.delete<ApiResult<unknown>>(`/api/v1/posts/${postId}`, {
+    suppressGlobalError: true,
+  });
 };
 
 export const reactToCommunityPost = async ({
