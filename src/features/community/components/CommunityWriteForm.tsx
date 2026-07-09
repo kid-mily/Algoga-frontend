@@ -240,12 +240,6 @@ export default function CommunityWriteForm() {
 
       setIsCompleteModalOpen(true);
     } catch (error) {
-      if (error instanceof ApiRequestError && error.status === 401) {
-        window.alert("게시글 작성은 로그인 후 이용할 수 있습니다.");
-        router.push(`/auth/login?redirect=${encodeURIComponent("/community/write")}`);
-        return;
-      }
-
       setErrorMessage(getErrorMessage(error, "게시글 등록에 실패했습니다."));
     } finally {
       setIsSubmitting(false);

@@ -3,8 +3,10 @@
 import { useCallback, useMemo, useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import CommunityCard from "@/features/community/components/CommunityCard";
+import CommunityActionModal from "@/features/community/components/CommunityActionModal";
 import CommunityHeader from "@/features/community/components/CommunityHeader";
 import type { CommunityCategoryOption } from "@/features/community/types";
+import { getMe } from "@/features/services/user.service";
 import {
   getCommunityPosts,
   type CommunityFilter,
@@ -35,6 +37,8 @@ export default function CommunityPageClient({
   const [hasNext, setHasNext] = useState(initialHasNext);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isCheckingWriteAuth, setIsCheckingWriteAuth] = useState(false);
+  const [isLoginRequiredOpen, setIsLoginRequiredOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState(initialErrorMessage);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -152,13 +156,46 @@ export default function CommunityPageClient({
     });
   };
 
+  const handleWriteClick = async () => {
+    if (isCheckingWriteAuth) return;
+
+    try {
+      setIsCheckingWriteAuth(true);
+      const user = await getMe();
+
+      if (!user?.userId) {
+        setIsLoginRequiredOpen(true);
+        return;
+      }
+
+      router.push("/community/write");
+    } finally {
+      setIsCheckingWriteAuth(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#F3F8FC]">
+      <CommunityActionModal
+        open={isLoginRequiredOpen}
+        title="로그인 필요"
+        description="로그인이 필요한 서비스입니다."
+        confirmLabel="로그인 이동"
+        cancelLabel="취소"
+        onCancel={() => setIsLoginRequiredOpen(false)}
+        onConfirm={() => {
+          setIsLoginRequiredOpen(false);
+          router.push(
+            `/auth/login?redirect=${encodeURIComponent("/community/write")}`
+          );
+        }}
+      />
+
       <CommunityHeader
         selectedCategories={selectedFilterIds}
         categories={categoryOptions}
         onCategoryChange={handleFilterChange}
-        onWriteClick={() => router.push("/community/write")}
+        onWriteClick={handleWriteClick}
       />
 
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-7 px-6 py-8">

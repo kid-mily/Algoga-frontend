@@ -1,4 +1,4 @@
-import { api, type ApiResult, unwrapData } from "@/lib/api";
+import { api, ApiRequestError, type ApiResult, unwrapData } from "@/lib/api";
 
 export type CommunityCategoryCode =
   | "TRAVEL_REVIEW"
@@ -51,6 +51,22 @@ export type CommunityPost = {
   commentCount: number;
   viewCount: number;
   isMine: boolean;
+  comments: CommunityComment[];
+};
+
+export type CommunityComment = {
+  commentId: number;
+  parentId: number | null;
+  authorId?: number;
+  authorName: string;
+  authorInitial: string;
+  authorProfileImageUrl?: string | null;
+  createdAt: string;
+  content: string;
+  likeCount: number;
+  dislikeCount: number;
+  isMine: boolean;
+  replies: CommunityComment[];
 };
 
 export type CommunityPostPage = {
@@ -136,6 +152,9 @@ const getItems = (value: unknown): unknown[] => {
     record.postList,
     record.filters,
     record.tags,
+    record.comments,
+    record.replies,
+    record.children,
     record.list,
   ];
 
@@ -397,8 +416,59 @@ const normalizePost = (value: unknown): CommunityPost | null => {
     commentCount: getNumber(record, ["commentCount", "comments"]),
     viewCount: getNumber(record, ["viewCount", "views"]),
     isMine: getBoolean(record, ["isMine", "mine", "isOwner", "owner", "isAuthor"]),
+    comments: toCommentList(record.comments ?? record.commentList ?? record.replies),
   };
 };
+
+const normalizeComment = (value: unknown): CommunityComment | null => {
+  const record = getRecord(value);
+  const commentId = getNumber(record, ["commentId", "id"]);
+  const content = getString(record, ["content", "comment", "body"]);
+
+  if (commentId <= 0) return null;
+
+  const authorId = getNumber(record, ["authorId", "writerId", "userId", "memberId"]);
+  const authorName = getString(record, [
+    "authorName",
+    "authorNickname",
+    "writerNickname",
+    "userNickname",
+    "nickname",
+    "writer",
+    "writerName",
+    "memberName",
+    "userName",
+  ], "익명");
+  const authorProfileImageUrl = getString(record, [
+    "authorProfileImageUrl",
+    "writerProfileImageUrl",
+    "profileImageUrl",
+    "userProfileImageUrl",
+    "memberProfileImageUrl",
+    "profileImage",
+  ]);
+  const replies = getItems(record.replies ?? record.children ?? record.childComments)
+    .map(normalizeComment)
+    .filter(Boolean) as CommunityComment[];
+
+  return {
+    commentId,
+    parentId: getNumber(record, ["parentId", "parentCommentId"], 0) || null,
+    authorId: authorId > 0 ? authorId : undefined,
+    authorName,
+    authorInitial: authorName.trim().slice(0, 1) || "?",
+    authorProfileImageUrl: authorProfileImageUrl || null,
+    createdAt: formatPostDate(getString(record, ["createdAt", "createdDate", "regDate"], "")),
+    content,
+    likeCount: getNumber(record, ["likeCount", "likes"]),
+    dislikeCount: getNumber(record, ["dislikeCount", "dislikes"]),
+    isMine: getBoolean(record, ["isMine", "mine", "isOwner", "owner", "isAuthor"]),
+    replies,
+  };
+};
+
+const toCommentList = (value: unknown): CommunityComment[] =>
+  getItems(value).map(normalizeComment).filter(Boolean) as CommunityComment[];
 
 export const getCommunityContinents = async (
   signal?: AbortSignal
@@ -559,8 +629,91 @@ export const reportCommunityPost = async ({
   );
 };
 
+export const reportCommunityComment = async ({
+  commentId,
+  reasonType = "SPAM",
+  detail,
+}: {
+  commentId: number;
+  reasonType?: CommunityReportReasonType;
+  detail: string;
+}) => {
+  return api.post<ApiResult<unknown>>(
+    "/api/v1/reports",
+    {
+      targetType: "COMMENT",
+      targetId: commentId,
+      reasonType,
+      detail,
+    },
+    {
+      suppressGlobalError: true,
+    }
+  );
+};
+
 export const deleteCommunityPost = async (postId: number) => {
   return api.delete<ApiResult<unknown>>(`/api/v1/posts/${postId}`, {
+    suppressGlobalError: true,
+  });
+};
+
+export const createCommunityComment = async ({
+  postId,
+  parentId = null,
+  content,
+}: {
+  postId: number;
+  parentId?: number | null;
+  content: string;
+}) => {
+  return api.post<ApiResult<unknown>>(
+    `/api/v1/posts/${postId}/comments`,
+    {
+      parentId,
+      content,
+    },
+    {
+      suppressGlobalError: true,
+    }
+  );
+};
+
+export const updateCommunityComment = async ({
+  commentId,
+  content,
+}: {
+  commentId: number;
+  content: string;
+}) => {
+  try {
+    return await api.patch<ApiResult<unknown>>(
+      `/api/v1/comments/${commentId}`,
+      { content },
+      {
+        suppressGlobalError: true,
+      }
+    );
+  } catch (error) {
+    if (
+      error instanceof ApiRequestError &&
+      (error.status === 405 || error.message.includes("지원하지 않는 HTTP 메서드"))
+    ) {
+      return api.put<ApiResult<unknown>>(
+        `/api/v1/comments/${commentId}`,
+        { content },
+        {
+          suppressGlobalError: true,
+        }
+      );
+    }
+
+    throw error;
+  }
+};
+
+export const deleteCommunityComment = async (commentId: number) => {
+  return api.delete<ApiResult<unknown>>(`/api/v1/comments/${commentId}`, {
     suppressGlobalError: true,
   });
 };
@@ -577,6 +730,38 @@ export const reactToCommunityPost = async ({
     {
       targetType: "POST",
       targetId: postId,
+      isLike,
+    },
+    {
+      suppressGlobalError: true,
+    }
+  );
+  const responseRecord = getRecord(response);
+  const data = getRecord(unwrapData(response));
+
+  return {
+    status: getString(data, ["status"], getString(responseRecord, ["status"], "ADDED")) as CommunityReactionStatus,
+    likeCount: getNumber(data, ["likeCount"], getNumber(responseRecord, ["likeCount"])),
+    dislikeCount: getNumber(
+      data,
+      ["dislikeCount"],
+      getNumber(responseRecord, ["dislikeCount"])
+    ),
+  };
+};
+
+export const reactToCommunityComment = async ({
+  commentId,
+  isLike,
+}: {
+  commentId: number;
+  isLike: boolean;
+}): Promise<CommunityReactionResult> => {
+  const response = await api.post<ApiResult<unknown>>(
+    "/api/v1/reactions",
+    {
+      targetType: "COMMENT",
+      targetId: commentId,
       isLike,
     },
     {

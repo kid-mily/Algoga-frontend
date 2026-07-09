@@ -25,7 +25,7 @@ export default function CommunityCard({
       className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6BA19D] focus-visible:ring-offset-2"
     >
       <article className="relative flex h-full w-full flex-col overflow-hidden rounded-[12px] border border-[#CFE0DE] bg-[#FFFDF8] px-6 py-5 shadow-[0_10px_24px_rgba(72,52,35,0.07)] transition duration-200 hover:-translate-y-0.5 hover:border-[#6BA19D] hover:shadow-[0_14px_30px_rgba(72,52,35,0.1)]">
-        <header className="relative flex items-start gap-3">
+        <header className="relative flex items-center gap-3">
           {authorProfileImageUrl ? (
             <div className="relative h-[44px] w-[44px] shrink-0 overflow-hidden rounded-full ring-4 ring-[#EEF4F4]">
               <Image
@@ -42,17 +42,17 @@ export default function CommunityCard({
             </div>
           )}
 
-          <div className="pt-1">
-            <h3 className="text-[16px] font-extrabold text-[#2F2A26]">
+          <div className="min-w-0">
+            <h3 className="truncate text-[16px] font-extrabold leading-5 text-[#2F2A26]">
               {authorName}
             </h3>
 
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-[#EEF4F4] px-2.5 py-0.5 text-[12px] font-bold text-[#5F928E]">
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <span className="flex h-6 items-center rounded-full bg-[#EEF4F4] px-2.5 text-[12px] font-bold text-[#5F928E]">
                 {country}
               </span>
 
-              <span className="rounded-[8px] border border-[#6BA19D] bg-[#6BA19D] px-2.5 py-0.5 text-[12px] font-bold text-white">
+              <span className="flex h-6 items-center rounded-full border border-[#6BA19D] bg-[#6BA19D] px-2.5 text-[12px] font-bold text-white">
                 {category}
               </span>
 

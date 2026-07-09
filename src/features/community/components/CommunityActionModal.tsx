@@ -1,17 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-
-type CommunityActionModalProps = {
-  open: boolean;
-  title: string;
-  description?: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  isPending?: boolean;
-  onConfirm: () => void;
-  onCancel?: () => void;
-};
+import { CommunityActionModalProps } from '../types'
 
 export default function CommunityActionModal({
   open,
