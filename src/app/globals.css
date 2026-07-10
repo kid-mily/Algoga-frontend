@@ -47,3 +47,11 @@ input::placeholder,
 textarea::placeholder {
   color: color-mix(in srgb, var(--foreground) 55%, transparent);
 }
+
+button:not(:disabled),
+a[href],
+label[for],
+select:not(:disabled),
+[role="button"] {
+  cursor: pointer;
+}

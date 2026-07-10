@@ -36,11 +36,7 @@ export default function ChapterItem({
   return (
     <article
       aria-labelledby={`chapter-${id}-heading`}
-      className={`rounded-[16px] border bg-white p-4 transition-colors ${
-        errors.title || errors.description || errors.video
-          ? "border-[#DC2626]"
-          : "border-[#E4E7EC]"
-      }`}
+      className="rounded-[16px] border border-[#E4E7EC] bg-white p-4"
     >
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2">

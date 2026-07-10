@@ -26,13 +26,13 @@ export default function AccommodationTable({
           숙소 목록
         </h2>
       </header>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[860px] table-fixed border-collapse">
+      <div className="overflow-hidden">
+        <table className="w-full table-fixed border-collapse">
           <colgroup>
+            <col className="w-[32%]" />
             <col className="w-[34%]" />
-            <col className="w-[34%]" />
-            <col className="w-[20%]" />
-            <col className="w-[6%]" />
+            <col className="w-[18%]" />
+            <col className="w-[16%]" />
           </colgroup>
           <thead className="border-b border-[#E4E7EC] bg-[#FCFCFD]">
             <tr>

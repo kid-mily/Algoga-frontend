@@ -7,10 +7,11 @@ import LectureForm from "@/features/contentmanage/lecture/components/LectureForm
 import LectureChapterForm from "@/features/contentmanage/lecture/components/LectureChapterForm";
 import CompleteModal from "@/features/common/components/CompleteModal";
 import LectureCreateStepIndicator from "./LectureCreateStepIndicator";
+import LectureQuizForm from "./LectureQuizForm";
 
 export default function CreateLectureClient() {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [createdCourseId, setCreatedCourseId] = useState<number | null>(null);
   const [openModal, setOpenModal] = useState(false);
 
@@ -43,6 +44,14 @@ export default function CreateLectureClient() {
             <LectureChapterForm
               courseId={createdCourseId}
               onPrev={() => setStep(1)}
+              onSubmit={() => setStep(3)}
+            />
+          )}
+
+          {step === 3 && createdCourseId !== null && (
+            <LectureQuizForm
+              courseId={createdCourseId}
+              onPrev={() => setStep(2)}
               onSubmit={() => setOpenModal(true)}
             />
           )}
@@ -50,7 +59,7 @@ export default function CreateLectureClient() {
           <CompleteModal
             open={openModal}
             title="등록 완료"
-            description="강의와 챕터가 등록되었습니다."
+            description="강의, 챕터, 퀴즈가 등록되었습니다."
             buttonText="확인"
             onConfirm={() => {
               setOpenModal(false);
