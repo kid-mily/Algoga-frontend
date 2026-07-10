@@ -1,4 +1,4 @@
-import CommunityWriteForm from "@/features/community/components/CommunityWriteForm";
+import CommunityWriteForm from "@/features/community/components/common/CommunityWriteForm";
 
 export const dynamic = "force-static";
 

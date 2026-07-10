@@ -1,4 +1,4 @@
-import { CommunityWriteButtonProps } from "../types"
+import type { CommunityWriteButtonProps } from "../../types";
 
 export default function CommunityWriteButton({
   onClick,

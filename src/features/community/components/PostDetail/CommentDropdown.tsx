@@ -2,13 +2,8 @@
 
 import { useState } from "react";
 import { Flag, Pencil, Trash2, MoreVertical } from "lucide-react";
+import {  CommentDropdownProps } from '../../types'
 
-type CommentDropdownProps = {
-  isMine: boolean;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onReport?: () => void;
-};
 
 export default function CommentDropdown({
   isMine,

@@ -2,9 +2,9 @@
 
 import { useCallback, useMemo, useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import CommunityCard from "@/features/community/components/CommunityCard";
-import CommunityActionModal from "@/features/community/components/CommunityActionModal";
-import CommunityHeader from "@/features/community/components/CommunityHeader";
+import CommunityCard from "@/features/community/components/common/CommunityCard";
+import CommunityActionModal from "@/features/community/components/common/CommunityActionModal";
+import CommunityHeader from "@/features/community/components/common/CommunityHeader";
 import { useLoginRequiredModal } from "@/features/community/hooks/useLoginRequiredModal";
 import type {
   CommunityCategoryCode,
@@ -12,8 +12,11 @@ import type {
   CommunityPost,
 } from "@/features/community/types";
 import { getMe } from "@/features/services/user.service";
-import { getCommunityPosts } from "@/features/services/community.service";
-import { CommunityPageClientProps } from "../types"
+import {
+  getCommunityPosts,
+  getMyCommunityPosts,
+} from "@/features/services/community.service";
+import { CommunityPageClientProps } from "../../types"
 
 const ALL_CATEGORY_ID = "ALL";
 
@@ -37,6 +40,8 @@ export default function CommunityPageClient({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isCheckingWriteAuth, setIsCheckingWriteAuth] = useState(false);
+  const [isMyPostsOnly, setIsMyPostsOnly] = useState(false);
+  const [isCheckingMyPostsAuth, setIsCheckingMyPostsAuth] = useState(false);
   const {
     isLoginRequiredOpen,
     openLoginRequiredModal,
@@ -93,14 +98,22 @@ export default function CommunityPageClient({
       setErrorMessage("");
 
       try {
-        const data = await getCommunityPosts({
-          lastPostId: nextLastPostId,
-          categories: selectedCategoryFilters
-            .map((filter) => filter.category)
-            .filter(isCommunityCategoryCode),
-          countryId: selectedCountryFilter?.countryId,
-          signal,
-        });
+        const categories = selectedCategoryFilters
+          .map((filter) => filter.category)
+          .filter(isCommunityCategoryCode);
+
+        const data = isMyPostsOnly
+          ? await getMyCommunityPosts({
+              lastPostId: nextLastPostId,
+              categories,
+              signal,
+            })
+          : await getCommunityPosts({
+              lastPostId: nextLastPostId,
+              categories,
+              countryId: selectedCountryFilter?.countryId,
+              signal,
+            });
 
         setPosts((prev) => (append ? [...prev, ...data.posts] : data.posts));
         setLastPostId(data.lastPostId);
@@ -120,11 +133,13 @@ export default function CommunityPageClient({
         }
       }
     },
-    [selectedCategoryFilters, selectedCountryFilter]
+    [selectedCategoryFilters, selectedCountryFilter, isMyPostsOnly]
   );
 
+  const shouldFetchPosts = hasSelectedFilter || isMyPostsOnly;
+
   useEffect(() => {
-    if (!hasSelectedFilter) {
+    if (!shouldFetchPosts) {
       setPosts(initialPosts);
       setLastPostId(initialLastPostId);
       setHasNext(initialHasNext);
@@ -143,7 +158,7 @@ export default function CommunityPageClient({
     initialHasNext,
     initialLastPostId,
     initialPosts,
-    hasSelectedFilter,
+    shouldFetchPosts,
     loadPosts,
   ]);
 
@@ -178,6 +193,7 @@ export default function CommunityPageClient({
     if (!nextFilter) return;
 
     if (nextFilter.tagType === "COUNTRY") {
+      if (isMyPostsOnly) return;
       setSelectedCountryId((prev) => (prev === filterId ? null : filterId));
       return;
     }
@@ -187,6 +203,28 @@ export default function CommunityPageClient({
         ? prev.filter((categoryId) => categoryId !== filterId)
         : [...prev, filterId]
     );
+  };
+
+  const handleToggleMyPostsOnly = async () => {
+    if (isCheckingMyPostsAuth) return;
+
+    if (!isMyPostsOnly) {
+      try {
+        setIsCheckingMyPostsAuth(true);
+        const user = await getMe();
+
+        if (!user?.userId) {
+          openLoginRequiredModal();
+          return;
+        }
+      } finally {
+        setIsCheckingMyPostsAuth(false);
+      }
+
+      setSelectedCountryId(null);
+    }
+
+    setIsMyPostsOnly((prev) => !prev);
   };
 
   const handleWriteClick = async () => {
@@ -229,6 +267,8 @@ export default function CommunityPageClient({
         categories={categoryOptions}
         onCategoryChange={handleFilterChange}
         onWriteClick={handleWriteClick}
+        isMyPostsOnly={isMyPostsOnly}
+        onToggleMyPostsOnly={handleToggleMyPostsOnly}
       />
 
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-7 px-6 py-8">

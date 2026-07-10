@@ -1,5 +1,5 @@
 import { Heart, ThumbsDown } from "lucide-react";
-import { CommunityCommentItemProps } from '../types'
+import { CommunityCommentItemProps } from '../../types'
 import CommentDropdown from "./CommentDropdown";
 import CommunityCommentForm from "./CommunityCommentForm";
 

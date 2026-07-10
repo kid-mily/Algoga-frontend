@@ -1,4 +1,4 @@
-import CommunityPost from "@/features/community/components/CommunityPost";
+import CommunityPost from "@/features/community/components/PostDetail/CommunityPost";
 
 type CommunityPostDetailPageProps = {
   params: Promise<{

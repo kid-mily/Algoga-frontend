@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { CommunityActionModalProps } from '../types'
+import { CommunityActionModalProps } from '../../types'
 
 export default function CommunityActionModal({
   open,
