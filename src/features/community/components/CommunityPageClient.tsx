@@ -5,23 +5,13 @@ import { useRouter } from "next/navigation";
 import CommunityCard from "@/features/community/components/CommunityCard";
 import CommunityActionModal from "@/features/community/components/CommunityActionModal";
 import CommunityHeader from "@/features/community/components/CommunityHeader";
-import type { CommunityCategoryOption } from "@/features/community/types";
+import { useLoginRequiredModal } from "@/features/community/hooks/useLoginRequiredModal";
+import type { CommunityCategoryOption, CommunityPost } from "@/features/community/types";
 import { getMe } from "@/features/services/user.service";
-import {
-  getCommunityPosts,
-  type CommunityFilter,
-  type CommunityPost,
-} from "@/features/services/community.service";
+import { getCommunityPosts } from "@/features/services/community.service";
+import { CommunityPageClientProps } from "../types"
 
 const ALL_CATEGORY_ID = "ALL";
-
-type CommunityPageClientProps = {
-  initialFilters: CommunityFilter[];
-  initialPosts: CommunityPost[];
-  initialLastPostId: number | null;
-  initialHasNext: boolean;
-  initialErrorMessage?: string;
-};
 
 export default function CommunityPageClient({
   initialFilters,
@@ -38,7 +28,11 @@ export default function CommunityPageClient({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isCheckingWriteAuth, setIsCheckingWriteAuth] = useState(false);
-  const [isLoginRequiredOpen, setIsLoginRequiredOpen] = useState(false);
+  const {
+    isLoginRequiredOpen,
+    openLoginRequiredModal,
+    closeLoginRequiredModal,
+  } = useLoginRequiredModal();
   const [errorMessage, setErrorMessage] = useState(initialErrorMessage);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -164,7 +158,7 @@ export default function CommunityPageClient({
       const user = await getMe();
 
       if (!user?.userId) {
-        setIsLoginRequiredOpen(true);
+        openLoginRequiredModal();
         return;
       }
 
@@ -182,9 +176,9 @@ export default function CommunityPageClient({
         description="로그인이 필요한 서비스입니다."
         confirmLabel="로그인 이동"
         cancelLabel="취소"
-        onCancel={() => setIsLoginRequiredOpen(false)}
+        onCancel={closeLoginRequiredModal}
         onConfirm={() => {
-          setIsLoginRequiredOpen(false);
+          closeLoginRequiredModal();
           router.push(
             `/auth/login?redirect=${encodeURIComponent("/community/write")}`
           );

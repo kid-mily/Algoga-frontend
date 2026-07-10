@@ -18,16 +18,20 @@ import { ApiRequestError } from "@/lib/api";
 import CommunityActionModal from "@/features/community/components/CommunityActionModal";
 import CommunityCommentSection from "@/features/community/components/CommunityCommentSection";
 import CommunityReportModal from "@/features/community/components/CommunityReportModal";
+import { useLoginRequiredModal } from "@/features/community/hooks/useLoginRequiredModal";
 import { getMe } from "@/features/services/user.service";
 import {
   deleteCommunityPost,
   getCommunityPost,
   reactToCommunityPost,
   reportCommunityPost,
-  type CommunityPost,
-  type CommunityReportReasonType,
 } from "@/features/services/community.service";
-import { CommunityPostDetailProps, ReactionState } from '../types'; 
+import {
+  type CommunityPost,
+  type CommunityPostDetailProps,
+  type CommunityReportReasonType,
+  type ReactionState,
+} from "../types";
 
 const getRequestErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof ApiRequestError) {
@@ -39,10 +43,12 @@ const getRequestErrorMessage = (error: unknown, fallback: string) => {
 
 const isAlreadyReportedError = (error: unknown) => {
   const message = getRequestErrorMessage(error, "");
+  const code = error instanceof ApiRequestError ? error.code ?? "" : "";
 
   return (
     (error instanceof ApiRequestError && error.status === 409) ||
-    message.includes("이미 신고")
+    message.includes("이미 신고") ||
+    code.includes("ALREADY_REPORTED")
   );
 };
 
@@ -56,12 +62,15 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeleteCompleteOpen, setIsDeleteCompleteOpen] = useState(false);
-  const [isLoginRequiredOpen, setIsLoginRequiredOpen] = useState(false);
+  const {
+    isLoginRequiredOpen,
+    openLoginRequiredModal,
+    closeLoginRequiredModal,
+  } = useLoginRequiredModal();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isReportCompleteOpen, setIsReportCompleteOpen] = useState(false);
   const [isAlreadyReportedOpen, setIsAlreadyReportedOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const [currentUserInitial, setCurrentUserInitial] = useState("?");
   const [currentUserProfileImageUrl, setCurrentUserProfileImageUrl] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
@@ -90,9 +99,6 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
         setPost(data);
         setCurrentImageIndex(0);
         setCurrentUserId(user?.userId ?? null);
-        setCurrentUserInitial(
-          (user?.nickname || user?.name || user?.username || "?").trim().slice(0, 1) || "?"
-        );
         setCurrentUserProfileImageUrl(user?.profileImageUrl ?? null);
       } catch (error) {
         if (controller.signal.aborted) return;
@@ -118,7 +124,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
     if (!post || isReacting) return;
 
     if (!currentUserId) {
-      setIsLoginRequiredOpen(true);
+      openLoginRequiredModal();
       return;
     }
 
@@ -144,7 +150,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
       console.error("[community] reaction failed", error);
 
       if (error instanceof ApiRequestError && error.status === 401) {
-        setIsLoginRequiredOpen(true);
+        openLoginRequiredModal();
         return;
       }
 
@@ -163,7 +169,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
     if (!post || isReporting) return;
 
     if (!currentUserId) {
-      setIsLoginRequiredOpen(true);
+      openLoginRequiredModal();
       return;
     }
 
@@ -190,13 +196,13 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
       setIsReportModalOpen(false);
       setIsReportCompleteOpen(true);
     } catch (error) {
-      console.error("[community] report failed", error);
       if (isAlreadyReportedError(error)) {
         setIsReportModalOpen(false);
         setIsAlreadyReportedOpen(true);
         return;
       }
 
+      console.error("[community] report failed", error);
       window.alert(getRequestErrorMessage(error, "신고 접수에 실패했습니다."));
     } finally {
       setIsReporting(false);
@@ -266,7 +272,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
         title="로그인 필요"
         description="로그인이 필요한 서비스입니다."
         confirmLabel="확인"
-        onConfirm={() => setIsLoginRequiredOpen(false)}
+        onConfirm={closeLoginRequiredModal}
       />
 
       <CommunityActionModal
@@ -438,7 +444,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
                 type="button"
                 onClick={() => handleReaction(true)}
                 disabled={isReacting}
-                className={`flex items-center gap-2 transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`flex cursor-pointer items-center gap-2 transition disabled:opacity-60 ${
                   reaction === true ? "text-[#E05252]" : "hover:text-[#E05252]"
                 }`}
               >
@@ -450,7 +456,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
                 type="button"
                 onClick={() => handleReaction(false)}
                 disabled={isReacting}
-                className={`flex items-center gap-2 transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`flex cursor-pointer items-center gap-2 transition disabled:opacity-60 ${
                   reaction === false ? "text-[#5F928E]" : "hover:text-[#5F928E]"
                 }`}
               >
@@ -474,7 +480,6 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
               initialCommentCount={post.commentCount}
               initialComments={post.comments}
               currentUserId={currentUserId}
-              currentUserInitial={currentUserInitial}
               onCommentCountChange={(count) =>
                 setPost((prev) =>
                   prev
