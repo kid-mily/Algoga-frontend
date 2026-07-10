@@ -14,6 +14,11 @@ export default function LectureCreateStepIndicator({
       title: "챕터 정보",
       description: "강의 챕터를 등록합니다.",
     },
+    {
+      number: 3,
+      title: "퀴즈 정보",
+      description: "강의 퀴즈를 등록합니다.",
+    },
   ];
 
   return (
@@ -24,7 +29,7 @@ export default function LectureCreateStepIndicator({
       <ol className="mx-auto flex max-w-[900px] items-center justify-center">
         {steps.map((item, index) => (
           <li key={item.number} className="flex items-center">
-            {index > 0 && <div className="mx-12 h-px w-[120px] bg-[#E4E7EC]" aria-hidden="true" />}
+            {index > 0 && <div className="mx-8 h-px w-[80px] bg-[#E4E7EC]" aria-hidden="true" />}
 
             <div className="flex items-center" aria-current={step === item.number ? "step" : undefined}>
               <div

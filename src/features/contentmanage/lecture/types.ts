@@ -255,7 +255,7 @@ export interface LectureCardProps {
 }
 
 export type LectureCreateStepIndicatorProps = {
-  step: 1 | 2;
+  step: 1 | 2 | 3;
 };
 
 export type EditLectureClientProps = {
