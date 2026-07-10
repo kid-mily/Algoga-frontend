@@ -1,32 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { CommunityReportReasonType } from "@/features/services/community.service";
-
-type CommunityReportTargetType = "게시글" | "댓글";
-
-type CommunityReportModalProps = {
-  open: boolean;
-  targetType: CommunityReportTargetType;
-  isPending?: boolean;
-  onCancel: () => void;
-  onSubmit: (payload: {
-    reasonType: CommunityReportReasonType;
-    detail: string;
-  }) => void;
-};
-
-const REPORT_REASONS: Array<{
-  label: string;
-  value: CommunityReportReasonType;
-}> = [
-  { label: "스팸/광고", value: "SPAM" },
-  { label: "욕설/비방", value: "ABUSE" },
-  { label: "허위정보", value: "FALSE_INFO" },
-  { label: "부적절한 콘텐츠", value: "INAPPROPRIATE" },
-  { label: "저작권 침해", value: "COPYRIGHT" },
-  { label: "기타", value: "ETC" },
-];
+import {
+  REPORT_REASONS,
+  type CommunityReportModalProps,
+  type CommunityReportReasonType,
+} from "@/features/community/types";
 
 export default function CommunityReportModal({
   open,

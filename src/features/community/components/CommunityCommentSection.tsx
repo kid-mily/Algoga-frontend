@@ -6,6 +6,7 @@ import CommunityActionModal from "@/features/community/components/CommunityActio
 import CommunityCommentForm from "@/features/community/components/CommunityCommentForm";
 import CommunityCommentItem from "@/features/community/components/CommunityCommentItem";
 import CommunityReportModal from "@/features/community/components/CommunityReportModal";
+import { useLoginRequiredModal } from "@/features/community/hooks/useLoginRequiredModal";
 import {
   createCommunityComment,
   deleteCommunityComment,
@@ -13,17 +14,18 @@ import {
   reactToCommunityComment,
   reportCommunityComment,
   updateCommunityComment,
+} from "@/features/services/community.service";
+import {
   type CommunityComment,
   type CommunityReportReasonType,
-} from "@/features/services/community.service";
-import { ReactionState } from "../types";
+  type ReactionState,
+} from "../types";
 
 type CommunityCommentSectionProps = {
   postId: number;
   initialCommentCount: number;
   initialComments?: CommunityComment[];
   currentUserId: number | null;
-  currentUserInitial: string;
   onCommentCountChange?: (count: number) => void;
 };
 
@@ -75,10 +77,12 @@ const getRequestErrorMessage = (error: unknown, fallback: string) => {
 
 const isAlreadyReportedError = (error: unknown) => {
   const message = getRequestErrorMessage(error, "");
+  const code = error instanceof ApiRequestError ? error.code ?? "" : "";
 
   return (
     (error instanceof ApiRequestError && error.status === 409) ||
-    message.includes("이미 신고")
+    message.includes("이미 신고") ||
+    code.includes("ALREADY_REPORTED")
   );
 };
 
@@ -87,7 +91,6 @@ export default function CommunityCommentSection({
   initialCommentCount,
   initialComments = [],
   currentUserId,
-  currentUserInitial,
   onCommentCountChange,
 }: CommunityCommentSectionProps) {
   const [comments, setComments] = useState<CommunityComment[]>(initialComments);
@@ -101,7 +104,11 @@ export default function CommunityCommentSection({
   const [textDialog, setTextDialog] = useState<TextDialogState>(null);
   const [isReportCompleteOpen, setIsReportCompleteOpen] = useState(false);
   const [isAlreadyReportedOpen, setIsAlreadyReportedOpen] = useState(false);
-  const [isLoginRequiredOpen, setIsLoginRequiredOpen] = useState(false);
+  const {
+    isLoginRequiredOpen,
+    openLoginRequiredModal,
+    closeLoginRequiredModal,
+  } = useLoginRequiredModal();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -127,7 +134,7 @@ export default function CommunityCommentSection({
     if (!nextContent || isSubmitting) return;
 
     if (!currentUserId) {
-      setIsLoginRequiredOpen(true);
+      openLoginRequiredModal();
       return;
     }
 
@@ -151,7 +158,7 @@ export default function CommunityCommentSection({
     if (pendingCommentId) return;
 
     if (!currentUserId) {
-      setIsLoginRequiredOpen(true);
+      openLoginRequiredModal();
       return;
     }
 
@@ -229,7 +236,7 @@ export default function CommunityCommentSection({
     if (!reportTargetId || !detail.trim()) return;
     if (!currentUserId) {
       setReportTargetId(null);
-      setIsLoginRequiredOpen(true);
+      openLoginRequiredModal();
       return;
     }
 
@@ -291,7 +298,7 @@ export default function CommunityCommentSection({
         title="로그인 필요"
         description="로그인이 필요한 서비스입니다."
         confirmLabel="확인"
-        onConfirm={() => setIsLoginRequiredOpen(false)}
+        onConfirm={closeLoginRequiredModal}
       />
 
       <CommunityReportModal
@@ -377,7 +384,7 @@ export default function CommunityCommentSection({
               onDelete={setDeleteTargetId}
               onReport={(commentId) => {
                 if (!currentUserId) {
-                  setIsLoginRequiredOpen(true);
+                  openLoginRequiredModal();
                   return;
                 }
 
@@ -394,7 +401,6 @@ export default function CommunityCommentSection({
 
       <div className="mt-6 border-t border-[#DDE8EF] pt-5">
         <CommunityCommentForm
-          profileText={currentUserInitial}
           value={content}
           disabled={isSubmitting}
           onChange={setContent}

@@ -1,10 +1,11 @@
 import CommunityPageClient from "@/features/community/components/CommunityPageClient";
-import { COMMUNITY_CATEGORIES } from "@/features/community/components/CommunityCategory";
+import {
+  COMMUNITY_CATEGORIES,
+  type CommunityFilter,
+} from "@/features/community/types";
 import {
   getCommunityFilters,
   getCommunityPosts,
-  type CommunityCategoryCode,
-  type CommunityFilter,
 } from "@/features/services/community.service";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ const DEFAULT_FILTERS: CommunityFilter[] = COMMUNITY_CATEGORIES.filter(
   id: category.id,
   tagType: "CATEGORY",
   tagName: category.label,
-  category: category.id as CommunityCategoryCode,
+  category: category.id,
 }));
 
 const loadCommunityFilters = async () => {

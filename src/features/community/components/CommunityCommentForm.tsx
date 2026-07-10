@@ -1,7 +1,6 @@
 import { CommunityCommentFormProps } from '../types'
 
 export default function CommunityCommentForm({
-  profileText,
   value,
   placeholder = "댓글을 입력하세요...",
   submitLabel = "등록",
@@ -17,10 +16,6 @@ export default function CommunityCommentForm({
         onSubmit();
       }}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-600 text-sm font-semibold text-white">
-        {profileText}
-      </div>
-
       <input
         type="text"
         value={value}
@@ -33,9 +28,9 @@ export default function CommunityCommentForm({
       <button
         type="submit"
         disabled={disabled || !value.trim()}
-        className="h-11 cursor-pointer rounded-2xl bg-teal-600 px-5 text-sm font-bold text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="h-11 cursor-pointer rounded-2xl bg-teal-600 px-5 text-sm font-bold text-white hover:bg-teal-700 disabled:opacity-60"
       >
-        {disabled ? "처리 중" : submitLabel}
+        {disabled ? "등록 중" : submitLabel}
       </button>
     </form>
   );

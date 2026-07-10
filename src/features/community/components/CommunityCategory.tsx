@@ -1,13 +1,4 @@
-import { CommunityCategoryOption,  CommunityCategoryTabsProps } from "../types"
-
-export const COMMUNITY_CATEGORIES: CommunityCategoryOption[] = [
-  { id: "TRAVEL_REVIEW", label: "여행후기" },
-  { id: "TIP_INFO", label: "팁&정보" },
-  { id: "QUESTION", label: "질문" },
-  { id: "COMPANION", label: "동행 구해요" },
-  { id: "LECTURE", label: "수강강의" },
-  { id: "FREE", label: "자유" },
-];
+import type { CommunityCategoryTabsProps } from "../types";
 
 export default function CommunityCategoryTabs({
   selectedCategories,

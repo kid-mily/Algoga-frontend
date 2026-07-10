@@ -51,7 +51,7 @@ export default function CommunityCommentItem({
               type="button"
               disabled={isPending}
               onClick={() => onReact(comment.commentId, true)}
-              className={`flex cursor-pointer items-center gap-1 disabled:cursor-not-allowed disabled:opacity-60 ${
+              className={`flex cursor-pointer items-center gap-1 disabled:opacity-60 ${
                 reaction === true ? "text-[#E05252]" : "hover:text-[#5F928E]"
               }`}
             >
@@ -63,7 +63,7 @@ export default function CommunityCommentItem({
               type="button"
               disabled={isPending}
               onClick={() => onReact(comment.commentId, false)}
-              className={`flex cursor-pointer items-center gap-1 disabled:cursor-not-allowed disabled:opacity-60 ${
+              className={`flex cursor-pointer items-center gap-1 disabled:opacity-60 ${
                 reaction === false ? "text-[#5F928E]" : "hover:text-[#5F928E]"
               }`}
             >
