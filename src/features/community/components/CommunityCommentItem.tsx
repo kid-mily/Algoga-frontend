@@ -1,6 +1,7 @@
 import { Heart, ThumbsDown } from "lucide-react";
 import { CommunityCommentItemProps } from '../types'
 import CommentDropdown from "./CommentDropdown";
+import CommunityCommentForm from "./CommunityCommentForm";
 
 export default function CommunityCommentItem({
   currentUserId,
@@ -11,6 +12,14 @@ export default function CommunityCommentItem({
   onEdit,
   onDelete,
   onReport,
+  onReply,
+  activeReplyCommentId = null,
+  replyContent = "",
+  isReplySubmitting = false,
+  canReply = true,
+  onReplyContentChange,
+  onCancelReply,
+  onOpenReply,
 }: CommunityCommentItemProps) {
   const isMine = Boolean(
     comment.isMine || (comment.authorId && currentUserId === comment.authorId)
@@ -70,7 +79,37 @@ export default function CommunityCommentItem({
               <ThumbsDown size={16} />
               {comment.dislikeCount.toLocaleString()}
             </button>
+
+            {canReply && (
+              <button
+                type="button"
+                onClick={() => onOpenReply?.(comment.commentId)}
+                className="cursor-pointer hover:text-[#5F928E]"
+              >
+                답글
+              </button>
+            )}
           </div>
+
+          {canReply && activeReplyCommentId === comment.commentId && (
+            <div className="mt-3 rounded-[14px] bg-[#F8FAFC] p-3">
+              <CommunityCommentForm
+                value={replyContent}
+                placeholder="대댓글을 입력하세요..."
+                submitLabel="답글 등록"
+                disabled={isReplySubmitting}
+                onChange={(value) => onReplyContentChange?.(value)}
+                onSubmit={() => onReply(comment.commentId, replyContent)}
+              />
+              <button
+                type="button"
+                onClick={onCancelReply}
+                className="mt-2 cursor-pointer text-xs font-bold text-[#7A6F66] hover:text-[#5F928E]"
+              >
+                취소
+              </button>
+            </div>
+          )}
         </div>
 
         <CommentDropdown
@@ -94,6 +133,14 @@ export default function CommunityCommentItem({
               onEdit={onEdit}
               onDelete={onDelete}
               onReport={onReport}
+              onReply={onReply}
+              activeReplyCommentId={activeReplyCommentId}
+              replyContent={replyContent}
+              isReplySubmitting={isReplySubmitting}
+              canReply={false}
+              onReplyContentChange={onReplyContentChange}
+              onCancelReply={onCancelReply}
+              onOpenReply={onOpenReply}
             />
           ))}
         </div>

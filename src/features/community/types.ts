@@ -3,6 +3,7 @@ export type CommunityCardProps = {
   authorName: string;
   authorInitial: string;
   authorProfileImageUrl?: string | null;
+  countryId?: number;
   country: string;
   category: string;
   createdAt: string;
@@ -28,6 +29,7 @@ export type CommunityCategoryCode =
 export type CommunityCategoryOption = {
   id: string;
   label: string;
+  tagType?: "ALL" | "CATEGORY" | "COUNTRY";
 };
 
 export const COMMUNITY_CATEGORIES: Array<{
@@ -38,7 +40,7 @@ export const COMMUNITY_CATEGORIES: Array<{
   { id: "TIP_INFO", label: "팁&정보" },
   { id: "QUESTION", label: "질문" },
   { id: "COMPANION", label: "동행 구해요" },
-  { id: "LECTURE", label: "수강강의" },
+  { id: "LECTURE", label: "강의후기" },
   { id: "FREE", label: "자유" },
 ];
 
@@ -87,6 +89,14 @@ export type CommunityCommentItemProps = {
   onEdit: (commentId: number, content: string) => void;
   onDelete: (commentId: number) => void;
   onReport: (commentId: number) => void;
+  onReply: (commentId: number, content: string) => void;
+  activeReplyCommentId?: number | null;
+  replyContent?: string;
+  isReplySubmitting?: boolean;
+  canReply?: boolean;
+  onReplyContentChange?: (value: string) => void;
+  onCancelReply?: () => void;
+  onOpenReply?: (commentId: number) => void;
 };
 
 export type CommunityHeaderProps = {
@@ -222,7 +232,7 @@ export type GetCommunityPostsParams = {
 export type CreateCommunityPostPayload = {
   title: string;
   content: string;
-  countryId: number;
+  countryId?: number | null;
   tagType: CommunityCategoryCode;
   customTags?: string[];
   images?: File[];

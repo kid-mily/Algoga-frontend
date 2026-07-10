@@ -71,9 +71,7 @@ export const useCommunityWriteForm = () => {
     [images]
   );
   const isFreeTag = tagType === "FREE";
-  const isFormValid = Boolean(
-    Number(countryId) > 0 && tagType && title.trim() && content.trim()
-  );
+  const isFormValid = Boolean(tagType && title.trim() && content.trim());
 
   useEffect(() => {
     const controller = new AbortController();
@@ -229,7 +227,7 @@ export const useCommunityWriteForm = () => {
       const payload = {
         title: title.trim(),
         content: content.trim(),
-        countryId: Number(countryId),
+        countryId: Number(countryId) > 0 ? Number(countryId) : undefined,
         tagType,
         customTags: isFreeTag ? customTags : [],
         images,

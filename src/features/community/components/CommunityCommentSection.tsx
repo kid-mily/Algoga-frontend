@@ -101,6 +101,8 @@ export default function CommunityCommentSection({
   const [pendingCommentId, setPendingCommentId] = useState<number | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [reportTargetId, setReportTargetId] = useState<number | null>(null);
+  const [replyTargetId, setReplyTargetId] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState("");
   const [textDialog, setTextDialog] = useState<TextDialogState>(null);
   const [isReportCompleteOpen, setIsReportCompleteOpen] = useState(false);
   const [isAlreadyReportedOpen, setIsAlreadyReportedOpen] = useState(false);
@@ -149,6 +151,32 @@ export default function CommunityCommentSection({
       await refreshCommentsFromPost();
     } catch (error) {
       setErrorMessage(getRequestErrorMessage(error, "댓글 등록에 실패했습니다."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateReply = async (parentId: number, replyValue: string) => {
+    const nextContent = replyValue.trim();
+    if (!nextContent || isSubmitting) return;
+
+    if (!currentUserId) {
+      openLoginRequiredModal();
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await createCommunityComment({
+        postId,
+        parentId,
+        content: nextContent,
+      });
+      setReplyTargetId(null);
+      setReplyContent("");
+      await refreshCommentsFromPost();
+    } catch (error) {
+      setErrorMessage(getRequestErrorMessage(error, "대댓글 등록에 실패했습니다."));
     } finally {
       setIsSubmitting(false);
     }
@@ -390,6 +418,25 @@ export default function CommunityCommentSection({
 
                 setReportTargetId(commentId);
               }}
+              onReply={handleCreateReply}
+              activeReplyCommentId={replyTargetId}
+              replyContent={replyContent}
+              isReplySubmitting={isSubmitting}
+              canReply
+              onOpenReply={(commentId) => {
+                if (!currentUserId) {
+                  openLoginRequiredModal();
+                  return;
+                }
+
+                setReplyTargetId(commentId);
+                setReplyContent("");
+              }}
+              onCancelReply={() => {
+                setReplyTargetId(null);
+                setReplyContent("");
+              }}
+              onReplyContentChange={setReplyContent}
             />
           ))
         ) : (

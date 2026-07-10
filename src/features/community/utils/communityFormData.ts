@@ -15,7 +15,9 @@ export const createCommunityPostFormData = ({
 
   formData.append("title", title);
   formData.append("content", content);
-  formData.append("countryId", String(countryId));
+  if (countryId) {
+    formData.append("countryId", String(countryId));
+  }
   formData.append("category", tagType);
   customTags.forEach((tag) => formData.append("customTags", tag));
   images.forEach((image) => formData.append("images", image));

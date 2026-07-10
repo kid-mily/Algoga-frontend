@@ -8,6 +8,9 @@ export default function CommunityHeader({
   onCategoryChange,
   onWriteClick,
 }: CommunityHeaderProps) {
+  const categoryTags = categories.filter((category) => category.tagType !== "COUNTRY");
+  const countryTags = categories.filter((category) => category.tagType === "COUNTRY");
+
   return (
     <section className="w-full bg-[#F3F8FC] pb-4 pt-8">
       <div className="mx-auto w-full max-w-5xl px-6">
@@ -27,13 +30,33 @@ export default function CommunityHeader({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 py-2">
-          <CommunityCategoryTabs
-            selectedCategories={selectedCategories}
-            categories={categories}
-            onCategoryChange={onCategoryChange}
-          />
-          <CommunityWriteButton onClick={onWriteClick} />
+        <div className="space-y-3 py-2">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 flex-1 items-start gap-3">
+              <span className="mt-[9px] w-[64px] shrink-0 text-sm font-extrabold text-[#5F928E]">
+                카테고리
+              </span>
+              <CommunityCategoryTabs
+                selectedCategories={selectedCategories}
+                categories={categoryTags}
+                onCategoryChange={onCategoryChange}
+              />
+            </div>
+            <CommunityWriteButton onClick={onWriteClick} />
+          </div>
+
+          {countryTags.length > 0 && (
+            <div className="flex items-start gap-3 pr-[118px]">
+              <span className="mt-[9px] w-[64px] shrink-0 text-sm font-extrabold text-[#5F928E]">
+                인기나라
+              </span>
+              <CommunityCategoryTabs
+                selectedCategories={selectedCategories}
+                categories={countryTags}
+                onCategoryChange={onCategoryChange}
+              />
+            </div>
+          )}
         </div>
       </div>
     </section>
