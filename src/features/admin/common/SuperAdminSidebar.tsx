@@ -19,6 +19,30 @@ const menus = [
     icon: "/images/blacklist.svg",
     activeIcon: "/images/blacklist-active.svg",
   },
+  {
+    name: "컨텐츠매니저로 이동",
+    href: "/contentadmin/lecture",
+    icon: "/images/book.svg",
+    activeIcon: "/images/book-active.svg",
+  },
+  {
+    name: "CS매니저로 이동",
+    href: "/csadmin/inquiry",
+    icon: "/images/qna.svg",
+    activeIcon: "/images/qna-active.svg",
+  },
+  {
+    name: "통계매니저로 이동",
+    href: "/statisticadmin/reservation-conversion",
+    icon: "/images/chart.svg",
+    activeIcon: "/images/chart-active.svg",
+  },
+  {
+    name: "정산 매니저로 이동",
+    href: "/moneyadmin/payments",
+    icon: "/images/list.svg",
+    activeIcon: "/images/list-active.svg",
+  },
 ];
 
 export default function SuperAdminSidebar() {
