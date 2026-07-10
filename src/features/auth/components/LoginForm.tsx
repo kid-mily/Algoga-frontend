@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import CompleteModal from "@/features/common/components/CompleteModal";
 import { login } from "@/features/services/auth.service";
 import { useLoginLockTimer } from "../hooks/useLoginLockTimer";
 import { useSocialUrls } from "../hooks/useSocialUrl";
@@ -18,6 +19,7 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [blacklistModalMessage, setBlacklistModalMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const validateUsername = (value: string) => {
@@ -111,6 +113,15 @@ export default function LoginForm() {
         return;
       }
 
+      if (errorCode === "AUTH_015") {
+        setUsernameError("");
+        setPasswordError("");
+        setBlacklistModalMessage(
+          "블랙리스트에 등록되어 제한된 계정입니다. 고객센터(algoga.official@gmail.com)에 문의하세요."
+        );
+        return;
+      }
+
       setUsernameError("아이디 또는 비밀번호가 틀렸습니다.");
       setPasswordError("아이디 또는 비밀번호가 틀렸습니다.");
     } finally {
@@ -120,6 +131,14 @@ export default function LoginForm() {
 
   return (
     <>
+      <CompleteModal
+        open={Boolean(blacklistModalMessage)}
+        title="로그인 제한"
+        description={blacklistModalMessage}
+        buttonText="확인"
+        onConfirm={() => setBlacklistModalMessage("")}
+      />
+
       {lockRemainingSeconds > 0 && (
         <div className="fixed inset-0 z-[5000] flex items-center justify-center bg-black/35 px-4">
           <div

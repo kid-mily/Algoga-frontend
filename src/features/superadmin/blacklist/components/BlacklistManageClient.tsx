@@ -3,14 +3,10 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
-import CompleteModal from "@/features/common/components/CompleteModal";
-import Modal from "@/features/common/components/Modal";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import {
-  deregisterBlacklistUser,
   getBlacklistCandidates,
   getBlacklistedUsers,
-  registerBlacklistUser,
 } from "@/features/services/adminBlacklist.service";
 import { getErrorMessage } from "@/features/services/error.service";
 import { BlacklistTab, BlacklistUser, PageResult } from "../types";
@@ -35,11 +31,7 @@ export default function BlacklistManageClient() {
   const [blacklistData, setBlacklistData] = useState<PageResult<BlacklistUser>>(emptyPage);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
-  const [completeMessage, setCompleteMessage] = useState("");
-  const [registerTarget, setRegisterTarget] = useState<BlacklistUser | null>(null);
-  const [deregisterTarget, setDeregisterTarget] = useState<BlacklistUser | null>(null);
 
   const loadCandidates = useCallback(async (index: number, signal?: AbortSignal) => {
     const data = await getBlacklistCandidates({ index, size: PAGE_SIZE, signal });
@@ -94,53 +86,6 @@ export default function BlacklistManageClient() {
     [blacklistData.items, searchKeyword]
   );
 
-  const handleRegister = async () => {
-    if (!registerTarget || isProcessing) return;
-
-    const targetUserId = registerTarget.userId;
-
-    try {
-      setIsProcessing(true);
-      setError("");
-      await registerBlacklistUser(targetUserId);
-    } catch (actionError: unknown) {
-      setError(getErrorMessage(actionError, "블랙리스트 등록에 실패했습니다."));
-      setIsProcessing(false);
-      return;
-    }
-
-    setRegisterTarget(null);
-    setCompleteMessage("블랙리스트 등록이 완료되었습니다.");
-
-    try {
-      await Promise.all([
-        loadCandidates(candidatePage),
-        loadBlacklists(blacklistPage),
-      ]);
-    } catch (reloadError: unknown) {
-      setError(getErrorMessage(reloadError, "등록은 완료됐지만 목록을 새로고침하지 못했습니다."));
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleDeregister = async () => {
-    if (!deregisterTarget || isProcessing) return;
-
-    try {
-      setIsProcessing(true);
-      setError("");
-      await deregisterBlacklistUser(deregisterTarget.userId);
-      await loadBlacklists(blacklistPage);
-      setDeregisterTarget(null);
-      setCompleteMessage("블랙리스트 해제가 완료되었습니다.");
-    } catch (actionError: unknown) {
-      setError(getErrorMessage(actionError, "블랙리스트 해제에 실패했습니다."));
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   return (
     <main aria-labelledby="blacklist-management-title">
       <SimpleSubHeader
@@ -188,7 +133,6 @@ export default function BlacklistManageClient() {
             <CandidateTable
               users={visibleCandidates}
               isLoading={isLoading}
-              onRegister={setRegisterTarget}
             />
             <BlacklistPagination
               currentPage={candidateData.page}
@@ -201,7 +145,6 @@ export default function BlacklistManageClient() {
             <BlacklistedTable
               users={visibleBlacklists}
               isLoading={isLoading}
-              onDeregister={setDeregisterTarget}
             />
             <BlacklistPagination
               currentPage={blacklistData.page}
@@ -212,35 +155,6 @@ export default function BlacklistManageClient() {
         )}
       </section>
 
-      <Modal
-        open={Boolean(registerTarget)}
-        title="블랙리스트 등록"
-        description={`${registerTarget?.name || "선택한 유저"}를 블랙리스트로 등록하시겠습니까?`}
-        confirmText={isProcessing ? "처리 중..." : "등록"}
-        cancelText="취소"
-        confirmDisabled={isProcessing}
-        onConfirm={handleRegister}
-        onCancel={() => setRegisterTarget(null)}
-      />
-
-      <Modal
-        open={Boolean(deregisterTarget)}
-        title="블랙리스트 해제"
-        description={`${deregisterTarget?.name || "선택한 유저"}의 블랙리스트를 해제하시겠습니까?`}
-        confirmText={isProcessing ? "처리 중..." : "해제"}
-        cancelText="취소"
-        confirmDisabled={isProcessing}
-        onConfirm={handleDeregister}
-        onCancel={() => setDeregisterTarget(null)}
-      />
-
-      <CompleteModal
-        open={Boolean(completeMessage)}
-        title="처리 완료"
-        description={completeMessage}
-        buttonText="확인"
-        onConfirm={() => setCompleteMessage("")}
-      />
     </main>
   );
 }
@@ -277,6 +191,7 @@ const filterUsers = (users: BlacklistUser[], keyword: string) => {
   return users.filter((user) =>
     [
       user.displayId,
+      user.username,
       user.name,
       user.nickname,
       user.email,

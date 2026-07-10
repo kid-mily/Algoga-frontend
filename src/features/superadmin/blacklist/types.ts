@@ -9,11 +9,13 @@ export type ReportHistoryTargetType = "POST" | "COMMENT" | "USER" | "UNKNOWN";
 export type BlacklistUser = {
   userId: number;
   displayId: string;
+  username: string;
   name: string;
   nickname: string;
   email: string;
   reportCount: number;
   lastReportedAt: string;
+  isBlacklisted: boolean;
   registeredAt: string;
   managerName: string;
   status: BlacklistStatus;

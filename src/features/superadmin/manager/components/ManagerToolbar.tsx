@@ -1,5 +1,9 @@
 import { managerRoleOptions, ManagerRole } from "../types";
 
+const managerSearchRoleOptions = managerRoleOptions.filter(
+  (role) => role.value !== "SUPER_ADMIN"
+);
+
 type ManagerToolbarProps = {
   searchKeyword: string;
   selectedRole: ManagerRole | "ALL";
@@ -33,7 +37,7 @@ export default function ManagerToolbar({
           className="h-[42px] w-[160px] shrink-0 rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] text-[#344054] outline-none"
         >
           <option value="ALL">전체 권한</option>
-          {managerRoleOptions.map((role) => (
+          {managerSearchRoleOptions.map((role) => (
             <option key={role.value} value={role.value}>
               {role.label}
             </option>

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
@@ -8,6 +7,7 @@ import CompleteModal from "@/features/common/components/CompleteModal";
 import Modal from "@/features/common/components/Modal";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import {
+  deregisterBlacklistUser,
   getBlacklistCandidateById,
   getReportedUserReports,
   registerBlacklistUser,
@@ -18,6 +18,26 @@ import BlacklistPagination from "./BlacklistPagination";
 import { ReportStatusBadge } from "./BlacklistStatusBadge";
 
 const REPORT_PAGE_SIZE = 5;
+
+const reportTargetLabel: Record<string, string> = {
+  POST: "게시글",
+  COMMENT: "댓글",
+  USER: "사용자",
+  UNKNOWN: "-",
+};
+
+const reportReasonLabel: Record<string, string> = {
+  SPAM: "스팸/광고",
+  ABUSE: "욕설/비방",
+  FALSE_INFO: "허위정보",
+  INAPPROPRIATE: "부적절한 콘텐츠",
+  COPYRIGHT: "저작권 침해",
+  ETC: "기타",
+};
+
+const getReportReasonLabel = (reasonType: string) => {
+  return reportReasonLabel[reasonType] ?? reasonType;
+};
 
 export default function BlacklistDetailClient({ userId }: { userId: number }) {
   const router = useRouter();
@@ -36,7 +56,11 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
   const [userError, setUserError] = useState("");
   const [reportError, setReportError] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deregisterConfirmOpen, setDeregisterConfirmOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
+  const [completeMessage, setCompleteMessage] = useState("");
+  const [registerReason, setRegisterReason] = useState("");
+  const [registerReasonError, setRegisterReasonError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -102,15 +126,51 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
   const handleRegister = async () => {
     if (isProcessing) return;
 
+    const nextReason = registerReason.trim();
+
+    if (!nextReason) {
+      setRegisterReasonError("등록 사유를 입력해주세요.");
+      return;
+    }
+
     try {
       setIsProcessing(true);
       setUserError("");
       setReportError("");
-      await registerBlacklistUser(userId);
+      await registerBlacklistUser(userId, nextReason);
       setConfirmOpen(false);
+      setRegisterReason("");
+      setRegisterReasonError("");
+      setCompleteMessage("블랙리스트 등록이 완료되었습니다.");
       setCompleteOpen(true);
     } catch (actionError: unknown) {
       setUserError(getErrorMessage(actionError, "블랙리스트 등록에 실패했습니다."));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (isProcessing) return;
+
+    setConfirmOpen(false);
+    setRegisterReason("");
+    setRegisterReasonError("");
+  };
+
+  const handleDeregister = async () => {
+    if (isProcessing) return;
+
+    try {
+      setIsProcessing(true);
+      setUserError("");
+      setReportError("");
+      await deregisterBlacklistUser(userId);
+      setDeregisterConfirmOpen(false);
+      setCompleteMessage("블랙리스트 해제가 완료되었습니다.");
+      setCompleteOpen(true);
+    } catch (actionError: unknown) {
+      setUserError(getErrorMessage(actionError, "블랙리스트 해제에 실패했습니다."));
     } finally {
       setIsProcessing(false);
     }
@@ -145,12 +205,18 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
               <p className="text-[14px] text-[#667085]">유저 정보를 불러오는 중입니다...</p>
             ) : user ? (
               <div className="grid grid-cols-2 gap-x-16 gap-y-7">
-                <UserInfoItem icon="/images/user.svg" label="회원 ID" value={user.displayId} />
-                <UserInfoItem icon="/images/user.svg" label="이름" value={user.name} />
-                <UserInfoItem icon="/images/user.svg" label="닉네임" value={user.nickname} />
-                <UserInfoItem icon="/images/mail.svg" label="이메일" value={user.email} />
-                <UserInfoItem icon="/images/calendar.svg" label="가입일" value={user.joinedAt} />
-                <UserInfoItem icon="/images/warning.svg" label="신고 횟수" value={`${user.reportCount}회`} danger />
+                <UserInfoItem label="유저 ID" value={String(user.userId)} />
+                <UserInfoItem label="아이디" value={user.username} />
+                <UserInfoItem label="이름" value={user.name} />
+                <UserInfoItem label="닉네임" value={user.nickname} />
+                <UserInfoItem label="이메일" value={user.email} />
+                <UserInfoItem label="신고 횟수" value={`${user.reportCount}회`} danger />
+                <UserInfoItem label="최근 신고일" value={user.lastReportedAt} />
+                <UserInfoItem
+                  label="블랙리스트 여부"
+                  value={user.isBlacklisted ? "등록됨" : "미등록"}
+                  danger={user.isBlacklisted}
+                />
               </div>
             ) : (
               <p className="text-[14px] text-[#667085]">유저 정보를 찾을 수 없습니다.</p>
@@ -178,8 +244,12 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
                   reports.items.map((report) => (
                     <tr key={report.reportId} className="border-b border-[#EEF0F3] text-[14px] text-[#344054] last:border-b-0">
                       <td className="px-5 py-5 font-semibold">{report.displayId}</td>
-                      <td className="px-5 py-5">{report.targetType}</td>
-                      <td className="px-5 py-5">{report.reasonType}</td>
+                      <td className="px-5 py-5">
+                        {reportTargetLabel[report.targetType]}
+                      </td>
+                      <td className="px-5 py-5">
+                        {getReportReasonLabel(report.reasonType)}
+                      </td>
                       <td className="px-5 py-5 text-[#667085]">{report.createdAt}</td>
                       <td className="px-5 py-5"><ReportStatusBadge status={report.status} /></td>
                     </tr>
@@ -198,14 +268,24 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
         <aside>
           <section className="rounded-[16px] border border-[#E4E7EC] bg-white p-6">
             <h2 className="mb-5 text-[20px] font-bold text-[#111827]">관리 액션</h2>
-            <button
-              type="button"
-              onClick={() => setConfirmOpen(true)}
-              className="mb-6 flex h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-[#D92D20] text-[14px] font-bold text-white"
-            >
-              <span className="text-[18px]">⊘</span>
-              블랙리스트 등록
-            </button>
+            {user?.isBlacklisted ? (
+              <button
+                type="button"
+                onClick={() => setDeregisterConfirmOpen(true)}
+                className="mb-6 flex h-[48px] w-full items-center justify-center rounded-[10px] border border-[#D0D5DD] text-[14px] font-bold text-[#344054]"
+              >
+                블랙리스트 해제
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(true)}
+                className="mb-6 flex h-[48px] w-full items-center justify-center gap-2 rounded-[10px] bg-[#D92D20] text-[14px] font-bold text-white"
+              >
+                <span className="text-[18px]">⊘</span>
+                블랙리스트 등록
+              </button>
+            )}
             <div className="rounded-[10px] bg-[#F9FAFB] p-4">
               <p className="mb-3 text-[13px] font-bold text-[#667085]">블랙리스트 등록 시</p>
               <ul className="space-y-1 text-[13px] font-semibold leading-[1.7] text-[#344054]">
@@ -219,20 +299,84 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
         </aside>
       </div>
 
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="blacklist-register-modal-title"
+            className="w-full max-w-[460px] rounded-[20px] bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.18)]"
+          >
+            <h2
+              id="blacklist-register-modal-title"
+              className="text-[20px] font-bold text-[#111827]"
+            >
+              블랙리스트 등록
+            </h2>
+            <p className="mt-3 text-[14px] leading-6 text-[#667085]">
+              {user?.name || displayUserId} 유저를 블랙리스트로 등록하시겠습니까?
+            </p>
+
+            <label className="mt-5 block">
+              <span className="text-[14px] font-bold text-[#344054]">
+                등록 사유
+              </span>
+              <textarea
+                value={registerReason}
+                onChange={(event) => {
+                  setRegisterReason(event.target.value);
+                  setRegisterReasonError("");
+                }}
+                disabled={isProcessing}
+                placeholder="블랙리스트 등록 사유를 입력해주세요."
+                className={`mt-2 h-[120px] w-full resize-none rounded-[14px] border p-4 text-[14px] outline-none disabled:bg-[#F2F4F7] ${
+                  registerReasonError
+                    ? "border-[#DC2626] bg-[#FEF2F2]"
+                    : "border-[#D0D5DD] focus:border-[#439A97]"
+                }`}
+              />
+            </label>
+            {registerReasonError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {registerReasonError}
+              </p>
+            )}
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={handleCloseConfirmModal}
+                disabled={isProcessing}
+                className="h-[42px] flex-1 rounded-[12px] border border-[#D0D5DD] text-[15px] font-semibold text-[#344054] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleRegister}
+                disabled={isProcessing}
+                className="h-[42px] flex-1 rounded-[12px] bg-[#D92D20] text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+              >
+                {isProcessing ? "처리 중..." : "등록"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
       <Modal
-        open={confirmOpen}
-        title="블랙리스트 등록"
-        description={`${user?.name || displayUserId} 유저를 블랙리스트로 등록하시겠습니까?`}
-        confirmText={isProcessing ? "처리 중..." : "등록"}
+        open={deregisterConfirmOpen}
+        title="블랙리스트 해제"
+        description={`${user?.name || displayUserId} 유저의 블랙리스트를 해제하시겠습니까?`}
+        confirmText={isProcessing ? "처리 중..." : "해제"}
         cancelText="취소"
         confirmDisabled={isProcessing}
-        onConfirm={handleRegister}
-        onCancel={() => setConfirmOpen(false)}
+        onConfirm={handleDeregister}
+        onCancel={() => setDeregisterConfirmOpen(false)}
       />
       <CompleteModal
         open={completeOpen}
-        title="등록 완료"
-        description="블랙리스트 등록이 완료되었습니다."
+        title="처리 완료"
+        description={completeMessage}
         buttonText="확인"
         onConfirm={() => router.push("/superadmin/blacklist")}
       />
@@ -241,25 +385,20 @@ export default function BlacklistDetailClient({ userId }: { userId: number }) {
 }
 
 function UserInfoItem({
-  icon,
   label,
   value,
   danger = false,
 }: {
-  icon: string;
   label: string;
   value: string;
   danger?: boolean;
 }) {
   return (
-    <div className="flex items-start gap-3">
-      <Image src={icon} alt="" aria-hidden width={18} height={18} className="mt-1" />
-      <div>
-        <p className="mb-1 text-[13px] font-semibold text-[#98A2B3]">{label}</p>
-        <p className={`text-[14px] font-bold ${danger ? "text-[#DC2626]" : "text-[#111827]"}`}>
-          {value}
-        </p>
-      </div>
+    <div>
+      <p className="mb-1 text-[13px] font-semibold text-[#98A2B3]">{label}</p>
+      <p className={`text-[14px] font-bold ${danger ? "text-[#DC2626]" : "text-[#111827]"}`}>
+        {value}
+      </p>
     </div>
   );
 }
