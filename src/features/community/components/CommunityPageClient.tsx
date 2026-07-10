@@ -6,12 +6,20 @@ import CommunityCard from "@/features/community/components/CommunityCard";
 import CommunityActionModal from "@/features/community/components/CommunityActionModal";
 import CommunityHeader from "@/features/community/components/CommunityHeader";
 import { useLoginRequiredModal } from "@/features/community/hooks/useLoginRequiredModal";
-import type { CommunityCategoryOption, CommunityPost } from "@/features/community/types";
+import type {
+  CommunityCategoryCode,
+  CommunityCategoryOption,
+  CommunityPost,
+} from "@/features/community/types";
 import { getMe } from "@/features/services/user.service";
 import { getCommunityPosts } from "@/features/services/community.service";
 import { CommunityPageClientProps } from "../types"
 
 const ALL_CATEGORY_ID = "ALL";
+
+const isCommunityCategoryCode = (
+  category: CommunityCategoryCode | undefined
+): category is CommunityCategoryCode => Boolean(category);
 
 export default function CommunityPageClient({
   initialFilters,
@@ -21,7 +29,8 @@ export default function CommunityPageClient({
   initialErrorMessage = "",
 }: CommunityPageClientProps) {
   const router = useRouter();
-  const [selectedFilterId, setSelectedFilterId] = useState<string>(ALL_CATEGORY_ID);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedCountryId, setSelectedCountryId] = useState<string | null>(null);
   const [posts, setPosts] = useState<CommunityPost[]>(initialPosts);
   const [lastPostId, setLastPostId] = useState<number | null>(initialLastPostId);
   const [hasNext, setHasNext] = useState(initialHasNext);
@@ -38,19 +47,32 @@ export default function CommunityPageClient({
 
   const categoryOptions = useMemo<CommunityCategoryOption[]>(
     () => [
-      { id: ALL_CATEGORY_ID, label: "전체" },
+      { id: ALL_CATEGORY_ID, label: "전체", tagType: "ALL" },
       ...initialFilters.map((filter) => ({
         id: filter.id,
         label: filter.tagName,
+        tagType: filter.tagType,
       })),
     ],
     [initialFilters]
   );
-  const selectedFilter = useMemo(
-    () => initialFilters.find((filter) => filter.id === selectedFilterId),
-    [initialFilters, selectedFilterId]
+  const selectedCategoryFilters = useMemo(
+    () => initialFilters.filter((filter) => selectedCategoryIds.includes(filter.id)),
+    [initialFilters, selectedCategoryIds]
   );
-  const selectedFilterIds = useMemo(() => [selectedFilterId], [selectedFilterId]);
+  const selectedCountryFilter = useMemo(
+    () => initialFilters.find((filter) => filter.id === selectedCountryId),
+    [initialFilters, selectedCountryId]
+  );
+  const selectedFilterIds = useMemo(
+    () => [
+      ...selectedCategoryIds,
+      ...(selectedCountryId ? [selectedCountryId] : []),
+      ...(selectedCategoryIds.length === 0 && !selectedCountryId ? [ALL_CATEGORY_ID] : []),
+    ],
+    [selectedCategoryIds, selectedCountryId]
+  );
+  const hasSelectedFilter = selectedCategoryFilters.length > 0 || Boolean(selectedCountryFilter);
 
   const loadPosts = useCallback(
     async ({
@@ -73,7 +95,10 @@ export default function CommunityPageClient({
       try {
         const data = await getCommunityPosts({
           lastPostId: nextLastPostId,
-          categories: selectedFilter?.category ? [selectedFilter.category] : undefined,
+          categories: selectedCategoryFilters
+            .map((filter) => filter.category)
+            .filter(isCommunityCategoryCode),
+          countryId: selectedCountryFilter?.countryId,
           signal,
         });
 
@@ -95,11 +120,11 @@ export default function CommunityPageClient({
         }
       }
     },
-    [selectedFilter]
+    [selectedCategoryFilters, selectedCountryFilter]
   );
 
   useEffect(() => {
-    if (selectedFilterId === ALL_CATEGORY_ID) {
+    if (!hasSelectedFilter) {
       setPosts(initialPosts);
       setLastPostId(initialLastPostId);
       setHasNext(initialHasNext);
@@ -118,8 +143,8 @@ export default function CommunityPageClient({
     initialHasNext,
     initialLastPostId,
     initialPosts,
+    hasSelectedFilter,
     loadPosts,
-    selectedFilterId,
   ]);
 
   useEffect(() => {
@@ -143,11 +168,25 @@ export default function CommunityPageClient({
   }, [hasNext, isLoading, isLoadingMore, lastPostId, loadPosts]);
 
   const handleFilterChange = (filterId: string) => {
-    setSelectedFilterId((prev) => {
-      if (filterId === ALL_CATEGORY_ID) return ALL_CATEGORY_ID;
+    if (filterId === ALL_CATEGORY_ID) {
+      setSelectedCategoryIds([]);
+      setSelectedCountryId(null);
+      return;
+    }
 
-      return prev === filterId ? ALL_CATEGORY_ID : filterId;
-    });
+    const nextFilter = initialFilters.find((filter) => filter.id === filterId);
+    if (!nextFilter) return;
+
+    if (nextFilter.tagType === "COUNTRY") {
+      setSelectedCountryId((prev) => (prev === filterId ? null : filterId));
+      return;
+    }
+
+    setSelectedCategoryIds((prev) =>
+      prev.includes(filterId)
+        ? prev.filter((categoryId) => categoryId !== filterId)
+        : [...prev, filterId]
+    );
   };
 
   const handleWriteClick = async () => {

@@ -14,7 +14,7 @@ export const CATEGORY_LABELS: Record<CommunityCategoryCode, string> = {
   TIP_INFO: "팁&정보",
   QUESTION: "질문",
   COMPANION: "동행 구해요",
-  LECTURE: "수강강의",
+  LECTURE: "강의후기",
   FREE: "자유",
 };
 
@@ -54,8 +54,11 @@ const formatPostDate = (value: unknown) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
 
-  return `${year}.${month}.${day}`;
+  return `${year}.${month}.${day} ${hours}:${minutes}:${seconds}`;
 };
 
 export const normalizeContinent = (value: unknown): CommunityContinent | null => {

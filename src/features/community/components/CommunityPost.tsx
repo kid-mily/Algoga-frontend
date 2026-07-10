@@ -347,9 +347,11 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
                   </h2>
 
                   <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                    <span className="flex h-6 items-center rounded-full bg-[#EEF4F4] px-2.5 text-xs font-bold text-[#5F928E]">
-                      {post.country}
-                    </span>
+                    {post.countryId && (
+                      <span className="flex h-6 items-center rounded-full bg-[#EEF4F4] px-2.5 text-xs font-bold text-[#5F928E]">
+                        {post.country}
+                      </span>
+                    )}
                     <span className="flex h-6 items-center rounded-full border border-[#6BA19D] bg-[#6BA19D] px-2.5 text-xs font-bold text-white">
                       {post.category}
                     </span>
@@ -407,7 +409,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
                   src={currentImageUrl}
                   alt={`${post.imageAlt} 이미지 ${currentImageIndex + 1}`}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                   sizes="(max-width: 768px) 100vw, 768px"
                 />
 

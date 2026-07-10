@@ -8,6 +8,7 @@ export default function CommunityCard({
   authorName,
   authorInitial,
   authorProfileImageUrl,
+  countryId,
   country,
   category,
   createdAt,
@@ -48,9 +49,11 @@ export default function CommunityCard({
             </h3>
 
             <div className="mt-1.5 flex flex-wrap items-center gap-2">
-              <span className="flex h-6 items-center rounded-full bg-[#EEF4F4] px-2.5 text-[12px] font-bold text-[#5F928E]">
-                {country}
-              </span>
+              {countryId && (
+                <span className="flex h-6 items-center rounded-full bg-[#EEF4F4] px-2.5 text-[12px] font-bold text-[#5F928E]">
+                  {country}
+                </span>
+              )}
 
               <span className="flex h-6 items-center rounded-full border border-[#6BA19D] bg-[#6BA19D] px-2.5 text-[12px] font-bold text-white">
                 {category}

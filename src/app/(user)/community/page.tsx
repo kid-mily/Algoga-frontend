@@ -11,11 +11,9 @@ import {
 export const dynamic = "force-dynamic";
 
 const isVisibleCategoryFilter = (filter: CommunityFilter) =>
-  filter.tagType !== "COUNTRY" && filter.category !== "FREE";
+  filter.tagType === "COUNTRY" || Boolean(filter.category);
 
-const DEFAULT_FILTERS: CommunityFilter[] = COMMUNITY_CATEGORIES.filter(
-  (category) => category.id !== "FREE"
-).map((category) => ({
+const DEFAULT_FILTERS: CommunityFilter[] = COMMUNITY_CATEGORIES.map((category) => ({
   id: category.id,
   tagType: "CATEGORY",
   tagName: category.label,
