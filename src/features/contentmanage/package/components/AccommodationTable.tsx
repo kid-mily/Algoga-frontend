@@ -29,11 +29,9 @@ export default function AccommodationTable({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[860px] table-fixed border-collapse">
           <colgroup>
-            <col className="w-[30%]" />
-            <col className="w-[28%]" />
-            <col className="w-[14%]" />
-            <col className="w-[10%]" />
-            <col className="w-[12%]" />
+            <col className="w-[34%]" />
+            <col className="w-[34%]" />
+            <col className="w-[20%]" />
             <col className="w-[6%]" />
           </colgroup>
           <thead className="border-b border-[#E4E7EC] bg-[#FCFCFD]">
@@ -41,21 +39,19 @@ export default function AccommodationTable({
               <th scope="col" className="px-5 py-4 text-left text-[13px] font-semibold text-[#667085]">숙소</th>
               <th scope="col" className="px-5 py-4 text-left text-[13px] font-semibold text-[#667085]">설명</th>
               <th scope="col" className="px-5 py-4 text-left text-[13px] font-semibold text-[#667085]">1박 가격</th>
-              <th scope="col" className="px-5 py-4 text-left text-[13px] font-semibold text-[#667085]">숙박일수</th>
-              <th scope="col" className="px-5 py-4 text-left text-[13px] font-semibold text-[#667085]">숙소 가격</th>
               <th scope="col" className="px-5 py-4 text-center text-[13px] font-semibold text-[#667085]">관리</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={6}>
+                <td colSpan={4}>
                   <LoadingSpinner text="숙소 목록을 불러오는 중입니다..." />
                 </td>
               </tr>
             ) : accommodations.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-12 text-center text-[14px] text-[#667085]">
+                <td colSpan={4} className="px-5 py-12 text-center text-[14px] text-[#667085]">
                   선택한 국가에 등록된 숙소가 없습니다.
                 </td>
               </tr>

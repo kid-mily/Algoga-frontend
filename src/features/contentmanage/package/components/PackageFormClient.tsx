@@ -21,11 +21,24 @@ type PackageFormClientProps = {
   packageId?: string;
 };
 
+const getStayNights = (checkInDate: string, checkOutDate: string) => {
+  if (!checkInDate || !checkOutDate) return 0;
+
+  const checkInTime = new Date(`${checkInDate}T00:00:00`).getTime();
+  const checkOutTime = new Date(`${checkOutDate}T00:00:00`).getTime();
+  const dayMs = 1000 * 60 * 60 * 24;
+
+  if (!Number.isFinite(checkInTime) || !Number.isFinite(checkOutTime)) return 0;
+
+  return Math.max(0, Math.round((checkOutTime - checkInTime) / dayMs));
+};
+
 export default function PackageFormClient({
   mode,
   packageId,
 }: PackageFormClientProps) {
   const router = useRouter();
+  const packageImageInputId = "package-image-file";
   const [countries, setCountries] = useState<CourseCountry[]>([]);
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
   const [countryId, setCountryId] = useState("");
@@ -34,7 +47,6 @@ export default function PackageFormClient({
   const [description, setDescription] = useState("");
   const [checkInDate, setCheckInDate] = useState("");
   const [checkOutDate, setCheckOutDate] = useState("");
-  const [discountRate, setDiscountRate] = useState(0);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [flightDestination, setFlightDestination] = useState("");
   const [flightDepartureDate, setFlightDepartureDate] = useState("");
@@ -61,15 +73,13 @@ export default function PackageFormClient({
       ),
     [accommodations, accommodationId]
   );
+  const stayNights = getStayNights(checkInDate, checkOutDate);
   const accommodationPrice = selectedAccommodation
-    ? selectedAccommodation.pricePerNight * selectedAccommodation.nights
+    ? selectedAccommodation.pricePerNight * stayNights
     : 0;
   const flightPrice = selectedFlight?.price ?? 0;
   const basePrice = accommodationPrice + flightPrice;
-  const finalPrice = Math.max(
-    0,
-    Math.round(basePrice * ((100 - discountRate) / 100))
-  );
+  const finalPrice = Math.max(0, Math.round(basePrice));
   const showFlightSearchErrors = hasSubmitted || hasSearchedFlight;
   const countryError = hasSubmitted && !countryId ? "국가를 선택해주세요." : "";
   const accommodationError =
@@ -80,6 +90,10 @@ export default function PackageFormClient({
     hasSubmitted && !checkInDate ? "체크인 날짜를 선택해주세요." : "";
   const checkOutDateError =
     hasSubmitted && !checkOutDate ? "체크아웃 날짜를 선택해주세요." : "";
+  const stayNightsError =
+    hasSubmitted && checkInDate && checkOutDate && stayNights <= 0
+      ? "체크아웃 날짜는 체크인 다음날 이후로 선택해주세요."
+      : "";
   const imageError =
     hasSubmitted && mode === "create" && !imageFile
       ? "패키지 이미지를 선택해주세요."
@@ -138,7 +152,6 @@ export default function PackageFormClient({
           setDescription(packageData.description);
           setCheckInDate(packageData.checkInDate);
           setCheckOutDate(packageData.checkOutDate);
-          setDiscountRate(0);
           setFlightDestination(packageData.arrival !== "-" ? packageData.arrival : "");
           setFlightDepartureDate(
             packageData.departureTime.includes("T")
@@ -234,6 +247,7 @@ export default function PackageFormClient({
       !name.trim() ||
       !checkInDate ||
       !checkOutDate ||
+      stayNights <= 0 ||
       basePrice <= 0 ||
       (mode === "create" && !imageFile) ||
       !selectedFlight
@@ -248,6 +262,7 @@ export default function PackageFormClient({
       description: description.trim(),
       price: finalPrice,
       flightDestination: selectedFlight.arrival,
+      airline: selectedFlight.airline,
       checkInDate,
       checkOutDate,
       image: imageFile,
@@ -403,35 +418,35 @@ export default function PackageFormClient({
                 {checkOutDateError}
               </p>
             )}
-          </label>
-
-          <label>
-            <span className="text-[15px] font-semibold text-[#111827]">할인율 *</span>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={discountRate}
-              onChange={(event) =>
-                setDiscountRate(Math.min(100, Math.max(0, Number(event.target.value))))
-              }
-              className="mt-3 h-[52px] w-full rounded-[16px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
-            />
-            <p className="mt-2 text-[12px] text-[#98A2B3]">
-              숙소와 항공 가격을 합산한 뒤 할인율을 적용합니다.
-            </p>
+            {stayNightsError && (
+              <p className="mt-2 text-[13px] font-medium text-[#DC2626]">
+                {stayNightsError}
+              </p>
+            )}
           </label>
 
           <label>
             <span className="text-[15px] font-semibold text-[#111827]">
               패키지 이미지 {mode === "create" ? "*" : ""}
             </span>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
-              className="mt-3 flex h-[52px] w-full items-center rounded-[16px] border border-[#E4E7EC] px-4 py-3 text-[14px] text-[#344054] file:mr-4 file:rounded-[10px] file:border-0 file:bg-[#E7F4EC] file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-[#439A97]"
-            />
+            <div className="mt-3 flex min-h-[52px] w-full flex-col items-center justify-center rounded-[16px] border border-[#E4E7EC] px-4 py-3">
+              <input
+                id={packageImageInputId}
+                type="file"
+                accept="image/*"
+                onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
+                className="sr-only"
+              />
+              <label
+                htmlFor={packageImageInputId}
+                className="inline-flex h-[36px] cursor-pointer items-center justify-center rounded-[10px] bg-[#E7F4EC] px-5 text-[13px] font-semibold text-[#439A97] transition hover:opacity-90"
+              >
+                파일 선택
+              </label>
+              <p className="mt-2 max-w-full truncate text-center text-[13px] text-[#667085]">
+                {imageFile?.name || "선택된 파일 없음"}
+              </p>
+            </div>
             {mode === "edit" && (
               <p className="mt-2 text-[12px] text-[#98A2B3]">
                 새 이미지를 선택하지 않으면 기존 이미지가 유지됩니다.
@@ -448,7 +463,7 @@ export default function PackageFormClient({
             <h2 className="text-[15px] font-bold text-[#111827]">선택 숙소</h2>
             <p className="mt-2 text-[14px] text-[#667085]">
               {selectedAccommodation
-                ? `${selectedAccommodation.name} | ${selectedAccommodation.nights}박 | ${selectedAccommodation.pricePerNight.toLocaleString()}원/박`
+                ? `${selectedAccommodation.name} | ${selectedAccommodation.pricePerNight.toLocaleString()}원/박 | ${stayNights.toLocaleString()}박`
                 : "숙소를 선택해주세요."}
             </p>
           </section>
@@ -457,16 +472,12 @@ export default function PackageFormClient({
             <h2 className="text-[15px] font-bold text-[#111827]">최종 가격</h2>
             <dl className="mt-2 space-y-1 text-[13px] text-[#667085]">
               <div className="flex justify-between">
-                <dt>숙소</dt>
+                <dt>숙소 {stayNights > 0 ? `(${stayNights}박)` : ""}</dt>
                 <dd>{accommodationPrice.toLocaleString()}원</dd>
               </div>
               <div className="flex justify-between">
                 <dt>항공</dt>
                 <dd>{flightPrice.toLocaleString()}원</dd>
-              </div>
-              <div className="flex justify-between font-semibold text-[#344054]">
-                <dt>할인 적용</dt>
-                <dd>{discountRate}%</dd>
               </div>
               <div className="flex justify-between pt-1 text-[15px] font-bold text-[#111827]">
                 <dt>최종</dt>

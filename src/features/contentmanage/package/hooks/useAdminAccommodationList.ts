@@ -9,9 +9,11 @@ import { getCourseCountries } from "@/features/services/adminCourse.service";
 import { getErrorMessage } from "@/features/services/error.service";
 import { Accommodation, CourseCountry } from "../types";
 
+export const ALL_COUNTRIES_ID = "ALL";
+
 export const useAdminAccommodationList = () => {
   const [countries, setCountries] = useState<CourseCountry[]>([]);
-  const [selectedCountryId, setSelectedCountryId] = useState("");
+  const [selectedCountryId, setSelectedCountryId] = useState(ALL_COUNTRIES_ID);
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
   const [isLoadingCountries, setIsLoadingCountries] = useState(true);
   const [isLoadingAccommodations, setIsLoadingAccommodations] = useState(false);
@@ -30,7 +32,7 @@ export const useAdminAccommodationList = () => {
       const data = await getCourseCountries(signal);
       if (!isCurrent()) return;
       setCountries(data);
-      setSelectedCountryId((prev) => prev || String(data[0]?.countryId || ""));
+      setSelectedCountryId((prev) => prev || ALL_COUNTRIES_ID);
     } catch (fetchError: unknown) {
       if (!isCurrent()) return;
       setError(getErrorMessage(fetchError, "국가 목록을 불러오지 못했습니다."));
@@ -54,7 +56,16 @@ export const useAdminAccommodationList = () => {
     try {
       setIsLoadingAccommodations(true);
       setError("");
-      const data = await getCountryAccommodations(selectedCountryId, signal);
+      const data =
+        selectedCountryId === ALL_COUNTRIES_ID
+          ? (
+              await Promise.all(
+                countries.map((country) =>
+                  getCountryAccommodations(country.countryId, signal)
+                )
+              )
+            ).flat()
+          : await getCountryAccommodations(selectedCountryId, signal);
       if (!isCurrent()) return;
       setAccommodations(data);
     } catch (fetchError: unknown) {
@@ -64,7 +75,7 @@ export const useAdminAccommodationList = () => {
       if (!isCurrent()) return;
       setIsLoadingAccommodations(false);
     }
-  }, [selectedCountryId]);
+  }, [countries, selectedCountryId]);
 
   const removeAccommodation = useCallback(
     async (accommodationId: number) => {
