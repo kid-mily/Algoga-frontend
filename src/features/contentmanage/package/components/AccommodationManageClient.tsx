@@ -7,7 +7,10 @@ import { useState } from "react";
 import CompleteModal from "@/features/common/components/CompleteModal";
 import Modal from "@/features/common/components/Modal";
 import SubHeader from "@/features/common/components/SubHeader";
-import { useAdminAccommodationList } from "../hooks/useAdminAccommodationList";
+import {
+  ALL_COUNTRIES_ID,
+  useAdminAccommodationList,
+} from "../hooks/useAdminAccommodationList";
 import { Accommodation } from "../types";
 import AccommodationTable from "./AccommodationTable";
 
@@ -59,11 +62,14 @@ export default function AccommodationManageClient() {
               {countries.length === 0 ? (
                 <option value="">국가 없음</option>
               ) : (
-                countries.map((country) => (
-                  <option key={country.countryId} value={country.countryId}>
-                    {country.countryName}
-                  </option>
-                ))
+                <>
+                  <option value={ALL_COUNTRIES_ID}>전체</option>
+                  {countries.map((country) => (
+                    <option key={country.countryId} value={country.countryId}>
+                      {country.countryName}
+                    </option>
+                  ))}
+                </>
               )}
             </select>
           </label>

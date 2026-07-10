@@ -26,7 +26,6 @@ export default function AccommodationRow({
   onDelete,
 }: AccommodationRowProps) {
   const canRenderAccommodationImage = isAllowedImageUrl(accommodation.imageUrl);
-  const accommodationPrice = accommodation.pricePerNight * accommodation.nights;
 
   return (
     <tr className="border-b border-[#E4E7EC]">
@@ -69,30 +68,26 @@ export default function AccommodationRow({
       <td className="px-5 py-5 text-[16px] font-bold text-[#111827]">
         {accommodation.pricePerNight.toLocaleString()}원
       </td>
-      <td className="px-5 py-5 text-[14px] font-semibold text-[#344054]">
-        {accommodation.nights.toLocaleString()}박
-      </td>
-      <td className="px-5 py-5 text-[16px] font-bold text-[#439A97]">
-        {accommodationPrice.toLocaleString()}원
-      </td>
       <td className="px-5 py-5">
         <menu className="flex items-center justify-center gap-3">
           <li>
             <button
               type="button"
               onClick={() => onEdit(accommodation.accommodationId)}
-              className="text-[13px] font-semibold text-[#439A97]"
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] transition hover:bg-[#F2F4F7]"
+              aria-label={`${accommodation.name} 수정`}
             >
-              수정
+              <Image src="/images/edit.svg" alt="" width={16} height={16} />
             </button>
           </li>
           <li>
             <button
               type="button"
               onClick={() => onDelete(accommodation)}
-              className="text-[13px] font-semibold text-[#DC2626]"
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] transition hover:bg-[#FEF2F2]"
+              aria-label={`${accommodation.name} 삭제`}
             >
-              삭제
+              <Image src="/images/delete.svg" alt="" width={16} height={16} />
             </button>
           </li>
         </menu>

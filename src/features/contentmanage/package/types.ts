@@ -13,7 +13,6 @@ export interface Accommodation {
   address: string;
   description: string;
   pricePerNight: number;
-  nights: number;
   imageUrl?: string;
 }
 
@@ -23,7 +22,6 @@ export interface AccommodationPayload {
   address: string;
   description: string;
   pricePerNight: number;
-  nights: number;
   image?: File | null;
 }
 
@@ -77,6 +75,7 @@ export interface PackagePayload {
   description: string;
   price: number;
   flightDestination: string;
+  airline: string;
   checkInDate: string;
   checkOutDate: string;
   image?: File | null;
@@ -185,7 +184,6 @@ export const normalizeAccommodation = (
       "oneNightPrice",
       "cost",
     ]),
-    nights: getNumber(record, ["nights", "nightCount", "stayNights"], 1),
     imageUrl: getString(record, [
       "imageUrl",
       "thumbnailUrl",
@@ -269,7 +267,9 @@ export const normalizeTravelPackage = (
     flightInfo,
     hasFlightInfo,
     flightNumber: getString(flightInfoRecord, ["flightNumber"], "-"),
-    airline: getString(flightInfoRecord, ["airline"], "-"),
+    airline:
+      getString(record, ["airline", "airlineName", "carrier"]) ||
+      getString(flightInfoRecord, ["airline"], "-"),
     departure: getString(flightInfoRecord, ["departure", "origin", "from"], "-"),
     arrival:
       getString(flightInfoRecord, ["arrival", "destination", "to"]) ||
