@@ -1,4 +1,4 @@
-import { CommunityCommentFormProps } from '../types'
+import { CommunityCommentFormProps } from '../../types'
 
 export default function CommunityCommentForm({
   value,

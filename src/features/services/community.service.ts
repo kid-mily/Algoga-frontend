@@ -23,6 +23,7 @@ import type {
   CreateCommunityCommentPayload,
   CreateCommunityPostPayload,
   GetCommunityPostsParams,
+  GetMyCommunityPostsParams,
   ReactToCommunityCommentPayload,
   ReactToCommunityPostPayload,
   ReportCommunityCommentPayload,
@@ -98,6 +99,18 @@ export const getCommunityFilters = async (
   return getItems(unwrapData(response)).map(normalizeFilter).filter(Boolean) as CommunityFilter[];
 };
 
+const parseCommunityPostPage = (data: unknown): CommunityPostPage => {
+  const record = getRecord(data);
+  const posts = getItems(record.posts).map(normalizePost).filter(Boolean) as CommunityPost[];
+  const nextLastPostId = Number(record.lastPostId);
+
+  return {
+    posts,
+    lastPostId: Number.isFinite(nextLastPostId) && nextLastPostId > 0 ? nextLastPostId : null,
+    hasNext: Boolean(record.hasNext),
+  };
+};
+
 export const getCommunityPosts = async ({
   lastPostId,
   categories,
@@ -112,16 +125,24 @@ export const getCommunityPosts = async ({
       countryId: countryId ?? undefined,
     },
   });
-  const data = unwrapData(response);
-  const record = getRecord(data);
-  const posts = getItems(record.posts).map(normalizePost).filter(Boolean) as CommunityPost[];
-  const nextLastPostId = Number(record.lastPostId);
 
-  return {
-    posts,
-    lastPostId: Number.isFinite(nextLastPostId) && nextLastPostId > 0 ? nextLastPostId : null,
-    hasNext: Boolean(record.hasNext),
-  };
+  return parseCommunityPostPage(unwrapData(response));
+};
+
+export const getMyCommunityPosts = async ({
+  lastPostId,
+  categories,
+  signal,
+}: GetMyCommunityPostsParams = {}): Promise<CommunityPostPage> => {
+  const response = await api.get<ApiResult<unknown>>("/api/v1/users/me/posts", {
+    signal,
+    params: {
+      lastPostId: lastPostId ?? undefined,
+      categories: categories?.length ? categories.join(",") : undefined,
+    },
+  });
+
+  return parseCommunityPostPage(unwrapData(response));
 };
 
 export const getCommunityPost = async (

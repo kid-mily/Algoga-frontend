@@ -2,11 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ApiRequestError } from "@/lib/api";
-import CommunityActionModal from "@/features/community/components/CommunityActionModal";
-import CommunityCommentForm from "@/features/community/components/CommunityCommentForm";
-import CommunityCommentItem from "@/features/community/components/CommunityCommentItem";
-import CommunityReportModal from "@/features/community/components/CommunityReportModal";
-import { useLoginRequiredModal } from "@/features/community/hooks/useLoginRequiredModal";
 import {
   createCommunityComment,
   deleteCommunityComment,
@@ -15,29 +10,16 @@ import {
   reportCommunityComment,
   updateCommunityComment,
 } from "@/features/services/community.service";
-import {
-  type CommunityComment,
-  type CommunityReportReasonType,
-  type ReactionState,
-} from "../types";
+import { useLoginRequiredModal } from "@/features/community/hooks/useLoginRequiredModal";
+import type {
+  CommunityComment,
+  CommunityCommentSectionProps,
+  CommunityCommentTextDialogState,
+  CommunityReportReasonType,
+  ReactionState,
+} from "@/features/community/types";
 
-type CommunityCommentSectionProps = {
-  postId: number;
-  initialCommentCount: number;
-  initialComments?: CommunityComment[];
-  currentUserId: number | null;
-  onCommentCountChange?: (count: number) => void;
-};
-
-type TextDialogState =
-  | {
-      type: "edit";
-      commentId: number;
-      value: string;
-    }
-  | null;
-
-const countComments = (comments: CommunityComment[]): number =>
+export const countComments = (comments: CommunityComment[]): number =>
   comments.reduce((total, comment) => total + 1 + countComments(comment.replies), 0);
 
 const updateCommentInTree = (
@@ -86,13 +68,13 @@ const isAlreadyReportedError = (error: unknown) => {
   );
 };
 
-export default function CommunityCommentSection({
+export const useCommunityComments = ({
   postId,
   initialCommentCount,
   initialComments = [],
   currentUserId,
   onCommentCountChange,
-}: CommunityCommentSectionProps) {
+}: CommunityCommentSectionProps) => {
   const [comments, setComments] = useState<CommunityComment[]>(initialComments);
   const [content, setContent] = useState("");
   const [reactionByCommentId, setReactionByCommentId] = useState<
@@ -103,7 +85,7 @@ export default function CommunityCommentSection({
   const [reportTargetId, setReportTargetId] = useState<number | null>(null);
   const [replyTargetId, setReplyTargetId] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
-  const [textDialog, setTextDialog] = useState<TextDialogState>(null);
+  const [textDialog, setTextDialog] = useState<CommunityCommentTextDialogState>(null);
   const [isReportCompleteOpen, setIsReportCompleteOpen] = useState(false);
   const [isAlreadyReportedOpen, setIsAlreadyReportedOpen] = useState(false);
   const {
@@ -120,16 +102,18 @@ export default function CommunityCommentSection({
     return counted || initialCommentCount;
   }, [comments, initialCommentCount]);
 
-  const refreshCommentsFromPost = async (signal?: AbortSignal) => {
-    const post = await getCommunityPost(postId, signal);
-    setComments(post.comments);
-    onCommentCountChange?.(post.comments.length > 0 ? countComments(post.comments) : post.commentCount);
-  };
-
   useEffect(() => {
     setComments(initialComments);
     setIsLoading(false);
   }, [initialComments]);
+
+  const refreshCommentsFromPost = async (signal?: AbortSignal) => {
+    const post = await getCommunityPost(postId, signal);
+    setComments(post.comments);
+    onCommentCountChange?.(
+      post.comments.length > 0 ? countComments(post.comments) : post.commentCount
+    );
+  };
 
   const handleCreate = async () => {
     const nextContent = content.trim();
@@ -292,168 +276,63 @@ export default function CommunityCommentSection({
     }
   };
 
-  return (
-    <section className="border-t border-[#CFE0DE] px-7 py-6">
-      <CommunityActionModal
-        open={Boolean(deleteTargetId)}
-        title="댓글 삭제"
-        description="삭제한 댓글은 되돌릴 수 없습니다."
-        confirmLabel="삭제"
-        cancelLabel="취소"
-        isPending={isSubmitting}
-        onCancel={() => setDeleteTargetId(null)}
-        onConfirm={handleDelete}
-      />
+  const handleOpenReport = (commentId: number) => {
+    if (!currentUserId) {
+      openLoginRequiredModal();
+      return;
+    }
 
-      <CommunityActionModal
-        open={isReportCompleteOpen}
-        title="댓글 신고 접수"
-        description="댓글 신고가 접수되었습니다."
-        confirmLabel="확인"
-        onConfirm={() => setIsReportCompleteOpen(false)}
-      />
+    setReportTargetId(commentId);
+  };
 
-      <CommunityActionModal
-        open={isAlreadyReportedOpen}
-        title="이미 신고한 댓글"
-        description="이미 신고한 댓글입니다."
-        confirmLabel="확인"
-        onConfirm={() => setIsAlreadyReportedOpen(false)}
-      />
+  const handleOpenReply = (commentId: number) => {
+    if (!currentUserId) {
+      openLoginRequiredModal();
+      return;
+    }
 
-      <CommunityActionModal
-        open={isLoginRequiredOpen}
-        title="로그인 필요"
-        description="로그인이 필요한 서비스입니다."
-        confirmLabel="확인"
-        onConfirm={closeLoginRequiredModal}
-      />
+    setReplyTargetId(commentId);
+    setReplyContent("");
+  };
 
-      <CommunityReportModal
-        open={Boolean(reportTargetId)}
-        targetType="댓글"
-        isPending={isSubmitting}
-        onCancel={() => setReportTargetId(null)}
-        onSubmit={handleReport}
-      />
+  const handleCancelReply = () => {
+    setReplyTargetId(null);
+    setReplyContent("");
+  };
 
-      {textDialog && (
-        <div className="fixed inset-0 z-[5000] flex items-center justify-center bg-black/35 px-4">
-          <div className="w-full max-w-md rounded-[14px] border border-[#CFE0DE] bg-[#FFFDF8] p-6 shadow-[0_18px_42px_rgba(47,42,38,0.18)]">
-            <h2 className="text-lg font-extrabold text-[#2F2A26]">
-              댓글 수정
-            </h2>
-            <textarea
-              value={textDialog.value}
-              onChange={(event) =>
-                setTextDialog((prev) =>
-                  prev ? { ...prev, value: event.target.value } : prev
-                )
-              }
-              maxLength={2000}
-              className="mt-4 h-32 w-full resize-none rounded-[12px] border border-[#CFE0DE] bg-white p-4 text-sm text-[#2F2A26] outline-none focus:border-[#6BA19D]"
-              placeholder="수정할 댓글을 입력하세요."
-            />
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={() => setTextDialog(null)}
-                className="h-11 cursor-pointer rounded-[10px] border border-[#CFE0DE] bg-white text-sm font-bold text-[#7A6F66] hover:bg-[#F8F5EF] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                disabled={isSubmitting || !textDialog.value.trim()}
-                onClick={handleUpdate}
-                className="h-11 cursor-pointer rounded-[10px] bg-[#6BA19D] text-sm font-bold text-white hover:bg-[#5F928E] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSubmitting ? "처리 중" : "확인"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-sm font-extrabold text-[#2F2A26]">
-          댓글 {commentCount.toLocaleString()}개
-        </h2>
-      </div>
-
-      {errorMessage && (
-        <p className="mb-4 rounded-[10px] bg-[#EEF4F4] px-4 py-3 text-sm font-semibold text-[#5F928E]">
-          {errorMessage}
-        </p>
-      )}
-
-      <div className="space-y-5">
-        {isLoading ? (
-          <p className="py-6 text-center text-sm font-semibold text-[#7A6F66]">
-            댓글을 불러오는 중입니다.
-          </p>
-        ) : comments.length > 0 ? (
-          comments.map((comment) => (
-            <CommunityCommentItem
-              key={comment.commentId}
-              currentUserId={currentUserId}
-              comment={comment}
-              reactionByCommentId={reactionByCommentId}
-              pendingCommentId={pendingCommentId}
-              onReact={handleReaction}
-              onEdit={(commentId, currentContent) =>
-                setTextDialog({
-                  type: "edit",
-                  commentId,
-                  value: currentContent,
-                })
-              }
-              onDelete={setDeleteTargetId}
-              onReport={(commentId) => {
-                if (!currentUserId) {
-                  openLoginRequiredModal();
-                  return;
-                }
-
-                setReportTargetId(commentId);
-              }}
-              onReply={handleCreateReply}
-              activeReplyCommentId={replyTargetId}
-              replyContent={replyContent}
-              isReplySubmitting={isSubmitting}
-              canReply
-              onOpenReply={(commentId) => {
-                if (!currentUserId) {
-                  openLoginRequiredModal();
-                  return;
-                }
-
-                setReplyTargetId(commentId);
-                setReplyContent("");
-              }}
-              onCancelReply={() => {
-                setReplyTargetId(null);
-                setReplyContent("");
-              }}
-              onReplyContentChange={setReplyContent}
-            />
-          ))
-        ) : (
-          <p className="py-6 text-center text-sm font-semibold text-[#7A6F66]">
-            아직 등록된 댓글이 없습니다.
-          </p>
-        )}
-      </div>
-
-      <div className="mt-6 border-t border-[#DDE8EF] pt-5">
-        <CommunityCommentForm
-          value={content}
-          disabled={isSubmitting}
-          onChange={setContent}
-          onSubmit={handleCreate}
-        />
-      </div>
-    </section>
-  );
-}
+  return {
+    comments,
+    content,
+    reactionByCommentId,
+    pendingCommentId,
+    deleteTargetId,
+    reportTargetId,
+    replyTargetId,
+    replyContent,
+    textDialog,
+    isReportCompleteOpen,
+    isAlreadyReportedOpen,
+    isLoginRequiredOpen,
+    isLoading,
+    isSubmitting,
+    errorMessage,
+    commentCount,
+    closeLoginRequiredModal,
+    setContent,
+    setDeleteTargetId,
+    setReportTargetId,
+    setReplyContent,
+    setTextDialog,
+    setIsReportCompleteOpen,
+    setIsAlreadyReportedOpen,
+    handleCreate,
+    handleCreateReply,
+    handleReaction,
+    handleUpdate,
+    handleDelete,
+    handleReport,
+    handleOpenReport,
+    handleOpenReply,
+    handleCancelReply,
+  };
+};

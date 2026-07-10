@@ -1,4 +1,4 @@
-import CommunityPageClient from "@/features/community/components/CommunityPageClient";
+import CommunityPageClient from "@/features/community/components/main/CommunityPageClient";
 import {
   COMMUNITY_CATEGORIES,
   type CommunityFilter,

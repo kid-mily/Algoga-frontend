@@ -1,7 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { CommunityCardProps, CommunityStatProps } from "../types";
+import type {
+  CommunityCardProps,
+  CommunityStatProps,
+} from "@/features/community/types";
 
 export default function CommunityCard({
   postId,

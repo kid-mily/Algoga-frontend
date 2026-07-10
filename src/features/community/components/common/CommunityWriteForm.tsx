@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { ArrowLeft, ImagePlus, Send, X } from "lucide-react";
-import CommunityActionModal from "@/features/community/components/CommunityActionModal";
+import CommunityActionModal from "@/features/community/components/common/CommunityActionModal";
 import {
   MAX_CONTENT_LENGTH,
   MAX_CUSTOM_TAG_COUNT,
