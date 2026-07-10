@@ -9,24 +9,69 @@ import {
 } from "@/features/auth/types";
 import { api, ApiResult, unwrapData } from "@/lib/api";
 
-const normalizeLoginResponse = (value: unknown): LoginResponse => {
-  if (typeof value === "boolean") {
-    return { requiresPasswordChange: value };
+const getBooleanLike = (value: unknown) => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalizedValue = value.trim().toLowerCase();
+    return normalizedValue === "true" || normalizedValue === "y";
   }
+  return Boolean(value);
+};
 
-  if (!value || typeof value !== "object") return {};
-
-  const record = value as Record<string, unknown>;
-  const requiresPasswordChange =
+const getPasswordChangeRequired = (record: Record<string, unknown>) => {
+  const directValue =
     record.requiresPasswordChange ??
     record.passwordChangeRequired ??
     record.needPasswordChange ??
     record.mustChangePassword ??
-    record.temporaryPassword;
+    record.temporaryPassword ??
+    record.isTemporaryPassword ??
+    record.tempPassword ??
+    record.forcePasswordChange ??
+    record.passwordResetRequired;
+
+  if (directValue !== undefined) {
+    return getBooleanLike(directValue);
+  }
+
+  const code = String(record.code ?? "").toUpperCase();
+  const message = String(record.message ?? "");
+
+  return (
+    code.includes("TEMP") ||
+    code.includes("PASSWORD_CHANGE") ||
+    code.includes("PASSWORD_RESET") ||
+    message.includes("임시") ||
+    message.includes("비밀번호 변경")
+  );
+};
+
+const normalizeLoginResponse = (
+  value: unknown,
+  response?: unknown
+): LoginResponse => {
+  if (typeof value === "boolean") {
+    return { requiresPasswordChange: value };
+  }
+
+  const responseRecord =
+    response && typeof response === "object"
+      ? (response as Record<string, unknown>)
+      : {};
+
+  if (!value || typeof value !== "object") {
+    return {
+      requiresPasswordChange: getPasswordChangeRequired(responseRecord),
+    };
+  }
+
+  const record = value as Record<string, unknown>;
+  const requiresPasswordChange =
+    getPasswordChangeRequired(record) || getPasswordChangeRequired(responseRecord);
 
   return {
     ...record,
-    requiresPasswordChange: Boolean(requiresPasswordChange),
+    requiresPasswordChange,
   };
 };
 
@@ -38,7 +83,10 @@ export const login = async (user: LoginRequest): Promise<LoginResponse> => {
     { skipAuth: true, suppressGlobalError: true }
   );
 
-  return normalizeLoginResponse(unwrapData<LoginResponse | null>(response));
+  return normalizeLoginResponse(
+    unwrapData<LoginResponse | null>(response),
+    response
+  );
 }; // 응답 데이터 꺼내기
 
 // id 찾기 요청

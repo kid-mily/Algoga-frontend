@@ -66,7 +66,8 @@ export default function LoginForm() {
       );
       const shouldChangePassword =
         data?.requiresPasswordChange ||
-        pendingPasswordResetUsername === normalizedUsername;
+        pendingPasswordResetUsername?.trim().toLowerCase() ===
+          normalizedUsername.toLowerCase();
 
       if (shouldChangePassword) {
         router.push("/auth/login/newpw");
