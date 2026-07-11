@@ -85,6 +85,14 @@ export const deleteAdminQuiz = async (
   courseId: number,
   quizId: number
 ): Promise<void> => {
+  const existingQuizzes = await getAdminQuizzes(courseId);
+
+  if (existingQuizzes.length <= 1) {
+    throw new Error(
+      "강의에는 퀴즈가 최소 1개 이상 필요합니다. 마지막 퀴즈는 삭제할 수 없습니다."
+    );
+  }
+
   await adminApi.delete(
     `/api/v1/admin/courses/${courseId}/quizzes/${quizId}`
   );

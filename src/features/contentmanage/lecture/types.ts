@@ -29,6 +29,8 @@ export type AdminCourseRecord = AdminCourse & {
   thumbnail_url?: string;
   is_public?: boolean | string;
   public?: boolean | string;
+  max_reward_mileage?: number;
+  reward_mileage?: number;
 };
 
 export interface CourseCountry {
@@ -268,6 +270,7 @@ export type EditLecturePayload = {
   price: string;
   mileage?: string;
   maxRewardMileage?: string;
+  level: string;
   isPublic: string;
   status?: string;
 };
@@ -339,7 +342,9 @@ export interface LectureUpdateFormProps {
     description: string;
     price: string;
     mileage: string;
+    level: string;
     isPublic?: string;
+    thumbnailUrl?: string | null;
   };
   onSubmit?: (
     data: EditLecturePayload,

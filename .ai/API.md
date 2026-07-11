@@ -75,6 +75,22 @@
 
 ---
 
+### GET /api/v1/admin/courses/{courseId}
+
+#### Used In
+
+- `src/features/services/adminCourse.service.ts` (`getAdminCourse`) — 콘텐츠매니저 강의 수정 페이지 초기값 로드, `EditLectureClient.tsx`
+
+#### Response Fields Used
+
+- `data.maxRewardMileage`: number — "최대 지급 마일리지" 입력값. **주의**: 이 저장소에서 마일리지 필드는 과거 여러 차례(#59/#125/#172/#221/#281/#348) `mileage` ↔ `maxRewardMileage` 필드명 불일치로 반복 이슈 발생. 프론트는 `getMaxRewardMileage()`(`lectureFormatters.ts`)로 `maxRewardMileage → max_reward_mileage → mileage → reward_mileage` 순 방어적 폴백 처리 중이나, 실제 정확한 응답 필드명은 Swagger/네트워크탭으로 재확인 필요 (2026-07-11 기준 미확인)
+
+#### Notes
+
+- 2026-07-11: 강의 수정 시 마일리지 미표시 이슈 보고 → 방어적 폴백만 추가, 근본 원인(백엔드 실제 필드명) 미확정
+
+---
+
 ## 최근 변경된 API
 
 <!-- 백엔드 변경으로 프론트가 대응했거나 대응해야 하는 항목. 날짜 + 요약 + 영향 파일. -->
