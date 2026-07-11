@@ -9,7 +9,11 @@ import QuizCard from "./QuizCard";
 import { deleteQuizAction } from "../actions";
 import { AdminQuizWithLecture, QuizListProps } from "../types";
 
-export default function QuizList({ quizzes = [], onDeleted }: QuizListProps) {
+export default function QuizList({
+  quizzes = [],
+  quizCountByCourse,
+  onDeleted,
+}: QuizListProps) {
   const router = useRouter();
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openDeleteCompleteModal, setOpenDeleteCompleteModal] = useState(false);
@@ -17,9 +21,26 @@ export default function QuizList({ quizzes = [], onDeleted }: QuizListProps) {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const safeQuizzes = Array.isArray(quizzes) ? quizzes : [];
+  const fallbackQuizCountByCourse = safeQuizzes.reduce<Record<number, number>>(
+    (counts, quiz) => {
+      counts[quiz.courseId] = (counts[quiz.courseId] ?? 0) + 1;
+      return counts;
+    },
+    {}
+  );
+  const selectedCourseQuizCount = selectedQuiz
+    ? (quizCountByCourse ?? fallbackQuizCountByCourse)[selectedQuiz.courseId] ?? 0
+    : 0;
+  const isMinimumQuizDeleteBlocked = Boolean(
+    selectedQuiz && selectedCourseQuizCount <= 1
+  );
+  const deleteDescription = isMinimumQuizDeleteBlocked
+    ? "강의에는 퀴즈가 최소 1개 이상 필요합니다.\n마지막 퀴즈는 삭제할 수 없습니다."
+    : deleteError || "정말 삭제하시겠습니까?";
 
   const handleDelete = async () => {
     if (!selectedQuiz) return;
+    if (isMinimumQuizDeleteBlocked) return;
 
     try {
       setDeleteError(null);
@@ -76,9 +97,10 @@ export default function QuizList({ quizzes = [], onDeleted }: QuizListProps) {
       <Modal
         open={openDeleteModal}
         title="퀴즈 삭제"
-        description={deleteError || "정말 삭제하시겠습니까?"}
+        description={deleteDescription}
         confirmText="삭제"
         cancelText="취소"
+        confirmDisabled={isMinimumQuizDeleteBlocked}
         onConfirm={handleDelete}
         onCancel={() => {
           setOpenDeleteModal(false);

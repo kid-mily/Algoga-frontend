@@ -29,7 +29,9 @@ export default function QuizForm({
   const router = useRouter();
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [courseId, setCourseId] = useState<number>(
-    initialQuiz.courseId ?? defaultCourseId ?? 0
+    mode === "create"
+      ? defaultCourseId ?? initialQuiz.courseId ?? 0
+      : initialQuiz.courseId ?? 0
   );
   const [question, setQuestion] = useState(initialQuiz.question);
   const [options, setOptions] = useState<string[]>([
@@ -46,6 +48,12 @@ export default function QuizForm({
 
   const labels = ["A", "B", "C", "D"];
   const isCreateMode = mode === "create";
+
+  useEffect(() => {
+    if (isCreateMode && defaultCourseId) {
+      setCourseId(defaultCourseId);
+    }
+  }, [defaultCourseId, isCreateMode]);
 
   useEffect(() => {
     const controller = new AbortController();

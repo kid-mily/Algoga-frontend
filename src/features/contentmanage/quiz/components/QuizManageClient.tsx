@@ -18,6 +18,7 @@ export default function QuizManageClient({
     setSearchKeyword,
     courses,
     filteredQuizzes,
+    quizCountByCourse,
     isLoading,
     errorMessage,
     refetch,
@@ -61,7 +62,11 @@ export default function QuizManageClient({
       {!isLoading && <AdminErrorBanner message={errorMessage} className="mt-6" />}
 
       {!isLoading && !errorMessage && (
-        <QuizList quizzes={filteredQuizzes} onDeleted={refetch} />
+        <QuizList
+          quizzes={filteredQuizzes}
+          quizCountByCourse={quizCountByCourse}
+          onDeleted={refetch}
+        />
       )}
     </main>
   );

@@ -8,6 +8,15 @@ export function getLectureCountryId(lecture: AdminCourseRecord) {
   return lecture.countryId || lecture.country_id || 0;
 }
 
+export function getMaxRewardMileage(lecture: AdminCourseRecord) {
+  if (lecture.maxRewardMileage !== undefined) return lecture.maxRewardMileage;
+  if (lecture.max_reward_mileage !== undefined) return lecture.max_reward_mileage;
+  if (lecture.mileage !== undefined) return lecture.mileage;
+  if (lecture.reward_mileage !== undefined) return lecture.reward_mileage;
+
+  return undefined;
+}
+
 export function getIsPublic(lecture: AdminCourseRecord) {
   if (lecture.status) {
     const status = String(lecture.status).toUpperCase();

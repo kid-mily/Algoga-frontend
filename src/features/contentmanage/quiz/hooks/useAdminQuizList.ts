@@ -20,6 +20,10 @@ export function useAdminQuizList(initialCourseId = "all") {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
+  useEffect(() => {
+    setSelectedLecture(initialCourseId || "all");
+  }, [initialCourseId]);
+
   const fetchQuizzesByCourses = async (
     courseList: AdminCourse[],
     selectedValue: string
@@ -120,6 +124,13 @@ export function useAdminQuizList(initialCourseId = "all") {
     );
   }, [quizzes, searchKeyword]);
 
+  const quizCountByCourse = useMemo(() => {
+    return quizzes.reduce<Record<number, number>>((counts, quiz) => {
+      counts[quiz.courseId] = (counts[quiz.courseId] ?? 0) + 1;
+      return counts;
+    }, {});
+  }, [quizzes]);
+
   return {
     selectedLecture,
     setSelectedLecture,
@@ -127,6 +138,7 @@ export function useAdminQuizList(initialCourseId = "all") {
     setSearchKeyword,
     courses,
     filteredQuizzes,
+    quizCountByCourse,
     isLoading,
     errorMessage,
     refetch: fetchPageData,

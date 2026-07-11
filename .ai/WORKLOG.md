@@ -4,6 +4,42 @@
 
 ---
 
+## 2026-07-11 — 콘텐츠매니저 강의 수정 시 "최대 지급 마일리지" 미표시 방어 처리
+
+### 작업 요약
+
+- 강의 수정 페이지 진입 시 "최대 지급 마일리지" 입력값이 비어있는 문제 확인 요청
+- 강의 상세 GET 응답의 `maxRewardMileage`를 그대로 읽는 코드는 정상이었으나, 이 저장소에서 마일리지 필드는 과거에도 여러 번(#59, #125, #172, #221, #281, #348) 백엔드 필드명(`mileage`/`maxRewardMileage`/snake_case) 불일치로 반복 수정된 이력이 있음
+- `AdminCourseRecord`에 `country_id`/`is_public`/`thumbnail_url` 등은 snake_case 폴백이 있는데 마일리지만 없었던 게 비대칭 지점 → `getMaxRewardMileage()` 헬퍼로 `maxRewardMileage → max_reward_mileage → mileage → reward_mileage` 순으로 방어적으로 읽도록 보강
+- **주의**: 실제 라이브 백엔드 응답의 정확한 필드명은 확인 못함(Swagger/네트워크탭 직접 확인 불가, 관리자 로그인 권한 없음) — 이번 변경은 방어적 보강이며 근본 원인 100% 확정은 아님
+
+### 수정 파일
+
+- `src/features/contentmanage/lecture/types.ts` — `AdminCourseRecord`에 `max_reward_mileage`, `reward_mileage` 필드 추가
+- `src/features/contentmanage/lecture/utils/lectureFormatters.ts` — `getMaxRewardMileage()` 헬퍼 추가
+- `src/features/contentmanage/lecture/components/EditLectureClient.tsx` — `lecture.maxRewardMileage` 직접 참조 → `getMaxRewardMileage(lecture)` 사용
+
+### 실행한 검증
+
+- `tsc --noEmit`: 통과 (기존 무관 에러 제외)
+- `npm run lint` (해당 파일 한정): 통과
+- 브라우저 시각 확인: **못함** — `/contentadmin/...` 접근에 관리자 로그인 필요, 계정 정보 없음
+
+### 문제
+
+- 실제로 백엔드가 어떤 케이스에서 snake_case로 내려주는지 재현/확인 못함
+
+### 해결 방법
+
+- 확정 원인 파악 전까지 방어적 폴백으로 우선 대응
+
+### 다음 참고사항
+
+- 여전히 안 보이면: 강의 상세 GET 응답 원문(Network 탭)을 그대로 공유 받아 실제 키 이름 확인 필요 (Swagger 확인 권장, AGENTS.md 규칙)
+- 관리자 테스트 계정이 있으면 로컬에서 직접 재현 가능
+
+---
+
 ## 2026-07-11 — 커뮤니티 목록 "내가 쓴 글" 필터 연동
 
 ### 작업 요약

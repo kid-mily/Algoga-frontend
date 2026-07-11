@@ -69,6 +69,7 @@ export type QuizCardProps = {
 
 export type QuizListProps = {
   quizzes?: AdminQuizWithLecture[];
+  quizCountByCourse?: Record<number, number>;
   onDeleted?: () => void;
 };
 

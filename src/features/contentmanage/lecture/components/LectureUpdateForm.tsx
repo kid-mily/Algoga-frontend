@@ -14,12 +14,15 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
     isPublic: String(initialData.isPublic) === "true" ? "true" : "false",
   });
   const [thumbnailFile, setThumbnailFile] = useState<File | undefined>();
-  const [preview, setPreview] = useState("/images/thumb.png");
+  const [preview, setPreview] = useState(
+    initialData.thumbnailUrl || "/images/thumb.png"
+  );
   const [attachments, setAttachments] = useState<File[]>([]);
   const [errors, setErrors] = useState({
     title: "",
     description: "",
     price: "",
+    level: "",
   });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -49,7 +52,7 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const newErrors = { title: "", description: "", price: "" };
+    const newErrors = { title: "", description: "", price: "", level: "" };
     let hasError = false;
 
     if (!formData.title.trim()) {
@@ -62,6 +65,10 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
     }
     if (!formData.price || Number(formData.price) < 0) {
       newErrors.price = "올바른 가격을 입력해주세요.";
+      hasError = true;
+    }
+    if (!formData.level) {
+      newErrors.level = "강의 난이도를 선택해주세요.";
       hasError = true;
     }
 
@@ -108,17 +115,13 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
               <label htmlFor="lecture-edit-country" className="text-[14px] font-semibold text-[#111827]">
                 국가 선택 *
               </label>
-              <select
+              <div
                 id="lecture-edit-country"
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
-                disabled
-                className="mt-2 h-[48px] w-full cursor-not-allowed rounded-[12px] border border-transparent bg-[#F2F4F7] px-4 text-[14px] text-[#98A2B3] outline-none"
+                aria-disabled="true"
+                className="mt-2 flex h-[48px] w-full cursor-not-allowed items-center rounded-[12px] border border-[#D0D5DD] bg-[#F2F4F7] px-4 text-[14px] font-medium text-[#344054]"
               >
-                <option value="">국가 선택</option>
-                {formData.country && <option value={formData.country}>{formData.country}</option>}
-              </select>
+                {formData.country || "국가 정보를 불러오는 중입니다."}
+              </div>
             </div>
 
             <div>
@@ -244,6 +247,32 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] text-[#667085]">P</span>
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="lecture-edit-level" className="text-[14px] font-semibold text-[#111827]">
+                난이도 *
+              </label>
+              <select
+                id="lecture-edit-level"
+                name="level"
+                value={formData.level}
+                onChange={handleChange}
+                aria-invalid={Boolean(errors.level)}
+                aria-describedby={errors.level ? "lecture-edit-level-error" : undefined}
+                className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
+                  errors.level ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
+                }`}
+              >
+                <option value="BEGINNER">초급</option>
+                <option value="INTERMEDIATE">중급</option>
+                <option value="ADVANCED">고급</option>
+              </select>
+              {errors.level && (
+                <p id="lecture-edit-level-error" className="mt-1 text-[13px] text-[#DC2626]">
+                  {errors.level}
+                </p>
+              )}
             </div>
           </div>
 
