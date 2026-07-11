@@ -3,14 +3,12 @@ import { formatNumber, formatPercent, formatWon } from "../utils";
 
 type CountryPopularityTopChartProps = {
   countries: CountryPopularityStat[];
-  isLoading: boolean;
   title: string;
   metric: "booking" | "revenue";
 };
 
 export default function CountryPopularityTopChart({
   countries,
-  isLoading,
   title,
   metric,
 }: CountryPopularityTopChartProps) {
@@ -26,15 +24,7 @@ export default function CountryPopularityTopChart({
       </header>
 
       <div className="p-6">
-        {isLoading ? (
-          <p
-            role="status"
-            aria-live="polite"
-            className="py-12 text-center text-[14px] text-[#667085]"
-          >
-            나라별 Top 10을 불러오는 중입니다...
-          </p>
-        ) : countries.length === 0 ? (
+        {countries.length === 0 ? (
           <p
             role="status"
             aria-live="polite"

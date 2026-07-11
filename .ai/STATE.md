@@ -10,7 +10,7 @@
 
 ## 현재 작업
 
-- 콘텐츠매니저 강의 수정 화면 "최대 지급 마일리지" 미표시 문제 방어 처리 (`getMaxRewardMileage` 폴백 추가)
+- 나라별 인기도(country-popular) API 연동 제거, UI만 남기고 정적 셸로 전환 완료
 
 ## 현재 브랜치
 
@@ -22,7 +22,9 @@
 - [x] `getMyCommunityPosts` 서비스 함수 추가, `CommunityPageClient`/`CommunityHeader`/`CommunityCategory`에 "내가 쓴 글" 체크박스 및 나라 필터 비활성화 로직 연동
 - [x] `CompleteModal`을 `Modal` 사이즈 기준(360px, 22px/16px)으로 통일
 - [x] 강의 수정 시 마일리지 미표시 — `getMaxRewardMileage()` 방어적 폴백 추가 (원인 100% 확정은 아님)
-- [ ] 로컬 브라우저에서 실제 토글/입력값 동작 시각 확인 (Chrome 확장 연결 실패 + 관리자 로그인 권한 없음으로 계속 미완료)
+- [x] 통계매니저 정리 — 사이드바 미연결 구 기능(coupons/lecture-analysis/interest) + dangling 서비스(`adminReservationConversion.service.ts`) + 고아 리다이렉트(`moneyadmin/coupons`) 삭제, 헤더/사이드바/user/country-popular/신규 placeholder는 유지
+- [x] country-popular API 연동 제거 — `useCountryPopularity` 훅, `adminCountryStatistics.service.ts` 삭제, UI는 빈 데이터로 렌더링되는 정적 셸로 유지
+- [ ] 로컬 브라우저에서 실제 토글/입력값/화면 동작 시각 확인 (Chrome 확장 연결 실패 + 관리자 로그인 권한 없음으로 계속 미완료)
 
 ## 다음 할 일
 

@@ -1,30 +1,59 @@
 ﻿"use client";
 
-import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import { useMemo, useState } from "react";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
-import { useCountryPopularity } from "../hooks/useCountryPopularity";
-import { formatNumber, formatPercent, formatWon } from "../utils";
+import { CountryPopularityStat } from "../types";
+import {
+  formatNumber,
+  formatPercent,
+  formatWon,
+  getCountryPopularitySummary,
+  getDefaultCountryPopularityDateRange,
+} from "../utils";
 import CountryPopularitySummaryCards from "./CountryPopularitySummaryCards";
 import CountryPopularityTable from "./CountryPopularityTable";
 import CountryPopularityTopChart from "./CountryPopularityTopChart";
 import CountryPopularityToolbar from "./CountryPopularityToolbar";
 
+const EMPTY_COUNTRIES: CountryPopularityStat[] = [];
+
 export default function CountryPopularityManageClient() {
-  const {
-    fromDate,
-    toDate,
-    filteredCountries,
-    revenueTop10,
-    summary,
-    searchKeyword,
-    isLoading,
-    isDownloading,
-    error,
-    setFromDate,
-    setToDate,
-    setSearchKeyword,
-    downloadCsv,
-  } = useCountryPopularity();
+  const defaultRange = useMemo(() => getDefaultCountryPopularityDateRange(), []);
+  const [fromDate, setFromDate] = useState(defaultRange.from);
+  const [toDate, setToDate] = useState(defaultRange.to);
+  const [searchKeyword, setSearchKeyword] = useState("");
+
+  const filteredCountries = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase();
+
+    if (!keyword) return EMPTY_COUNTRIES;
+
+    return EMPTY_COUNTRIES.filter((country) =>
+      [country.countryName, String(country.countryId)]
+        .join(" ")
+        .toLowerCase()
+        .includes(keyword)
+    );
+  }, [searchKeyword]);
+
+  const summary = useMemo(
+    () => getCountryPopularitySummary(EMPTY_COUNTRIES),
+    []
+  );
+
+  const handleFromDateChange = (value: string) => {
+    setFromDate(value);
+    setToDate((currentToDate) =>
+      currentToDate && value > currentToDate ? value : currentToDate
+    );
+  };
+
+  const handleToDateChange = (value: string) => {
+    setToDate(value);
+    setFromDate((currentFromDate) =>
+      currentFromDate && value < currentFromDate ? value : currentFromDate
+    );
+  };
 
   return (
     <main aria-label="나라별 인기도">
@@ -33,15 +62,12 @@ export default function CountryPopularityManageClient() {
         description={`국가 ${formatNumber(summary.totalCountryCount)}개 | 가입 ${formatNumber(summary.totalSignupCount)}명 | 예약 ${formatNumber(summary.totalBookingCount)}건 | 평균 점유율 ${formatPercent(summary.averageShareRate)}`}
       />
 
-      <AdminErrorBanner message={error} className="mb-4" />
-
       <CountryPopularitySummaryCards summary={summary} />
 
       <div className="mb-5 grid grid-cols-[minmax(0,1fr)_360px] gap-5">
         <CountryPopularityTopChart
           title="매출 Top 10"
-          countries={revenueTop10}
-          isLoading={isLoading}
+          countries={EMPTY_COUNTRIES}
           metric="revenue"
         />
 
@@ -74,17 +100,12 @@ export default function CountryPopularityManageClient() {
         fromDate={fromDate}
         toDate={toDate}
         searchKeyword={searchKeyword}
-        isDownloading={isDownloading}
-        onFromDateChange={setFromDate}
-        onToDateChange={setToDate}
+        onFromDateChange={handleFromDateChange}
+        onToDateChange={handleToDateChange}
         onSearchKeywordChange={setSearchKeyword}
-        onCsvDownload={downloadCsv}
       />
 
-      <CountryPopularityTable
-        countries={filteredCountries}
-        isLoading={isLoading}
-      />
+      <CountryPopularityTable countries={filteredCountries} />
     </main>
   );
 }

@@ -9,34 +9,52 @@ import { clearAdminSessionActive } from "@/features/admin/auth/services/adminSes
 
 const menus = [
   {
-    name: "예약 전환율 분석",
-    href: "/statisticadmin/reservation-conversion",
+    name: "매출현황",
+    href: "/statisticadmin/sales",
     icon: "/images/chart.svg",
     activeIcon: "/images/chart-active.svg",
   },
   {
-    name: "쿠폰 사용 현황 조회",
-    href: "/statisticadmin/coupons",
-    icon: "/images/gift.svg",
-    activeIcon: "/images/gift-active.svg",
+    name: "유입 경로별 전환",
+    href: "/statisticadmin/user",
+    icon: "/images/users.svg",
+    activeIcon: "/images/users-active.svg",
   },
   {
-    name: "수강률 분석",
-    href: "/statisticadmin/lecture-analysis",
-    icon: "/images/book.svg",
-    activeIcon: "/images/book-active.svg",
-  },
-  {
-    name: "나라별 인기도",
+    name: "나라/강의 관심도",
     href: "/statisticadmin/country-popular",
     icon: "/images/global-inactive.svg",
     activeIcon: "/images/global.svg",
   },
   {
-    name: "유저 유입 경로 통계",
-    href: "/statisticadmin/user",
-    icon: "/images/users.svg",
-    activeIcon: "/images/users-active.svg",
+    name: "잔금/미수금",
+    href: "/statisticadmin/balance-receivable",
+    icon: "/images/list.svg",
+    activeIcon: "/images/list-active.svg",
+  },
+  {
+    name: "환불/취소",
+    href: "/statisticadmin/refund-cancel",
+    icon: "/images/list.svg",
+    activeIcon: "/images/list-active.svg",
+  },
+  {
+    name: "강의·쿠폰 → 여행 전환",
+    href: "/statisticadmin/course-coupon-travel",
+    icon: "/images/gift.svg",
+    activeIcon: "/images/gift-active.svg",
+  },
+  {
+    name: "재구매/LTV",
+    href: "/statisticadmin/repurchase-ltv",
+    icon: "/images/chart.svg",
+    activeIcon: "/images/chart-active.svg",
+  },
+  {
+    name: "나라별 수익성",
+    href: "/statisticadmin/country-profitability",
+    icon: "/images/global-inactive.svg",
+    activeIcon: "/images/global.svg",
   },
 ];
 
@@ -54,7 +72,7 @@ export default function StatisticAdminSidebar() {
   };
 
   return (
-    <aside className="flex w-[240px] flex-col border-r border-[#E4E7EC] bg-white">
+    <aside className="flex w-[260px] flex-col border-r border-[#E4E7EC] bg-white">
       <div className="flex items-center gap-3 border-b border-[#E4E7EC] px-6 py-5">
         <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#6FA8A5] text-[13px] font-semibold text-white">
           ST
@@ -75,7 +93,7 @@ export default function StatisticAdminSidebar() {
                 <Link
                   href={menu.href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] ${
+                  className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[14px] leading-snug ${
                     active
                       ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
                       : "text-[#344054] hover:bg-[#F5F7FA]"
@@ -89,7 +107,7 @@ export default function StatisticAdminSidebar() {
                     height={18}
                     priority={false}
                   />
-                  {menu.name}
+                  <span className="break-keep">{menu.name}</span>
                 </Link>
               </li>
             );

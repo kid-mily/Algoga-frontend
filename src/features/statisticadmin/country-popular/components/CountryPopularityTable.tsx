@@ -3,7 +3,6 @@ import { formatNumber, formatPercent, formatWon } from "../utils";
 
 type CountryPopularityTableProps = {
   countries: CountryPopularityStat[];
-  isLoading: boolean;
 };
 
 const COLUMN_COUNT = 8;
@@ -25,7 +24,6 @@ function EmptyRow({ message }: { message: string }) {
 
 export default function CountryPopularityTable({
   countries,
-  isLoading,
 }: CountryPopularityTableProps) {
   return (
     <section className="rounded-[16px] border border-[#E4E7EC] bg-white">
@@ -48,9 +46,7 @@ export default function CountryPopularityTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-[#EEF0F3] text-[#344054]">
-            {isLoading ? (
-              <EmptyRow message="나라별 통계 목록을 불러오는 중입니다..." />
-            ) : countries.length === 0 ? (
+            {countries.length === 0 ? (
               <EmptyRow message="나라별 통계 데이터가 없습니다." />
             ) : (
               countries.map((country, index) => (

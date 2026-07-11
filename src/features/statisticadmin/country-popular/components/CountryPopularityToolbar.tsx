@@ -4,22 +4,18 @@ type CountryPopularityToolbarProps = {
   fromDate: string;
   toDate: string;
   searchKeyword: string;
-  isDownloading: boolean;
   onFromDateChange: (value: string) => void;
   onToDateChange: (value: string) => void;
   onSearchKeywordChange: (value: string) => void;
-  onCsvDownload: () => void;
 };
 
 export default function CountryPopularityToolbar({
   fromDate,
   toDate,
   searchKeyword,
-  isDownloading,
   onFromDateChange,
   onToDateChange,
   onSearchKeywordChange,
-  onCsvDownload,
 }: CountryPopularityToolbarProps) {
   return (
     <section
@@ -66,16 +62,6 @@ export default function CountryPopularityToolbar({
           />
         </label>
       </div>
-
-      <button
-        type="button"
-        onClick={onCsvDownload}
-        disabled={isDownloading}
-        className="flex h-[42px] items-center gap-2 rounded-[10px] bg-[#439A97] px-4 text-[14px] font-semibold text-white transition hover:bg-[#367C79] disabled:cursor-not-allowed disabled:bg-[#CFE5E4]"
-      >
-        <Image src="/images/download.svg" alt="" aria-hidden width={16} height={16} />
-        {isDownloading ? "다운로드 중..." : "CSV 다운로드"}
-      </button>
     </section>
   );
 }
