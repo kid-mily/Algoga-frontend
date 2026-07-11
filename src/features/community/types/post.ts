@@ -12,6 +12,7 @@ export type CommunityPost = {
   country: string;
   category: string;
   categoryCode?: CommunityCategoryCode;
+  customTags: string[];
   createdAt: string;
   title: string;
   content: string;

@@ -119,6 +119,17 @@ export const normalizeFilter = (value: unknown): CommunityFilter | null => {
 const getPostTagFilters = (record: Record<string, unknown>) =>
   getItems(record.tags).map(normalizeFilter).filter(Boolean) as CommunityFilter[];
 
+const getPostCustomTags = (record: Record<string, unknown>) =>
+  getItems(record.tags)
+    .map((tag) => {
+      const tagRecord = getRecord(tag);
+      const tagType = getString(tagRecord.tagType).toUpperCase();
+      const tagName = getString(tagRecord.tagName).trim();
+
+      return tagType === "FREE" && tagName && tagName !== "FREE" ? tagName : "";
+    })
+    .filter(Boolean);
+
 const getPostImageUrls = (record: Record<string, unknown>) => {
   const imageUrls = getStringList(record.imageUrls);
   const thumbnailUrl = getString(record.thumbnailUrl);
@@ -180,6 +191,7 @@ export const normalizePost = (value: unknown): CommunityPost | null => {
     country: getString(record.countryName, "여행"),
     category: categoryCode ? CATEGORY_LABELS[categoryCode] : "자유",
     categoryCode,
+    customTags: getPostCustomTags(record),
     createdAt: formatPostDate(record.createdAt),
     title,
     content: getString(record.content),

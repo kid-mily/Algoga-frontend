@@ -45,6 +45,14 @@ export default function CommunityPostHeader({
             <span className="flex h-6 items-center rounded-full border border-[#6BA19D] bg-[#6BA19D] px-2.5 text-xs font-bold text-white">
               {post.category}
             </span>
+            {post.customTags.map((tag) => (
+              <span
+                key={tag}
+                className="flex h-6 items-center rounded-full border border-[#CFE0DE] bg-white px-2.5 text-xs font-bold text-[#5F928E]"
+              >
+                #{tag}
+              </span>
+            ))}
             <span className="text-xs font-semibold text-[#9A8B7D]">
               {post.createdAt}
             </span>
