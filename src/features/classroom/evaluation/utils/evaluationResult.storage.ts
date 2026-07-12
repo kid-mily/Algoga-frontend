@@ -48,3 +48,27 @@ export const saveSelectedRecommendedCourse = (
         })
     );
 };
+
+export interface StoredRecommendedCourse {
+    courseId: number;
+    countryId: string;
+    continentCode: string;
+    title: string;
+    level: string;
+    levelName: string;
+    selectedAt: string;
+}
+
+// 진단평가 완료 페이지에서 저장한, 사용자가 선택한 강의 정보를 읽어온다 (없으면 null)
+export const getSelectedRecommendedCourse = (): StoredRecommendedCourse | null => {
+    if (typeof window === "undefined") return null;
+
+    const stored = sessionStorage.getItem(SELECTED_RECOMMENDED_COURSE_KEY);
+    if (!stored) return null;
+
+    try {
+        return JSON.parse(stored) as StoredRecommendedCourse;
+    } catch {
+        return null;
+    }
+};
