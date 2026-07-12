@@ -27,6 +27,9 @@ const allowedDevOrigins = Array.from(
 );
 
 const nextConfig: NextConfig = {
+  // Docker(ECS) 배포용: 최소 실행 파일만 담긴 standalone 서버 출력
+  output: "standalone",
+
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
