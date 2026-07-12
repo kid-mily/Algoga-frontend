@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-
 import type { CourseItem } from "@/features/classroom/components/types";
 import type { AccommodationResponse, PackageApiItem } from "../types";
 import { calculatePayment, formatDateTime } from "../utils/payment";
@@ -177,4 +176,5 @@ function DetailRow({ label, value }: { label: string; value: string }) {
       <strong className="text-right text-[#172235]">{value}</strong>
     </div>
   );
+
 }

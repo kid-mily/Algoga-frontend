@@ -58,6 +58,7 @@ describe("Classroom components", () => {
         render(
         <CountrySearchClient
             continentCode="ASIA"
+            continentName="?꾩떆??"
             ticketStyle={ticketStyle}
             countries={[
             {
@@ -89,6 +90,7 @@ describe("Classroom components", () => {
         render(
         <CountrySearchClient
             continentCode="ASIA"
+            continentName="?꾩떆??"
             ticketStyle={ticketStyle}
             countries={[]}
             errorMessage="국가 데이터를 불러오지 못했습니다."
