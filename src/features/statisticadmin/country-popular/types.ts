@@ -16,8 +16,3 @@ export type CountryPopularitySummary = {
   totalRevenue: number;
   averageShareRate: number;
 };
-
-export type CountryPopularityData = {
-  bookingTop10: CountryPopularityStat[];
-  revenueTop10: CountryPopularityStat[];
-};

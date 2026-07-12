@@ -1,10 +1,4 @@
-﻿import { getErrorMessage } from "@/features/services/error.service";
-import { CountryPopularityStat, CountryPopularitySummary } from "./types";
-
-export const formatCountryPopularityError = (
-  error: unknown,
-  fallbackMessage: string
-) => getErrorMessage(error, fallbackMessage);
+﻿import { CountryPopularityStat, CountryPopularitySummary } from "./types";
 
 export const formatNumber = (value: number) =>
   Number(value || 0).toLocaleString("ko-KR");

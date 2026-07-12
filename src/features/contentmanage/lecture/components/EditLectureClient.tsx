@@ -8,11 +8,7 @@ import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 import { toNumberOrZero } from "@/features/common/utils/number";
 import { updateLectureAction } from "../actions";
 import { useAdminLectureDetail } from "../hooks/useAdminLectureDetail";
-import {
-  getIsPublic,
-  getLectureCountryId,
-  getMaxRewardMileage,
-} from "../utils/lectureFormatters";
+import { getIsPublic, getLectureCountryId } from "../utils/lectureFormatters";
 import { EditLectureClientProps, EditLecturePayload } from "../types";
 
 export default function EditLectureClient({
@@ -85,7 +81,7 @@ export default function EditLectureClient({
             title: lecture.title || "",
             description: lecture.description || "",
             price: String(lecture.price || ""),
-            mileage: String(getMaxRewardMileage(lecture) ?? ""),
+            mileage: String(lecture.maxRewardMileage ?? ""),
             level: lecture.level || "BEGINNER",
             isPublic: getIsPublic(lecture) ? "true" : "false",
             thumbnailUrl: lecture.thumbnailUrl || lecture.thumbnail_url || null,

@@ -29,8 +29,6 @@ export type AdminCourseRecord = AdminCourse & {
   thumbnail_url?: string;
   is_public?: boolean | string;
   public?: boolean | string;
-  max_reward_mileage?: number;
-  reward_mileage?: number;
 };
 
 export interface CourseCountry {

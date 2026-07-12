@@ -4,6 +4,87 @@
 
 ---
 
+## 2026-07-11 — 나라별 인기도(country-popular) API 연동 제거, UI만 유지
+
+### 작업 요약
+
+- "나라별 인기도" 화면의 실제 데이터/차트/표 UI는 그대로 두고, 백엔드 연동(fetch, CSV 다운로드) 관련 코드만 전부 제거
+- `useCountryPopularity` 훅과 `adminCountryStatistics.service.ts`(GET `/api/v1/admin/stats/countries/top10`, CSV 다운로드) 삭제
+- `CountryPopularityManageClient`는 훅 대신 로컬 `useState`로 기간/검색어만 관리하고, 국가 목록은 빈 배열(`EMPTY_COUNTRIES`) 고정 → 요약카드/차트/표는 항상 "데이터 없음" 상태로 렌더링되는 정적 UI 셸이 됨
+- Toolbar에서 CSV 다운로드 버튼(API 전용 기능) 제거, 기간/검색 입력 UI는 유지
+- Table/TopChart의 `isLoading` prop 제거 (더 이상 비동기 로딩이 없으므로)
+- `types.ts`에서 API 응답 전용 타입 `CountryPopularityData` 제거, `utils.ts`에서 API 에러 포맷터 `formatCountryPopularityError` 제거 (포맷팅/집계 순수 함수들은 유지)
+
+### 수정/삭제 파일
+
+- 삭제: `src/features/services/adminCountryStatistics.service.ts`, `src/features/statisticadmin/country-popular/hooks/useCountryPopularity.ts`
+- 수정: `CountryPopularityManageClient.tsx`, `CountryPopularityToolbar.tsx`, `CountryPopularityTable.tsx`, `CountryPopularityTopChart.tsx`, `country-popular/types.ts`, `country-popular/utils.ts`
+- 유지(변경 없음): `CountryPopularitySummaryCards.tsx`
+
+### 실행한 검증
+
+- `tsc --noEmit`: 통과 (무관한 기존 에러 제외)
+- `npm run lint` (해당 폴더 한정): 통과, 경고 없음
+- grep으로 삭제한 훅/서비스/타입 참조 전무 확인
+- 브라우저 시각 확인: 못함 (관리자 로그인 권한 없음)
+
+### 다음 참고사항
+
+- 나중에 실제 통계 API가 다시 붙으면 `CountryPopularityManageClient`의 `EMPTY_COUNTRIES` 고정값과 로컬 상태를 다시 fetch 훅으로 교체하면 됨 (UI 컴포넌트들은 props 인터페이스 그대로 유지되어 있어 재연동 시 큰 변경 불필요)
+
+---
+
+## 2026-07-11 — 통계매니저(statisticadmin) 미사용 콘텐츠 정리
+
+### 작업 요약
+
+- 사용자 요청: 헤더/사이드바/유저유입경로통계 + 사이드바에 현재 연결된 신규 placeholder 페이지만 남기고 나머지 통계매니저 콘텐츠 전부 삭제
+- `StatisticAdminSidebar.tsx` 메뉴(8개: 매출현황/유입경로별전환/나라·강의관심도/잔금·미수금/환불·취소/강의·쿠폰→여행전환/재구매·LTV/나라별수익성)에 실제로 연결된 라우트만 남기고, 사이드바에서 연결이 끊긴 구(舊) 라우트/기능 삭제
+- 정리 중 이미 삭제된 `reservation-conversion` 기능의 dangling 서비스 파일(`adminReservationConversion.service.ts`, 아무도 import 안 함)도 함께 정리
+- `statisticadmin/coupons`를 리다이렉트하던 `moneyadmin/coupons/page.tsx`도 다른 곳에서 링크되지 않는 고아 라우트라 함께 삭제 (범위 밖이지만 안 지우면 깨진 리다이렉트로 남음)
+
+### 삭제한 파일/폴더
+
+- `src/app/statisticadmin/coupons/` — 사이드바 미연결 (구 쿠폰 통계 페이지)
+- `src/app/statisticadmin/lecture-analysis/` — 사이드바 미연결 (구 수강률 분석 페이지)
+- `src/app/statisticadmin/interest/` — 사이드바 미연결 (고아 placeholder, "나라/강의 관심도" 메뉴는 `country-popular`로 연결됨)
+- `src/features/statisticadmin/coupon/` (components/hooks/types/utils 전체)
+- `src/features/statisticadmin/lecture-analysis/` (components/hooks/types/utils 전체)
+- `src/features/services/adminCouponStatistics.service.ts` — coupon 기능 전용, 사용처 없어짐
+- `src/features/services/adminCourseEnrollmentStatistics.service.ts` — lecture-analysis 기능 전용, 사용처 없어짐
+- `src/features/services/adminReservationConversion.service.ts` — 이미 삭제된 기능의 dangling 서비스 (아무도 참조 안 함)
+- `src/app/moneyadmin/coupons/page.tsx` — `/statisticadmin/coupons`로의 고아 리다이렉트, 어디서도 링크 안 됨
+
+### 유지한 파일/폴더
+
+- `src/features/admin/common/StatisticAdminSidebar.tsx`, `ContentHeader`(공용 헤더) — 그대로
+- `src/features/statisticadmin/user/*` — 유저유입경로통계 (요청대로 유지)
+- `src/features/statisticadmin/country-popular/*` — 사이드바 "나라/강의 관심도"에 실제 연결된 기능이라 유지
+- `src/features/statisticadmin/common/components/StatisticPlaceholderPage.tsx` — sales/balance-receivable/refund-cancel/course-coupon-travel/repurchase-ltv/country-profitability 등 신규 placeholder 페이지들이 공용으로 사용 중
+- `src/features/services/adminCountryStatistics.service.ts`, `adminUserStatistics.service.ts` — 각각 country-popular/user가 사용 중
+- `src/features/services/adminCoupon.service.ts` — 통계 아닌 contentmanage 쿠폰 기능이 사용 중, 무관하므로 유지
+
+### 실행한 검증
+
+- `grep`으로 삭제 대상 심볼/경로가 다른 곳에서 참조되는지 전수 확인 후 삭제
+- `tsc --noEmit`: 통과 (스테일 `.next` 캐시가 삭제된 라우트를 참조해 에러 냈던 것 확인 → `.next` 삭제 후 재통과)
+- `npm run lint` (statisticadmin 영역 한정): 통과 (기존 무관 경고만 존재)
+- 브라우저 시각 확인: 못함 (관리자 로그인 권한 없음)
+
+### 문제
+
+-
+
+### 해결 방법
+
+-
+
+### 다음 참고사항
+
+- placeholder 상태로 남아있는 페이지(sales/balance-receivable/refund-cancel/course-coupon-travel/repurchase-ltv/country-profitability)는 실제 통계 기능 구현 필요 시 `StatisticPlaceholderPage` 자리에 실제 컴포넌트로 교체하면 됨
+
+---
+
 ## 2026-07-11 — 콘텐츠매니저 강의 수정 시 "최대 지급 마일리지" 미표시 방어 처리
 
 ### 작업 요약
