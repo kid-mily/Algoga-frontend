@@ -55,9 +55,7 @@ const getContinentName = (continentCode: string) => {
 };
 
 export function generateStaticParams() {
-  return ALLOWED_CONTINENTS.map((continentCode) => ({
-    continentCode: continentCode.toLowerCase(),
-  }));
+  return [];
 }
 
 export async function generateMetadata({
