@@ -33,7 +33,7 @@ const menus = [
   },
   {
     name: "통계매니저로 이동",
-    href: "/statisticadmin/sales",
+    href: "/statisticadmin/finance-status",
     icon: "/images/chart.svg",
     activeIcon: "/images/chart-active.svg",
   },
