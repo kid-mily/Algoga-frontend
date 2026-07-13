@@ -1,4 +1,4 @@
-import { api, ApiRequestError, type ApiResult, unwrapData } from "@/lib/api";
+import { api, type ApiResult, unwrapData } from "@/lib/api";
 import {
   createCommunityPostFormData,
   createCommunityPostUpdateFormData,
@@ -226,30 +226,13 @@ export const updateCommunityComment = async ({
   commentId,
   content,
 }: UpdateCommunityCommentPayload) => {
-  try {
-    return await api.patch<ApiResult<unknown>>(
-      `/api/v1/comments/${commentId}`,
-      { content },
-      {
-        suppressGlobalError: true,
-      }
-    );
-  } catch (error) {
-    if (
-      error instanceof ApiRequestError &&
-      (error.status === 405 || error.message.includes("지원하지 않는 HTTP 메서드"))
-    ) {
-      return api.put<ApiResult<unknown>>(
-        `/api/v1/comments/${commentId}`,
-        { content },
-        {
-          suppressGlobalError: true,
-        }
-      );
+  return api.patch<ApiResult<unknown>>(
+    `/api/v1/comments/${commentId}`,
+    { content },
+    {
+      suppressGlobalError: true,
     }
-
-    throw error;
-  }
+  );
 };
 
 export const deleteCommunityComment = async (commentId: number) => {
