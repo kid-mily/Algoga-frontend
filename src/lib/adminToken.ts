@@ -72,7 +72,7 @@ export const getAdminRedirectPathByRole = (role: string) => {
     return "/moneyadmin/payments";
   }
   if (role === "STATISTICS_MANAGER") {
-    return "/statisticadmin/sales";
+    return "/statisticadmin/finance-status";
   }
   return "/contentadmin/lecture";
 };
