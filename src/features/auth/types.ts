@@ -170,9 +170,3 @@ export type ValidateRegisterInfoOptions = {
   isUsernameChecked?: boolean;
   isEmailVerified?: boolean;
 };
-
-export type ActionState = {
-  success: boolean;
-  message?: string;
-  errors?: Record<string, string>;
-};
