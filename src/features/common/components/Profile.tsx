@@ -90,13 +90,21 @@ export default function Profile({ user }: Props) {
 
   return (
     <div className="flex gap-6 items-center pr-5">
-      <Image
-        src="/images/FriendIcon.svg"
-        alt="친구"
-        width={24}
-        height={24}
-        className="cursor-pointer"
-      />
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new Event("friend-panel-toggle"))}
+        aria-label="친구 목록 열기"
+        className="flex h-6 w-6 items-center justify-center"
+      >
+        <Image
+          src="/images/FriendIcon.svg"
+          alt=""
+          width={24}
+          height={24}
+          aria-hidden="true"
+          className="cursor-pointer"
+        />
+      </button>
 
       <button
         type="button"

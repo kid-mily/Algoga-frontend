@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from "next";
 import ChatWidget from "@/features/chat/components/ChatWidget";
+import FriendPanel from "@/features/friends/components/FriendPanel";
 import { getSiteUrl } from "@/features/seo/site";
 import "./globals.css";
 
@@ -63,6 +64,7 @@ export default function RootLayout({
     <html lang="ko">
       <body>
         <ChatWidget />
+        <FriendPanel />
         {children}
       </body>
     </html>
