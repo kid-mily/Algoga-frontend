@@ -1,4 +1,4 @@
-import { CourseQna, QnaComment, QnaStatus, QnaWriterType } from "./types";
+import { CourseQna, QnaComment, QnaStatus } from "./types";
 
 export const formatQnaDate = (value: string) => {
   if (!value) return "";
@@ -24,10 +24,6 @@ export const formatQnaDateTime = (value: string) => {
 
 export const getStatusLabel = (status: QnaStatus) => {
   return status === "ANSWERED" ? "답변 완료" : "답변 대기";
-};
-
-export const getWriterLabel = (writerType: QnaWriterType) => {
-  return writerType === "MANAGER" ? "관리자" : "작성자";
 };
 
 export const getQnaWriterName = (qna: CourseQna) => {

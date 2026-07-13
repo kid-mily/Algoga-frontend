@@ -5,23 +5,6 @@ import type {
 } from "@/features/packagelounge/types";
 import { api, type ApiResult, unwrapData } from "@/lib/api";
 
-export async function getCountryPackages(
-  countryId: string | number,
-  signal?: AbortSignal
-): Promise<PackageApiItem[]> {
-  const response = await api.get<ApiResult<PackageApiItem[]>>(
-    `/api/v1/countries/${countryId}/packages`,
-    {
-      signal,
-      skipAuth: true,
-      suppressGlobalError: true,
-      cache: "no-store",
-    }
-  );
-
-  return unwrapData(response);
-}
-
 export async function getPackageDetail(
   packageId: string | number,
   signal?: AbortSignal

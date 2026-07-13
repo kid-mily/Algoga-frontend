@@ -58,11 +58,6 @@ export interface SocialSignupRequest {
   termsMarketingAgreed: boolean;
 }
 
-export interface SignupResponse {
-  message?: string;
-  user?: User;
-}
-
 export interface FindPasswordRequest {
   username: string;
   email: string;
@@ -91,11 +86,6 @@ export interface UserProfileResponse {
   gender: string;
   birthDate: string;
   personalCode: string;
-}
-
-export interface UpdatePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
 }
 
 export type RegisterFormData = {

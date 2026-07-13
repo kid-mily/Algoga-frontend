@@ -47,11 +47,6 @@ export interface CourseDetailItem extends CourseItem {
   curriculum?: string[];
 }
 
-export interface CountryCourseResponse {
-  country: Country | null;
-  courses: CourseItem[];
-}
-
 // 난이도 타입 정의 및 색상
 export type LevelType = '초급' | '중급' | '고급';
 
@@ -159,13 +154,4 @@ export interface StudyChapter {
   progressRate?: number;
   completed?: boolean;
   watchedSeconds?: number;
-}
-
-export interface StudyCourseDetail {
-  courseId: number;
-  title: string;
-  description?: string;
-  isEnrolled: boolean;
-  isPaid: boolean;
-  chapters: StudyChapter[];
 }

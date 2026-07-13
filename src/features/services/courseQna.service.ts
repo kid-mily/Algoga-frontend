@@ -8,17 +8,6 @@ type CourseQnaApiResponse<T> = ApiResponse<T> | T;
 
 type RawRecord = Record<string, unknown>;
 
-interface CreateCourseQnaPayload {
-  title: string;
-  question?: string;
-  content?: string;
-}
-
-interface CreateCourseQnaCommentPayload {
-  content: string;
-  parentCommentId?: number | null;
-}
-
 interface CreateAdminCourseQnaAnswerPayload {
   answer: string;
 }
@@ -199,24 +188,6 @@ export const getCourseQnas = async (
   );
 };
 
-export const createCourseQna = async (
-  courseId: string | number,
-  payload: CreateCourseQnaPayload
-): Promise<unknown> => {
-  const response = await api.post<CourseQnaApiResponse<unknown>>(
-    `/api/v1/courses/${courseId}/qnas`,
-    {
-      title: payload.title,
-      question: payload.question ?? payload.content ?? "",
-    },
-    {
-      suppressGlobalError: true,
-    }
-  );
-
-  return unwrapData(response);
-};
-
 export const getCourseQna = async (
   courseId: string | number,
   qnaId: string | number
@@ -232,25 +203,6 @@ export const getCourseQna = async (
   const data = unwrapData(response);
 
   return normalizeQna(data, Number(qnaId));
-};
-
-export const createCourseQnaComment = async (
-  courseId: string | number,
-  qnaId: string | number,
-  payload: CreateCourseQnaCommentPayload
-): Promise<unknown> => {
-  const response = await api.post<CourseQnaApiResponse<unknown>>(
-    `/api/v1/courses/${courseId}/qnas/${qnaId}/comments`,
-    {
-      content: payload.content,
-      parentCommentId: payload.parentCommentId ?? null,
-    },
-    {
-      suppressGlobalError: true,
-    }
-  );
-
-  return unwrapData(response);
 };
 
 export const createAdminCourseQnaAnswer = async (

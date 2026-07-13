@@ -35,10 +35,6 @@ export function calculatePayment({
   };
 }
 
-export function formatPackageSchedule(item: PackageApiItem) {
-  return `${item.checkInDate} ~ ${item.checkOutDate}`;
-}
-
 export function formatDateTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
