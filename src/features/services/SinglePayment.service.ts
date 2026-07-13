@@ -39,16 +39,6 @@ export interface LecturePaymentResponse {
   paymentStatus?: string;
 }
 
-// 내 결제 내역 타입
-// 실제 API 응답 필드에 맞춰 필요한 속성을 추가
-export interface MyPayment {
-  paymentId: number;
-  courseId?: number;
-  amount?: number;
-  paymentStatus?: string;
-  createdAt?: string;
-}
-
 // 백엔드 오류 응답 타입
 interface PaymentErrorResponse {
   timestamp?: string;
@@ -175,11 +165,4 @@ export const createLecturePayment = async (
       body: JSON.stringify(paymentData),
     }
   );
-};
-
-// 내 결제 내역 조회
-export const getMyPayments = async (): Promise<MyPayment[]> => {
-  return requestPaymentApi<MyPayment[]>("/api/v1/payments/me", {
-    method: "GET",
-  });
 };

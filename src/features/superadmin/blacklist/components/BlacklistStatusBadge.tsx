@@ -1,11 +1,4 @@
-import { BlacklistStatus, ReportHistoryStatus } from "../types";
-
-const blacklistStatusLabel: Record<BlacklistStatus, string> = {
-  NORMAL: "정상",
-  BLACKLISTED: "차단 중",
-  DEREGISTERED: "해제",
-  UNKNOWN: "-",
-};
+import { ReportHistoryStatus } from "../types";
 
 const reportStatusLabel: Record<ReportHistoryStatus, string> = {
   RECEIVED: "접수",
@@ -13,23 +6,6 @@ const reportStatusLabel: Record<ReportHistoryStatus, string> = {
   REJECTED: "반려",
   UNKNOWN: "-",
 };
-
-export function BlacklistStatusBadge({ status }: { status: BlacklistStatus }) {
-  const style =
-    status === "BLACKLISTED"
-      ? "bg-[#FEE2E2] text-[#DC2626]"
-      : status === "UNKNOWN"
-        ? "bg-[#F2F4F7] text-[#667085]"
-        : "bg-[#DCFCE7] text-[#16A34A]";
-
-  return (
-    <span
-      className={`inline-flex rounded-full px-3 py-1 text-[12px] font-bold ${style}`}
-    >
-      {blacklistStatusLabel[status]}
-    </span>
-  );
-}
 
 export function ReportStatusBadge({ status }: { status: ReportHistoryStatus }) {
   const style =

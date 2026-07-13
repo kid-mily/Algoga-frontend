@@ -71,10 +71,6 @@ export type CouponFormProps = {
   onSubmit: (data: AdminCouponPayload) => Promise<boolean> | boolean;
 };
 
-export type CreateCouponClientProps = {
-  courses?: AdminCourse[];
-};
-
 export type EditCouponClientProps = {
   couponId: number;
   courseId: number;

@@ -47,15 +47,6 @@ export const getAdminRoleCandidates = (payload: AdminTokenPayload | null) => {
   ].filter(Boolean) as string[];
 };
 
-export const hasAdminRole = (
-  payload: AdminTokenPayload | null,
-  roles: string[]
-) => {
-  return getAdminRoleCandidates(payload).some((candidate) =>
-    roles.includes(candidate)
-  );
-};
-
 export const getCurrentAdminPayload = () => {
   if (typeof window === "undefined") return null;
 

@@ -1,5 +1,3 @@
-import type { CourseStudyChapter } from "@/features/services/courseStudy.service";
-
 export interface CourseQuiz {
     quizId: number;
     courseId: number;
@@ -73,15 +71,4 @@ export interface CourseQuizAttempt {
 export interface CourseQuizAnswer {
     quizId: number;
     selectedOption: 1 | 2 | 3 | 4;
-}
-
-export interface QuizState {
-    courseTitle: string;
-    chapters: CourseStudyChapter[];
-    quizzes: CourseQuiz[];
-    currentIndex: number;
-    selectedAnswers: Record<number, number>;
-    isLoading: boolean;
-    isSubmitting: boolean;
-    errorMessage: string;
 }
