@@ -94,7 +94,7 @@ export const getAdminRefundById = async (
 };
 
 export const requestRefundReview = async (refundId: number): Promise<void> => {
-  await adminApi.post<ApiResult<string>>(
+  await adminApi.put<ApiResult<string>>(
     `/api/v1/admin/refund-requests/${refundId}/review`,
     undefined,
     { suppressGlobalError: true }
@@ -102,7 +102,7 @@ export const requestRefundReview = async (refundId: number): Promise<void> => {
 };
 
 export const approveRefund = async (refundId: number): Promise<void> => {
-  await adminApi.post<ApiResult<string>>(
+  await adminApi.put<ApiResult<string>>(
     `/api/v1/admin/refund-requests/${refundId}/approve`,
     undefined,
     { suppressGlobalError: true }
@@ -110,7 +110,7 @@ export const approveRefund = async (refundId: number): Promise<void> => {
 };
 
 export const rejectRefund = async (refundId: number): Promise<void> => {
-  await adminApi.post<ApiResult<string>>(
+  await adminApi.put<ApiResult<string>>(
     `/api/v1/admin/refund-requests/${refundId}/reject`,
     undefined,
     { suppressGlobalError: true }
@@ -118,7 +118,7 @@ export const rejectRefund = async (refundId: number): Promise<void> => {
 };
 
 export const completeRefund = async (refundId: number): Promise<void> => {
-  await adminApi.post<ApiResult<string>>(
+  await adminApi.put<ApiResult<string>>(
     `/api/v1/admin/refund-requests/${refundId}/complete`,
     undefined,
     { suppressGlobalError: true }

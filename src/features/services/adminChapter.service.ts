@@ -44,17 +44,6 @@ export const getAdminChapters = async (
     : [];
 };
 
-export const getAdminChapter = async (
-  courseId: number,
-  chapterId: number
-): Promise<AdminChapter> => {
-  const response = await adminApi.get<ApiResponse<AdminChapterRecord>>(
-    `/api/v1/admin/courses/${courseId}/chapters/${chapterId}`
-  );
-
-  return normalizeChapter(response.data, courseId);
-};
-
 export const createAdminChapter = async (
   payload: CreateAdminChapterPayload
 ) => {
