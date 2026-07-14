@@ -1,4 +1,4 @@
-import SalesFinanceManageClient from "@/features/statisticadmin/sales/components/SalesFinanceManageClient";
+import SalesFinanceManageClient from "@/features/statisticadmin/finances/components/SalesFinanceManageClient";
 
 export const metadata = {
   title: "재무현황 | 알고가 통계 관리자",

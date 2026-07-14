@@ -3,7 +3,7 @@ import {
   SalesOverview,
   SalesOverviewMonthlyStat,
   SalesOverviewQuery,
-} from "@/features/statisticadmin/sales/types";
+} from "@/features/statisticadmin/finances/types";
 
 type RawSalesOverviewMonthlyStat = {
   month: string;
