@@ -78,8 +78,7 @@ export default function EditCouponClient({
           initialData={{
             courseId: String(coupon.courseId || courseId),
             couponName: getCouponName(coupon),
-            discountType: coupon.discountType || "RATE",
-            discountValue: String(coupon.discountValue || ""),
+            percent: String(coupon.percent || ""),
             active: String(coupon.active !== false),
           }}
           onSubmit={handleEdit}

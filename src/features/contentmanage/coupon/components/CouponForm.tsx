@@ -16,14 +16,13 @@ export default function CouponForm({
   const [formData, setFormData] = useState<CouponFormData>({
     courseId: initialData?.courseId || "",
     couponName: initialData?.couponName || "",
-    discountType: initialData?.discountType || "RATE",
-    discountValue: initialData?.discountValue || "",
+    percent: initialData?.percent || "",
     active: initialData?.active === "false" ? "false" : "true",
   });
   const [errors, setErrors] = useState({
     courseId: "",
     couponName: "",
-    discountValue: "",
+    percent: "",
   });
 
   const handleChange = (
@@ -43,8 +42,8 @@ export default function CouponForm({
     const newErrors = {
       courseId: "",
       couponName: "",
-      discountValue: "",
-      };
+      percent: "",
+    };
     let hasError = false;
 
     if (!formData.courseId) {
@@ -57,11 +56,12 @@ export default function CouponForm({
       hasError = true;
     }
 
-    if (!formData.discountValue || Number(formData.discountValue) <= 0) {
-      newErrors.discountValue = "올바른 할인 값을 입력해주세요.";
+    const percentValue = Number(formData.percent);
+
+    if (!formData.percent || percentValue <= 0 || percentValue > 100) {
+      newErrors.percent = "할인율은 1~100 사이로 입력해주세요.";
       hasError = true;
     }
-
 
     if (hasError) {
       setErrors(newErrors);
@@ -71,8 +71,7 @@ export default function CouponForm({
     const isSuccess = await onSubmit({
       courseId: Number(formData.courseId),
       couponName: formData.couponName.trim(),
-      discountType: formData.discountType,
-      discountValue: Number(formData.discountValue),
+      percent: percentValue,
       validDays: 30,
       active: formData.active === "true",
     });
@@ -153,38 +152,28 @@ export default function CouponForm({
             {errors.couponName && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.couponName}</p>}
           </section>
 
-          <section className="grid grid-cols-2 gap-4" aria-label="쿠폰 할인 정보">
-            <section>
-              <label htmlFor="coupon-discount-type" className="text-[14px] font-semibold text-[#111827]">
-                할인 타입 *
-              </label>
-              <select
-                id="coupon-discount-type"
-                name="discountType"
-                value={formData.discountType}
-                onChange={handleChange}
-                className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none"
-              >
-                <option value="RATE">비율 할인 (%)</option>
-                <option value="AMOUNT">정액 할인 (원)</option>
-              </select>
-            </section>
-
-            <section>
-              <label htmlFor="coupon-discount-value" className="text-[14px] font-semibold text-[#111827]">
-                할인 값 *
-              </label>
+          <section aria-label="쿠폰 할인율">
+            <label htmlFor="coupon-percent" className="text-[14px] font-semibold text-[#111827]">
+              할인율(%) *
+            </label>
+            <div className="relative mt-2">
               <input
-                id="coupon-discount-value"
+                id="coupon-percent"
                 type="number"
-                name="discountValue"
-                value={formData.discountValue}
+                name="percent"
+                min={1}
+                max={100}
+                value={formData.percent}
                 onChange={handleChange}
+                aria-invalid={Boolean(errors.percent)}
                 placeholder="예: 10"
-                className="mt-2 h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 text-[14px] outline-none"
+                className="h-[48px] w-full rounded-[12px] border border-[#E4E7EC] px-4 pr-10 text-[14px] outline-none"
               />
-              {errors.discountValue && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.discountValue}</p>}
-            </section>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] text-[#667085]">
+                %
+              </span>
+            </div>
+            {errors.percent && <p className="mt-1 text-[13px] text-[#DC2626]">{errors.percent}</p>}
           </section>
         </fieldset>
 

@@ -1,13 +1,11 @@
 import type { AdminCourse } from "@/features/contentmanage/lecture/types";
-export type CouponDiscountType = "RATE" | "AMOUNT";
 
 export interface AdminCoupon {
   couponPolicyId: number;
   courseId: number;
   managerId: number;
   couponName: string;
-  discountType: CouponDiscountType;
-  discountValue: number;
+  percent: number;
   validDays: number;
   active: boolean;
   createdAt: string;
@@ -17,8 +15,7 @@ export interface AdminCoupon {
 export interface AdminCouponPayload {
   courseId: number;
   couponName: string;
-  discountType: CouponDiscountType;
-  discountValue: number;
+  percent: number;
   validDays: number;
   active: boolean;
 }
@@ -32,8 +29,7 @@ export type CouponStatusFilter = "all" | "active" | "inactive";
 export type CouponFormData = {
   courseId: string;
   couponName: string;
-  discountType: CouponDiscountType;
-  discountValue: string;
+  percent: string;
   active: string;
 };
 
