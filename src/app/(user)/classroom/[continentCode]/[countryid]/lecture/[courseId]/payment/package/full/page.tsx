@@ -27,7 +27,7 @@ export default function FullPayment() {
                 {/* 상단 결제 안내 박스 */}
                 <div className="rounded-2xl bg-[#F57C00] p-6 text-white">
                     <div className="flex items-center gap-1.5 text-xl font-bold">
-                        <h3>💳 일시불 결제 안내</h3>
+                        <h3>일시불 결제 안내</h3>
                     </div>
                     <p className="mt-2 text-sm font-medium text-white/90">
                         전체 패키지 금액을 한 번에 결제합니다.
