@@ -1,9 +1,5 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
-import {
-  SignupPathChannelRevenue,
-  SignupPathCount,
-  SignupPathSummary,
-} from "@/features/statisticadmin/user/types";
+import { SignupPathChannelRevenue, SignupPathSummary } from "@/features/statisticadmin/user/types";
 import {
   normalizeSignupPathKey,
   normalizeSignupPathLabel,
@@ -12,25 +8,9 @@ import {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// 문서상 from/to는 선택값이지만, 실제로는 'from'이 없으면 400(GLOBAL_002)을 반환해서
-// 넓은 기본 기간을 항상 같이 보냅니다. 순수 날짜, LocalDateTime 형식 둘 다 타입
-// 불일치 오류가 나서, +09:00 오프셋까지 붙인 Instant/OffsetDateTime 형식으로 보냅니다.
-const DEFAULT_FROM_DATE_TIME = "2000-01-01T00:00:00+09:00";
-
-const getTodayEndDateTime = () => {
-  const today = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-
-  return `${today}T23:59:59+09:00`;
-};
-
-type SignupPathCountResponse = {
-  path: string;
-  count: number;
+type InflowQuery = {
+  from: string;
+  to: string;
 };
 
 type InflowSummaryResponse = {
@@ -45,62 +25,19 @@ type InflowChannelResponse = {
   signupCount: number;
   netRevenue: number;
   arpu: number;
-};
-
-const normalizeSignupPathCounts = (
-  items: SignupPathCountResponse[]
-): SignupPathCount[] => {
-  const totalSignupCount = items.reduce(
-    (sum, item) => sum + Number(item.count || 0),
-    0
-  );
-
-  return items.map((item, index) => {
-    const signupPath = normalizeSignupPathKey(item.path);
-    const signupCount = Number(item.count || 0);
-
-    return {
-      signupPath,
-      label: normalizeSignupPathLabel(item.path || signupPath),
-      signupCount,
-      ratio: totalSignupCount > 0 ? (signupCount / totalSignupCount) * 100 : 0,
-      color: signupPathColors[index % signupPathColors.length],
-    };
-  });
-};
-
-// 가입일 기준 기간 내 유입 경로별 가입자 수 (from/to 생략 시 전체 기간)
-export const getSignupPathCounts = async (
-  query: { from?: string; to?: string } = {},
-  signal?: AbortSignal
-): Promise<SignupPathCount[]> => {
-  const response = await adminApi.get<ApiResult<SignupPathCountResponse[]>>(
-    "/api/v1/admin/users/statistics/signup-paths",
-    {
-      // 문서대로 from/to를 생략하면 전체 기간을 조회하므로, 값이 있을 때만 보냅니다.
-      params: {
-        from: query.from,
-        to: query.to,
-      },
-      suppressGlobalError: true,
-      signal,
-    }
-  );
-
-  return normalizeSignupPathCounts(unwrapData(response) ?? []);
+  bookingCount: number;
+  bookingConversionRate: number;
 };
 
 // 전체 가입자·순매출·최고 효율 경로(ARPU) 요약
 export const getInflowSummary = async (
+  { from, to }: InflowQuery,
   signal?: AbortSignal
 ): Promise<SignupPathSummary> => {
   const response = await adminApi.get<ApiResult<InflowSummaryResponse>>(
     "/api/v1/admin/stats/inflow/summary",
     {
-      params: {
-        from: DEFAULT_FROM_DATE_TIME,
-        to: getTodayEndDateTime(),
-      },
+      params: { from, to },
       suppressGlobalError: true,
       signal,
     }
@@ -117,33 +54,40 @@ export const getInflowSummary = async (
   };
 };
 
-// 유입 경로별 가입자 수/순매출/1인당 매출 (순매출 내림차순)
+// 유입 경로별 가입자 수/순매출/1인당 매출 (순매출 내림차순) — 가입자수 비율/상세표에도 그대로 씁니다.
 export const getInflowChannelRevenue = async (
+  { from, to }: InflowQuery,
   signal?: AbortSignal
 ): Promise<SignupPathChannelRevenue[]> => {
   const response = await adminApi.get<ApiResult<InflowChannelResponse[]>>(
     "/api/v1/admin/stats/inflow/channels",
     {
-      params: {
-        from: DEFAULT_FROM_DATE_TIME,
-        to: getTodayEndDateTime(),
-      },
+      params: { from, to },
       suppressGlobalError: true,
       signal,
     }
   );
   const items = unwrapData(response) ?? [];
+  const totalSignupCount = items.reduce(
+    (sum, item) => sum + Number(item.signupCount || 0),
+    0
+  );
 
   return items
     .map((item, index) => {
       const signupPath = normalizeSignupPathKey(item.channel);
+      const signupCount = Number(item.signupCount || 0);
 
       return {
         signupPath,
         label: normalizeSignupPathLabel(item.channel || signupPath),
-        signupCount: Number(item.signupCount || 0),
+        signupCount,
+        ratio: totalSignupCount > 0 ? (signupCount / totalSignupCount) * 100 : 0,
         netSales: Number(item.netRevenue || 0),
         arpu: Number(item.arpu || 0),
+        bookingCount: Number(item.bookingCount || 0),
+        // 이미 %로 내려옴 (stats 도메인 rate 필드 공통 방식) — ×100 하지 않습니다.
+        bookingConversionRate: Number(item.bookingConversionRate || 0),
         color: signupPathColors[index % signupPathColors.length],
       };
     })
@@ -179,16 +123,10 @@ const downloadAdminCsv = async (path: string, filename: string) => {
   URL.revokeObjectURL(url);
 };
 
-export const downloadSignupPathCsv = async () => {
+export const downloadInflowChannelsCsv = async ({ from, to }: InflowQuery) => {
+  const params = new URLSearchParams({ from, to });
   await downloadAdminCsv(
-    "/api/v1/admin/users/statistics/signup-paths/csv",
-    "signup-paths.csv"
-  );
-};
-
-export const downloadInflowChannelsCsv = async () => {
-  await downloadAdminCsv(
-    "/api/v1/admin/stats/inflow/channels/csv",
+    `/api/v1/admin/stats/inflow/channels/csv?${params.toString()}`,
     "inflow-channels.csv"
   );
 };

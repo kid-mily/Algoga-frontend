@@ -8,11 +8,11 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { SignupPathCount } from "../types";
+import { SignupPathChannelRevenue } from "../types";
 import { formatNumber, formatPercent } from "../utils";
 
 type SignupPathPieChartProps = {
-  statistics: SignupPathCount[];
+  statistics: SignupPathChannelRevenue[];
   isLoading: boolean;
 };
 
@@ -20,7 +20,7 @@ type SignupPathPieDatum = {
   name: string;
   value: number;
   fill: string;
-  statistic: SignupPathCount;
+  statistic: SignupPathChannelRevenue;
 };
 
 export default function SignupPathPieChart({

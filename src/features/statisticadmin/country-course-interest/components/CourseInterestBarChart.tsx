@@ -41,15 +41,15 @@ export default function CourseInterestBarChart({
           <BarChart
             data={data}
             layout="vertical"
-            margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
+            margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
           >
             <CartesianGrid strokeDasharray="3 3" horizontal={false} />
             <XAxis type="number" tick={{ fill: "#98A2B3", fontSize: 12 }} />
             <YAxis
               type="category"
               dataKey="courseTitle"
-              width={190}
-              tick={{ fill: "#667085", fontSize: 13 }}
+              width={230}
+              tick={{ fill: "#667085", fontSize: 12 }}
             />
             <Bar
               dataKey="enrollmentCount"

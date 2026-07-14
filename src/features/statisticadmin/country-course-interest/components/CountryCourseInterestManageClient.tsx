@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
+import { downloadCountryProfitCsv } from "@/features/services/adminInterestStatistics.service";
 import CountryCourseInterestSummaryCards from "./CountryCourseInterestSummaryCards";
 import CountryInterestBarChart from "./CountryInterestBarChart";
 import CourseInterestBarChart from "./CourseInterestBarChart";
@@ -12,18 +12,18 @@ import CountryDetailStatsTable from "./CountryDetailStatsTable";
 import CourseCompletionAnalysisTable from "./CourseCompletionAnalysisTable";
 import PopularCountryCourseRankingTable from "./PopularCountryCourseRankingTable";
 import { useCountryCourseInterestStatistics } from "../hooks/useCountryCourseInterestStatistics";
-import type { InterestPeriod } from "../types";
+import { interestPeriodLabels, interestPeriods } from "../utils";
 
-const periodOptions: Array<{ label: string; value: InterestPeriod }> = [
-  { label: "오늘", value: "today" },
-  { label: "이번주", value: "week" },
-  { label: "이번달", value: "month" },
-  { label: "올해", value: "year" },
-];
+const periodOptions = interestPeriods.map((period) => ({
+  label: interestPeriodLabels[period],
+  value: period,
+}));
 
 export default function CountryCourseInterestManageClient() {
-  const [period, setPeriod] = useState<InterestPeriod>("month");
   const {
+    period,
+    setPeriod,
+    query,
     summary,
     countries,
     courses,
@@ -36,6 +36,8 @@ export default function CountryCourseInterestManageClient() {
     isCourseLoading,
     error,
   } = useCountryCourseInterestStatistics();
+
+  const handleDownloadCsv = () => downloadCountryProfitCsv(query);
 
   return (
     <main className="min-h-screen bg-[#F8FAFC]">
@@ -73,7 +75,10 @@ export default function CountryCourseInterestManageClient() {
           </section>
 
           <section className="mt-10">
-            <CountryDetailStatsTable data={countryDetails} />
+            <CountryDetailStatsTable
+              data={countryDetails}
+              onDownloadCsv={handleDownloadCsv}
+            />
           </section>
 
           <CourseCompletionAnalysisTable

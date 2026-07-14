@@ -27,23 +27,19 @@ const dateInputFormatter = new Intl.DateTimeFormat("en-CA", {
 
 const toDateInputValue = (date: Date) => dateInputFormatter.format(date);
 
-// 백엔드가 from/to를 Instant/OffsetDateTime으로 받아서(순수 날짜, LocalDateTime
-// 형식 둘 다 400) 한국 표준시(+09:00) 오프셋까지 붙인 값으로 보냅니다.
-const toStartOfDayDateTime = (date: Date) =>
-  `${toDateInputValue(date)}T00:00:00+09:00`;
-const toEndOfDayDateTime = (date: Date) =>
-  `${toDateInputValue(date)}T23:59:59+09:00`;
-
+// inflow/summary, inflow/channels 모두 from/to가 필수라 "전체"도 넓은 기본 범위로 보냅니다.
 export const getSignupPathDateRange = (
   period: SignupPathPeriod
-): { from?: string; to?: string } => {
-  if (period === "all") return {};
-
+): { from: string; to: string } => {
   const now = new Date();
   const from = new Date(now);
 
+  if (period === "all") {
+    return { from: "2000-01-01", to: toDateInputValue(now) };
+  }
+
   if (period === "today") {
-    return { from: toStartOfDayDateTime(now), to: toEndOfDayDateTime(now) };
+    return { from: toDateInputValue(now), to: toDateInputValue(now) };
   }
 
   if (period === "thisWeek") {
@@ -60,7 +56,7 @@ export const getSignupPathDateRange = (
     from.setMonth(0, 1);
   }
 
-  return { from: toStartOfDayDateTime(from), to: toEndOfDayDateTime(now) };
+  return { from: toDateInputValue(from), to: toDateInputValue(now) };
 };
 
 export const signupPathLabels: Record<string, string> = {
