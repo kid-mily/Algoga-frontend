@@ -108,13 +108,13 @@ export default function StatisticAdminSidebar() {
   };
 
   return (
-    <aside className="flex w-[240px] flex-col border-r border-[#E4E7EC] bg-white">
-      <header className="flex items-center gap-3 border-b border-[#E4E7EC] px-6 py-5">
+    <aside className="flex w-[240px] shrink-0 flex-col border-r border-[#E4E7EC] bg-white">
+      <header className="flex h-[77px] items-center gap-3 border-b border-[#E4E7EC] px-6">
         <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#6FA8A5] text-[14px] font-semibold text-white">
           ST
         </div>
 
-        <span className="text-[20px] font-semibold text-[#111827]">
+        <span className="whitespace-nowrap text-[18px] font-semibold text-[#111827]">
           Statistics Admin
         </span>
       </header>
