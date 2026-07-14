@@ -1,5 +1,5 @@
 import { SignupPathSummary } from "../types";
-import { formatNumber, formatPercent } from "../utils";
+import { formatNumber, formatWon } from "../utils";
 
 type SignupPathSummaryCardsProps = {
   summary: SignupPathSummary;
@@ -10,30 +10,27 @@ export default function SignupPathSummaryCards({
 }: SignupPathSummaryCardsProps) {
   const cards = [
     {
-      title: "총 가입 수",
+      title: "총가입자 수",
       value: `${formatNumber(summary.totalSignupCount)}명`,
       tone: "text-[#439A97]",
     },
     {
-      title: "유입 경로 수",
-      value: `${formatNumber(summary.pathCount)}개`,
+      title: "총 순매출",
+      value: formatWon(summary.totalNetSales),
       tone: "text-[#344054]",
     },
     {
-      title: "최다 유입 경로",
-      value: summary.topPathLabel,
-      tone: "text-[#111827]",
-    },
-    {
-      title: "최다 유입 비율",
-      value: formatPercent(summary.topPathRatio),
+      title: "최고 효율 경로",
+      value: `${summary.bestEfficiencyPathLabel} · ${formatWon(
+        summary.bestEfficiencyPathArpu
+      )}`,
       tone: "text-[#111827]",
     },
   ];
 
   return (
     <section
-      className="mb-5 grid grid-cols-4 gap-4"
+      className="mb-5 grid grid-cols-3 gap-4"
       aria-label="유저 유입 경로 요약"
     >
       {cards.map((card) => (

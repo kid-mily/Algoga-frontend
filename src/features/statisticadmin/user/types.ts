@@ -1,4 +1,4 @@
-export type SignupPathStatistic = {
+export type SignupPathCount = {
   signupPath: string;
   label: string;
   signupCount: number;
@@ -8,7 +8,16 @@ export type SignupPathStatistic = {
 
 export type SignupPathSummary = {
   totalSignupCount: number;
-  pathCount: number;
-  topPathLabel: string;
-  topPathRatio: number;
+  totalNetSales: number;
+  bestEfficiencyPathLabel: string;
+  bestEfficiencyPathArpu: number;
+};
+
+export type SignupPathChannelRevenue = {
+  signupPath: string;
+  label: string;
+  signupCount: number;
+  netSales: number;
+  arpu: number;
+  color: string;
 };

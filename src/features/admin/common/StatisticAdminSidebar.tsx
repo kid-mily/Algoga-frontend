@@ -113,7 +113,7 @@ export default function StatisticAdminSidebar() {
 
   return (
     <aside className="flex w-[218px] shrink-0 flex-col border-r border-[#EEF2F6] bg-white">
-      <header className="flex h-[70px] items-center gap-3 px-4">
+      <header className="flex h-[77px] items-center gap-3 border-b border-[#E4E7EC] px-4">
         <div className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[9px] bg-[#2BB3A3] text-white">
           <BarChart3 aria-hidden="true" className="h-[15px] w-[15px]" strokeWidth={2} />
         </div>

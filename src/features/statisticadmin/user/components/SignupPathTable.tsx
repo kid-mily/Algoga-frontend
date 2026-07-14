@@ -1,10 +1,11 @@
-import { SignupPathStatistic } from "../types";
-import { formatNumber, formatPercent } from "../utils";
+import { Download } from "lucide-react";
+import { downloadSignupPathCsv } from "@/features/services/adminUserStatistics.service";
+import { SignupPathCount } from "../types";
+import { formatNumber } from "../utils";
 
 type SignupPathTableProps = {
-  statistics: SignupPathStatistic[];
+  pathCounts: SignupPathCount[];
   isLoading: boolean;
-  compact?: boolean;
 };
 
 const COLUMN_COUNT = 4;
@@ -25,16 +26,23 @@ function EmptyRow({ message }: { message: string }) {
 }
 
 export default function SignupPathTable({
-  statistics,
+  pathCounts,
   isLoading,
-  compact = false,
 }: SignupPathTableProps) {
   return (
     <section className="rounded-[16px] border border-[#E4E7EC] bg-white">
-      <header className="border-b border-[#EEF0F3] px-6 py-4">
+      <header className="flex items-center justify-between border-b border-[#EEF0F3] px-6 py-4">
         <h2 className="text-[18px] font-bold text-[#111827]">
-          {compact ? "상위 유입 경로" : "유입 경로별 상세 통계"}
+          유저 경로별 상세통계
         </h2>
+        <button
+          type="button"
+          onClick={() => void downloadSignupPathCsv()}
+          className="flex h-[32px] cursor-pointer items-center gap-1.5 rounded-[10px] border border-[#E4E7EC] bg-white px-3 text-[12px] font-semibold text-[#667085]"
+        >
+          <Download aria-hidden="true" className="h-[14px] w-[14px]" />
+          CSV
+        </button>
       </header>
 
       <div className="overflow-x-auto">
@@ -42,19 +50,19 @@ export default function SignupPathTable({
           <thead className="bg-[#F9FAFB] text-[13px] text-[#667085]">
             <tr>
               <th className="px-5 py-3 font-semibold">유입 경로</th>
-              <th className="px-5 py-3 font-semibold">가입 수</th>
-              <th className="px-5 py-3 font-semibold">비율</th>
-              <th className="px-5 py-3 font-semibold">그래프</th>
+              <th className="px-5 py-3 font-semibold">회원가입 수</th>
+              <th className="px-5 py-3 font-semibold">예약 수</th>
+              <th className="px-5 py-3 font-semibold">예약 전환율</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#EEF0F3] text-[#344054]">
             {isLoading ? (
               <EmptyRow message="유입 경로 통계를 불러오는 중입니다..." />
-            ) : statistics.length === 0 ? (
+            ) : pathCounts.length === 0 ? (
               <EmptyRow message="유입 경로 통계 데이터가 없습니다." />
             ) : (
-              statistics.slice(0, compact ? 5 : statistics.length).map((statistic) => (
-                <tr key={`${statistic.signupPath}-${statistic.label}`}>
+              pathCounts.map((statistic) => (
+                <tr key={statistic.signupPath}>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <span
@@ -69,22 +77,9 @@ export default function SignupPathTable({
                   <td className="px-5 py-4">
                     {formatNumber(statistic.signupCount)}명
                   </td>
-                  <td className="px-5 py-4 font-semibold text-[#439A97]">
-                    {formatPercent(statistic.ratio)}
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="h-[8px] w-full min-w-[120px] overflow-hidden rounded-full bg-[#F2F4F7]">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: statistic.ratio
-                            ? `${Math.max(2, Math.min(100, statistic.ratio))}%`
-                            : "0%",
-                          backgroundColor: statistic.color,
-                        }}
-                      />
-                    </div>
-                  </td>
+                  {/* 예약수/예약전환율을 내려주는 API가 아직 없어 임시로 "-" 표시 */}
+                  <td className="px-5 py-4 text-[#98A2B3]">-</td>
+                  <td className="px-5 py-4 text-[#98A2B3]">-</td>
                 </tr>
               ))
             )}

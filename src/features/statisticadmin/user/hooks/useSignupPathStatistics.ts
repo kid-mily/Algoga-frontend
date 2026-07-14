@@ -1,31 +1,56 @@
-import { useEffect, useMemo, useState } from "react";
-import { getSignupPathStatistics } from "@/features/services/adminUserStatistics.service";
-import { SignupPathStatistic } from "../types";
+import { useEffect, useState } from "react";
+import {
+  getInflowChannelRevenue,
+  getInflowSummary,
+  getSignupPathCounts,
+} from "@/features/services/adminUserStatistics.service";
+import {
+  SignupPathChannelRevenue,
+  SignupPathCount,
+  SignupPathSummary,
+} from "../types";
 import {
   formatSignupPathError,
-  getSignupPathSummary,
+  getSignupPathDateRange,
+  SignupPathPeriod,
 } from "../utils";
 
+const emptySummary: SignupPathSummary = {
+  totalSignupCount: 0,
+  totalNetSales: 0,
+  bestEfficiencyPathLabel: "-",
+  bestEfficiencyPathArpu: 0,
+};
+
 export const useSignupPathStatistics = () => {
-  const [statistics, setStatistics] = useState<SignupPathStatistic[]>([]);
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedPath, setSelectedPath] = useState("all");
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState<SignupPathPeriod>("all");
+  const [pathCounts, setPathCounts] = useState<SignupPathCount[]>([]);
+  const [channelRevenue, setChannelRevenue] = useState<
+    SignupPathChannelRevenue[]
+  >([]);
+  const [summary, setSummary] = useState<SignupPathSummary>(emptySummary);
+  const [isLoadingCounts, setIsLoadingCounts] = useState(true);
+  const [isLoadingOverview, setIsLoadingOverview] = useState(true);
   const [error, setError] = useState("");
 
+  // summary/channels API는 기간 파라미터를 지원하지 않아 최초 1회만 조회합니다.
   useEffect(() => {
     const controller = new AbortController();
 
     const load = async () => {
       try {
-        setIsLoading(true);
+        setIsLoadingOverview(true);
         setError("");
 
-        const data = await getSignupPathStatistics(controller.signal);
+        const [summaryData, channels] = await Promise.all([
+          getInflowSummary(controller.signal),
+          getInflowChannelRevenue(controller.signal),
+        ]);
 
         if (controller.signal.aborted) return;
 
-        setStatistics(data);
+        setSummary(summaryData);
+        setChannelRevenue(channels);
       } catch (loadError: unknown) {
         if (controller.signal.aborted) return;
 
@@ -37,7 +62,7 @@ export const useSignupPathStatistics = () => {
         );
       } finally {
         if (!controller.signal.aborted) {
-          setIsLoading(false);
+          setIsLoadingOverview(false);
         }
       }
     };
@@ -49,51 +74,55 @@ export const useSignupPathStatistics = () => {
     };
   }, []);
 
-  const pathOptions = useMemo(
-    () => [
-      { value: "all", label: "전체" },
-      ...statistics.map((statistic) => ({
-        value: statistic.signupPath || statistic.label,
-        label: statistic.label,
-      })),
-    ],
-    [statistics]
-  );
+  // signup-paths API는 기간 파라미터를 지원해 선택된 기간이 바뀔 때마다 다시 조회합니다.
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const filteredStatistics = useMemo(() => {
-    const keyword = searchKeyword.trim().toLowerCase();
+    const load = async () => {
+      try {
+        setIsLoadingCounts(true);
+        setError("");
 
-    return statistics.filter((statistic) => {
-      const matchesPath =
-        selectedPath === "all" ||
-        statistic.signupPath === selectedPath ||
-        statistic.label === selectedPath;
-      const matchesKeyword =
-        !keyword ||
-        [statistic.signupPath, statistic.label]
-          .join(" ")
-          .toLowerCase()
-          .includes(keyword);
+        const counts = await getSignupPathCounts(
+          getSignupPathDateRange(selectedPeriod),
+          controller.signal
+        );
 
-      return matchesPath && matchesKeyword;
-    });
-  }, [searchKeyword, selectedPath, statistics]);
+        if (controller.signal.aborted) return;
 
-  const summary = useMemo(
-    () => getSignupPathSummary(statistics),
-    [statistics]
-  );
+        setPathCounts(counts);
+      } catch (loadError: unknown) {
+        if (controller.signal.aborted) return;
+
+        setError(
+          formatSignupPathError(
+            loadError,
+            "유저 유입 경로 통계를 불러오지 못했습니다."
+          )
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingCounts(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      controller.abort();
+    };
+  }, [selectedPeriod]);
 
   return {
-    statistics,
-    filteredStatistics,
-    pathOptions,
+    selectedPeriod,
+    setSelectedPeriod,
+    pathCounts,
+    channelRevenue,
     summary,
-    searchKeyword,
-    selectedPath,
-    isLoading,
+    isLoading: isLoadingCounts || isLoadingOverview,
+    isLoadingCounts,
+    isLoadingOverview,
     error,
-    setSearchKeyword,
-    setSelectedPath,
   };
 };
