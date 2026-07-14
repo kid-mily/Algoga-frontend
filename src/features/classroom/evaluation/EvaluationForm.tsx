@@ -1,6 +1,7 @@
 "use client";
 
 import CheckModal from "@/features/common/components/CheckModal";
+import Modal from "@/features/common/components/Modal";
 import SubHeader from "@/features/common/components/SubHeader";
 import EvaluationHeader from "./EvaluationHeader";
 import EvaluationNavigation from "./EvaluationNavigation";
@@ -27,6 +28,7 @@ export default function EvaluationForm({
     isAllAnswered,
     progress,
     isCompleteModalOpen,
+    isLoginModalOpen,
     isSubmitting,
     submitErrorMessage,
     handleSelectAnswer,
@@ -34,6 +36,8 @@ export default function EvaluationForm({
     handleNext,
     handleSubmitResult,
     closeCompleteModal,
+    closeLoginModal,
+    goToLogin,
   } = useEvaluationForm({
     continentCode,
     countryId,
@@ -43,10 +47,6 @@ export default function EvaluationForm({
   if (questions.length === 0) {
     return (
       <main className="relative min-h-[calc(100dvh-64px)] overflow-hidden bg-[#F3F8FC] px-4 py-6">
-        {/* 배경 장식 */}
-        <div className="pointer-events-none absolute -left-20 top-16 h-48 w-48 rounded-full bg-[#DCEEF3]/70" />
-        <div className="pointer-events-none absolute -right-20 bottom-10 h-56 w-56 rounded-full bg-[#E8F3E8]/70" />
-
         <section className="relative mx-auto w-full max-w-2xl">
           <SubHeader
             backHref={`/classroom/${continentCode}/${countryId}`}
@@ -56,11 +56,7 @@ export default function EvaluationForm({
           />
 
           <article className="mt-5 rounded-2xl border border-[#E3EDF3] bg-white px-6 py-10 text-center shadow-sm">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF5F5] text-xl">
-              🧭
-            </div>
-
-            <h1 className="mt-4 text-xl font-bold text-[#0A1628]">
+            <h1 className="text-xl font-bold text-[#0A1628]">
               준비된 진단평가가 없습니다
             </h1>
 
@@ -75,10 +71,6 @@ export default function EvaluationForm({
 
   return (
     <main className="relative min-h-[calc(100dvh-64px)] overflow-hidden bg-[#F3F8FC] px-4 py-5">
-      {/* 배경 */}
-      <div className="pointer-events-none absolute -left-24 top-20 h-56 w-56 rounded-full bg-[#DDEFF3]/65" />
-      <div className="pointer-events-none absolute -right-24 bottom-10 h-64 w-64 rounded-full bg-[#E6F2E8]/70" />
-
       <section className="relative mx-auto w-full max-w-2xl">
         <EvaluationHeader
           continentCode={continentCode}
@@ -88,10 +80,7 @@ export default function EvaluationForm({
           progress={progress}
         />
 
-        <form
-          className="mt-3"
-          onSubmit={(event) => event.preventDefault()}
-        >
+        <form className="mt-3" onSubmit={(event) => event.preventDefault()}>
           <EvaluationQuestion
             question={currentQuestion}
             questionNumber={step + 1}
@@ -102,9 +91,7 @@ export default function EvaluationForm({
           <EvaluationNavigation
             currentStep={step}
             isLast={isLast}
-            hasSelectedAnswer={
-              isLast ? isAllAnswered : selectedAnswer !== null
-            }
+            hasSelectedAnswer={isLast ? isAllAnswered : selectedAnswer !== null}
             onPrev={handlePrev}
             onNext={handleNext}
           />
@@ -123,12 +110,24 @@ export default function EvaluationForm({
       <CheckModal
         open={isCompleteModalOpen}
         title="진단평가를 제출하시겠습니까?"
-        description="제출하면 답안을 수정할 수 없습니다."
+        description="제출하면 답변을 수정할 수 없습니다."
         buttonText={isSubmitting ? "제출 중..." : "제출하기"}
         cancelText="계속 풀기"
         isProcessing={isSubmitting}
         onCancel={closeCompleteModal}
         onConfirm={handleSubmitResult}
+      />
+
+      <Modal
+        open={isLoginModalOpen}
+        title="로그인이 필요합니다"
+        description={
+          "진단평가 결과를 저장하려면 로그인이 필요해요.\n로그인 후 다시 이어서 진행해 주세요."
+        }
+        confirmText="로그인하기"
+        cancelText="머무르기"
+        onConfirm={goToLogin}
+        onCancel={closeLoginModal}
       />
     </main>
   );

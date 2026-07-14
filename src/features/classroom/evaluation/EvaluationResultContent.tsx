@@ -5,40 +5,40 @@ import EvaluationResultEmpty from "./components/EvaluationResultEmpty";
 import EvaluationResultHero from "./components/EvaluationResultHero";
 import RecommendedCourseList from "./components/RecommendedCourseList";
 import { useEvaluationResult } from "./hooks/useEvaluationResult";
-import type { RecommendedCourse } from "./evaluationResult.types";
-import { saveSelectedRecommendedCourse } from "./utils/evaluationResult.storage";
+import  { RecommendedCourse } from "./evaluationResult.types";
 import { LEVEL_STYLES } from "./utils/evaluationResult.util";
 
 interface EvaluationResultContentProps {
   continentCode: string;
   countryId: string;
+  resultId?: string | null;
 }
 
 export default function EvaluationResultContent({
   continentCode,
   countryId,
+  resultId,
 }: EvaluationResultContentProps) {
   const router = useRouter();
 
   const {
     pathContinentCode,
     result,
-    questions,
     levelMatchedCourses,
+    otherLevelGroups,
     selectedCourseId,
     setSelectedCourseId,
     isLoading,
-    isRecommendationLoading,
     errorMessage,
     courseListHref,
   } = useEvaluationResult({
     continentCode,
     countryId,
+    resultId,
   });
 
   const handleSingleCourseClick = (course: RecommendedCourse) => {
     setSelectedCourseId(course.courseId);
-    saveSelectedRecommendedCourse(course, pathContinentCode, countryId);
 
     const lectureHref =
       `/classroom/${pathContinentCode}/${countryId}/lecture/${course.courseId}`;
@@ -51,11 +51,12 @@ export default function EvaluationResultContent({
 
   const handlePackageClick = (course: RecommendedCourse) => {
     setSelectedCourseId(course.courseId);
-    saveSelectedRecommendedCourse(course, pathContinentCode, countryId);
+
+    const packageCountryId = course.countryId ?? Number(countryId);
 
     const packageLoungeHref =
-      `/packagelounge?countryId=${course.countryId || countryId}` +
-      `&courseId=${course.courseId}` +
+      `/packagelounge?countryId=${encodeURIComponent(String(packageCountryId))}` +
+      `&courseId=${encodeURIComponent(String(course.courseId))}` +
       `&continentCode=${encodeURIComponent(pathContinentCode)}`;
 
     router.push(packageLoungeHref);
@@ -88,13 +89,14 @@ export default function EvaluationResultContent({
   return (
     <main className="min-h-[calc(100dvh-64px)] bg-[#F4F7FB] px-4 py-8">
       <div className="mx-auto w-full max-w-4xl">
-        <EvaluationResultHero result={result} questions={questions} />
+        <EvaluationResultHero result={result} />
 
         <RecommendedCourseList
           levelName={levelName}
           courses={levelMatchedCourses}
+          otherLevelGroups={otherLevelGroups}
           selectedCourseId={selectedCourseId}
-          isLoading={isRecommendationLoading}
+          isLoading={false}
           onSingleCourseClick={handleSingleCourseClick}
           onPackageClick={handlePackageClick}
         />
