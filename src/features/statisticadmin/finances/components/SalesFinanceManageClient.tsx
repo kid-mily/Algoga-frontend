@@ -1,10 +1,16 @@
 "use client";
 
+import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
 import { useSalesOverview } from "../hooks/useSalesOverview";
+import { periodLabels, salesOverviewPeriods } from "../utils/salesOverviewFormatters";
 import SalesOverviewLineChart from "./SalesOverviewLineChart";
-import SalesOverviewPeriodFilter from "./SalesOverviewPeriodFilter";
 import SalesOverviewSummaryCards from "./SalesOverviewSummaryCards";
 import SalesOverviewTable from "./SalesOverviewTable";
+
+const periodOptions = salesOverviewPeriods.map((period) => ({
+  label: periodLabels[period],
+  value: period,
+}));
 
 export default function SalesFinanceManageClient() {
   const {
@@ -25,7 +31,8 @@ export default function SalesFinanceManageClient() {
           </p>
         </div>
 
-        <SalesOverviewPeriodFilter
+        <StatisticPeriodFilter
+          options={periodOptions}
           selectedPeriod={selectedPeriod}
           onPeriodChange={setSelectedPeriod}
         />

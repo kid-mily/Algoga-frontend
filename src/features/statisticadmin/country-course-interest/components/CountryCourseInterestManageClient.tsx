@@ -4,7 +4,7 @@ import { useState } from "react";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
-import CountryCourseInterestPeriodFilter from "./CountryCourseInterestPeriodFilter";
+import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
 import CountryCourseInterestSummaryCards from "./CountryCourseInterestSummaryCards";
 import CountryInterestBarChart from "./CountryInterestBarChart";
 import CourseInterestBarChart from "./CourseInterestBarChart";
@@ -13,6 +13,13 @@ import CourseCompletionAnalysisTable from "./CourseCompletionAnalysisTable";
 import PopularCountryCourseRankingTable from "./PopularCountryCourseRankingTable";
 import { useCountryCourseInterestStatistics } from "../hooks/useCountryCourseInterestStatistics";
 import type { InterestPeriod } from "../types";
+
+const periodOptions: Array<{ label: string; value: InterestPeriod }> = [
+  { label: "오늘", value: "today" },
+  { label: "이번주", value: "week" },
+  { label: "이번달", value: "month" },
+  { label: "올해", value: "year" },
+];
 
 export default function CountryCourseInterestManageClient() {
   const [period, setPeriod] = useState<InterestPeriod>("month");
@@ -38,9 +45,10 @@ export default function CountryCourseInterestManageClient() {
           description="어떤 나라·강의에 관심을 보이는가"
         />
 
-        <CountryCourseInterestPeriodFilter
+        <StatisticPeriodFilter
+          options={periodOptions}
           selectedPeriod={period}
-          onChange={setPeriod}
+          onPeriodChange={setPeriod}
         />
       </section>
 

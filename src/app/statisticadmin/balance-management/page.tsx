@@ -1,4 +1,4 @@
-import StatisticPlaceholderPage from "@/features/statisticadmin/common/components/StatisticPlaceholderPage";
+import BalanceManagementClient from "@/features/statisticadmin/balance/components/BalanceManagementClient";
 
 export const metadata = {
   title: "잔금 관리 | 알고가 통계 관리자",
@@ -6,10 +6,5 @@ export const metadata = {
 };
 
 export default function StatisticBalanceManagementPage() {
-  return (
-    <StatisticPlaceholderPage
-      title="잔금 관리"
-      description="잔금 관리 통계 화면을 준비 중입니다."
-    />
-  );
+  return <BalanceManagementClient />;
 }
