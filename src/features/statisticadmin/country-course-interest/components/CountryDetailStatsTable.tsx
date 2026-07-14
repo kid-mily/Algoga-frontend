@@ -60,7 +60,7 @@ export default function CountryDetailStatsTable({
           <tbody>
             {data.map((country) => (
               <tr
-                key={country.countryName}
+                key={country.rank}
                 className="border-b border-[#EEF0F3] text-[13px] text-[#111827]"
               >
                 <td className="px-5 py-4 font-bold text-[#2FAE9B]">
