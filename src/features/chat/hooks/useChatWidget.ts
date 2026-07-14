@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { ApiRequestError } from "@/lib/api";
 import { getMe } from "@/features/services/user.service";
 import { createDirectChatRoom, createGroupChatRoom, getChatRooms, getFriends, leaveChatRoom } from "../../services/chat.service";
 import { getTotalUnreadCount, sortRoomsByRecentMessage } from "../utils";
@@ -22,6 +23,7 @@ export const useChatWidget = ({ isAdminPage }: UseChatWidgetOptions) => {
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const [isLoadingFriends, setIsLoadingFriends] = useState(false);
   const [roomsError, setRoomsError] = useState("");
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
   const [friendsError, setFriendsError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -35,11 +37,18 @@ export const useChatWidget = ({ isAdminPage }: UseChatWidgetOptions) => {
         }
 
         setRoomsError("");
+        setIsUnauthorized(false);
 
         const data = await getChatRooms(signal);
         setRooms(sortRoomsByRecentMessage(data));
       } catch (error) {
         if (signal?.aborted) return;
+
+        if (error instanceof ApiRequestError && error.status === 401) {
+          setIsUnauthorized(true);
+          setRooms([]);
+          return;
+        }
 
         setRoomsError(
           error instanceof Error
@@ -160,17 +169,21 @@ export const useChatWidget = ({ isAdminPage }: UseChatWidgetOptions) => {
   useEffect(() => {
     if (!currentUserId || isAdminPage) return;
 
-    const intervalId = window.setInterval(() => {
-      void loadRooms(undefined, { showLoading: false });
-    }, 60000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void loadRooms(undefined, { showLoading: false });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [currentUserId, isAdminPage, loadRooms]);
 
   useEffect(() => {
-    if (!isOpen || isAdminPage) return;
+    if (!isOpen || isAdminPage || !currentUserId) return;
 
     const controller = new AbortController();
 
@@ -182,7 +195,9 @@ export const useChatWidget = ({ isAdminPage }: UseChatWidgetOptions) => {
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [isAdminPage, isOpen, loadRooms]);
+  }, [currentUserId, isAdminPage, isOpen, loadRooms]);
+
+  const isLoginRequired = !currentUserId || isUnauthorized;
 
   useEffect(() => {
     if (isAdminPage) return;
@@ -382,6 +397,9 @@ export const useChatWidget = ({ isAdminPage }: UseChatWidgetOptions) => {
   useChatNotificationSocket({
     userId: currentUserId,
     onNotification: handleRoomNotification,
+    onConnected: () => {
+      void loadRooms(undefined, { showLoading: false });
+    },
   });
 
   const handleSelectRoom = (room: ChatRoom) => {
@@ -449,6 +467,7 @@ export const useChatWidget = ({ isAdminPage }: UseChatWidgetOptions) => {
     isLoadingRooms,
     isLoadingFriends,
     roomsError,
+    isLoginRequired,
     friendsError,
     isProcessing,
     handleClose,

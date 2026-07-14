@@ -8,6 +8,7 @@ type ChatListPanelProps = {
   rooms: ChatRoom[];
   isLoading?: boolean;
   errorMessage?: string;
+  isLoginRequired?: boolean;
   onClose: () => void;
   onSelectRoom: (room: ChatRoom) => void;
   onStartDirectChat: () => void;
@@ -55,6 +56,7 @@ export default function ChatListPanel({
   rooms,
   isLoading,
   errorMessage,
+  isLoginRequired,
   onClose,
   onSelectRoom,
   onStartDirectChat,
@@ -156,6 +158,12 @@ export default function ChatListPanel({
         {isLoading ? (
           <div className="flex h-full items-center justify-center text-[14px] text-gray-400" role="status" aria-live="polite">
             채팅방을 불러오는 중입니다...
+          </div>
+        ) : isLoginRequired ? (
+          <div className="flex h-full items-center justify-center px-6 text-center text-[14px] font-medium text-[#344054]" role="status">
+            로그인이 필요한 서비스입니다.
+            <br />
+            로그인 후 다시 이용해 주세요.
           </div>
         ) : errorMessage ? (
           <div className="flex h-full items-center justify-center px-6 text-center text-[14px] text-red-500" role="alert">

@@ -42,6 +42,7 @@ function ChatWidgetContent() {
     isLoadingRooms,
     isLoadingFriends,
     roomsError,
+    isLoginRequired,
     friendsError,
     isProcessing,
     handleClose,
@@ -68,6 +69,7 @@ function ChatWidgetContent() {
               rooms={rooms}
               isLoading={isLoadingRooms}
               errorMessage={roomsError}
+              isLoginRequired={isLoginRequired}
               onClose={handleClose}
               onSelectRoom={handleSelectRoom}
               onStartDirectChat={handleStartDirectChat}
