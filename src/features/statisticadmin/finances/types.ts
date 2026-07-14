@@ -42,11 +42,6 @@ export type ChartDatum = {
   "환불": number;
 };
 
-export type SalesOverviewPeriodFilterProps = {
-  selectedPeriod: SalesOverviewPeriod;
-  onPeriodChange: (period: SalesOverviewPeriod) => void;
-};
-
 export type SummaryCard = {
   label: string;
   value: string;
