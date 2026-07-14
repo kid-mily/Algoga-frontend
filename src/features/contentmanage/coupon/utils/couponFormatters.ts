@@ -17,9 +17,7 @@ export const getIsCouponActive = (coupon: AdminCoupon) => {
 };
 
 export const formatDiscount = (coupon: AdminCoupon) => {
-  return coupon.discountType === "AMOUNT"
-    ? `${coupon.discountValue.toLocaleString("ko-KR")}원`
-    : `${coupon.discountValue}%`;
+  return `${coupon.percent}%`;
 };
 
 export const formatValidDays = (validDays?: number) => {

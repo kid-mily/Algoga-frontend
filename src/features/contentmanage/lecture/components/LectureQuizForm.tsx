@@ -2,7 +2,7 @@
 
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { createQuizAction } from "@/features/contentmanage/quiz/actions";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 
 type LectureQuizFormProps = {
   courseId: number;
@@ -37,6 +37,7 @@ export default function LectureQuizForm({
   const [explanation, setExplanation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const submitLockRef = useRef(false);
   const [fieldErrors, setFieldErrors] = useState<LectureQuizFieldErrors>(
     emptyFieldErrors
   );
@@ -75,6 +76,26 @@ export default function LectureQuizForm({
     );
     hasError = hasError || nextErrors.options.some(Boolean);
 
+    if (!nextErrors.options.some(Boolean)) {
+      const optionCounts = options.reduce<Record<string, number[]>>(
+        (counts, option, index) => {
+          const key = option.trim();
+          counts[key] = [...(counts[key] ?? []), index];
+          return counts;
+        },
+        {}
+      );
+
+      Object.values(optionCounts).forEach((indexes) => {
+        if (indexes.length <= 1) return;
+        indexes.forEach((index) => {
+          nextErrors.options[index] =
+            "같은 보기는 중복해서 입력할 수 없습니다.";
+          hasError = true;
+        });
+      });
+    }
+
     if (correctOption < 1 || correctOption > 4) {
       nextErrors.correctOption = "정답은 1번부터 4번 중 선택해야 합니다.";
       hasError = true;
@@ -90,7 +111,9 @@ export default function LectureQuizForm({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (submitLockRef.current) return;
     if (!validateForm()) return;
+    submitLockRef.current = true;
 
     try {
       setIsSubmitting(true);
@@ -110,6 +133,7 @@ export default function LectureQuizForm({
         error instanceof Error ? error.message : "퀴즈 등록에 실패했습니다."
       );
     } finally {
+      submitLockRef.current = false;
       setIsSubmitting(false);
     }
   };
