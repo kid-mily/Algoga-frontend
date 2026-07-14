@@ -1,0 +1,57 @@
+export type InterestPeriod = "today" | "week" | "month" | "year";
+
+export type InterestSummary = {
+  totalEnrollmentCount: number;
+  averageCompletionRate: number;
+  riskyCourseCount: number;
+};
+
+export type CountryInterestItem = {
+  countryName: string;
+  enrollmentCount: number;
+};
+
+export type CourseInterestItem = {
+  courseTitle: string;
+  enrollmentCount: number;
+};
+
+export type CountryDetailStat = {
+  rank: number;
+  countryName: string;
+  bookingCount: number;
+  grossRevenue: number;
+  netRevenue: number;
+  refundRate: number;
+  balanceConversionRate: number;
+  cancelRate: number;
+  share: number;
+};
+
+export type CourseCompletionStat = {
+  courseId: number;
+  courseTitle: string;
+  countryName: string;
+  enrollmentCount: number;
+  averageProgressRate: number;
+  completionRate: number;
+  averageWatchHours: number;
+  completionStatus: "NORMAL" | "WARNING" | "RISK";
+};
+
+export type PopularCountryCourseRank = {
+  rank: number;
+  courseTitle: string;
+  countryName: string;
+  enrollmentCount: number;
+  completionRate: number;
+};
+
+export type CountryCourseInterestData = {
+  summary: InterestSummary;
+  countries: CountryInterestItem[];
+  courses: CourseInterestItem[];
+  countryDetails: CountryDetailStat[];
+  courseCompletions: CourseCompletionStat[];
+  popularCourseRanks: PopularCountryCourseRank[];
+};

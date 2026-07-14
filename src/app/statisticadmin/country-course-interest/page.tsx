@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import CountryCourseInterestManageClient from "@/features/statisticadmin/country-course-interest/components/CountryCourseInterestManageClient";
 
 export const metadata: Metadata = {
   title: "나라·강의별 관심도 | 알고가 통계 관리자",
@@ -10,11 +11,5 @@ export const metadata: Metadata = {
 };
 
 export default function StatisticCountryCourseInterestPage() {
-  return (
-    <main aria-labelledby="country-course-interest-title">
-      <h1 id="country-course-interest-title" className="text-[26px] font-bold text-[#111827]">
-        나라·강의별 관심도
-      </h1>
-    </main>
-  );
+  return <CountryCourseInterestManageClient />;
 }
