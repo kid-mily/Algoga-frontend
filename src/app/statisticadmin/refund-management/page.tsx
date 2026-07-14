@@ -1,4 +1,4 @@
-import StatisticPlaceholderPage from "@/features/statisticadmin/common/components/StatisticPlaceholderPage";
+import RefundManagementClient from "@/features/statisticadmin/refund/components/RefundManagementClient";
 
 export const metadata = {
   title: "환불 관리 | 알고가 통계 관리자",
@@ -6,10 +6,5 @@ export const metadata = {
 };
 
 export default function StatisticRefundManagementPage() {
-  return (
-    <StatisticPlaceholderPage
-      title="환불 관리"
-      description="환불 관리 통계 화면을 준비 중입니다."
-    />
-  );
+  return <RefundManagementClient />;
 }

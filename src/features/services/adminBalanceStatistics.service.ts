@@ -50,7 +50,7 @@ type RawOutstandingReservation = {
 };
 
 const normalizeBalanceSummary = (raw: RawBalanceSummary): BalanceSummary => ({
-  conversionRate: (raw.balanceConversionRate ?? 0) * 100,
+  conversionRate: raw.balanceConversionRate ?? 0,
   outstandingAmount: raw.outstandingAmount ?? 0,
   depositPaidCount: raw.depositPaidCount ?? 0,
   fullPaidCount: raw.fullPaidCount ?? 0,
@@ -63,7 +63,7 @@ const normalizeRecoveryRates = (
 ): RecoveryRatePoint[] =>
   curve.map((point) => ({
     day: point.daysSinceDeposit ?? 0,
-    rate: (point.cumulativePaidRate ?? 0) * 100,
+    rate: point.cumulativePaidRate ?? 0,
   }));
 
 const normalizeCountryConversions = (
@@ -71,7 +71,7 @@ const normalizeCountryConversions = (
 ): CountryBalanceConversion[] =>
   byCountry.map((item) => ({
     countryName: item.countryName,
-    conversionRate: (item.conversionRate ?? 0) * 100,
+    conversionRate: item.conversionRate ?? 0,
     depositPaidCount: item.depositPaidCount ?? 0,
     fullPaidCount: item.fullPaidCount ?? 0,
   }));
