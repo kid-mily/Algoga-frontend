@@ -1,14 +1,10 @@
 import { Download, Search } from "lucide-react";
 import { downloadInterestLecturesCsv } from "@/features/services/adminInterestStatistics.service";
 import type { PopularCountryCourseRank } from "../types";
+import { getCompletionStatusStyle } from "../utils";
 
 type PopularCountryCourseRankingTableProps = {
   data: PopularCountryCourseRank[];
-};
-
-const getCompletionColor = (completionRate: number) => {
-  if (completionRate < 40) return "text-[#F59E0B]";
-  return "text-[#2FAE9B]";
 };
 
 export default function PopularCountryCourseRankingTable({
@@ -50,42 +46,59 @@ export default function PopularCountryCourseRankingTable({
         </header>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] table-fixed border-collapse">
+          <table className="w-full min-w-[1000px] table-fixed border-collapse">
             <thead className="bg-[#F7F8FA]">
               <tr className="text-left text-[12px] font-semibold text-[#667085]">
-                <th className="w-[8%] px-5 py-3">순위</th>
-                <th className="w-[36%] px-5 py-3">강의명</th>
-                <th className="w-[22%] px-5 py-3">나라</th>
-                <th className="w-[17%] px-5 py-3">수강자 수</th>
-                <th className="w-[17%] px-5 py-3">수료율</th>
+                <th className="w-[7%] px-5 py-3">순위</th>
+                <th className="w-[29%] px-5 py-3">강의명</th>
+                <th className="w-[18%] px-5 py-3">나라</th>
+                <th className="w-[14%] px-5 py-3">수강자 수</th>
+                <th className="w-[16%] px-5 py-3">평균 진도율</th>
+                <th className="w-[16%] px-5 py-3">수료율</th>
               </tr>
             </thead>
 
             <tbody>
-              {data.map((course) => (
-                <tr
-                  key={`${course.rank}-${course.courseTitle}`}
-                  className="border-b border-[#EEF0F3] text-[13px] text-[#111827]"
-                >
-                  <td className="px-5 py-4 font-bold text-[#2FAE9B]">
-                    #{course.rank}
-                  </td>
-                  <td className="px-5 py-4 font-semibold">
-                    {course.courseTitle}
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="rounded-full bg-[#E8F7F3] px-3 py-1 text-[12px] font-bold text-[#2FAE9B]">
-                      {course.countryName}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 font-bold">
-                    {course.enrollmentCount.toLocaleString()}명
-                  </td>
-                  <td className={`px-5 py-4 font-bold ${getCompletionColor(course.completionRate)}`}>
-                    {course.completionRate}%
-                  </td>
-                </tr>
-              ))}
+              {data.map((course) => {
+                const status = getCompletionStatusStyle(course.completionStatus);
+
+                return (
+                  <tr
+                    key={`${course.rank}-${course.courseTitle}`}
+                    className="border-b border-[#EEF0F3] text-[13px] text-[#111827]"
+                  >
+                    <td className="px-5 py-4 font-bold text-[#2FAE9B]">
+                      #{course.rank}
+                    </td>
+                    <td className="px-5 py-4 font-semibold">
+                      {course.courseTitle}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="rounded-full bg-[#E8F7F3] px-3 py-1 text-[12px] font-bold text-[#2FAE9B]">
+                        {course.countryName}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 font-bold">
+                      {course.enrollmentCount.toLocaleString()}명
+                    </td>
+                    <td className="px-5 py-4 text-[#667085]">
+                      {course.averageProgressRate}%
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`font-bold ${status.valueClassName}`}>
+                        {course.completionRate}%
+                      </span>
+                      {status.label ? (
+                        <span
+                          className={`ml-2 rounded-[6px] px-2 py-1 text-[11px] font-bold ${status.className}`}
+                        >
+                          {status.label}
+                        </span>
+                      ) : null}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

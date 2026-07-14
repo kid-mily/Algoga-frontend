@@ -1,38 +1,13 @@
 import { Download, Search } from "lucide-react";
 import { downloadCourseEnrollmentCsv } from "@/features/services/adminInterestStatistics.service";
 import type { CourseCompletionStat } from "../types";
+import { getCompletionStatusStyle } from "../utils";
 
 type CourseCompletionAnalysisTableProps = {
   data: CourseCompletionStat[];
   keyword: string;
   isLoading?: boolean;
   onKeywordChange: (keyword: string) => void;
-};
-
-const getCompletionStatus = (
-  completionStatus: CourseCompletionStat["completionStatus"]
-) => {
-  if (completionStatus === "RISK") {
-    return {
-      label: "점검필요",
-      className: "bg-[#FEEEEE] text-[#EF4444]",
-      valueClassName: "text-[#EF4444]",
-    };
-  }
-
-  if (completionStatus === "WARNING") {
-    return {
-      label: "주의",
-      className: "bg-[#FFF4D8] text-[#F59E0B]",
-      valueClassName: "text-[#F59E0B]",
-    };
-  }
-
-  return {
-    label: "",
-    className: "",
-    valueClassName: "text-[#2FAE9B]",
-  };
 };
 
 export default function CourseCompletionAnalysisTable({
@@ -127,7 +102,7 @@ export default function CourseCompletionAnalysisTable({
                 </tr>
               ) : (
                 data.map((course) => {
-                  const status = getCompletionStatus(course.completionStatus);
+                  const status = getCompletionStatusStyle(course.completionStatus);
 
                   return (
                     <tr

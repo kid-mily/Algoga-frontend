@@ -11,18 +11,19 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { downloadInflowChannelsCsv } from "@/features/services/adminUserStatistics.service";
 import { SignupPathChannelRevenue } from "../types";
 import { formatWon } from "../utils";
 
 type SignupPathNetSalesBarChartProps = {
   channelRevenue: SignupPathChannelRevenue[];
   isLoading: boolean;
+  onDownloadCsv: () => void;
 };
 
 export default function SignupPathNetSalesBarChart({
   channelRevenue,
   isLoading,
+  onDownloadCsv,
 }: SignupPathNetSalesBarChartProps) {
   return (
     <section className="rounded-[16px] border border-[#E4E7EC] bg-white">
@@ -32,7 +33,7 @@ export default function SignupPathNetSalesBarChart({
         </h2>
         <button
           type="button"
-          onClick={() => void downloadInflowChannelsCsv()}
+          onClick={onDownloadCsv}
           className="flex h-[32px] cursor-pointer items-center gap-1.5 rounded-[10px] border border-[#E4E7EC] bg-white px-3 text-[12px] font-semibold text-[#667085]"
         >
           <Download aria-hidden="true" className="h-[14px] w-[14px]" />

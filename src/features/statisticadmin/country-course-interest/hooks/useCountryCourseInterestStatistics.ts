@@ -1,19 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  getCountryProfitList,
   getCourseEnrollmentStatistics,
   getInterestCountries,
   getInterestLectures,
   getInterestSummary,
-  toCountryInterestItems,
 } from "@/features/services/adminInterestStatistics.service";
 import type {
   CountryDetailStat,
   CountryInterestItem,
   CourseInterestItem,
   CourseCompletionStat,
+  InterestPeriod,
   InterestSummary,
   PopularCountryCourseRank,
 } from "../types";
+import { getInterestDateRange } from "../utils";
 
 const emptySummary: InterestSummary = {
   totalEnrollmentCount: 0,
@@ -22,7 +24,9 @@ const emptySummary: InterestSummary = {
 };
 
 export const useCountryCourseInterestStatistics = () => {
+  const [period, setPeriod] = useState<InterestPeriod>("month");
   const [summary, setSummary] = useState<InterestSummary>(emptySummary);
+  const [countries, setCountries] = useState<CountryInterestItem[]>([]);
   const [countryDetails, setCountryDetails] = useState<CountryDetailStat[]>([]);
   const [courseCompletions, setCourseCompletions] = useState<
     CourseCompletionStat[]
@@ -35,6 +39,9 @@ export const useCountryCourseInterestStatistics = () => {
   const [isCourseLoading, setIsCourseLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const query = useMemo(() => getInterestDateRange(period), [period]);
+
+  // 기간 필터를 지원하지 않는 API들은 최초 1회만 조회합니다.
   useEffect(() => {
     const controller = new AbortController();
 
@@ -57,7 +64,7 @@ export const useCountryCourseInterestStatistics = () => {
         if (controller.signal.aborted) return;
 
         setSummary(summaryData);
-        setCountryDetails(countriesData);
+        setCountries(countriesData);
         setPopularCourseRanks(lecturesData.slice(0, 10));
         setCourseCompletions(enrollmentsData);
       } catch (loadError: unknown) {
@@ -81,6 +88,37 @@ export const useCountryCourseInterestStatistics = () => {
       controller.abort();
     };
   }, []);
+
+  // 나라별 상세 통계(country-profit)는 from/to가 필수라 선택된 기간이 바뀔 때마다 다시 조회합니다.
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const load = async () => {
+      try {
+        setError("");
+
+        const profitData = await getCountryProfitList(query, controller.signal);
+
+        if (controller.signal.aborted) return;
+
+        setCountryDetails(profitData);
+      } catch (loadError: unknown) {
+        if (controller.signal.aborted) return;
+
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "나라별 상세 통계를 불러오지 못했습니다."
+        );
+      }
+    };
+
+    void load();
+
+    return () => {
+      controller.abort();
+    };
+  }, [query]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -127,11 +165,6 @@ export const useCountryCourseInterestStatistics = () => {
     };
   }, [courseKeyword]);
 
-  const countries: CountryInterestItem[] = useMemo(
-    () => toCountryInterestItems(countryDetails),
-    [countryDetails]
-  );
-
   const courses: CourseInterestItem[] = useMemo(
     () =>
       popularCourseRanks.map((course) => ({
@@ -142,6 +175,9 @@ export const useCountryCourseInterestStatistics = () => {
   );
 
   return {
+    period,
+    setPeriod,
+    query,
     summary,
     countries,
     courses,

@@ -1,9 +1,9 @@
 import { Download, Search } from "lucide-react";
-import { downloadCountryProfitCsv } from "@/features/services/adminInterestStatistics.service";
 import type { CountryDetailStat } from "../types";
 
 type CountryDetailStatsTableProps = {
   data: CountryDetailStat[];
+  onDownloadCsv: () => void;
 };
 
 const formatNumber = (value: number) => Number(value ?? 0).toLocaleString();
@@ -12,6 +12,7 @@ const formatRate = (rate: number) => `${Number(rate ?? 0)}%`;
 
 export default function CountryDetailStatsTable({
   data,
+  onDownloadCsv,
 }: CountryDetailStatsTableProps) {
   return (
     <article className="overflow-hidden rounded-[18px] bg-white shadow-sm">
@@ -33,7 +34,7 @@ export default function CountryDetailStatsTable({
 
           <button
             type="button"
-            onClick={() => void downloadCountryProfitCsv()}
+            onClick={onDownloadCsv}
             className="flex h-9 items-center gap-1 rounded-[10px] border border-[#E4E7EC] px-3 text-[12px] font-semibold text-[#667085]"
           >
             <Download size={14} />

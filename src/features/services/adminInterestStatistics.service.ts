@@ -3,6 +3,7 @@ import type {
   CountryDetailStat,
   CourseCompletionStat,
   CountryInterestItem,
+  InterestQuery,
   InterestSummary,
   PopularCountryCourseRank,
 } from "@/features/statisticadmin/country-course-interest/types";
@@ -16,20 +17,20 @@ type RawInterestSummary = {
 };
 
 type RawInterestCountry = {
+  country: string;
+  enrollCount: number;
+};
+
+type RawCountryProfit = {
   countryId: number;
   countryName: string;
-  bookingCount?: number;
-  reservationCount?: number;
-  enrollCount?: number;
-  enrollmentCount?: number;
-  grossRevenue?: number;
-  salesAmount?: number;
-  totalRevenue?: number;
-  netRevenue?: number;
-  refundRate?: number;
-  balanceConversionRate?: number;
-  cancelRate?: number;
-  share?: number;
+  bookingCount: number;
+  grossRevenue: number;
+  netRevenue: number;
+  refundRate: number;
+  balanceConversionRate: number;
+  cancelRate: number;
+  share: number;
 };
 
 type RawInterestLecture = {
@@ -37,7 +38,9 @@ type RawInterestLecture = {
   lectureTitle: string;
   country: string;
   enrollCount: number;
+  averageProgressRate: number;
   completionRate: number;
+  completionStatus: "NORMAL" | "WARNING" | "RISK";
 };
 
 type RawCourseEnrollment = {
@@ -108,9 +111,10 @@ export const getInterestSummary = async (
   };
 };
 
+// 나라별 수강 신청 수 (수강자 내림차순) — 국가별 수강자 수 Top 10 바차트용
 export const getInterestCountries = async (
   signal?: AbortSignal
-): Promise<CountryDetailStat[]> => {
+): Promise<CountryInterestItem[]> => {
   const response = await adminApi.get<ApiResult<RawInterestCountry[]>>(
     "/api/v1/admin/stats/interest/countries",
     {
@@ -119,18 +123,33 @@ export const getInterestCountries = async (
     }
   );
 
+  return unwrapData(response)
+    .slice(0, 10)
+    .map((country) => ({
+      countryName: country.country,
+      enrollmentCount: toNumber(country.enrollCount),
+    }));
+};
+
+// 나라별 예약수·총매출·순매출·환불율·잔금전환율·취소율·점유율 — 국가별 상세 통계 테이블용
+export const getCountryProfitList = async (
+  { from, to }: InterestQuery,
+  signal?: AbortSignal
+): Promise<CountryDetailStat[]> => {
+  const response = await adminApi.get<ApiResult<RawCountryProfit[]>>(
+    "/api/v1/admin/stats/country-profit",
+    {
+      params: { from, to },
+      signal,
+      suppressGlobalError: true,
+    }
+  );
+
   return unwrapData(response).map((country, index) => ({
     rank: index + 1,
     countryName: country.countryName,
-    bookingCount: toNumber(
-      country.bookingCount ??
-        country.reservationCount ??
-        country.enrollCount ??
-        country.enrollmentCount
-    ),
-    grossRevenue: toNumber(
-      country.grossRevenue ?? country.salesAmount ?? country.totalRevenue
-    ),
+    bookingCount: toNumber(country.bookingCount),
+    grossRevenue: toNumber(country.grossRevenue),
     netRevenue: toNumber(country.netRevenue),
     refundRate: toNumber(country.refundRate),
     balanceConversionRate: toNumber(country.balanceConversionRate),
@@ -155,7 +174,9 @@ export const getInterestLectures = async (
     courseTitle: lecture.lectureTitle,
     countryName: lecture.country,
     enrollmentCount: toNumber(lecture.enrollCount),
+    averageProgressRate: toNumber(lecture.averageProgressRate),
     completionRate: toNumber(lecture.completionRate),
+    completionStatus: lecture.completionStatus,
   }));
 };
 
@@ -188,18 +209,11 @@ export const getCourseEnrollmentStatistics = async (
   }));
 };
 
-export const toCountryInterestItems = (
-  countries: CountryDetailStat[]
-): CountryInterestItem[] => {
-  return countries.slice(0, 10).map((country) => ({
-    countryName: country.countryName,
-    enrollmentCount: country.bookingCount,
-  }));
-};
+export const downloadCountryProfitCsv = async ({ from, to }: InterestQuery) => {
+  const params = new URLSearchParams({ from, to });
 
-export const downloadCountryProfitCsv = async () => {
   await downloadAdminCsv(
-    "/api/v1/admin/stats/country-profit/csv",
+    `/api/v1/admin/stats/country-profit/csv?${params.toString()}`,
     "country-profit.csv"
   );
 };

@@ -1,5 +1,10 @@
 export type InterestPeriod = "today" | "week" | "month" | "year";
 
+export type InterestQuery = {
+  from: string;
+  to: string;
+};
+
 export type InterestSummary = {
   totalEnrollmentCount: number;
   averageCompletionRate: number;
@@ -28,6 +33,8 @@ export type CountryDetailStat = {
   share: number;
 };
 
+export type CompletionStatus = "NORMAL" | "WARNING" | "RISK";
+
 export type CourseCompletionStat = {
   courseId: number;
   courseTitle: string;
@@ -36,7 +43,7 @@ export type CourseCompletionStat = {
   averageProgressRate: number;
   completionRate: number;
   averageWatchHours: number;
-  completionStatus: "NORMAL" | "WARNING" | "RISK";
+  completionStatus: CompletionStatus;
 };
 
 export type PopularCountryCourseRank = {
@@ -44,7 +51,9 @@ export type PopularCountryCourseRank = {
   courseTitle: string;
   countryName: string;
   enrollmentCount: number;
+  averageProgressRate: number;
   completionRate: number;
+  completionStatus: CompletionStatus;
 };
 
 export type CountryCourseInterestData = {

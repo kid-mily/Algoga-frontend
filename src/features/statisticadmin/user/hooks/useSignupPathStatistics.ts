@@ -2,13 +2,8 @@ import { useEffect, useState } from "react";
 import {
   getInflowChannelRevenue,
   getInflowSummary,
-  getSignupPathCounts,
 } from "@/features/services/adminUserStatistics.service";
-import {
-  SignupPathChannelRevenue,
-  SignupPathCount,
-  SignupPathSummary,
-} from "../types";
+import { SignupPathChannelRevenue, SignupPathSummary } from "../types";
 import {
   formatSignupPathError,
   getSignupPathDateRange,
@@ -24,27 +19,25 @@ const emptySummary: SignupPathSummary = {
 
 export const useSignupPathStatistics = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<SignupPathPeriod>("all");
-  const [pathCounts, setPathCounts] = useState<SignupPathCount[]>([]);
   const [channelRevenue, setChannelRevenue] = useState<
     SignupPathChannelRevenue[]
   >([]);
   const [summary, setSummary] = useState<SignupPathSummary>(emptySummary);
-  const [isLoadingCounts, setIsLoadingCounts] = useState(true);
-  const [isLoadingOverview, setIsLoadingOverview] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // summary/channels API는 기간 파라미터를 지원하지 않아 최초 1회만 조회합니다.
   useEffect(() => {
     const controller = new AbortController();
+    const query = getSignupPathDateRange(selectedPeriod);
 
     const load = async () => {
       try {
-        setIsLoadingOverview(true);
+        setIsLoading(true);
         setError("");
 
         const [summaryData, channels] = await Promise.all([
-          getInflowSummary(controller.signal),
-          getInflowChannelRevenue(controller.signal),
+          getInflowSummary(query, controller.signal),
+          getInflowChannelRevenue(query, controller.signal),
         ]);
 
         if (controller.signal.aborted) return;
@@ -62,47 +55,7 @@ export const useSignupPathStatistics = () => {
         );
       } finally {
         if (!controller.signal.aborted) {
-          setIsLoadingOverview(false);
-        }
-      }
-    };
-
-    void load();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  // signup-paths API는 기간 파라미터를 지원해 선택된 기간이 바뀔 때마다 다시 조회합니다.
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const load = async () => {
-      try {
-        setIsLoadingCounts(true);
-        setError("");
-
-        const counts = await getSignupPathCounts(
-          getSignupPathDateRange(selectedPeriod),
-          controller.signal
-        );
-
-        if (controller.signal.aborted) return;
-
-        setPathCounts(counts);
-      } catch (loadError: unknown) {
-        if (controller.signal.aborted) return;
-
-        setError(
-          formatSignupPathError(
-            loadError,
-            "유저 유입 경로 통계를 불러오지 못했습니다."
-          )
-        );
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoadingCounts(false);
+          setIsLoading(false);
         }
       }
     };
@@ -117,12 +70,9 @@ export const useSignupPathStatistics = () => {
   return {
     selectedPeriod,
     setSelectedPeriod,
-    pathCounts,
     channelRevenue,
     summary,
-    isLoading: isLoadingCounts || isLoadingOverview,
-    isLoadingCounts,
-    isLoadingOverview,
+    isLoading,
     error,
   };
 };
