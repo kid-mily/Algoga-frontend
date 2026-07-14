@@ -7,6 +7,7 @@ import type { RoomNotification } from "../types";
 type UseChatNotificationSocketOptions = {
   userId?: number;
   onNotification?: (notification: RoomNotification) => void;
+  onConnected?: () => void;
 };
 
 const getWebSocketUrl = () => {
@@ -54,14 +55,20 @@ const parseNotification = (body: unknown): RoomNotification | null => {
 export const useChatNotificationSocket = ({
   userId,
   onNotification,
+  onConnected,
 }: UseChatNotificationSocketOptions) => {
   const clientRef = useRef<Client | null>(null);
   const onNotificationRef = useRef(onNotification);
+  const onConnectedRef = useRef(onConnected);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     onNotificationRef.current = onNotification;
   }, [onNotification]);
+
+  useEffect(() => {
+    onConnectedRef.current = onConnected;
+  }, [onConnected]);
 
   useEffect(() => {
     if (!userId) return;
@@ -80,6 +87,8 @@ export const useChatNotificationSocket = ({
 
           onNotificationRef.current?.(notification);
         });
+
+        onConnectedRef.current?.();
       },
       onDisconnect: () => {
         setIsConnected(false);
