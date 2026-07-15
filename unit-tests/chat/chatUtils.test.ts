@@ -1,11 +1,10 @@
 import {
   getTotalUnreadCount,
   isBlankMessage,
-  isMyMessage,
   isValidChatMessage,
   sortRoomsByRecentMessage,
 } from "@/features/chat/utils";
-import type { ChatMessage, ChatRoom } from "@/features/chat/types";
+import type { ChatRoom } from "@/features/chat/types";
 
 const createRoom = (room: Partial<ChatRoom>): ChatRoom => ({
   roomId: room.roomId ?? 1,
@@ -16,17 +15,6 @@ const createRoom = (room: Partial<ChatRoom>): ChatRoom => ({
   lastMessageAt: room.lastMessageAt ?? null,
   unreadCount: room.unreadCount,
   memberCount: room.memberCount,
-});
-
-const createMessage = (message: Partial<ChatMessage>): ChatMessage => ({
-  messageId: message.messageId ?? 1,
-  roomId: message.roomId ?? 1,
-  senderId: message.senderId,
-  senderNickname: message.senderNickname ?? "김알고",
-  senderProfileImageUrl: message.senderProfileImageUrl ?? null,
-  content: message.content ?? "안녕하세요",
-  createdAt: message.createdAt ?? "2026-06-29T10:00:00",
-  unreadCount: message.unreadCount,
 });
 
 describe("채팅 유틸 함수 단위 테스트", () => {
@@ -56,24 +44,6 @@ describe("채팅 유틸 함수 단위 테스트", () => {
     ];
 
     expect(getTotalUnreadCount(rooms)).toBe(5);
-  });
-
-  test("내가 보낸 메시지인지 판단한다", () => {
-    const message = createMessage({ senderId: 10 });
-
-    expect(isMyMessage(message, 10)).toBeTruthy();
-  });
-
-  test("다른 사람이 보낸 메시지는 내 메시지가 아니다", () => {
-    const message = createMessage({ senderId: 20 });
-
-    expect(isMyMessage(message, 10)).toBeFalsy();
-  });
-
-  test("현재 사용자 ID가 없으면 내 메시지가 아니다", () => {
-    const message = createMessage({ senderId: 10 });
-
-    expect(isMyMessage(message)).toBeFalsy();
   });
 
   test("최근 메시지 시간이 최신인 채팅방이 먼저 온다", () => {

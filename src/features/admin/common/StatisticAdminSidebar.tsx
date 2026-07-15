@@ -1,24 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { adminLogout } from "@/features/services/adminAuth.service";
 import { getCurrentAdminDisplayInfo } from "@/features/admin/auth/services/adminDisplay";
-import { clearAdminSessionActive } from "@/features/admin/auth/services/adminSession";
+import AdminSidebarShell, {
+  type AdminSidebarMenuSection,
+} from "./AdminSidebarShell";
 
-type StatisticMenuItem = {
-  name: string;
-  href: string;
-  icon: string;
-  activeIcon: string;
-};
-
-type StatisticMenuSection = {
-  label?: string;
-  items: StatisticMenuItem[];
-};
-
-const menuSections: StatisticMenuSection[] = [
+const menuSections: AdminSidebarMenuSection[] = [
   {
     items: [
       {
@@ -95,109 +82,19 @@ const menuSections: StatisticMenuSection[] = [
 ];
 
 export default function StatisticAdminSidebar() {
-  const pathname = usePathname();
   const adminInfo = getCurrentAdminDisplayInfo("STATISTICS_MANAGER");
 
-  const handleLogout = async () => {
-    try {
-      await adminLogout();
-    } finally {
-      clearAdminSessionActive();
-      window.location.replace("/auth/adminlogin");
-    }
-  };
-
   return (
-    <aside className="flex w-[240px] shrink-0 flex-col border-r border-[#E4E7EC] bg-white">
-      <header className="flex h-[77px] items-center gap-3 border-b border-[#E4E7EC] px-6">
-        <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#6FA8A5] text-[14px] font-semibold text-white">
-          ST
-        </div>
-
-        <span className="whitespace-nowrap text-[18px] font-semibold text-[#111827]">
-          Statistics Admin
-        </span>
-      </header>
-
-      <nav className="flex-1 px-4 py-6" aria-label="통계 관리자 메뉴">
-        {menuSections.map((section, sectionIndex) => (
-          <div
-            key={section.label ?? section.items[0]?.href ?? sectionIndex}
-            className={sectionIndex === 0 ? "" : "mt-6"}
-          >
-            {section.label ? (
-              <p className="mb-2 px-4 text-[12px] font-semibold text-[#98A2B3]">
-                {section.label}
-              </p>
-            ) : null}
-
-            <ul className="space-y-2">
-              {section.items.map((menu) => {
-                const isActive =
-                  pathname === menu.href || pathname.startsWith(`${menu.href}/`);
-
-                return (
-                  <li key={menu.href}>
-                    <Link
-                      href={menu.href}
-                      aria-current={isActive ? "page" : undefined}
-                      className={`flex items-center gap-3 rounded-[12px] px-4 py-3 text-[15px] transition ${
-                        isActive
-                          ? "bg-[#E7F4EC] font-semibold text-[#439A97]"
-                          : "text-[#344054] hover:bg-[#F5F7FA]"
-                      }`}
-                    >
-                      <img
-                        src={isActive ? menu.activeIcon : menu.icon}
-                        alt=""
-                        aria-hidden="true"
-                        className="h-[19px] w-[19px]"
-                      />
-                      {menu.name}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
-      </nav>
-
-      <footer className="border-t border-[#E4E7EC] p-4">
-        <button
-          type="button"
-          onClick={() => void handleLogout()}
-          className="flex w-full items-center gap-3 rounded-[12px] px-4 py-3 text-left text-[15px] text-[#344054] hover:bg-[#F5F7FA]"
-        >
-          <img
-            src="/images/home.svg"
-            alt=""
-            aria-hidden="true"
-            className="h-[19px] w-[19px]"
-          />
-          로그아웃
-        </button>
-
-        <div className="mt-6 flex items-center gap-3 px-4">
-          <div className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#6FA8A5] text-white">
-            <img
-              src="/images/profile.svg"
-              alt=""
-              aria-hidden="true"
-              className="h-[18px] w-[18px]"
-            />
-          </div>
-
-          <div className="min-w-0">
-            <p className="truncate text-[14px] font-semibold text-[#111827]">
-              {adminInfo.name}
-            </p>
-            <p className="truncate text-[13px] text-[#98A2B3]">
-              {adminInfo.email}
-            </p>
-          </div>
-        </div>
-      </footer>
-    </aside>
+    <AdminSidebarShell
+      badgeInitial="ST"
+      title="Statistics Admin"
+      navLabel="통계 관리자 메뉴"
+      sections={menuSections}
+      adminName={adminInfo.name}
+      adminEmail={adminInfo.email}
+      asideClassName="flex w-[240px] shrink-0 flex-col border-r border-[#E4E7EC] bg-white"
+      headerClassName="flex h-[77px] items-center gap-3 border-b border-[#E4E7EC] px-6"
+      titleClassName="whitespace-nowrap text-[18px] font-semibold text-[#111827]"
+    />
   );
 }

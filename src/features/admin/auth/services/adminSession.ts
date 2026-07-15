@@ -14,7 +14,7 @@ const roleLabels: Record<string, string> = {
   SUPER_ADMIN: "슈퍼 관리자",
 };
 
-const normalizeRole = (role?: string | null) => {
+export const normalizeRole = (role?: string | null) => {
   return role?.replace(/^ROLE_/, "").toUpperCase() || "";
 };
 
@@ -24,7 +24,7 @@ const getRoleLabel = (role?: string | null) => {
   return roleLabels[normalizedRole] || "관리자";
 };
 
-const getInitial = (name: string) => {
+export const getInitial = (name: string) => {
   return name.trim().charAt(0).toUpperCase() || "?";
 };
 

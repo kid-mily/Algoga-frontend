@@ -1,4 +1,4 @@
-import CommunityPost from "@/features/community/components/PostDetail/CommunityPost";
+import CommunityPostDetail from "@/features/community/components/PostDetail/CommunityPostDetail";
 
 type CommunityPostDetailPageProps = {
   params: Promise<{
@@ -11,5 +11,5 @@ export default async function CommunityPostDetailPage({
 }: CommunityPostDetailPageProps) {
   const { postid } = await params;
 
-  return <CommunityPost postId={Number(postid)} />;
+  return <CommunityPostDetail postId={Number(postid)} />;
 }

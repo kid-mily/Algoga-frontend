@@ -1,7 +1,8 @@
 ﻿// 특정 채팅방 웹소켓 연결 담당
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Client, type IMessage } from "@stomp/stompjs";
+import { Client } from "@stomp/stompjs";
 import { normalizeChatMessage } from "../../services/chat.service";
+import { getWebSocketUrl, parseBody } from "../socket";
 import type { ChatMessage, ReadEvent, TypingEvent } from "../types";
 
 type UseChatSocketOptions = {
@@ -21,29 +22,6 @@ const getNumber = (record: RawRecord, keys: string[], fallback = 0) => {
   const numberValue = typeof value === "number" ? value : Number(value);
 
   return Number.isFinite(numberValue) ? numberValue : fallback;
-};
-
-const getWebSocketUrl = () => {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  if (!apiUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL 환경변수가 설정되지 않았습니다.");
-  }
-
-  const url = new URL(apiUrl);
-  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-  url.pathname = "/ws/chat";
-  url.search = "";
-
-  return url.toString();
-};
-
-const parseBody = (message: IMessage): unknown => {
-  try {
-    return JSON.parse(message.body) as unknown;
-  } catch {
-    return null;
-  }
 };
 
 // 채팅 읽었는지 확인

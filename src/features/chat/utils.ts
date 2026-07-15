@@ -1,4 +1,4 @@
-import type { ChatMessage, ChatRoom } from "./types";
+import type { ChatRoom } from "./types";
 
 export const isBlankMessage = (message: string) => {
   return !message.trim();
@@ -10,7 +10,7 @@ export const isValidChatMessage = (message: string) => {
   return trimmedMessage.length > 0 && trimmedMessage.length <= 300;
 };
 
-export const getRoomSortTime = (room: ChatRoom) => {
+const getRoomSortTime = (room: ChatRoom) => {
   const value = room.lastMessageAt;
   if (!value) return 0;
 
@@ -24,8 +24,4 @@ export const sortRoomsByRecentMessage = (rooms: ChatRoom[]) => {
 
 export const getTotalUnreadCount = (rooms: ChatRoom[]) => {
   return rooms.reduce((total, room) => total + (room.unreadCount ?? 0), 0);
-};
-
-export const isMyMessage = (message: ChatMessage, currentUserId?: number) => {
-  return Boolean(currentUserId && message.senderId === currentUserId);
 };

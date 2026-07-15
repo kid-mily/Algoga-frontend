@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiRequestError } from "@/lib/api";
-import { getMe } from "@/features/services/user.service";
 import { createDirectChatRoom, createGroupChatRoom, getChatRooms, getFriends, leaveChatRoom } from "../../services/chat.service";
 import { getTotalUnreadCount, sortRoomsByRecentMessage } from "../utils";
+import { useChatCurrentUser } from "./useChatCurrentUser";
 import { useChatNotificationSocket } from "./useChatNotificationSocket";
 import type { ChatMessage, ChatPanelView, ChatRoom, Friend, RoomNotification } from "../types";
 
@@ -16,7 +16,6 @@ export const useChatWidget = ({ isAdminPage }: UseChatWidgetOptions) => {
   const [isOpen, setIsOpen] = useState(false);
   const [view, setView] = useState<ChatPanelView>("list");
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<number>();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const [leaveTargetRoom, setLeaveTargetRoom] = useState<ChatRoom | null>(null);
@@ -86,62 +85,15 @@ export const useChatWidget = ({ isAdminPage }: UseChatWidgetOptions) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (isAdminPage) {
-      const timeoutId = window.setTimeout(() => {
-        setCurrentUserId(undefined);
-        setRooms([]);
-
-        window.dispatchEvent(
-          new CustomEvent(chatUnreadCountEventName, { detail: 0 })
-        );
-      }, 0);
-
-      return () => {
-        window.clearTimeout(timeoutId);
-      };
-    }
-
-    let isMounted = true;
-
-    const syncCurrentUser = async () => {
-      try {
-        const user = await getMe();
-        if (!isMounted) return;
-
-        const nextUserId =
-          user?.userId && user.userId > 0 ? user.userId : undefined;
-
-        setCurrentUserId(nextUserId);
-
-        if (!nextUserId) {
-          setRooms([]);
-
-          window.dispatchEvent(
-            new CustomEvent(chatUnreadCountEventName, { detail: 0 })
-          );
-        }
-      } catch {
-        if (!isMounted) return;
-
-        setCurrentUserId(undefined);
-        setRooms([]);
-
-        window.dispatchEvent(
-          new CustomEvent(chatUnreadCountEventName, { detail: 0 })
-        );
-      }
-    };
-
-    void syncCurrentUser();
-
-    window.addEventListener("auth-state-changed", syncCurrentUser);
-
-    return () => {
-      isMounted = false;
-      window.removeEventListener("auth-state-changed", syncCurrentUser);
-    };
-  }, [isAdminPage]);
+  const currentUserId = useChatCurrentUser({
+    isAdminPage,
+    onCleared: () => {
+      setRooms([]);
+      window.dispatchEvent(
+        new CustomEvent(chatUnreadCountEventName, { detail: 0 })
+      );
+    },
+  });
 
   useEffect(() => {
     const totalUnreadCount = getTotalUnreadCount(rooms);

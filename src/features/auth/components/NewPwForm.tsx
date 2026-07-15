@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { resetPassword } from "@/features/services/auth.service";
 import CompleteModal from "@/features/common/components/CompleteModal";
+import { passwordRegex } from "../utils/registerValidators";
 
 export default function NewPwForm() {
   const router = useRouter();
@@ -25,8 +26,6 @@ export default function NewPwForm() {
   });
 
   const getPasswordError = (value: string) => {
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-
     if (!value.trim()) {
       return "비밀번호를 입력해주세요.";
     }

@@ -6,7 +6,7 @@ import { useState } from "react";
 import CompleteModal from "@/features/common/components/CompleteModal";
 import { login } from "@/features/services/auth.service";
 import { useLoginLockTimer } from "../hooks/useLoginLockTimer";
-import { useSocialUrls } from "../hooks/useSocialUrl";
+import { useSocialUrls } from "../hooks/useSocialUrls";
 import { getErrorCode, getErrorNumber } from "../utils/authError";
 import { formatCountdown } from "../utils/formatCountdown";
 

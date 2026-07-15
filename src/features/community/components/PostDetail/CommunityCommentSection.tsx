@@ -4,6 +4,7 @@ import CommunityActionModal from "@/features/community/components/common/Communi
 import CommunityCommentForm from "@/features/community/components/PostDetail/CommunityCommentForm";
 import CommunityCommentItem from "@/features/community/components/PostDetail/CommunityCommentItem";
 import CommunityReportModal from "@/features/community/components/common/CommunityReportModal";
+import CommunityReportStatusModals from "@/features/community/components/common/CommunityReportStatusModals";
 import { useCommunityComments } from "@/features/community/hooks/useCommunityComments";
 import type { CommunityCommentSectionProps } from "../../types";
 
@@ -69,28 +70,14 @@ export default function CommunityCommentSection({
         onConfirm={handleDelete}
       />
 
-      <CommunityActionModal
-        open={isReportCompleteOpen}
-        title="댓글 신고 접수"
-        description="댓글 신고가 접수되었습니다."
-        confirmLabel="확인"
-        onConfirm={() => setIsReportCompleteOpen(false)}
-      />
-
-      <CommunityActionModal
-        open={isAlreadyReportedOpen}
-        title="이미 신고한 댓글"
-        description="이미 신고한 댓글입니다."
-        confirmLabel="확인"
-        onConfirm={() => setIsAlreadyReportedOpen(false)}
-      />
-
-      <CommunityActionModal
-        open={isLoginRequiredOpen}
-        title="로그인 필요"
-        description="로그인이 필요한 서비스입니다."
-        confirmLabel="확인"
-        onConfirm={closeLoginRequiredModal}
+      <CommunityReportStatusModals
+        targetLabel="댓글"
+        isReportCompleteOpen={isReportCompleteOpen}
+        onCloseReportComplete={() => setIsReportCompleteOpen(false)}
+        isAlreadyReportedOpen={isAlreadyReportedOpen}
+        onCloseAlreadyReported={() => setIsAlreadyReportedOpen(false)}
+        isLoginRequiredOpen={isLoginRequiredOpen}
+        onCloseLoginRequired={closeLoginRequiredModal}
       />
 
       <CommunityReportModal
