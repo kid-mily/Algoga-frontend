@@ -67,7 +67,8 @@ export const getLectureConversionDateRange = (
   };
 };
 
-// 백엔드가 나라별 평가 등급을 안 내려줘서 conversionRate 기준으로 FE에서 직접 분류합니다 (기존 목데이터 경계값 기준: 20%↑ 우수 / 10~20% 보통 / 10% 미만 저조)
+// 백엔드가 나라별 평가 등급을 안 내려줘서 conversionRate 기준으로 FE에서 직접 분류합니다
+// (기존 목데이터 경계값 기준: 20% 초과 우수 / 10% 초과 ~20% 이하 보통 / 10% 이하 저조 — 20.0%는 보통, 10.0%는 저조)
 export const getCountryEvaluation = (
   conversionRate: number
 ): CountryLectureConversion["evaluation"] => {

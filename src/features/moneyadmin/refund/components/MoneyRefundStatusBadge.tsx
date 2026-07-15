@@ -15,7 +15,7 @@ export default function MoneyRefundStatusBadge({
 }) {
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-[12px] font-bold ${
+      className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-bold ${
         statusStyle[status]
       }`}
     >

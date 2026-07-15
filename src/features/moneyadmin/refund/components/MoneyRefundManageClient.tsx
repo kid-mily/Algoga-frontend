@@ -8,7 +8,6 @@ import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import {
   approveRefund,
   completeRefund,
-  rejectRefund,
 } from "@/features/services/adminRefund.service";
 import { useMoneyRefundList } from "../hooks/useMoneyRefundList";
 import {
@@ -88,16 +87,17 @@ export default function MoneyRefundManageClient({
     if (!confirmTarget || processingId) return;
 
     const { refund, action } = confirmTarget;
-    const actionMap: Record<MoneyRefundAction, (refundId: number) => Promise<void>> = {
-      approve: approveRefund,
-      reject: rejectRefund,
-      complete: completeRefund,
-    };
 
     try {
       setProcessingId(refund.refundId);
       setError("");
-      await actionMap[action](refund.refundId);
+
+      if (action === "approve") {
+        await approveRefund(refund.refundId);
+      } else {
+        await completeRefund(refund.refundId);
+      }
+
       await loadRefunds();
       setConfirmTarget(null);
       setCompleteMessage(`${moneyRefundActionLabel[action]} 처리가 완료되었습니다.`);

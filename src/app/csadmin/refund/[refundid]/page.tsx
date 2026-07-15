@@ -26,5 +26,5 @@ export default async function RefundDetailPage({ params }: RefundDetailPageProps
     notFound();
   }
 
-  return <RefundFormClient mode="create" refundId={refundId} />;
+  return <RefundFormClient refundId={refundId} />;
 }

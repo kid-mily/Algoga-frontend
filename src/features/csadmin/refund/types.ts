@@ -1,7 +1,7 @@
 export type RefundApiStatus =
   | "REQUESTED"
-  | "REVIEWING"
-  | "IN_REVIEW"
+  | "UPPER_REVIEW"
+  | "UNDER_REVIEW"
   | "APPROVED"
   | "REJECTED"
   | "COMPLETED"
@@ -52,18 +52,21 @@ export type CsRefund = {
   paymentAmount: number;
   refundAmount: number;
   paymentMethod: string;
-  bookedAt: string;
+  // 실제 예약/결제 생성 시각. 상세 조회 시 booking/payment API에서 따로 받아오고,
+  // 그 호출이 실패하면(권한 등) 환불 요청 생성 시각으로 대체됩니다.
+  bookingCreatedAt: string;
+  paymentCreatedAt: string;
   useDate: string;
   adminMemo: string;
-  historyCount: number;
-  totalBookings: number;
 };
 
+// status: 처리 상태 select의 값. ""는 "아직 아무것도 안 골랐다"는 뜻으로, 현재 상태 라벨을
+// 그대로 넣으면 선택지 목록에 없어 select가 첫 옵션을 고른 것처럼 보이는 문제가 생겨서 분리했습니다.
 export type CsRefundFormData = {
   reason: string;
   refundAmount: string;
   adminMemo: string;
-  status: CsRefundStatus;
+  status: CsRefundStatus | "";
   rejectReason: string;
 };
 
@@ -78,11 +81,42 @@ export const refundStatusOptions: Array<CsRefundStatus | "ALL"> = [
 
 export const refundStatusLabel: Record<string, CsRefundStatus> = {
   REQUESTED: "취소 요청",
-  REVIEWING: "정산 검토중",
-  IN_REVIEW: "정산 검토중",
+  UPPER_REVIEW: "정산 검토중",
+  UNDER_REVIEW: "정산 검토중",
   APPROVED: "환불 승인",
   REJECTED: "반려",
   COMPLETED: "환불 완료",
+};
+
+// CS매니저 화면 전용: 최초 요청(REQUESTED) 단계에서만 CS 권한 액션(검토 요청/반려)이 있습니다.
+// 정산 검토로 넘어간 뒤에는 정산매니저 화면이 담당이라 CS매니저 쪽엔 더 이상 액션이 없습니다.
+export const getCsNextStatusOptions = (
+  statusCode: RefundApiStatus
+): CsRefundStatus[] => {
+  const normalized = String(statusCode ?? "").trim().toUpperCase();
+
+  if (normalized === "REQUESTED") {
+    return ["정산 검토중", "반려"];
+  }
+
+  return [];
+};
+
+// 정산매니저 화면 전용: 반려는 CS매니저 단계(REQUESTED)에서만 가능한 액션이라 정산매니저는 승인/완료만 다룹니다.
+export const getMoneyNextStatusOptions = (
+  statusCode: RefundApiStatus
+): CsRefundStatus[] => {
+  const normalized = String(statusCode ?? "").trim().toUpperCase();
+
+  if (normalized === "UPPER_REVIEW" || normalized === "UNDER_REVIEW") {
+    return ["환불 승인"];
+  }
+
+  if (normalized === "APPROVED") {
+    return ["환불 완료"];
+  }
+
+  return [];
 };
 
 export const toRefundFormData = (refund: CsRefund): CsRefundFormData => ({

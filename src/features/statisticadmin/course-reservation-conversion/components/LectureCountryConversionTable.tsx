@@ -41,7 +41,17 @@ export default function LectureCountryConversionTable({
             </tr>
           </thead>
           <tbody>
-            {data.map((country) => (
+            {data.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-6 py-12 text-center text-[13px] text-[#98A2B3]"
+                >
+                  조회된 나라별 전환 데이터가 없습니다.
+                </td>
+              </tr>
+            ) : (
+              data.map((country) => (
               <tr
                 key={country.country}
                 className="border-t border-[#EEF2F6] text-[14px] text-[#344054]"
@@ -81,7 +91,8 @@ export default function LectureCountryConversionTable({
                   </span>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>

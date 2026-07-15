@@ -3,20 +3,14 @@ import { CsRefund } from "../types";
 import CsRefundRow from "./CsRefundRow";
 import RefundStatusBadge from "./RefundStatusBadge";
 
-type RefundAction = "review" | "approve" | "reject" | "complete";
-
 type CsRefundTableProps = {
   refunds: CsRefund[];
   isLoading: boolean;
-  processingId: number | null;
-  onAction: (refundId: number, action: RefundAction) => void;
 };
 
 export default function CsRefundTable({
   refunds,
   isLoading,
-  processingId,
-  onAction,
 }: CsRefundTableProps) {
   return (
     <section
@@ -34,11 +28,11 @@ export default function CsRefundTable({
               <th scope="col" className="w-[100px] px-4 py-4">요청번호</th>
               <th scope="col" className="w-[150px] px-4 py-4">예약번호</th>
               <th scope="col" className="w-[100px] px-4 py-4">사용자명</th>
-              <th scope="col" className="px-4 py-4">상품명</th>
+              <th scope="col" className="min-w-[260px] px-4 py-4">상품명</th>
               <th scope="col" className="w-[120px] px-4 py-4">취소 요청일</th>
               <th scope="col" className="px-4 py-4">환불 사유</th>
               <th scope="col" className="w-[145px] px-4 py-4">현재 상태</th>
-              <th scope="col" className="w-[220px] px-4 py-4">관리</th>
+              <th scope="col" className="w-[96px] px-4 py-4">관리</th>
             </tr>
           </thead>
 
@@ -60,8 +54,6 @@ export default function CsRefundTable({
                 <CsRefundRow
                   key={refund.refundId}
                   refund={refund}
-                  processingId={processingId}
-                  onAction={onAction}
                 />
               ))
             )}

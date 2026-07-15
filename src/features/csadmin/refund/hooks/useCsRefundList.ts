@@ -1,25 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  approveRefund,
-  completeRefund,
-  getAdminRefunds,
-  rejectRefund,
-  requestRefundReview,
-} from "@/features/services/adminRefund.service";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { getAdminRefunds } from "@/features/services/adminRefund.service";
 import { CsRefund, CsRefundStatus } from "../types";
 
 export const useCsRefundList = (initialRefunds: CsRefund[]) => {
   const [refunds, setRefunds] = useState<CsRefund[]>(initialRefunds);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<CsRefundStatus | "ALL">("ALL");
-  const [completeOpen, setCompleteOpen] = useState(false);
-  const [completeMessage, setCompleteMessage] = useState("처리가 완료되었습니다.");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [processingId, setProcessingId] = useState<number | null>(null);
-  const inFlightRef = useRef(false);
 
   const fetchRefunds = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -79,60 +69,15 @@ export const useCsRefundList = (initialRefunds: CsRefund[]) => {
     [refunds]
   );
 
-  const runRefundAction = async (
-    refundId: number,
-    action: "review" | "approve" | "reject" | "complete"
-  ) => {
-    if (inFlightRef.current) return;
-
-    inFlightRef.current = true;
-
-    const actionMap = {
-      review: requestRefundReview,
-      approve: approveRefund,
-      reject: rejectRefund,
-      complete: completeRefund,
-    };
-    const messageMap = {
-      review: "환불 검토 요청이 완료되었습니다.",
-      approve: "환불 요청이 승인되었습니다.",
-      reject: "환불 요청이 반려되었습니다.",
-      complete: "환불 처리가 완료되었습니다.",
-    };
-
-    try {
-      setProcessingId(refundId);
-      setError("");
-      await actionMap[action](refundId);
-      await fetchRefunds();
-      setCompleteMessage(messageMap[action]);
-      setCompleteOpen(true);
-    } catch (actionError: unknown) {
-      setError(
-        actionError instanceof Error
-          ? actionError.message
-          : "환불 요청 처리에 실패했습니다."
-      );
-    } finally {
-      inFlightRef.current = false;
-      setProcessingId(null);
-    }
-  };
-
   return {
     searchKeyword,
     selectedStatus,
     filteredRefunds,
     totalCount: refunds.length,
     pendingCount,
-    completeOpen,
-    completeMessage,
     error,
     isLoading,
-    processingId,
     setSearchKeyword,
     setSelectedStatus,
-    setCompleteOpen,
-    runRefundAction,
   };
 };

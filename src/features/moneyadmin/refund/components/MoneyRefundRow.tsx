@@ -1,3 +1,4 @@
+import { getMoneyNextStatusOptions } from "@/features/csadmin/refund/types";
 import { MoneyRefund, MoneyRefundAction } from "../types";
 import { formatWon } from "../utils";
 import MoneyRefundStatusBadge from "./MoneyRefundStatusBadge";
@@ -9,10 +10,12 @@ type MoneyRefundRowProps = {
   onAction: (refund: MoneyRefund, action: MoneyRefundAction) => void;
 };
 
-const canApproveOrReject = (refund: MoneyRefund) =>
-  refund.status === "취소 요청" || refund.status === "정산 검토중";
+// 반려는 CS매니저 단계(REQUESTED)에서만 가능해서 정산매니저 화면엔 반려 버튼이 없습니다.
+const canApprove = (refund: MoneyRefund) =>
+  getMoneyNextStatusOptions(refund.statusCode).includes("환불 승인");
 
-const canComplete = (refund: MoneyRefund) => refund.status === "환불 승인";
+const canComplete = (refund: MoneyRefund) =>
+  getMoneyNextStatusOptions(refund.statusCode).includes("환불 완료");
 
 export default function MoneyRefundRow({
   refund,
@@ -43,19 +46,11 @@ export default function MoneyRefundRow({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            disabled={isActionDisabled || !canApproveOrReject(refund)}
+            disabled={isActionDisabled || !canApprove(refund)}
             onClick={() => onAction(refund, "approve")}
             className="h-[32px] rounded-[8px] bg-[#439A97] px-3 text-[12px] font-bold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
           >
             승인
-          </button>
-          <button
-            type="button"
-            disabled={isActionDisabled || !canApproveOrReject(refund)}
-            onClick={() => onAction(refund, "reject")}
-            className="h-[32px] rounded-[8px] border border-[#E4E7EC] px-3 text-[12px] font-bold text-[#344054] disabled:cursor-not-allowed disabled:text-[#98A2B3]"
-          >
-            반려
           </button>
           <button
             type="button"

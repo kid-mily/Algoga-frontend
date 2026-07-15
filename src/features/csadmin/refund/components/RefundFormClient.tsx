@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent } from "react";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import CompleteModal from "@/features/common/components/CompleteModal";
 import Modal from "@/features/common/components/Modal";
-import { refundStatusOptions, CsRefundFormData } from "../types";
+import { CsRefundFormData } from "../types";
 import { useRefundForm } from "../hooks/useRefundForm";
 import RefundStatusBadge from "./RefundStatusBadge";
 import { RefundCancelSection, RefundReservationSection } from "./RefundInfoSections";
@@ -14,15 +13,15 @@ import RefundSidePanel from "./RefundSidePanel";
 import SubHeader from "@/features/common/components/SubHeader";
 
 type RefundFormClientProps = {
-  mode: "create" | "edit";
   refundId: number;
 };
 
-export default function RefundFormClient({ mode, refundId }: RefundFormClientProps) {
+export default function RefundFormClient({ refundId }: RefundFormClientProps) {
   const router = useRouter();
   const {
     refund,
     formData,
+    nextStatusOptions,
     error,
     isLoading,
     isSubmitting,
@@ -32,28 +31,16 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
     setCompleteOpen,
     updateField,
     saveRefund,
-  } = useRefundForm(refundId, mode);
+  } = useRefundForm(refundId);
 
-  const title = mode === "create" ? "환불 검토 요청" : "환불 요청 처리";
-  const completeDescription =
-    mode === "create"
-      ? "환불 검토 요청이 완료되었습니다."
-      : "환불 요청 처리가 완료되었습니다.";
-  const statusOptions = refundStatusOptions.filter(
-    (status) => status !== "ALL" && status !== "취소 요청" && status !== "정산 검토중"
-  );
+  const hasNextAction = nextStatusOptions.length > 0;
+  const isInitialRequest = refund?.statusCode?.trim().toUpperCase() === "REQUESTED";
+  const title = isInitialRequest ? "환불 검토 요청" : "환불 요청 처리";
+  const isRejectSelected = formData.status === "반려";
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (mode === "edit") {
-      setConfirmOpen(true);
-      return;
-    }
-
-    void saveRefund().catch((saveError: unknown) => {
-      console.error("saveRefund failed:", saveError);
-    });
+    setConfirmOpen(true);
   };
 
   if (isLoading) {
@@ -102,9 +89,9 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
             <header className="bg-gradient-to-r from-[#DDF5DE] to-[#F3FBFB] px-6 py-5">
               <h2 className="text-[18px] font-bold text-[#111827]">{title}</h2>
               <p className="mt-2 text-[13px] text-[#667085]">
-                {mode === "create"
-                  ? "환불 요청을 검토 상태로 전달합니다."
-                  : "환불 요청의 처리 상태를 변경합니다."}
+                {hasNextAction
+                  ? "환불 요청의 처리 상태를 변경합니다."
+                  : "이미 처리가 종료되어 추가로 변경할 수 있는 상태가 없습니다."}
               </p>
             </header>
 
@@ -131,13 +118,13 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
                 >
                   환불 예정 금액
                 </label>
-                <div className="flex h-[44px] items-center rounded-[10px] border border-[#E4E7EC] bg-[#F9FAFB] px-4">
-                  <input
-                    id="refund-amount"
-                    value={Number(formData.refundAmount || 0).toLocaleString()}
-                    readOnly
-                    className="flex-1 bg-transparent text-[14px] outline-none"
-                  />
+                <div
+                  id="refund-amount"
+                  className="flex h-[44px] items-center rounded-[10px] border border-[#E4E7EC] bg-[#F9FAFB] px-4 text-[14px]"
+                >
+                  <span className="flex-1 text-[#111827]">
+                    {Number(formData.refundAmount || 0).toLocaleString()}
+                  </span>
                   <span className="text-[14px] text-[#344054]">원</span>
                 </div>
                 <p className="mt-2 text-[12px] text-[#667085]">
@@ -145,7 +132,7 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
                 </p>
               </div>
 
-              {mode === "edit" && (
+              {hasNextAction && (
                 <div>
                   <label
                     htmlFor="refund-status"
@@ -161,12 +148,33 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
                     }
                     className="h-[44px] w-full rounded-[10px] border border-[#E4E7EC] px-4 text-[14px] outline-none focus:border-[#639E9B]"
                   >
-                    {statusOptions.map((status) => (
+                    <option value="" disabled>
+                      선택하세요
+                    </option>
+                    {nextStatusOptions.map((status) => (
                       <option key={status} value={status}>
                         {status}
                       </option>
                     ))}
                   </select>
+                </div>
+              )}
+
+              {hasNextAction && isRejectSelected && (
+                <div>
+                  <label
+                    htmlFor="refund-reject-reason"
+                    className="mb-3 block text-[14px] font-semibold text-[#344054]"
+                  >
+                    반려 사유
+                  </label>
+                  <textarea
+                    id="refund-reject-reason"
+                    value={formData.rejectReason}
+                    onChange={(event) => updateField("rejectReason", event.target.value)}
+                    placeholder="반려 사유를 입력해주세요."
+                    className="h-[100px] w-full resize-none rounded-[10px] border border-[#E4E7EC] px-4 py-3 text-[14px] outline-none focus:border-[#639E9B]"
+                  />
                 </div>
               )}
 
@@ -176,20 +184,24 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
                   onClick={() => router.push("/csadmin/refund")}
                   className="h-[42px] rounded-[10px] border border-[#E4E7EC] bg-white px-5 text-[14px] font-semibold text-[#344054]"
                 >
-                  취소
+                  {hasNextAction ? "취소" : "목록으로"}
                 </button>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex h-[42px] items-center gap-2 rounded-[10px] bg-[#639E9B] px-5 text-[14px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
-                >
-                  {isSubmitting
-                    ? "처리 중..."
-                    : mode === "create"
-                      ? "검토 요청"
-                      : "처리 완료"}
-                </button>
+                {hasNextAction && (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex h-[42px] items-center gap-2 rounded-[10px] bg-[#639E9B] px-5 text-[14px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+                  >
+                    {isSubmitting
+                      ? "처리 중..."
+                      : formData.status === "정산 검토중"
+                        ? "검토 요청"
+                        : formData.status === "반려"
+                          ? "반려 처리"
+                          : "처리"}
+                  </button>
+                )}
               </footer>
             </form>
           </section>
@@ -216,7 +228,7 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
       <CompleteModal
         open={completeOpen}
         title="처리 완료"
-        description={completeDescription}
+        description="환불 요청 처리가 완료되었습니다."
         buttonText="확인"
         onConfirm={() => {
           setCompleteOpen(false);

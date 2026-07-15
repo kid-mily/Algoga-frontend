@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 interface ModalProps {
   open: boolean;
   title?: string;
@@ -7,6 +9,7 @@ interface ModalProps {
   confirmDisabled?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  children?: ReactNode;
 }
 
 export default function Modal({
@@ -18,6 +21,7 @@ export default function Modal({
   confirmDisabled = false,
   onConfirm,
   onCancel,
+  children,
 }: ModalProps) {
   if (!open) return null;
 
@@ -34,6 +38,8 @@ export default function Modal({
           <p className="whitespace-pre-line text-center text-[16px] leading-7 text-[#6B7280]">
             {description}
           </p>
+
+          {children && <div className="mt-4 w-full">{children}</div>}
 
           <div className="mt-8 flex w-full gap-3">
             <button

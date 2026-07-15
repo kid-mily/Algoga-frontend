@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
 import { downloadLectureCountryConversionCsv } from "@/features/services/adminLectureConversionStatistics.service";
@@ -18,8 +20,26 @@ const periodOptions = lectureConversionPeriods.map((period) => ({
 export default function LectureReservationConversionClient() {
   const { selectedPeriod, setSelectedPeriod, query, data, isLoading, error } =
     useCourseReservationConversion();
+  const [csvError, setCsvError] = useState("");
+  const [isDownloadingCsv, setIsDownloadingCsv] = useState(false);
 
-  const handleDownloadCsv = () => downloadLectureCountryConversionCsv(query);
+  const handleDownloadCsv = async () => {
+    if (isDownloadingCsv) return;
+
+    try {
+      setIsDownloadingCsv(true);
+      setCsvError("");
+      await downloadLectureCountryConversionCsv(query);
+    } catch (downloadError) {
+      setCsvError(
+        downloadError instanceof Error
+          ? downloadError.message
+          : "CSV 다운로드에 실패했습니다."
+      );
+    } finally {
+      setIsDownloadingCsv(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#F8FAFC]">
@@ -35,6 +55,8 @@ export default function LectureReservationConversionClient() {
           onPeriodChange={setSelectedPeriod}
         />
       </section>
+
+      <AdminErrorBanner message={csvError} className="mt-4" />
 
       {isLoading ? (
         <ConversionStateMessage message="강의 → 예약 전환 현황을 불러오는 중입니다..." />
