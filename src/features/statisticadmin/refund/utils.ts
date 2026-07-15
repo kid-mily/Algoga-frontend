@@ -75,14 +75,9 @@ export const formatPercent = (value: number) => `${value}%`;
 export const formatMillionAmount = (value: number) =>
   `${Math.round(value / 1000000).toLocaleString("ko-KR")}M`;
 
-export const getStatusLabel = (status: CountryRefundRateStatus) => {
-  if (status === "RISK") return "위험";
-  if (status === "WARNING") return "주의";
-  return "정상";
-};
-
+// 백엔드가 평가 문구(양호/주의/위험)를 그대로 내려줘서 라벨은 그대로 쓰고, 색상만 매핑합니다.
 export const getStatusClassName = (status: CountryRefundRateStatus) => {
-  if (status === "RISK") return "bg-[#FEEEEE] text-[#EF4444]";
-  if (status === "WARNING") return "bg-[#FFF4D8] text-[#F59E0B]";
+  if (status === "위험") return "bg-[#FEEEEE] text-[#EF4444]";
+  if (status === "주의") return "bg-[#FFF4D8] text-[#F59E0B]";
   return "bg-[#E8F7F3] text-[#2FAE9B]";
 };

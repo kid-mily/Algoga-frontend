@@ -46,12 +46,18 @@ type RawInterestLecture = {
 type RawCourseEnrollment = {
   courseId: number;
   courseTitle: string;
-  country: string;
   studentCount: number;
   averageProgressRate: number;
   completionRate: number;
-  averageWatchHours: number;
-  completionStatus: "NORMAL" | "WARNING" | "RISK";
+  averageLearningHours: number;
+};
+
+// 이 API는 completionStatus를 안 내려줘서, completionRate 기준으로 프론트에서 직접 분류합니다.
+// (interest/lectures와 같은 기준: 60%↑ 정상 / 30~59% 주의 / 30% 미만 위험)
+const getCompletionStatus = (completionRate: number): "NORMAL" | "WARNING" | "RISK" => {
+  if (completionRate >= 60) return "NORMAL";
+  if (completionRate >= 30) return "WARNING";
+  return "RISK";
 };
 
 type RawCourseEnrollmentPage = {
@@ -197,16 +203,19 @@ export const getCourseEnrollmentStatistics = async (
     }
   );
 
-  return unwrapData(response).content.map((course) => ({
-    courseId: toNumber(course.courseId),
-    courseTitle: course.courseTitle,
-    countryName: course.country,
-    enrollmentCount: toNumber(course.studentCount),
-    averageProgressRate: toNumber(course.averageProgressRate),
-    completionRate: toNumber(course.completionRate),
-    averageWatchHours: toNumber(course.averageWatchHours),
-    completionStatus: course.completionStatus,
-  }));
+  return unwrapData(response).content.map((course) => {
+    const completionRate = toNumber(course.completionRate);
+
+    return {
+      courseId: toNumber(course.courseId),
+      courseTitle: course.courseTitle,
+      enrollmentCount: toNumber(course.studentCount),
+      averageProgressRate: toNumber(course.averageProgressRate),
+      completionRate,
+      averageLearningHours: toNumber(course.averageLearningHours),
+      completionStatus: getCompletionStatus(completionRate),
+    };
+  });
 };
 
 export const downloadCountryProfitCsv = async ({ from, to }: InterestQuery) => {

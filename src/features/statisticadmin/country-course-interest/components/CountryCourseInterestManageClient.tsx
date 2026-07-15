@@ -46,12 +46,6 @@ export default function CountryCourseInterestManageClient() {
           title="나라·강의 관심도 분석"
           description="어떤 나라·강의에 관심을 보이는가"
         />
-
-        <StatisticPeriodFilter
-          options={periodOptions}
-          selectedPeriod={period}
-          onPeriodChange={setPeriod}
-        />
       </section>
 
       <AdminErrorBanner message={error} className="mt-6" />
