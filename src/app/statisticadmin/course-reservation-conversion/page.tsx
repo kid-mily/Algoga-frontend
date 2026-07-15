@@ -1,4 +1,4 @@
-import StatisticPlaceholderPage from "@/features/statisticadmin/common/components/StatisticPlaceholderPage";
+import LectureReservationConversionClient from "@/features/statisticadmin/course-reservation-conversion/components/LectureReservationConversionClient";
 
 export const metadata = {
   title: "강의 → 예약 전환 | 알고가 통계 관리자",
@@ -6,10 +6,5 @@ export const metadata = {
 };
 
 export default function StatisticCourseReservationConversionPage() {
-  return (
-    <StatisticPlaceholderPage
-      title="강의 → 예약 전환"
-      description="강의 → 예약 전환 통계 화면을 준비 중입니다."
-    />
-  );
+  return <LectureReservationConversionClient />;
 }

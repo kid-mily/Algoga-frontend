@@ -3,7 +3,6 @@
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
-import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
 import { downloadCountryProfitCsv } from "@/features/services/adminInterestStatistics.service";
 import CountryCourseInterestSummaryCards from "./CountryCourseInterestSummaryCards";
 import CountryInterestBarChart from "./CountryInterestBarChart";

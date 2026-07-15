@@ -1,11 +1,9 @@
 import { Download, Search } from "lucide-react";
 import { downloadInterestLecturesCsv } from "@/features/services/adminInterestStatistics.service";
-import type { PopularCountryCourseRank } from "../types";
+import type { PopularCountryCourseRankingTableProps } from "../types";
 import { getCompletionStatusStyle } from "../utils";
 
-type PopularCountryCourseRankingTableProps = {
-  data: PopularCountryCourseRank[];
-};
+
 
 export default function PopularCountryCourseRankingTable({
   data,

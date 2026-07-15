@@ -1,9 +1,6 @@
 import { BookOpen, TrendingUp, TriangleAlert } from "lucide-react";
-import type { InterestSummary } from "../types";
+import type { CountryCourseInterestSummaryCardsProps } from "../types";
 
-type CountryCourseInterestSummaryCardsProps = {
-  summary: InterestSummary;
-};
 
 export default function CountryCourseInterestSummaryCards({
   summary,

@@ -10,11 +10,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { CourseInterestItem } from "../types";
+import type { CourseInterestBarChartProps } from "../types";
 
-type CourseInterestBarChartProps = {
-  data: CourseInterestItem[];
-};
+
 
 export default function CourseInterestBarChart({
   data,

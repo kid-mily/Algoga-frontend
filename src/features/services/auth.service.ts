@@ -136,10 +136,3 @@ export const getAuthSession = async (
 
   return unwrapData<AuthSessionInfo>(response);
 };
-
-export const refreshAuthSession = async (): Promise<void> => {
-  await api.post("/api/v1/auth/refresh", undefined, {
-    skipAuth: true,
-    suppressGlobalError: true,
-  });
-};

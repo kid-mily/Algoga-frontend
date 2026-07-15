@@ -1,10 +1,5 @@
 import { Download, Search } from "lucide-react";
-import type { CountryDetailStat } from "../types";
-
-type CountryDetailStatsTableProps = {
-  data: CountryDetailStat[];
-  onDownloadCsv: () => void;
-};
+import type { CountryDetailStatsTableProps } from "../types";
 
 const formatNumber = (value: number) => Number(value ?? 0).toLocaleString();
 const formatMoney = (amount: number) => `${formatNumber(amount)}원`;
