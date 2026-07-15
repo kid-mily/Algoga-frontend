@@ -38,11 +38,10 @@ export type CompletionStatus = "NORMAL" | "WARNING" | "RISK";
 export type CourseCompletionStat = {
   courseId: number;
   courseTitle: string;
-  countryName: string;
   enrollmentCount: number;
   averageProgressRate: number;
   completionRate: number;
-  averageWatchHours: number;
+  averageLearningHours: number;
   completionStatus: CompletionStatus;
 };
 

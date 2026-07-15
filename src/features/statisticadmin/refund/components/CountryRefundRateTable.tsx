@@ -1,5 +1,5 @@
 import type { CountryRefundRate } from "../types";
-import { getStatusClassName, getStatusLabel } from "../utils";
+import { getStatusClassName } from "../utils";
 
 type CountryRefundRateTableProps = {
   data: CountryRefundRate[];
@@ -48,7 +48,7 @@ export default function CountryRefundRateTable({
                       item.status
                     )}`}
                   >
-                    {getStatusLabel(item.status)}
+                    {item.status}
                   </span>
                 </td>
               </tr>

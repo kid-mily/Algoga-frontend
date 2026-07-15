@@ -73,11 +73,10 @@ export default function CourseCompletionAnalysisTable({
           <table className="w-full min-w-[960px] table-fixed border-collapse">
             <thead className="bg-[#F7F8FA]">
               <tr className="text-left text-[12px] font-semibold text-[#667085]">
-                <th className="w-[25%] px-5 py-3">강의명</th>
-                <th className="w-[15%] px-5 py-3">나라</th>
-                <th className="w-[16%] px-5 py-3">수강생 수</th>
-                <th className="w-[26%] px-5 py-3">평균 진도율</th>
-                <th className="w-[18%] px-5 py-3">수료율</th>
+                <th className="w-[30%] px-5 py-3">강의명</th>
+                <th className="w-[20%] px-5 py-3">수강생 수</th>
+                <th className="w-[30%] px-5 py-3">평균 진도율</th>
+                <th className="w-[20%] px-5 py-3">수료율</th>
               </tr>
             </thead>
 
@@ -85,7 +84,7 @@ export default function CourseCompletionAnalysisTable({
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={4}
                     className="px-5 py-12 text-center text-[13px] text-[#98A2B3]"
                   >
                     강의별 수강 현황을 불러오는 중입니다...
@@ -94,7 +93,7 @@ export default function CourseCompletionAnalysisTable({
               ) : data.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={4}
                     className="px-5 py-12 text-center text-[13px] text-[#98A2B3]"
                   >
                     조회된 강의별 수강 현황이 없습니다.
@@ -111,11 +110,6 @@ export default function CourseCompletionAnalysisTable({
                     >
                       <td className="px-5 py-4 font-semibold">
                         {course.courseTitle}
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="rounded-full bg-[#F2F4F7] px-3 py-1 text-[12px] font-semibold text-[#667085]">
-                          {course.countryName}
-                        </span>
                       </td>
                       <td className="px-5 py-4 text-[#98A2B3]">
                         {course.enrollmentCount.toLocaleString()}명

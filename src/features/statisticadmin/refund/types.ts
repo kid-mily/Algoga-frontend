@@ -41,7 +41,7 @@ export type RefundReason = {
   rate: number;
 };
 
-export type CountryRefundRateStatus = "RISK" | "WARNING" | "NORMAL";
+export type CountryRefundRateStatus = "위험" | "주의" | "양호";
 
 export type CountryRefundRate = {
   countryName: string;

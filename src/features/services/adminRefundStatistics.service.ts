@@ -1,6 +1,8 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import {
   CancellationStage,
+  CountryRefundRate,
+  CountryRefundRateStatus,
   RefundManagementData,
   RefundMonthlyTrend,
   RefundQuery,
@@ -8,7 +10,6 @@ import {
   RefundTiming,
   TrendUnit,
 } from "@/features/statisticadmin/refund/types";
-import { countryRefundRatesMockData } from "@/features/statisticadmin/refund/mockData";
 
 const timingColors = ["#2FAE9B", "#F5A623", "#EC4899"];
 const cancelStageColors = ["#B8C0CC", "#F5A623", "#EC4899"];
@@ -50,6 +51,16 @@ type RawRefundReason = {
   reason: string;
   count: number;
   amount: number;
+};
+
+type RawRefundByCountry = {
+  countryId: number;
+  countryName: string;
+  bookingCount: number;
+  refundCount: number;
+  refundAmount: number;
+  refundRate: number;
+  grade: CountryRefundRateStatus;
 };
 
 const normalizeMonthlyTrends = (
@@ -102,6 +113,17 @@ const normalizeRefundReasons = (items: RawRefundReason[]): RefundReason[] => {
   }));
 };
 
+// refundRate/grade는 이미 %·평가문구로 내려옴 (×100 하지 않음)
+const normalizeCountryRefundRates = (
+  items: RawRefundByCountry[]
+): CountryRefundRate[] =>
+  items.map((item) => ({
+    countryName: item.countryName,
+    bookingCount: item.bookingCount ?? 0,
+    refundRate: item.refundRate ?? 0,
+    status: item.grade,
+  }));
+
 const getRefundSummaryRaw = (query: RefundQuery, signal?: AbortSignal) =>
   adminApi.get<ApiResult<RawRefundSummary>>(
     "/api/v1/admin/stats/refund/summary",
@@ -137,19 +159,25 @@ const getRefundReasonsRaw = (query: RefundQuery, signal?: AbortSignal) =>
     { params: query, suppressGlobalError: true, signal }
   );
 
-// 나라별 환불율(예약건수/환불율/평가)은 아직 배포 전이라, 배포될 때까지 목데이터를 그대로 씁니다.
+const getRefundByCountryRaw = (query: RefundQuery, signal?: AbortSignal) =>
+  adminApi.get<ApiResult<RawRefundByCountry[]>>(
+    "/api/v1/admin/stats/refund/by-country",
+    { params: query, suppressGlobalError: true, signal }
+  );
+
 export const getRefundManagementData = async (
   query: RefundQuery,
   unit: TrendUnit,
   signal?: AbortSignal
 ): Promise<RefundManagementData> => {
-  const [summaryRes, cancelRes, trendRes, timingRes, reasonsRes] =
+  const [summaryRes, cancelRes, trendRes, timingRes, reasonsRes, byCountryRes] =
     await Promise.all([
       getRefundSummaryRaw(query, signal),
       getCancelStatsRaw(query, signal),
       getOverviewTrendRaw(query, unit, signal),
       getRefundTimingRaw(query, signal),
       getRefundReasonsRaw(query, signal),
+      getRefundByCountryRaw(query, signal),
     ]);
 
   const summary = unwrapData(summaryRes);
@@ -166,6 +194,6 @@ export const getRefundManagementData = async (
     refundTimings: normalizeRefundTimings(unwrapData(timingRes) ?? []),
     cancellationStages: normalizeCancellationStages(cancel),
     refundReasons: normalizeRefundReasons(unwrapData(reasonsRes) ?? []),
-    countryRefundRates: countryRefundRatesMockData,
+    countryRefundRates: normalizeCountryRefundRates(unwrapData(byCountryRes) ?? []),
   };
 };

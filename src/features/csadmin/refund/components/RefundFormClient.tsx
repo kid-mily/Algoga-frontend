@@ -11,6 +11,7 @@ import { useRefundForm } from "../hooks/useRefundForm";
 import RefundStatusBadge from "./RefundStatusBadge";
 import { RefundCancelSection, RefundReservationSection } from "./RefundInfoSections";
 import RefundSidePanel from "./RefundSidePanel";
+import SubHeader from "@/features/common/components/SubHeader";
 
 type RefundFormClientProps = {
   mode: "create" | "edit";
@@ -76,16 +77,12 @@ export default function RefundFormClient({ mode, refundId }: RefundFormClientPro
     <main aria-labelledby="refund-form-title">
       <header className="mb-6 flex items-start justify-between">
         <div>
-          <Link
-            href="/csadmin/refund"
-            className="mb-3 inline-flex text-[14px] font-semibold text-[#344054]"
-          >
-            환불 요청 목록으로 돌아가기
-          </Link>
-          <h1 id="refund-form-title" className="text-[26px] font-bold text-[#111827]">
-            {title}
-          </h1>
-          <p className="mt-2 text-[14px] text-[#667085]">요청번호: {refund.id}</p>
+          <SubHeader
+            backHref="/csadmin/refund"
+            backText="환불 요청 목록으로 돌아가기"
+            title={title}
+            description={`요청번호: ${refund.id}`}
+          />
         </div>
 
         <div className="flex items-center gap-3">
