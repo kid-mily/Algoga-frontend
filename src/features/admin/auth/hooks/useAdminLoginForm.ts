@@ -2,35 +2,8 @@
 
 import { useState } from "react";
 import { markAdminSessionActive, saveAdminDisplayInfo } from "@/features/admin/auth/services/adminSession";
+import { getSafeNextPath } from "@/features/admin/auth/utils/adminRedirect";
 import { adminLogin, getAdminLoginRole, getAdminRedirectPathByRole } from "@/features/services/adminAuth.service";
-
-const ADMIN_PATH_PREFIXES = [
-  "/contentadmin",
-  "/csadmin",
-  "/moneyadmin",
-  "/statisticadmin",
-  "/superadmin",
-];
-
-const getSafeNextPath = () => {
-  const rawNext = new URLSearchParams(window.location.search).get("next");
-  if (!rawNext) return null;
-
-  try {
-    const nextUrl = new URL(rawNext, window.location.origin);
-    const isInternal = nextUrl.origin === window.location.origin;
-    const isAdminPath = ADMIN_PATH_PREFIXES.some(
-      (path) =>
-        nextUrl.pathname === path || nextUrl.pathname.startsWith(`${path}/`)
-    );
-
-    if (!isInternal || !isAdminPath) return null;
-
-    return `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
-  } catch {
-    return null;
-  }
-};
 
 export const useAdminLoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);

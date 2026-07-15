@@ -11,30 +11,15 @@ import {
   reportCommunityPost,
 } from "@/features/services/community.service";
 import { getMe } from "@/features/services/user.service";
+import {
+  getRequestErrorMessage,
+  isAlreadyReportedError,
+} from "@/features/community/utils/communityErrors";
 import type {
   CommunityPost,
   CommunityReportReasonType,
   ReactionState,
 } from "@/features/community/types";
-
-const getRequestErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof ApiRequestError) {
-    return error.message || fallback;
-  }
-
-  return error instanceof Error ? error.message : fallback;
-};
-
-const isAlreadyReportedError = (error: unknown) => {
-  const message = getRequestErrorMessage(error, "");
-  const code = error instanceof ApiRequestError ? error.code ?? "" : "";
-
-  return (
-    (error instanceof ApiRequestError && error.status === 409) ||
-    message.includes("이미 신고") ||
-    code.includes("ALREADY_REPORTED")
-  );
-};
 
 export const useCommunityPostDetail = (postId: number) => {
   const router = useRouter();

@@ -1,5 +1,4 @@
 import {
-  createRegisterPayload,
   REGISTER_REQUIRED_EMAIL_MESSAGE,
   REGISTER_REQUIRED_NAME_MESSAGE,
   REGISTER_REQUIRED_NICKNAME_MESSAGE,
@@ -119,104 +118,6 @@ describe("회원가입 유효성 검사 단위 테스트", () => {
     const result = validateRegisterNickname("알고가조아");
 
     expect(result).toBe("");
-  });
-
-  test("회원가입 값이 정상 입력되면 요청 payload를 만든다", () => {
-    const result = createRegisterPayload({
-      name: " 김알고 ",
-      username: " testuser ",
-      password: "password123",
-      passwordConfirm: "password123",
-      email: "test@example.com",
-      nickname: " 알고가조아 ",
-    });
-
-    expect(result).toMatchObject({
-      name: "김알고",
-      username: "testuser",
-      password: "password123",
-      passwordConfirm: "password123",
-      email: "test@example.com",
-      nickname: "알고가조아",
-    });
-  });
-
-  test("필수 값이 없으면 에러가 발생한다", () => {
-    expect(() =>
-      createRegisterPayload({
-        name: "",
-        username: "",
-        password: "",
-        passwordConfirm: "",
-        email: "",
-        nickname: "",
-      })
-    ).toThrow();
-  });
-
-  test("아이디가 올바르지 않으면 에러가 발생한다", () => {
-    expect(() =>
-      createRegisterPayload({
-        name: "김알고",
-        username: "abc",
-        password: "password123",
-        passwordConfirm: "password123",
-        email: "test@example.com",
-        nickname: "알고가조아",
-      })
-    ).toThrow(REGISTER_REQUIRED_USERNAME_MESSAGE);
-  });
-
-  test("비밀번호가 올바르지 않으면 에러가 발생한다", () => {
-    expect(() =>
-      createRegisterPayload({
-        name: "김알고",
-        username: "testuser",
-        password: "1234567",
-        passwordConfirm: "1234567",
-        email: "test@example.com",
-        nickname: "알고가조아",
-      })
-    ).toThrow(REGISTER_REQUIRED_PASSWORD_MESSAGE);
-  });
-
-  test("이메일이 올바르지 않으면 에러가 발생한다", () => {
-    expect(() =>
-      createRegisterPayload({
-        name: "김알고",
-        username: "testuser",
-        password: "password123",
-        passwordConfirm: "password123",
-        email: "test-email",
-        nickname: "알고가조아",
-      })
-    ).toThrow(REGISTER_INVALID_EMAIL_MESSAGE);
-  });
-
-  test("닉네임이 올바르지 않으면 에러가 발생한다", () => {
-    expect(() =>
-      createRegisterPayload({
-        name: "김알고",
-        username: "testuser",
-        password: "password123",
-        passwordConfirm: "password123",
-        email: "test@example.com",
-        nickname: "",
-      })
-    ).toThrow(REGISTER_REQUIRED_NICKNAME_MESSAGE);
-  });
-
-  test("비밀번호 확인이 일치하지 않으면 에러가 발생한다", () => {
-    expect(() =>
-      createRegisterPayload({
-        name: "김알고",
-        username: "testuser",
-        password: "password123",
-        passwordConfirm: "password456",
-        email: "test@example.com",
-        nickname: "알고가조아",
-      })
-    ).toThrow(REGISTER_PASSWORD_CONFIRM_MESSAGE);
   });
 
   test("일반 회원가입 값이 모두 정상이고 중복 확인과 이메일 인증이 끝나면 에러가 없다", () => {

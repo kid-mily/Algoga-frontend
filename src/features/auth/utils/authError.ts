@@ -15,13 +15,6 @@ export const getErrorCode = (error: unknown) => {
   return typeof code === "string" ? code : "";
 };
 
-export const getErrorMessage = (error: unknown, fallback = "") => {
-  const record = getErrorRecord(error);
-  const message = record.message;
-
-  return typeof message === "string" && message.trim() ? message : fallback;
-};
-
 export const getErrorNumber = (
   error: unknown,
   key: string,

@@ -1,55 +1,46 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { checkUsernameDuplicate, sendSignupEmailCode, verifySignupEmailCode } from "@/features/services/signup.service";
+import { useEffect, useState } from "react";
 
 import FormLabel from "@/features/common/components/FormLabel";
 
 import {  RegisterInfoFormProps  } from "../types";
-import { validateRegisterInfoForm } from "../utils/registerValidators";
+import { emailRegex, validateRegisterInfoForm } from "../utils/registerValidators";
+import { useEmailVerification } from "../hooks/useEmailVerification";
+import { useUsernameDuplicateCheck } from "../hooks/useUsernameDuplicateCheck";
 
 
-export default function RegisterInfoForm({ 
-  formData, 
-  onChange, 
-  onNext, 
-  isLoading, 
-  serverError, 
+export default function RegisterInfoForm({
+  formData,
+  onChange,
+  onNext,
+  isLoading,
+  serverError,
   setServerError,
   isSocialSignup = false,
 }: RegisterInfoFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isEtcRoute, setIsEtcRoute] = useState(formData.signupPath !== "" && !["search", "social", "friend", "ad"].includes(formData.signupPath));
-  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-  const [isUsernameChecked, setIsUsernameChecked] = useState(false);
-  const [usernameMessage, setUsernameMessage] = useState("");
-  const [isSendingEmailCode, setIsSendingEmailCode] = useState(false);
-  const [isVerifyingEmailCode, setIsVerifyingEmailCode] = useState(false);
-  const [isEmailCodeSent, setIsEmailCodeSent] = useState(false);
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
-  const [isEmailDuplicated, setIsEmailDuplicated] = useState(false);
-  const [emailCode, setEmailCode] = useState("");
-  const [emailMessage, setEmailMessage] = useState("");
-  const usernameCheckControllerRef = useRef<AbortController | null>(null);
-  const emailCodeControllerRef = useRef<AbortController | null>(null);
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const isAbortError = (error: unknown) => {
-    return error instanceof DOMException && error.name === "AbortError";
-  };
+  const usernameCheck = useUsernameDuplicateCheck();
+  const emailVerification = useEmailVerification();
 
   useEffect(() => {
     return () => {
-      usernameCheckControllerRef.current?.abort();
-      emailCodeControllerRef.current?.abort();
+      usernameCheck.reset();
+      emailVerification.reset();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const setFieldError = (field: string) => (message: string) => {
+    setErrors((prev) => ({ ...prev, [field]: message }));
+  };
 
   const validateForm = () => {
     const newErrors = validateRegisterInfoForm(formData, {
       isSocialSignup,
-      isUsernameChecked,
-      isEmailVerified,
+      isUsernameChecked: usernameCheck.isChecked,
+      isEmailVerified: emailVerification.isVerified,
     });
 
     setErrors(newErrors);
@@ -74,11 +65,8 @@ export default function RegisterInfoForm({
   };
 
   const handleUsernameChange = (value: string) => {
-    usernameCheckControllerRef.current?.abort();
-    setIsCheckingUsername(false);
+    usernameCheck.reset();
     onChange("username", value);
-    setIsUsernameChecked(false);
-    setUsernameMessage("");
 
     if (serverError?.field === "username" && setServerError) {
       setServerError({ field: "", message: "" });
@@ -86,165 +74,24 @@ export default function RegisterInfoForm({
   };
 
   const handleEmailChange = (value: string) => {
-    emailCodeControllerRef.current?.abort();
-    setIsSendingEmailCode(false);
+    emailVerification.reset();
     onChange("email", value);
-    setIsEmailCodeSent(false);
-    setIsEmailVerified(false);
-    setIsEmailDuplicated(false);
-    setEmailCode("");
-    setEmailMessage("");
 
     if (serverError?.field === "email" && setServerError) {
       setServerError({ field: "", message: "" });
     }
   };
 
-  const handleUsernameCheck = async () => {
-    const username = formData.username.trim();
-
-    if (username.length < 4 || username.length > 20) {
-      setErrors((prev) => ({
-        ...prev,
-        username: "아이디는 4자 이상 20자 이하로 입력해주세요.",
-      }));
-      return;
-    }
-
-    usernameCheckControllerRef.current?.abort();
-    const controller = new AbortController();
-    usernameCheckControllerRef.current = controller;
-
-    try {
-      setIsCheckingUsername(true);
-      setUsernameMessage("");
-      setErrors((prev) => ({ ...prev, username: "" }));
-
-      const isAvailable = await checkUsernameDuplicate(
-        username,
-        controller.signal
-      );
-
-      if (controller.signal.aborted) return;
-
-      if (!isAvailable) {
-        setIsUsernameChecked(false);
-        setUsernameMessage("");
-        setErrors((prev) => ({
-          ...prev,
-          username: "이미 사용 중인 아이디입니다.",
-        }));
-        return;
-      }
-
-      setIsUsernameChecked(true);
-      setUsernameMessage("사용 가능한 아이디입니다.");
-    } catch (error: unknown) {
-      if (isAbortError(error) || controller.signal.aborted) return;
-
-      const message =
-        error instanceof Error
-          ? error.message
-          : "아이디 중복 확인에 실패했습니다.";
-
-      setIsUsernameChecked(false);
-      setUsernameMessage("");
-      setErrors((prev) => ({
-        ...prev,
-        username: message,
-      }));
-    } finally {
-      if (!controller.signal.aborted) {
-        setIsCheckingUsername(false);
-      }
-    }
+  const handleUsernameCheck = () => {
+    void usernameCheck.check(formData.username, setFieldError("username"));
   };
 
-  const handleSendEmailCode = async () => {
-    const email = formData.email.trim();
-
-    if (!emailRegex.test(email)) {
-      setErrors((prev) => ({
-        ...prev,
-        email: "올바른 이메일 형식을 입력해주세요.",
-      }));
-      return;
-    }
-
-    emailCodeControllerRef.current?.abort();
-    const controller = new AbortController();
-    emailCodeControllerRef.current = controller;
-
-    try {
-      setIsSendingEmailCode(true);
-      setIsEmailDuplicated(false);
-      setIsEmailVerified(false);
-      setEmailCode("");
-      setEmailMessage("");
-      setErrors((prev) => ({ ...prev, email: "" }));
-
-      await sendSignupEmailCode(email, controller.signal);
-
-      if (controller.signal.aborted) return;
-
-      setIsEmailCodeSent(true);
-      setEmailMessage("인증번호를 이메일로 보냈습니다.");
-    } catch (error: unknown) {
-      if (isAbortError(error) || controller.signal.aborted) return;
-
-      const message =
-        error instanceof Error
-          ? error.message
-          : "이메일 인증번호 발송에 실패했습니다.";
-      const duplicated = /이미|가입|중복|존재|사용/.test(message);
-
-      setIsEmailCodeSent(false);
-      setIsEmailVerified(false);
-      setIsEmailDuplicated(duplicated);
-      setEmailMessage("");
-      setErrors((prev) => ({
-        ...prev,
-        email: duplicated ? "이미 가입된 이메일입니다." : message,
-      }));
-    } finally {
-      if (!controller.signal.aborted) {
-        setIsSendingEmailCode(false);
-      }
-    }
+  const handleSendEmailCode = () => {
+    void emailVerification.sendCode(formData.email, setFieldError("email"));
   };
 
-  const handleVerifyEmailCode = async () => {
-    if (!emailCode.trim()) {
-      setEmailMessage("");
-      setErrors((prev) => ({
-        ...prev,
-        emailCode: "인증번호를 입력해주세요.",
-      }));
-      return;
-    }
-
-    try {
-      setIsVerifyingEmailCode(true);
-      setErrors((prev) => ({ ...prev, emailCode: "" }));
-
-      await verifySignupEmailCode(formData.email.trim(), emailCode.trim());
-      setIsEmailVerified(true);
-      setEmailMessage("이메일 인증이 완료되었습니다.");
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "인증번호 확인에 실패했습니다.";
-
-      setIsEmailVerified(false);
-      setEmailMessage("");
-      setErrors((prev) => ({
-        ...prev,
-        emailCode: message,
-      }));
-    } finally {
-      setIsVerifyingEmailCode(false);
-    }
+  const handleVerifyEmailCode = () => {
+    void emailVerification.verifyCode(formData.email, setFieldError("emailCode"));
   };
 
   return (
@@ -281,24 +128,24 @@ export default function RegisterInfoForm({
             <button
               type="button"
               onClick={handleUsernameCheck}
-              disabled={isLoading || isCheckingUsername || !formData.username.trim()}
+              disabled={isLoading || usernameCheck.isChecking || !formData.username.trim()}
               aria-label={
-                isCheckingUsername
+                usernameCheck.isChecking
                   ? "중복 확인: 사용자 이름 검사 중"
                   : "중복 확인: 사용자 이름 검사"
               }
               className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
             >
-              {isCheckingUsername ? "확인 중" : "중복 확인"}
+              {usernameCheck.isChecking ? "확인 중" : "중복 확인"}
             </button>
           </div>
           {errors.username && <p className="mt-1 text-[13px] text-red-500">{errors.username}</p>}
-          {!errors.username && usernameMessage && (
+          {!errors.username && usernameCheck.message && (
             <p aria-live="polite" className="mt-1 text-[13px] text-[#439A97]">
-              {usernameMessage}
+              {usernameCheck.message}
             </p>
           )}
-          
+
           {/* 아이디 중복 관련 백엔드 에러 표시 */}
           {serverError?.field === "username" && !errors.username && (
             <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
@@ -363,13 +210,13 @@ export default function RegisterInfoForm({
               value={formData.email}
               onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="example@algoga.com"
-              aria-invalid={isEmailDuplicated || !!errors.email}
+              aria-invalid={emailVerification.isDuplicated || !!errors.email}
               className={`h-[35px] min-w-0 flex-1 rounded-[16px] border bg-[#F9FAFB] px-5 text-[15px] outline-none ${
-                isEmailDuplicated
+                emailVerification.isDuplicated
                   ? "border-red-500 ring-1 ring-red-100"
                   : "border-[#D0D5DD]"
               }`}
-              disabled={isLoading || isEmailVerified || (isSocialSignup && Boolean(formData.email))}
+              disabled={isLoading || emailVerification.isVerified || (isSocialSignup && Boolean(formData.email))}
             />
 
             {/* 소셜로그인 */}
@@ -379,64 +226,64 @@ export default function RegisterInfoForm({
                 onClick={handleSendEmailCode}
                 disabled={
                   isLoading ||
-                  isSendingEmailCode ||
-                  isEmailDuplicated ||
-                  isEmailVerified ||
+                  emailVerification.isSending ||
+                  emailVerification.isDuplicated ||
+                  emailVerification.isVerified ||
                   !emailRegex.test(formData.email)
                 }
                 aria-label={
-                  isSendingEmailCode
+                  emailVerification.isSending
                     ? "인증: 이메일 인증번호 발송 중"
                     : "인증: 이메일 인증번호 발송"
                 }
                 className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
               >
-                {isSendingEmailCode ? "발송 중" : isEmailCodeSent ? "재발송" : "인증"}
+                {emailVerification.isSending ? "발송 중" : emailVerification.isCodeSent ? "재발송" : "인증"}
               </button>
             )}
           </div>
 
           {/* 프론트엔드 자체 에러 (형식 등) */}
           {errors.email && <p className="mt-1 text-[13px] text-red-500">{errors.email}</p>}
-          {!errors.email && emailMessage && (
+          {!errors.email && emailVerification.message && (
             <p
               aria-live="polite"
-              className={`mt-1 text-[13px] ${isEmailVerified ? "text-[#439A97]" : "text-[#667085]"}`}
+              className={`mt-1 text-[13px] ${emailVerification.isVerified ? "text-[#439A97]" : "text-[#667085]"}`}
             >
-              {emailMessage}
+              {emailVerification.message}
             </p>
           )}
-          
+
           {/*  이메일 중복 관련 백엔드 에러 표시 */}
           {serverError?.field === "email" && !errors.email && (
             <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
           )}
 
-          {isEmailCodeSent && !isEmailVerified && !isSocialSignup && (
+          {emailVerification.isCodeSent && !emailVerification.isVerified && !isSocialSignup && (
             <div className="mt-3 flex gap-2">
               <input
                 type="text"
-                value={emailCode}
+                value={emailVerification.code}
                 onChange={(e) => {
-                  setEmailCode(e.target.value);
-                  setErrors((prev) => ({ ...prev, emailCode: "" }));
+                  emailVerification.setCode(e.target.value);
+                  setFieldError("emailCode")("");
                 }}
                 placeholder="인증번호 입력"
                 className="h-[35px] min-w-0 flex-1 rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
-                disabled={isLoading || isVerifyingEmailCode}
+                disabled={isLoading || emailVerification.isVerifying}
               />
               <button
                 type="button"
                 onClick={handleVerifyEmailCode}
-                disabled={isLoading || isVerifyingEmailCode || !emailCode.trim()}
+                disabled={isLoading || emailVerification.isVerifying || !emailVerification.code.trim()}
                 aria-label={
-                  isVerifyingEmailCode
+                  emailVerification.isVerifying
                     ? "확인: 이메일 인증번호 확인 중"
                     : "확인: 이메일 인증번호 확인"
                 }
                 className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
               >
-                {isVerifyingEmailCode ? "확인 중" : "확인"}
+                {emailVerification.isVerifying ? "확인 중" : "확인"}
               </button>
             </div>
           )}
@@ -546,7 +393,7 @@ export default function RegisterInfoForm({
       <button
         type="button"
         onClick={handleNextClick}
-        disabled={isLoading} 
+        disabled={isLoading}
         aria-label={isLoading ? "다음 단계 이동 준비 중" : "다음 단계로 이동"}
         className={`mt-8 h-[43px] w-full rounded-[18px] text-[18px] font-semibold text-white transition ${
           isLoading ? "bg-[#D0D5DD] cursor-not-allowed" : "bg-[#439A97] hover:bg-[#357c7a]"

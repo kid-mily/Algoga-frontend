@@ -1,5 +1,5 @@
-import CommunityCategoryTabs from "../main/CommunityCategory";
-import CommunityWriteButton from "../main/CommunityWriteButton";
+import CommunityCategoryTabs from "./CommunityCategory";
+import CommunityWriteButton from "./CommunityWriteButton";
 import { CommunityHeaderProps } from "../../types";
 
 export default function CommunityHeader({

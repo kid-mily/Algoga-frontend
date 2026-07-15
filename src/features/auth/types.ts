@@ -1,17 +1,4 @@
-﻿export interface User {
-  id: number;
-  username: string;
-  email: string;
-  name: string;
-  nickname: string;
-  role: "USER" | "ADMIN";
-
-  phone?: string;
-  birthDate?: string;
-  gender?: "MALE" | "FEMALE" | "OTHER";
-}
-
-export interface LoginRequest {
+﻿export interface LoginRequest {
   username: string;
   password: string;
 }
@@ -76,18 +63,6 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
-export interface UserProfileResponse {
-  username: string;
-  name: string;
-  nickname: string;
-  email: string;
-  profileImageUrl?: string;
-  phone: string;
-  gender: string;
-  birthDate: string;
-  personalCode: string;
-}
-
 export type RegisterFormData = {
   name: string;
   username: string;
@@ -138,7 +113,10 @@ export interface RegisterStepHeaderProps {
 }
 
 export interface RegisterAgreeFormProps {
-  formData: any;
+  formData: Pick<
+    RegisterFormData,
+    "termsServiceAgreed" | "termsPrivacyAgreed" | "termsMarketingAgreed"
+  >;
   onChange: (field: string, value: boolean) => void;
   onPrev: () => void;
   onNext: () => void;

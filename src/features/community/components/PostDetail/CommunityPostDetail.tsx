@@ -3,6 +3,7 @@
 import { ChevronLeft } from "lucide-react";
 import CommunityActionModal from "@/features/community/components/common/CommunityActionModal";
 import CommunityReportModal from "@/features/community/components/common/CommunityReportModal";
+import CommunityReportStatusModals from "@/features/community/components/common/CommunityReportStatusModals";
 import CommunityCommentSection from "@/features/community/components/PostDetail/CommunityCommentSection";
 import CommunityPostHeader from "@/features/community/components/PostDetail/CommunityPostHeader";
 import CommunityPostImageCarousel from "@/features/community/components/PostDetail/CommunityPostImageCarousel";
@@ -67,28 +68,14 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
         onConfirm={handleBackToList}
       />
 
-      <CommunityActionModal
-        open={isLoginRequiredOpen}
-        title="로그인 필요"
-        description="로그인이 필요한 서비스입니다."
-        confirmLabel="확인"
-        onConfirm={closeLoginRequiredModal}
-      />
-
-      <CommunityActionModal
-        open={isReportCompleteOpen}
-        title="게시글 신고 접수"
-        description="게시글 신고가 접수되었습니다."
-        confirmLabel="확인"
-        onConfirm={() => setIsReportCompleteOpen(false)}
-      />
-
-      <CommunityActionModal
-        open={isAlreadyReportedOpen}
-        title="이미 신고한 게시글"
-        description="이미 신고한 게시글입니다."
-        confirmLabel="확인"
-        onConfirm={() => setIsAlreadyReportedOpen(false)}
+      <CommunityReportStatusModals
+        targetLabel="게시글"
+        isReportCompleteOpen={isReportCompleteOpen}
+        onCloseReportComplete={() => setIsReportCompleteOpen(false)}
+        isAlreadyReportedOpen={isAlreadyReportedOpen}
+        onCloseAlreadyReported={() => setIsAlreadyReportedOpen(false)}
+        isLoginRequiredOpen={isLoginRequiredOpen}
+        onCloseLoginRequired={closeLoginRequiredModal}
       />
 
       <CommunityReportModal

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ApiRequestError } from "@/lib/api";
 import {
   createCommunityComment,
   deleteCommunityComment,
@@ -11,6 +10,10 @@ import {
   updateCommunityComment,
 } from "@/features/services/community.service";
 import { useLoginRequiredModal } from "@/features/community/hooks/useLoginRequiredModal";
+import {
+  getRequestErrorMessage,
+  isAlreadyReportedError,
+} from "@/features/community/utils/communityErrors";
 import type {
   CommunityComment,
   CommunityCommentSectionProps,
@@ -48,25 +51,6 @@ const removeCommentFromTree = (
       ...comment,
       replies: removeCommentFromTree(comment.replies, commentId),
     }));
-
-const getRequestErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof ApiRequestError) {
-    return error.message || fallback;
-  }
-
-  return error instanceof Error ? error.message : fallback;
-};
-
-const isAlreadyReportedError = (error: unknown) => {
-  const message = getRequestErrorMessage(error, "");
-  const code = error instanceof ApiRequestError ? error.code ?? "" : "";
-
-  return (
-    (error instanceof ApiRequestError && error.status === 409) ||
-    message.includes("이미 신고") ||
-    code.includes("ALREADY_REPORTED")
-  );
-};
 
 export const useCommunityComments = ({
   postId,

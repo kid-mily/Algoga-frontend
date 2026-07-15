@@ -1,8 +1,7 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ApiRequestError } from "@/lib/api";
 import {
   createCommunityPost,
   getCommunityContinents,
@@ -11,19 +10,20 @@ import {
   getCommunityPostTags,
   updateCommunityPost,
 } from "@/features/services/community.service";
+import { getRequestErrorMessage } from "@/features/community/utils/communityErrors";
 import {
   COMMUNITY_CATEGORIES,
   type CommunityCategoryCode,
-  type CommunityContinent,
-  type CommunityCountry,
   type CommunityFilter,
 } from "@/features/community/types";
+import { useCommunityImageUpload } from "./useCommunityImageUpload";
+import { useCommunityLocationOptions } from "./useCommunityLocationOptions";
 
 export const MAX_TITLE_LENGTH = 60;
 export const MAX_CONTENT_LENGTH = 2000;
-export const MAX_IMAGE_COUNT = 10;
 export const MAX_CUSTOM_TAG_COUNT = 10;
 export const MAX_CUSTOM_TAG_LENGTH = 10;
+export { MAX_IMAGE_COUNT } from "./useCommunityImageUpload";
 
 const DEFAULT_TAGS: CommunityFilter[] = COMMUNITY_CATEGORIES.map((category) => ({
   id: category.id,
@@ -32,44 +32,26 @@ const DEFAULT_TAGS: CommunityFilter[] = COMMUNITY_CATEGORIES.map((category) => (
   category: category.id,
 }));
 
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof ApiRequestError) {
-    return error.message || fallback;
-  }
-
-  return error instanceof Error ? error.message : fallback;
-};
-
 export const useCommunityWriteForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const editPostId = Number(searchParams.get("postId"));
   const isEditMode = Number.isSafeInteger(editPostId) && editPostId > 0;
 
-  const [continents, setContinents] = useState<CommunityContinent[]>([]);
-  const [countries, setCountries] = useState<CommunityCountry[]>([]);
   const [tags, setTags] = useState<CommunityFilter[]>(DEFAULT_TAGS);
-  const [continentCode, setContinentCode] = useState("");
-  const [countryId, setCountryId] = useState("");
   const [tagType, setTagType] = useState<CommunityCategoryCode | "">("");
   const [customTagInput, setCustomTagInput] = useState("");
   const [customTags, setCustomTags] = useState<string[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [images, setImages] = useState<File[]>([]);
-  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
-  const [deletedImageUrls, setDeletedImageUrls] = useState<string[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(isEditMode);
-  const [isLoadingCountries, setIsLoadingCountries] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const imagePreviews = useMemo(
-    () => images.map((image) => ({ file: image, url: URL.createObjectURL(image) })),
-    [images]
-  );
+  const location = useCommunityLocationOptions(isEditMode, setErrorMessage);
+  const imageUpload = useCommunityImageUpload();
+
   const isFreeTag = tagType === "FREE";
   const isFormValid = Boolean(tagType && title.trim() && content.trim());
 
@@ -84,7 +66,7 @@ export const useCommunityWriteForm = () => {
           isEditMode ? getCommunityPost(editPostId, controller.signal) : Promise.resolve(null),
         ]);
 
-        setContinents(continentData);
+        location.setContinents(continentData);
         if (tagData.length > 0) {
           setTags(tagData.filter((tag) => tag.tagType !== "COUNTRY"));
         }
@@ -93,8 +75,7 @@ export const useCommunityWriteForm = () => {
           setTitle(postData.title.slice(0, MAX_TITLE_LENGTH));
           setContent(postData.content.slice(0, MAX_CONTENT_LENGTH));
           setTagType(postData.categoryCode ?? "");
-          setExistingImageUrls(postData.imageUrls);
-          setDeletedImageUrls([]);
+          imageUpload.resetForEdit(postData.imageUrls);
 
           if (postData.countryId) {
             for (const continent of continentData) {
@@ -107,9 +88,11 @@ export const useCommunityWriteForm = () => {
               );
 
               if (matchedCountry) {
-                setContinentCode(continent.continentCode);
-                setCountries(countryData);
-                setCountryId(String(matchedCountry.countryId));
+                location.restoreSelection(
+                  continent.continentCode,
+                  countryData,
+                  String(matchedCountry.countryId)
+                );
                 break;
               }
             }
@@ -117,7 +100,7 @@ export const useCommunityWriteForm = () => {
         }
       } catch (error) {
         if (!controller.signal.aborted) {
-          setErrorMessage(getErrorMessage(error, "작성 옵션을 불러오지 못했습니다."));
+          setErrorMessage(getRequestErrorMessage(error, "작성 옵션을 불러오지 못했습니다."));
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -131,66 +114,8 @@ export const useCommunityWriteForm = () => {
     return () => {
       controller.abort();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editPostId, isEditMode]);
-
-  useEffect(() => {
-    return () => {
-      imagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
-    };
-  }, [imagePreviews]);
-
-  useEffect(() => {
-    if (!continentCode) {
-      setCountries([]);
-      setCountryId("");
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const loadCountries = async () => {
-      try {
-        setIsLoadingCountries(true);
-        if (!isEditMode) {
-          setCountryId("");
-        }
-        const data = await getCommunityCountries(continentCode, controller.signal);
-        setCountries(data);
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          setErrorMessage(getErrorMessage(error, "국가 목록을 불러오지 못했습니다."));
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoadingCountries(false);
-        }
-      }
-    };
-
-    void loadCountries();
-
-    return () => {
-      controller.abort();
-    };
-  }, [continentCode, isEditMode]);
-
-  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(event.target.files ?? []);
-    if (selectedFiles.length === 0) return;
-
-    const remainingImageCount = Math.max(MAX_IMAGE_COUNT - existingImageUrls.length, 0);
-    setImages((prev) => [...prev, ...selectedFiles].slice(0, remainingImageCount));
-    event.target.value = "";
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setImages((prev) => prev.filter((_, imageIndex) => imageIndex !== index));
-  };
-
-  const handleRemoveExistingImage = (imageUrl: string) => {
-    setExistingImageUrls((prev) => prev.filter((url) => url !== imageUrl));
-    setDeletedImageUrls((prev) => (prev.includes(imageUrl) ? prev : [...prev, imageUrl]));
-  };
 
   const handleAddCustomTag = () => {
     const nextTag = customTagInput.trim().slice(0, MAX_CUSTOM_TAG_LENGTH);
@@ -227,18 +152,18 @@ export const useCommunityWriteForm = () => {
       const payload = {
         title: title.trim(),
         content: content.trim(),
-        countryId: Number(countryId) > 0 ? Number(countryId) : undefined,
+        countryId: Number(location.countryId) > 0 ? Number(location.countryId) : undefined,
         tagType,
         customTags: isFreeTag ? customTags : [],
-        images,
+        images: imageUpload.images,
       };
 
       if (isEditMode) {
         await updateCommunityPost({
           postId: editPostId,
           ...payload,
-          existingImageUrls,
-          deletedImageUrls,
+          existingImageUrls: imageUpload.existingImageUrls,
+          deletedImageUrls: imageUpload.deletedImageUrls,
         });
       } else {
         await createCommunityPost(payload);
@@ -246,37 +171,37 @@ export const useCommunityWriteForm = () => {
 
       setIsCompleteModalOpen(true);
     } catch (error) {
-      setErrorMessage(getErrorMessage(error, "게시글 등록에 실패했습니다."));
+      setErrorMessage(getRequestErrorMessage(error, "게시글 등록에 실패했습니다."));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return {
-    continents,
-    countries,
+    continents: location.continents,
+    countries: location.countries,
     tags,
-    continentCode,
-    countryId,
+    continentCode: location.continentCode,
+    countryId: location.countryId,
     tagType,
     customTagInput,
     customTags,
     title,
     content,
-    existingImageUrls,
-    imagePreviews,
+    existingImageUrls: imageUpload.existingImageUrls,
+    imagePreviews: imageUpload.imagePreviews,
     isEditMode,
     editPostId,
     isFreeTag,
     isFormValid,
     isInitialLoading,
-    isLoadingCountries,
+    isLoadingCountries: location.isLoadingCountries,
     isSubmitting,
     isCompleteModalOpen,
     errorMessage,
-    fileInputRef,
-    setContinentCode,
-    setCountryId,
+    fileInputRef: imageUpload.fileInputRef,
+    setContinentCode: location.setContinentCode,
+    setCountryId: location.setCountryId,
     setCustomTagInput,
     setIsCompleteModalOpen,
     handleAddCustomTag,
@@ -284,11 +209,11 @@ export const useCommunityWriteForm = () => {
     handleCompleteConfirm: () => router.push(isEditMode ? `/community/${editPostId}` : "/community"),
     handleBack: () => router.back(),
     handleContentChange: (value: string) => setContent(value.slice(0, MAX_CONTENT_LENGTH)),
-    handleImageChange,
-    handleOpenFilePicker: () => fileInputRef.current?.click(),
+    handleImageChange: imageUpload.handleImageChange,
+    handleOpenFilePicker: imageUpload.handleOpenFilePicker,
     handleRemoveCustomTag,
-    handleRemoveExistingImage,
-    handleRemoveImage,
+    handleRemoveExistingImage: imageUpload.handleRemoveExistingImage,
+    handleRemoveImage: imageUpload.handleRemoveImage,
     handleSubmit,
     handleTagTypeChange,
     handleTitleChange: (value: string) => setTitle(value.slice(0, MAX_TITLE_LENGTH)),
