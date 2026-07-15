@@ -29,7 +29,7 @@ export default function MoneyRefundTable({
             <th className="px-5 py-4">상품명</th>
             <th className="w-[140px] px-5 py-4">환불금액</th>
             <th className="w-[130px] px-5 py-4">요청일</th>
-            <th className="w-[120px] px-5 py-4">상태</th>
+            <th className="w-[140px] px-5 py-4">상태</th>
             <th className="w-[210px] px-5 py-4">처리</th>
           </tr>
         </thead>

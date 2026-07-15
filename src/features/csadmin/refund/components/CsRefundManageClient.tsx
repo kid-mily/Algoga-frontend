@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
-import CompleteModal from "@/features/common/components/CompleteModal";
 import { downloadRefundExcel } from "@/features/services/adminRefund.service";
 import { CsRefund, CsRefundStatus } from "../types";
 import { useCsRefundList } from "../hooks/useCsRefundList";
@@ -25,15 +24,10 @@ export default function CsRefundManageClient({
     filteredRefunds,
     totalCount,
     pendingCount,
-    completeOpen,
-    completeMessage,
     error,
     isLoading,
-    processingId,
     setSearchKeyword,
     setSelectedStatus,
-    setCompleteOpen,
-    runRefundAction,
   } = useCsRefundList(initialRefunds);
   const [downloadError, setDownloadError] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
@@ -98,7 +92,7 @@ export default function CsRefundManageClient({
           disabled={isDownloading}
           className="flex h-[40px] items-center gap-2 rounded-[10px] border border-[#E4E7EC] bg-white px-4 text-[14px] font-semibold text-[#344054] disabled:cursor-not-allowed disabled:text-[#98A2B3]"
         >
-          {isDownloading ? "내보내는 중..." : "내보내기"}
+          {isDownloading ? "다운로드 중..." : "csv다운로드"}
         </button>
       </header>
 
@@ -114,22 +108,12 @@ export default function CsRefundManageClient({
       <CsRefundTable
         refunds={pagedRefunds}
         isLoading={isLoading}
-        processingId={processingId}
-        onAction={runRefundAction}
       />
       <CsRefundPagination
         currentPage={safeCurrentPage}
         totalCount={filteredRefunds.length}
         totalPages={totalPages}
         onPageChange={handlePageChange}
-      />
-
-      <CompleteModal
-        open={completeOpen}
-        title="처리 완료"
-        description={completeMessage}
-        buttonText="확인"
-        onConfirm={() => setCompleteOpen(false)}
       />
     </main>
   );

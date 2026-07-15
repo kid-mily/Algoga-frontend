@@ -32,8 +32,17 @@ const formatDate = (value: string | undefined) => {
   return value.includes("T") ? formatDateTime(value).slice(0, 10) : value;
 };
 
-export const normalizeRefund = (item: RefundRequestApiRecord): CsRefund => {
-  const status = refundStatusLabel[item.status] ?? "취소 요청";
+type RefundExtraDetail = {
+  bookingCreatedAt?: string;
+  paymentCreatedAt?: string;
+};
+
+export const normalizeRefund = (
+  item: RefundRequestApiRecord,
+  extra?: RefundExtraDetail
+): CsRefund => {
+  const statusCode = String(item.status ?? "").trim().toUpperCase();
+  const status = refundStatusLabel[statusCode] ?? "취소 요청";
 
   return {
     refundId: item.refundId,
@@ -50,16 +59,46 @@ export const normalizeRefund = (item: RefundRequestApiRecord): CsRefund => {
     reason: item.reason || "-",
     rejectReason: item.rejectReason ?? "",
     status,
-    statusCode: item.status,
+    statusCode,
     paymentAmount: item.paidAmount ?? 0,
     refundAmount: item.amount ?? 0,
     paymentMethod: item.paymentMethod || "-",
-    bookedAt: formatDateTime(item.createdAt),
+    bookingCreatedAt: formatDateTime(extra?.bookingCreatedAt ?? item.createdAt),
+    paymentCreatedAt: formatDateTime(extra?.paymentCreatedAt ?? item.createdAt),
     useDate: item.checkInDate || "-",
     adminMemo: item.rejectReason ?? "",
-    historyCount: item.updatedAt && item.updatedAt !== item.createdAt ? 1 : 0,
-    totalBookings: 0,
   };
+};
+
+type RawBookingDetail = { createdAt?: string };
+type RawPaymentDetail = { createdAt?: string };
+
+// 예약/결제 상세는 소유자 전용 엔드포인트일 수 있어 admin 호출이 거절될 수 있습니다.
+// 실패하면 조용히 null을 돌려주고, normalizeRefund가 환불 요청 생성 시각으로 대체합니다.
+const getBookingDetail = async (bookingId: number, signal?: AbortSignal) => {
+  try {
+    const response = await adminApi.get<ApiResult<RawBookingDetail>>(
+      `/api/v1/bookings/${bookingId}`,
+      { suppressGlobalError: true, signal }
+    );
+
+    return unwrapData(response);
+  } catch {
+    return null;
+  }
+};
+
+const getPaymentDetail = async (paymentId: number, signal?: AbortSignal) => {
+  try {
+    const response = await adminApi.get<ApiResult<RawPaymentDetail>>(
+      `/api/v1/payments/${paymentId}`,
+      { suppressGlobalError: true, signal }
+    );
+
+    return unwrapData(response);
+  } catch {
+    return null;
+  }
 };
 
 export const getAdminRefunds = async (
@@ -74,7 +113,7 @@ export const getAdminRefunds = async (
   );
   const data = unwrapData(response);
 
-  return Array.isArray(data) ? data.map(normalizeRefund) : [];
+  return Array.isArray(data) ? data.map((item) => normalizeRefund(item)) : [];
 };
 
 export const getAdminRefundById = async (
@@ -90,7 +129,17 @@ export const getAdminRefundById = async (
   );
   const data = unwrapData(response);
 
-  return data ? normalizeRefund(data) : null;
+  if (!data) return null;
+
+  const [booking, payment] = await Promise.all([
+    getBookingDetail(data.bookingId, signal),
+    getPaymentDetail(data.paymentId, signal),
+  ]);
+
+  return normalizeRefund(data, {
+    bookingCreatedAt: booking?.createdAt,
+    paymentCreatedAt: payment?.createdAt,
+  });
 };
 
 export const requestRefundReview = async (refundId: number): Promise<void> => {
@@ -109,11 +158,14 @@ export const approveRefund = async (refundId: number): Promise<void> => {
   );
 };
 
-export const rejectRefund = async (refundId: number): Promise<void> => {
+export const rejectRefund = async (
+  refundId: number,
+  rejectReason: string
+): Promise<void> => {
   await adminApi.put<ApiResult<string>>(
     `/api/v1/admin/refund-requests/${refundId}/reject`,
     undefined,
-    { suppressGlobalError: true }
+    { params: { rejectReason }, suppressGlobalError: true }
   );
 };
 
