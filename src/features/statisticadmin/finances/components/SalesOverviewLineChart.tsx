@@ -10,7 +10,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { SalesOverviewMonthlyStat } from "../types";
 import { toMillionValue } from "../utils/salesOverviewFormatters";
 import { SalesOverviewLineChartProps,ChartDatum } from '../types'
 
