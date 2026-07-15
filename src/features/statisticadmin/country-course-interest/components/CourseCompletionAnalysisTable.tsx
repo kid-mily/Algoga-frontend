@@ -1,14 +1,9 @@
 import { Download, Search } from "lucide-react";
 import { downloadCourseEnrollmentCsv } from "@/features/services/adminInterestStatistics.service";
-import type { CourseCompletionStat } from "../types";
+import type { CourseCompletionAnalysisTableProps } from "../types";
 import { getCompletionStatusStyle } from "../utils";
 
-type CourseCompletionAnalysisTableProps = {
-  data: CourseCompletionStat[];
-  keyword: string;
-  isLoading?: boolean;
-  onKeywordChange: (keyword: string) => void;
-};
+
 
 export default function CourseCompletionAnalysisTable({
   data,

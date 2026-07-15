@@ -63,3 +63,31 @@ export type CountryCourseInterestData = {
   courseCompletions: CourseCompletionStat[];
   popularCourseRanks: PopularCountryCourseRank[];
 };
+
+export type CountryCourseInterestSummaryCardsProps = {
+  summary: InterestSummary;
+};
+
+export type CountryDetailStatsTableProps = {
+  data: CountryDetailStat[];
+  onDownloadCsv: () => void;
+};
+
+export type CountryInterestBarChartProps = {
+  data: CountryInterestItem[];
+};
+
+export type CourseCompletionAnalysisTableProps = {
+  data: CourseCompletionStat[];
+  keyword: string;
+  isLoading?: boolean;
+  onKeywordChange: (keyword: string) => void;
+};
+
+export type CourseInterestBarChartProps = {
+  data: CourseInterestItem[];
+};
+
+export type PopularCountryCourseRankingTableProps = {
+  data: PopularCountryCourseRank[];
+};

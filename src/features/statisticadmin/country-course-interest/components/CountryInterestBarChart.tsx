@@ -9,11 +9,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { CountryInterestItem } from "../types";
+import type { CountryInterestBarChartProps} from "../types";
 
-type CountryInterestBarChartProps = {
-  data: CountryInterestItem[];
-};
 
 export default function CountryInterestBarChart({
   data,
