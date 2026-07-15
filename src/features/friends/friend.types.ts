@@ -1,11 +1,11 @@
-// 친구 목록 패널에서 사용하는 타입 모음
-
 export interface Friend {
-  friendId: number;
+  relationId: number;
+  userId: number;
   nickname: string;
-  userId: string;
-  profileImageUrl?: string | null;
+  personalCode: string;
+  profileImageUrl: string | null;
   isFavorite: boolean;
+  isOnline: boolean;
 }
 
 export type FriendFilter = "all" | "favorite";
