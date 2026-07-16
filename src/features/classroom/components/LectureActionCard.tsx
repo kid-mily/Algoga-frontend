@@ -47,9 +47,15 @@ export default function LectureActionCard({
         setIsCheckingAccess(true);
         setRequiresLogin(false);
 
-        await getMe();
+        const user = await getMe();
 
         if (!isActive) return;
+
+        if (!user) {
+          setRequiresLogin(true);
+          setCanStudy(false);
+          return;
+        }
 
         try {
           await getCourseStudyDetail(courseId);
@@ -61,25 +67,45 @@ export default function LectureActionCard({
           if (!isActive) return;
 
           if (error instanceof ApiRequestError) {
-            if (error.status === 403 || error.status === 404) {
+            if (
+              error.status === 403 ||
+              error.status === 404
+            ) {
               setCanStudy(false);
               return;
             }
           }
 
-          console.error("[lecture-action] 수강 권한 확인 실패:", error);
-          setCanStudy(Boolean(course.isPaid ?? course.purchased ?? course.paid));
+          console.error(
+            "[lecture-action] 수강 권한 확인 실패:",
+            error
+          );
+
+          setCanStudy(
+            Boolean(
+              course.isPaid ??
+                course.purchased ??
+                course.paid
+            )
+          );
         }
       } catch (error) {
         if (!isActive) return;
 
-        if (error instanceof ApiRequestError && error.status === 401) {
+        if (
+          error instanceof ApiRequestError &&
+          error.status === 401
+        ) {
           setRequiresLogin(true);
           setCanStudy(false);
           return;
         }
 
-        console.error("[lecture-action] 로그인 상태 확인 실패:", error);
+        console.error(
+          "[lecture-action] 로그인 상태 확인 실패:",
+          error
+        );
+
         setRequiresLogin(true);
         setCanStudy(false);
       } finally {
