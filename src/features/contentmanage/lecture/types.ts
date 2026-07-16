@@ -11,6 +11,7 @@ export interface AdminCourse {
   maxRewardMileage?: number;
   thumbnailUrl?: string | null;
   fileUrls?: string[];
+  files?: CourseFile[];
   level?: string;
   levelName?: string;
   status?: string;
@@ -343,6 +344,7 @@ export interface LectureUpdateFormProps {
     level: string;
     isPublic?: string;
     thumbnailUrl?: string | null;
+    files?: CourseFile[];
   };
   onSubmit?: (
     data: EditLecturePayload,

@@ -4,6 +4,8 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCourseQnaComment } from "@/features/services/userQna.service";
 
+const QNA_COMMENT_MAX_LENGTH = 1000;
+
 interface QnaCommentFormProps {
     courseId: string;
     qnaId: string;
@@ -40,6 +42,7 @@ export default function QnaCommentForm({ courseId, qnaId }: QnaCommentFormProps)
             value={content}
             onChange={(event) => setContent(event.target.value)}
             placeholder="추가로 궁금한 내용을 입력해 주세요."
+            maxLength={QNA_COMMENT_MAX_LENGTH}
             className="h-14 flex-1 rounded-2xl border border-slate-200 bg-white px-5 text-sm outline-none focus:border-[#6FA7A1]"
         />
 

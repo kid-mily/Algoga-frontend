@@ -17,6 +17,13 @@ export interface Country {
   courseCount: number;
 }
 
+// 강의자료 파일 (원본 파일명 포함)
+export interface CourseFile {
+  fileUrl: string;
+  originalFileName: string | null;
+  fileOrder: number;
+}
+
 // 단일 강의
 export interface CourseItem {
   courseId: number;
@@ -26,6 +33,7 @@ export interface CourseItem {
   price: number;
   thumbnailUrl: string;
   fileUrls: string[];
+  files?: CourseFile[];
   level: string;
   levelName: string; // '초급', '중급', '고급'
   status: string;

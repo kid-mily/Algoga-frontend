@@ -1,14 +1,20 @@
 import Link from "next/link";
-import { QuizToolbarProps } from "../types";
+import { MAX_QUIZ_COUNT, QuizToolbarProps } from "../types";
 
 export default function QuizToolbar({
   searchKeyword,
   selectedLecture,
   courses,
   createHref = "/contentadmin/quiz/new",
+  selectedCourseQuizCount,
   onSearchKeywordChange,
   onSelectedLectureChange,
 }: QuizToolbarProps) {
+  const isMaxReached =
+    selectedLecture !== "all" &&
+    typeof selectedCourseQuizCount === "number" &&
+    selectedCourseQuizCount >= MAX_QUIZ_COUNT;
+
   return (
     <form
       role="search"
@@ -57,12 +63,29 @@ export default function QuizToolbar({
           </select>
         </div>
 
-        <Link
-          href={createHref}
-          className="flex h-[42px] shrink-0 items-center rounded-[12px] bg-[#439A97] px-5 text-[14px] font-semibold text-white transition hover:opacity-90"
-        >
-          + 퀴즈 등록
-        </Link>
+        <div className="flex shrink-0 items-center gap-3">
+          {selectedLecture !== "all" && typeof selectedCourseQuizCount === "number" && (
+            <span className="text-[13px] font-semibold text-[#667085]">
+              퀴즈 {selectedCourseQuizCount} / {MAX_QUIZ_COUNT}
+            </span>
+          )}
+
+          {isMaxReached ? (
+            <span
+              className="flex h-[42px] cursor-not-allowed items-center rounded-[12px] bg-[#CFE5E4] px-5 text-[14px] font-semibold text-white"
+              title={`퀴즈는 강의당 최대 ${MAX_QUIZ_COUNT}개까지 등록할 수 있습니다.`}
+            >
+              + 퀴즈 등록
+            </span>
+          ) : (
+            <Link
+              href={createHref}
+              className="flex h-[42px] items-center rounded-[12px] bg-[#439A97] px-5 text-[14px] font-semibold text-white transition hover:opacity-90"
+            >
+              + 퀴즈 등록
+            </Link>
+          )}
+        </div>
       </div>
     </form>
   );

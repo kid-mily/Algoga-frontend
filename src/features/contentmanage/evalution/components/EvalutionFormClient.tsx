@@ -6,6 +6,7 @@ import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import CompleteModal from "@/features/common/components/CompleteModal";
 import Modal from "@/features/common/components/Modal";
 import SubHeader from "@/features/common/components/SubHeader";
+import CharCounter from "@/features/common/components/CharCounter";
 import type { CourseCountry } from "@/features/contentmanage/lecture/types";
 import { getCourseCountries } from "@/features/services/adminCourse.service";
 import {
@@ -24,6 +25,8 @@ type EvalutionFormClientProps = {
 
 const QUESTION_COUNT = 5;
 const OPTION_COUNT = 4;
+const EVALUTION_QUESTION_MAX_LENGTH = 500;
+const EVALUTION_OPTION_MAX_LENGTH = 200;
 
 const normalizeFourOptions = (options: string[]) => {
   const nextOptions = [...options.slice(0, OPTION_COUNT)];
@@ -363,9 +366,15 @@ export default function EvalutionFormClient({
                   updateQuestion(questionIndex, { title: event.target.value })
                 }
                 placeholder={`${questionIndex + 1}번 문제를 입력하세요`}
-                maxLength={500}
+                maxLength={EVALUTION_QUESTION_MAX_LENGTH}
                 className="h-[96px] w-full resize-none rounded-[10px] border border-[#E4E7EC] px-4 py-3 text-[14px] outline-none placeholder:text-[#98A2B3] focus:border-[#639E9B]"
               />
+              <div className="mt-1 flex justify-end">
+                <CharCounter
+                  length={question.title.length}
+                  maxLength={EVALUTION_QUESTION_MAX_LENGTH}
+                />
+              </div>
             </label>
 
             <ol className="space-y-3">
@@ -388,15 +397,19 @@ export default function EvalutionFormClient({
                   >
                     {optionIndex + 1}
                   </button>
-                  <input
-                    type="text"
-                    value={option}
-                    onChange={(event) =>
-                      updateOption(questionIndex, optionIndex, event.target.value)
-                    }
-                    placeholder={`선택지 ${optionIndex + 1}`}
-                    className="min-w-0 flex-1 bg-transparent text-[14px] outline-none placeholder:text-[#98A2B3]"
-                  />
+                  <div className="min-w-0 flex-1">
+                    <input
+                      type="text"
+                      value={option}
+                      onChange={(event) =>
+                        updateOption(questionIndex, optionIndex, event.target.value)
+                      }
+                      placeholder={`선택지 ${optionIndex + 1}`}
+                      maxLength={EVALUTION_OPTION_MAX_LENGTH}
+                      className="w-full bg-transparent text-[14px] outline-none placeholder:text-[#98A2B3]"
+                    />
+                  </div>
+                  <CharCounter length={option.length} maxLength={EVALUTION_OPTION_MAX_LENGTH} />
                 </li>
               ))}
             </ol>

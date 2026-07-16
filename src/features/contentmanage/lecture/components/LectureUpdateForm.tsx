@@ -3,10 +3,23 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/components/CompleteModal";
+import CharCounter from "@/features/common/components/CharCounter";
 import { LectureUpdateFormProps } from "../types";
+import {
+  ALLOWED_LECTURE_MATERIAL_ACCEPT,
+  getCourseFileDisplayName,
+  isAllowedLectureMaterial,
+  LECTURE_MATERIAL_TYPE_ERROR_MESSAGE,
+} from "../constants";
+
+const LECTURE_TITLE_MAX_LENGTH = 100;
+const LECTURE_DESCRIPTION_MAX_LENGTH = 3000;
 
 export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpdateFormProps) {
   const router = useRouter();
+  const existingFiles = [...(initialData.files ?? [])].sort(
+    (a, b) => a.fileOrder - b.fileOrder
+  );
   const [openModal, setOpenModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,6 +36,7 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
     description: "",
     price: "",
     level: "",
+    attachments: "",
   });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -46,13 +60,39 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
 
   const handleAttachmentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
-    setAttachments(Array.from(event.target.files));
+
+    const selected = Array.from(event.target.files);
+    const invalid = selected.filter((file) => !isAllowedLectureMaterial(file));
+    const valid = selected.filter((file) => isAllowedLectureMaterial(file));
+
+    setErrors((prev) => ({
+      ...prev,
+      attachments:
+        invalid.length > 0
+          ? `${LECTURE_MATERIAL_TYPE_ERROR_MESSAGE} (${invalid.map((file) => file.name).join(", ")} 제외됨)`
+          : "",
+    }));
+    // 업로드 영역을 여러 번 다시 눌러서 파일을 추가할 수도 있어서, 새로 고른 파일을 기존 목록에 이어 붙입니다.
+    setAttachments((prev) => [
+      ...prev,
+      ...valid.filter(
+        (file) =>
+          !prev.some(
+            (existing) => existing.name === file.name && existing.size === file.size
+          )
+      ),
+    ]);
+    event.target.value = "";
+  };
+
+  const handleAttachmentRemove = (fileToRemove: File) => {
+    setAttachments((prev) => prev.filter((file) => file !== fileToRemove));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const newErrors = { title: "", description: "", price: "", level: "" };
+    const newErrors = { title: "", description: "", price: "", level: "", attachments: errors.attachments };
     let hasError = false;
 
     if (!formData.title.trim()) {
@@ -152,17 +192,23 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
               value={formData.title}
               onChange={handleChange}
               placeholder="강의 제목 입력"
+              maxLength={LECTURE_TITLE_MAX_LENGTH}
               aria-invalid={Boolean(errors.title)}
               aria-describedby={errors.title ? "lecture-edit-title-error" : undefined}
               className={`mt-2 h-[48px] w-full rounded-[12px] border px-4 text-[14px] outline-none transition-colors ${
                 errors.title ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
               }`}
             />
-            {errors.title && (
-              <p id="lecture-edit-title-error" className="mt-1 text-[13px] text-[#DC2626]">
-                {errors.title}
-              </p>
-            )}
+            <div className="mt-1 flex items-center justify-between">
+              {errors.title ? (
+                <p id="lecture-edit-title-error" className="text-[13px] text-[#DC2626]">
+                  {errors.title}
+                </p>
+              ) : (
+                <span />
+              )}
+              <CharCounter length={formData.title.length} maxLength={LECTURE_TITLE_MAX_LENGTH} />
+            </div>
           </div>
 
           <div>
@@ -175,17 +221,26 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
               value={formData.description}
               onChange={handleChange}
               placeholder="강의 설명 입력"
+              maxLength={LECTURE_DESCRIPTION_MAX_LENGTH}
               aria-invalid={Boolean(errors.description)}
               aria-describedby={errors.description ? "lecture-edit-description-error" : undefined}
               className={`mt-2 h-[120px] w-full resize-none rounded-[12px] border p-4 text-[14px] outline-none transition-colors ${
                 errors.description ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
               }`}
             />
-            {errors.description && (
-              <p id="lecture-edit-description-error" className="mt-1 text-[13px] text-[#DC2626]">
-                {errors.description}
-              </p>
-            )}
+            <div className="mt-1 flex items-center justify-between">
+              {errors.description ? (
+                <p id="lecture-edit-description-error" className="text-[13px] text-[#DC2626]">
+                  {errors.description}
+                </p>
+              ) : (
+                <span />
+              )}
+              <CharCounter
+                length={formData.description.length}
+                maxLength={LECTURE_DESCRIPTION_MAX_LENGTH}
+              />
+            </div>
           </div>
 
           <div>
@@ -280,19 +335,60 @@ export default function LectureUpdateForm({ initialData, onSubmit }: LectureUpda
             <label htmlFor="lecture-edit-attachments" className="text-[14px] font-semibold text-[#111827]">
               첨부 자료
             </label>
+
+            {existingFiles.length > 0 && (
+              <ul className="mt-2 space-y-1" aria-label="기존 강의자료">
+                {existingFiles.map((file) => (
+                  <li key={file.fileUrl} className="text-[13px] text-[#344054]">
+                    <a
+                      href={file.fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[#439A97] underline hover:opacity-80"
+                    >
+                      {getCourseFileDisplayName(file)}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+
             <label
               htmlFor="lecture-edit-attachments"
               className="mt-2 flex h-[120px] cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-[#D0D5DD] bg-[#FCFCFD] transition hover:bg-gray-50"
             >
               <img src="/images/upload.svg" alt="업로드" aria-hidden className="h-[24px] w-[24px]" />
-              <span className="mt-2 text-[13px] font-medium text-[#344054]">PDF, PPT, DOC 업로드</span>
-              <input id="lecture-edit-attachments" type="file" multiple onChange={handleAttachmentChange} className="hidden" />
+              <span className="mt-2 text-[13px] font-medium text-[#344054]">
+                새 강의자료 추가 (PDF, Word, PPT, Excel, HWP, TXT)
+              </span>
+              <input
+                id="lecture-edit-attachments"
+                type="file"
+                multiple
+                accept={ALLOWED_LECTURE_MATERIAL_ACCEPT}
+                onChange={handleAttachmentChange}
+                className="hidden"
+              />
             </label>
+            {errors.attachments && (
+              <p className="mt-1 text-[13px] text-[#DC2626]">{errors.attachments}</p>
+            )}
             {attachments.length > 0 && (
-              <ul className="mt-3 space-y-1" aria-label="선택된 첨부 파일">
-                {attachments.map((file) => (
-                  <li key={file.name} className="text-[13px] text-[#667085]">
-                    {file.name}
+              <ul className="mt-3 space-y-1" aria-label="새로 추가한 첨부 파일">
+                {attachments.map((file, index) => (
+                  <li
+                    key={`${file.name}-${file.size}-${index}`}
+                    className="flex items-center justify-between text-[13px] text-[#667085]"
+                  >
+                    <span className="truncate">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleAttachmentRemove(file)}
+                      aria-label={`${file.name} 첨부 취소`}
+                      className="ml-2 shrink-0 text-[#98A2B3] hover:text-[#DC2626]"
+                    >
+                      x
+                    </button>
                   </li>
                 ))}
               </ul>

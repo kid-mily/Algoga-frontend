@@ -27,6 +27,10 @@ export default function QuizManageClient({
     selectedLecture === "all"
       ? "/contentadmin/quiz/new"
       : `/contentadmin/quiz/new?courseId=${selectedLecture}`;
+  const selectedCourseQuizCount =
+    selectedLecture !== "all"
+      ? quizCountByCourse[Number(selectedLecture)] ?? 0
+      : undefined;
 
   return (
     <main className="min-h-screen bg-[#F8F8F8] px-8 py-8" aria-labelledby="quiz-management-title">
@@ -45,6 +49,7 @@ export default function QuizManageClient({
           selectedLecture={selectedLecture}
           courses={courses}
           createHref={createHref}
+          selectedCourseQuizCount={selectedCourseQuizCount}
           onSearchKeywordChange={setSearchKeyword}
           onSelectedLectureChange={setSelectedLecture}
         />

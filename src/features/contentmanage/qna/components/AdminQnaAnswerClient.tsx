@@ -1,6 +1,7 @@
 "use client";
 
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import CharCounter from "@/features/common/components/CharCounter";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/components/CompleteModal";
@@ -11,6 +12,8 @@ import {
   createAdminCourseQnaAnswer,
   getCourseQna,
 } from "@/features/services/courseQna.service";
+
+const QNA_ANSWER_MAX_LENGTH = 2000;
 
 interface AdminQnaAnswerClientProps {
   courseId: string;
@@ -159,9 +162,13 @@ export default function AdminQnaAnswerClient({
               value={answer}
               onChange={(event) => setAnswer(event.target.value)}
               placeholder="학생의 질문에 대한 답변을 작성해주세요..."
+              maxLength={QNA_ANSWER_MAX_LENGTH}
               className="mt-5 h-[180px] w-full resize-none rounded-[14px] border border-[#E4E7EC] p-4 text-[14px] outline-none placeholder:text-[#98A2B3]"
               disabled={isSubmitting}
             />
+            <div className="mt-1 flex justify-end">
+              <CharCounter length={answer.length} maxLength={QNA_ANSWER_MAX_LENGTH} />
+            </div>
             <footer className="mt-5 flex justify-end gap-3">
               <button
                 type="button"

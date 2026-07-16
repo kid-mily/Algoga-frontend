@@ -85,6 +85,7 @@ export default function EditLectureClient({
             level: lecture.level || "BEGINNER",
             isPublic: getIsPublic(lecture) ? "true" : "false",
             thumbnailUrl: lecture.thumbnailUrl || lecture.thumbnail_url || null,
+            files: lecture.files ?? [],
           }}
           onSubmit={handleEdit}
         />

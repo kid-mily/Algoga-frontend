@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import { ApiRequestError } from "@/lib/api";
 import { getCourseStudyDetail } from "@/features/services/courseStudy.service";
 import { getMe } from "@/features/services/user.service";
+import type { CourseFile } from "./types";
 
 interface LectureAttachmentsProps {
   courseId: string;
   fileUrls: string[];
+  files?: CourseFile[];
 }
 
 const getFileName = (url: string, index: number) => {
@@ -29,7 +31,19 @@ const getFileName = (url: string, index: number) => {
 export default function LectureAttachments({
   courseId,
   fileUrls,
+  files,
 }: LectureAttachmentsProps) {
+  // files(원본 파일명 포함)가 있으면 우선 사용하고, 없으면 URL 목록으로 대체합니다.
+  const attachments =
+    files && files.length > 0
+      ? [...files]
+          .sort((a, b) => a.fileOrder - b.fileOrder)
+          .map((file, index) => ({
+            url: file.fileUrl,
+            name: file.originalFileName || getFileName(file.fileUrl, index),
+          }))
+      : fileUrls.map((url, index) => ({ url, name: getFileName(url, index) }));
+  const hasAttachments = attachments.length > 0;
   const [canViewAttachments, setCanViewAttachments] = useState(false);
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
 
@@ -37,7 +51,7 @@ export default function LectureAttachments({
     let isActive = true;
 
     const checkAttachmentAccess = async () => {
-      if (!courseId || !fileUrls || fileUrls.length === 0) {
+      if (!courseId || !hasAttachments) {
         setCanViewAttachments(false);
         setIsCheckingAccess(false);
         return;
@@ -84,9 +98,9 @@ export default function LectureAttachments({
     return () => {
       isActive = false;
     };
-  }, [courseId, fileUrls]);
+  }, [courseId, hasAttachments]);
 
-  if (!fileUrls || fileUrls.length === 0) {
+  if (attachments.length === 0) {
     return null;
   }
 
@@ -108,16 +122,14 @@ export default function LectureAttachments({
       </div>
 
       <div>
-        {fileUrls.map((url, index) => {
-          const fileName = getFileName(url, index);
-
+        {attachments.map(({ url, name }, index) => {
           return (
             <div
               key={`${url}-${index}`}
               className="mb-3 flex items-center justify-between rounded-xl border border-gray-100 bg-[#F5F7FA] p-4"
             >
               <span className="min-w-0 truncate text-sm font-medium text-[#0A1628]">
-                {fileName}
+                {name}
               </span>
 
               <a
