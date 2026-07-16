@@ -3,7 +3,16 @@
 import { useEffect, useState } from "react";
 
 import LoadingSpinner from "@/features/common/components/LoadingSpinner";
-import { getFriends } from "../friend.service";
+import {
+  acceptFriendRequest,
+  blockUser,
+  deleteFriend,
+  getBlockedUsers,
+  getFriends,
+  getReceivedFriendRequests,
+  rejectFriendRequest,
+  unblockUser,
+} from "../friend.service";
 import type { Friend } from "../friend.types";
 import BlockedList from "./BlockedList";
 import FriendCode from "./FriendCode";
@@ -22,8 +31,12 @@ export default function FriendManagement({
   personalCode,
 }: FriendManagementProps) {
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [requests, setRequests] = useState<Friend[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<Friend[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [processingRequestId, setProcessingRequestId] = useState<number | null>(null);
+  const [processingBlockedCode, setProcessingBlockedCode] = useState<string | null>(null);
   const [activeTab, setActiveTab] =
     useState<ManagementTab>("list");
 
@@ -35,11 +48,15 @@ export default function FriendManagement({
         setIsLoading(true);
         setErrorMessage("");
 
-        const result = await getFriends(
-          controller.signal
-        );
+        const [friendResult, requestResult, blockedResult] = await Promise.all([
+          getFriends(controller.signal),
+          getReceivedFriendRequests(controller.signal),
+          getBlockedUsers(controller.signal),
+        ]);
 
-        setFriends(result);
+        setFriends(friendResult);
+        setRequests(requestResult);
+        setBlockedUsers(blockedResult);
       } catch (error) {
         if (controller.signal.aborted) return;
 
@@ -62,15 +79,71 @@ export default function FriendManagement({
     };
   }, []);
 
-  const handleRemoveFriend = (
-    relationId: number
-  ) => {
+  const handleDeleteFriend = async (friend: Friend) => {
+    await deleteFriend(friend.relationId);
     setFriends((previous) =>
-      previous.filter(
-        (friend) =>
-          friend.relationId !== relationId
-      )
+      previous.filter((item) => item.relationId !== friend.relationId)
     );
+  };
+
+  const handleBlockFriend = async (friend: Friend) => {
+    await blockUser(friend.personalCode);
+    setFriends((previous) =>
+      previous.filter((item) => item.relationId !== friend.relationId)
+    );
+    setBlockedUsers(await getBlockedUsers());
+  };
+
+  const handleAcceptRequest = async (requestId: number) => {
+    if (processingRequestId !== null) return;
+
+    try {
+      setProcessingRequestId(requestId);
+      setErrorMessage("");
+      await acceptFriendRequest(requestId);
+      setRequests((previous) =>
+        previous.filter((request) => request.relationId !== requestId)
+      );
+      setFriends(await getFriends());
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "친구 요청을 수락하지 못했습니다.");
+    } finally {
+      setProcessingRequestId(null);
+    }
+  };
+
+  const handleRejectRequest = async (requestId: number) => {
+    if (processingRequestId !== null) return;
+
+    try {
+      setProcessingRequestId(requestId);
+      setErrorMessage("");
+      await rejectFriendRequest(requestId);
+      setRequests((previous) =>
+        previous.filter((request) => request.relationId !== requestId)
+      );
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "친구 요청을 거절하지 못했습니다.");
+    } finally {
+      setProcessingRequestId(null);
+    }
+  };
+
+  const handleUnblock = async (personalCode: string) => {
+    if (processingBlockedCode !== null) return;
+
+    try {
+      setProcessingBlockedCode(personalCode);
+      setErrorMessage("");
+      await unblockUser(personalCode);
+      setBlockedUsers((previous) =>
+        previous.filter((friend) => friend.personalCode !== personalCode)
+      );
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "차단을 해제하지 못했습니다.");
+    } finally {
+      setProcessingBlockedCode(null);
+    }
   };
 
   return (
@@ -78,9 +151,7 @@ export default function FriendManagement({
       <section className="grid gap-4 lg:grid-cols-2">
         <FriendCode personalCode={personalCode} />
 
-        <FriendCodeSearch
-          friendCount={friends.length}
-        />
+        <FriendCodeSearch />
       </section>
 
       <article className="overflow-hidden rounded-2xl border border-[#E5EDF5] bg-white shadow-sm">
@@ -118,12 +189,12 @@ export default function FriendManagement({
               {
                 value: "requests",
                 label: "받은 요청",
-                count: 0,
+                count: requests.length,
               },
               {
                 value: "blocked",
                 label: "차단 목록",
-                count: 0,
+                count: blockedUsers.length,
               },
             ]}
           />
@@ -142,18 +213,26 @@ export default function FriendManagement({
             {activeTab === "list" && (
               <FriendList
                 friends={friends}
-                onRemoveFriend={
-                  handleRemoveFriend
-                }
+                onDeleteFriend={handleDeleteFriend}
+                onBlockFriend={handleBlockFriend}
               />
             )}
 
             {activeTab === "requests" && (
-              <FriendRequestList />
+              <FriendRequestList
+                requests={requests}
+                processingId={processingRequestId}
+                onAccept={handleAcceptRequest}
+                onReject={handleRejectRequest}
+              />
             )}
 
             {activeTab === "blocked" && (
-              <BlockedList />
+              <BlockedList
+                blockedUsers={blockedUsers}
+                processingCode={processingBlockedCode}
+                onUnblock={handleUnblock}
+              />
             )}
           </>
         )}
