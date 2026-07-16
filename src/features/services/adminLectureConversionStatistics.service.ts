@@ -125,6 +125,15 @@ const getByCountryRaw = (query: LectureConversionQuery, signal?: AbortSignal) =>
     { params: query, suppressGlobalError: true, signal }
   );
 
+// 나라별 강의→여행 전환율 — course-reservation-conversion과 coupon-reservation-conversion 양쪽에서 공유합니다.
+export const getLectureCountryConversion = async (
+  query: LectureConversionQuery,
+  signal?: AbortSignal
+): Promise<CountryLectureConversion[]> => {
+  const response = await getByCountryRaw(query, signal);
+  return normalizeCountries(unwrapData(response) ?? []);
+};
+
 export const getCourseReservationConversionData = async (
   query: LectureConversionQuery,
   signal?: AbortSignal

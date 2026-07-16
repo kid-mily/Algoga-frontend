@@ -1,4 +1,4 @@
-import StatisticPlaceholderPage from "@/features/statisticadmin/common/components/StatisticPlaceholderPage";
+import CouponReservationConversionClient from "@/features/statisticadmin/coupon-reservation-conversion/components/CouponReservationConversionClient";
 
 export const metadata = {
   title: "쿠폰 → 예약 전환 | 알고가 통계 관리자",
@@ -6,10 +6,5 @@ export const metadata = {
 };
 
 export default function StatisticCouponReservationConversionPage() {
-  return (
-    <StatisticPlaceholderPage
-      title="쿠폰 → 예약 전환"
-      description="쿠폰 → 예약 전환 통계 화면을 준비 중입니다."
-    />
-  );
+  return <CouponReservationConversionClient />;
 }
