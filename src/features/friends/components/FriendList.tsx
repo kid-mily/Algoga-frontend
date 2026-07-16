@@ -15,14 +15,16 @@ import FriendSearch from "./FriendSearch";
 
 interface FriendListProps {
   friends: Friend[];
-  onRemoveFriend: (relationId: number) => void;
+  onDeleteFriend: (friend: Friend) => Promise<void>;
+  onBlockFriend: (friend: Friend) => Promise<void>;
 }
 
 type ConfirmMode = "block" | "delete";
 
 export default function FriendList({
   friends,
-  onRemoveFriend,
+  onDeleteFriend,
+  onBlockFriend,
 }: FriendListProps) {
   const [searchValue, setSearchValue] =
     useState("");
@@ -37,6 +39,7 @@ export default function FriendList({
     } | null>(null);
   const [isProcessing, setIsProcessing] =
     useState(false);
+  const [actionError, setActionError] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -87,13 +90,25 @@ export default function FriendList({
     if (!confirmTarget) return;
 
     setIsProcessing(true);
+    setActionError("");
 
     try {
-      onRemoveFriend(
-        confirmTarget.friend.relationId
-      );
+      if (confirmTarget.mode === "block") {
+        await onBlockFriend(confirmTarget.friend);
+      } else {
+        await onDeleteFriend(confirmTarget.friend);
+      }
+
       setOpenMenuRelationId(null);
       setConfirmTarget(null);
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : confirmTarget.mode === "block"
+            ? "친구를 차단하지 못했습니다."
+            : "친구를 삭제하지 못했습니다."
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -107,6 +122,10 @@ export default function FriendList({
           onChange={setSearchValue}
         />
       </div>
+
+      {actionError && (
+        <p className="px-5 pb-3 text-sm font-semibold text-red-500">{actionError}</p>
+      )}
 
       <div
         ref={listRef}

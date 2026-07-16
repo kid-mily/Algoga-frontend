@@ -2,9 +2,8 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
-
 import { ApiRequestError } from "@/lib/api";
-import { getFriends } from "../friend.service";
+import { getFriends, toggleFriendFavorite } from "../friend.service";
 import type { Friend, FriendFilter } from "../friend.types";
 import FriendItem from "./FriendItem";
 import FriendSearch from "./FriendSearch";
@@ -90,17 +89,44 @@ export default function FriendPanel() {
     };
   }, [isOpen, fetchFriends]);
 
-  const handleToggleFavorite = (relationId: number) => {
-    setFriends((previous) =>
+  const handleToggleFavorite = async (
+    relationId: number
+  ) => {
+    const targetFriend = friends.find((friend) =>
+      friend.relationId === relationId
+    );
+    
+    if (!targetFriend) return;
+    
+    const previousFavorite = targetFriend.isFavorite;
+    
+    setFriends((previous) => 
       previous.map((friend) =>
-        friend.relationId === relationId
-          ? {
-              ...friend,
-              isFavorite: !friend.isFavorite,
-            }
-          : friend
+        friend.relationId === relationId ? {
+          ...friend,
+          isFavorite:
+          !previousFavorite,
+        }
+        : friend
       )
     );
+    
+    try {
+      await toggleFriendFavorite(relationId);
+    } catch (error) {
+      setFriends((previous) =>
+        previous.map((friend) =>
+          friend.relationId === relationId ? {
+            ...friend,
+            isFavorite:
+            previousFavorite,
+          }
+          : friend
+        )
+      );
+
+      setErrorMessage(error instanceof Error ? error.message : "즐겨찾기 상태를 변경하지 못했습니다.");
+    }
   };
 
   const handleSelectFriend = (friend: Friend) => {
