@@ -21,6 +21,8 @@ export default function CreateLectureClient() {
       return;
     }
 
+    // 강의는 챕터·퀴즈가 각 1개 이상 있어야 등록이 완료된 것으로 취급하므로,
+    // 건너뛸 수 있는 선택지 없이 바로 챕터 등록 단계로 넘어갑니다.
     setCreatedCourseId(courseId);
     setStep(2);
   };
@@ -30,7 +32,7 @@ export default function CreateLectureClient() {
       <section aria-labelledby="create-lecture-title">
         <LectureHeader
           title="강의 등록"
-          description="강의 콘텐츠와 챕터를 등록합니다."
+          description="강의는 챕터와 퀴즈가 각 1개 이상 등록되어야 완료됩니다."
         />
       </section>
 

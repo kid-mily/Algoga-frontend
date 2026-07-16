@@ -4,8 +4,12 @@ import Image from "next/image";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import CompleteModal from "@/features/common/components/CompleteModal";
 import Modal from "@/features/common/components/Modal";
+import CharCounter from "@/features/common/components/CharCounter";
 import { useChapterForm } from "../hooks/useChapterForm";
 import type { ChapterFormProps } from "../types";
+
+const CHAPTER_TITLE_MAX_LENGTH = 100;
+const CHAPTER_DESCRIPTION_MAX_LENGTH = 1000;
 
 export default function ChapterForm({
   mode = "create",
@@ -82,17 +86,23 @@ export default function ChapterForm({
               clearFieldError("title");
             }}
             placeholder="챕터 제목 입력"
+            maxLength={CHAPTER_TITLE_MAX_LENGTH}
             aria-invalid={Boolean(errors.title)}
             aria-describedby={errors.title ? "chapter-title-error" : undefined}
             className={`mt-2 h-[42px] w-full rounded-[10px] border px-4 text-[13px] outline-none transition-colors ${
               errors.title ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
             }`}
           />
-          {errors.title && (
-            <p id="chapter-title-error" className="mt-1 text-[13px] text-[#DC2626]">
-              {errors.title}
-            </p>
-          )}
+          <div className="mt-1 flex items-center justify-between">
+            {errors.title ? (
+              <p id="chapter-title-error" className="text-[13px] text-[#DC2626]">
+                {errors.title}
+              </p>
+            ) : (
+              <span />
+            )}
+            <CharCounter length={form.title.length} maxLength={CHAPTER_TITLE_MAX_LENGTH} />
+          </div>
         </div>
 
         <div>
@@ -107,17 +117,26 @@ export default function ChapterForm({
               clearFieldError("description");
             }}
             placeholder="챕터 설명 입력"
+            maxLength={CHAPTER_DESCRIPTION_MAX_LENGTH}
             aria-invalid={Boolean(errors.description)}
             aria-describedby={errors.description ? "chapter-description-error" : undefined}
             className={`mt-2 h-[90px] w-full resize-none rounded-[10px] border p-4 text-[13px] outline-none transition-colors ${
               errors.description ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#E4E7EC] focus:border-[#439A97]"
             }`}
           />
-          {errors.description && (
-            <p id="chapter-description-error" className="mt-1 text-[13px] text-[#DC2626]">
-              {errors.description}
-            </p>
-          )}
+          <div className="mt-1 flex items-center justify-between">
+            {errors.description ? (
+              <p id="chapter-description-error" className="text-[13px] text-[#DC2626]">
+                {errors.description}
+              </p>
+            ) : (
+              <span />
+            )}
+            <CharCounter
+              length={form.description.length}
+              maxLength={CHAPTER_DESCRIPTION_MAX_LENGTH}
+            />
+          </div>
         </div>
 
         <div>

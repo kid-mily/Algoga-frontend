@@ -3,6 +3,10 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCourseQna } from "@/features/services/userQna.service";
+import CharCounter from "@/features/common/components/CharCounter";
+
+const QNA_TITLE_MAX_LENGTH = 100;
+const QNA_QUESTION_MAX_LENGTH = 2000;
 
 interface QnaWriteFormProps {
     continentCode: string;
@@ -86,8 +90,12 @@ export default function QnaWriteForm({
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="질문 제목을 입력해 주세요."
+                maxLength={QNA_TITLE_MAX_LENGTH}
                 className="h-14 w-full rounded-2xl border border-transparent bg-[#F5F6FA] px-4 text-sm outline-none focus:border-[#6FA7A1]"
             />
+            <div className="mt-1 flex justify-end">
+                <CharCounter length={title.length} maxLength={QNA_TITLE_MAX_LENGTH} />
+            </div>
             </label>
 
             <label className="block">
@@ -98,8 +106,12 @@ export default function QnaWriteForm({
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
                 placeholder="궁금한 내용을 자세하게 작성해 주세요."
+                maxLength={QNA_QUESTION_MAX_LENGTH}
                 className="h-40 w-full resize-none rounded-2xl border border-transparent bg-[#F5F6FA] px-4 py-4 text-sm outline-none focus:border-[#6FA7A1]"
             />
+            <div className="mt-1 flex justify-end">
+                <CharCounter length={question.length} maxLength={QNA_QUESTION_MAX_LENGTH} />
+            </div>
             </label>
         </div>
 

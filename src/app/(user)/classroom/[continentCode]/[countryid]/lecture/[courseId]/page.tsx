@@ -330,6 +330,7 @@ export default async function LectureDetailPage({
           <LectureAttachments
             courseId={courseId}
             fileUrls={course.fileUrls ?? []}
+            files={course.files ?? []}
           />
 
           <LectureReviews

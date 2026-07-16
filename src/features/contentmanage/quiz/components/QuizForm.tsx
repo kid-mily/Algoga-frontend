@@ -1,6 +1,7 @@
 "use client";
 
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import CharCounter from "@/features/common/components/CharCounter";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/components/CompleteModal";
@@ -9,6 +10,10 @@ import { getLectureListAction } from "@/features/contentmanage/lecture/actions";
 import { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { createQuizAction, updateQuizAction } from "../actions";
 import { QuizFormProps } from "../types";
+
+const QUIZ_QUESTION_MAX_LENGTH = 500;
+const QUIZ_OPTION_MAX_LENGTH = 200;
+const QUIZ_EXPLANATION_MAX_LENGTH = 1000;
 
 const emptyQuiz = {
   courseId: 0,
@@ -239,8 +244,12 @@ export default function QuizForm({
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             placeholder="퀴즈 문제를 입력하세요"
+            maxLength={QUIZ_QUESTION_MAX_LENGTH}
             className="mt-3 h-[120px] w-full resize-none rounded-[14px] border border-[#E4E7EC] p-4 text-[15px] outline-none"
           />
+          <div className="mt-1 flex justify-end">
+            <CharCounter length={question.length} maxLength={QUIZ_QUESTION_MAX_LENGTH} />
+          </div>
         </div>
 
         <fieldset>
@@ -268,32 +277,40 @@ export default function QuizForm({
                   <label htmlFor={`quiz-option-${optionNumber}`} className="sr-only">
                     {optionNumber}번 보기
                   </label>
-                  <input
-                    id={`quiz-option-${optionNumber}`}
-                    type="text"
-                    value={option}
-                    onChange={(event) => handleOptionChange(index, event.target.value)}
-                    placeholder={`${optionNumber}번 보기`}
-                    aria-invalid={Boolean(optionErrors[index])}
-                    aria-describedby={
-                      optionErrors[index]
-                        ? `quiz-option-${optionNumber}-error`
-                        : undefined
-                    }
-                    className={`h-[48px] flex-1 rounded-[14px] border px-4 text-[15px] outline-none ${
-                      optionErrors[index]
-                        ? "border-[#DC2626] bg-[#FEF2F2]"
-                        : "border-[#E4E7EC]"
-                    }`}
-                  />
-                  {optionErrors[index] && (
-                    <p
-                      id={`quiz-option-${optionNumber}-error`}
-                      className="w-[180px] text-[13px] font-medium text-[#DC2626]"
-                    >
-                      {optionErrors[index]}
-                    </p>
-                  )}
+                  <div className="flex-1">
+                    <input
+                      id={`quiz-option-${optionNumber}`}
+                      type="text"
+                      value={option}
+                      onChange={(event) => handleOptionChange(index, event.target.value)}
+                      placeholder={`${optionNumber}번 보기`}
+                      maxLength={QUIZ_OPTION_MAX_LENGTH}
+                      aria-invalid={Boolean(optionErrors[index])}
+                      aria-describedby={
+                        optionErrors[index]
+                          ? `quiz-option-${optionNumber}-error`
+                          : undefined
+                      }
+                      className={`h-[48px] w-full rounded-[14px] border px-4 text-[15px] outline-none ${
+                        optionErrors[index]
+                          ? "border-[#DC2626] bg-[#FEF2F2]"
+                          : "border-[#E4E7EC]"
+                      }`}
+                    />
+                    <div className="mt-1 flex items-center justify-between">
+                      {optionErrors[index] ? (
+                        <p
+                          id={`quiz-option-${optionNumber}-error`}
+                          className="text-[13px] font-medium text-[#DC2626]"
+                        >
+                          {optionErrors[index]}
+                        </p>
+                      ) : (
+                        <span />
+                      )}
+                      <CharCounter length={option.length} maxLength={QUIZ_OPTION_MAX_LENGTH} />
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -312,8 +329,12 @@ export default function QuizForm({
             value={explanation}
             onChange={(event) => setExplanation(event.target.value)}
             placeholder="정답 힌트나 해설을 입력하세요"
+            maxLength={QUIZ_EXPLANATION_MAX_LENGTH}
             className="mt-3 h-[100px] w-full resize-none rounded-[14px] border border-[#E4E7EC] p-4 text-[15px] outline-none"
           />
+          <div className="mt-1 flex justify-end">
+            <CharCounter length={explanation.length} maxLength={QUIZ_EXPLANATION_MAX_LENGTH} />
+          </div>
         </div>
       </fieldset>
 
