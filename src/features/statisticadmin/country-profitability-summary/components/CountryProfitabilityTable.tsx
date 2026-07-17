@@ -2,17 +2,19 @@ import { Download, Search } from "lucide-react";
 import type { CountryProfitabilityItem } from "../types";
 import {
   formatBookingCount,
-  formatHundredMillion,
+  formatManwon,
   formatPercent,
   getRateTextColor,
 } from "../utils";
 
 type CountryProfitabilityTableProps = {
   data: CountryProfitabilityItem[];
+  onDownloadCsv: () => void;
 };
 
 export default function CountryProfitabilityTable({
   data,
+  onDownloadCsv,
 }: CountryProfitabilityTableProps) {
   return (
     <section className="mt-6 overflow-hidden rounded-[18px] border border-[#EAECF0] bg-white shadow-sm">
@@ -33,6 +35,7 @@ export default function CountryProfitabilityTable({
 
           <button
             type="button"
+            onClick={onDownloadCsv}
             className="flex h-9 items-center gap-1 rounded-[10px] border border-[#E4E7EC] px-3 text-[12px] font-semibold text-[#667085]"
           >
             <Download size={14} />
@@ -45,20 +48,26 @@ export default function CountryProfitabilityTable({
         <table className="w-full table-fixed border-collapse">
           <thead className="bg-[#F8FAFC] text-left text-[12px] font-semibold text-[#667085]">
             <tr>
-              <th className="w-[10%] px-4 py-4">국가</th>
-              <th className="w-[10%] px-3 py-4">예약수 ↕</th>
-              <th className="w-[10%] px-3 py-4">총매출 ↕</th>
-              <th className="w-[10%] px-3 py-4 text-[#2FAE9B]">순매출 ↓</th>
-              <th className="w-[10%] px-3 py-4">환불율 ↕</th>
-              <th className="w-[12%] px-3 py-4">잔금전환율 ↕</th>
-              <th className="w-[10%] px-3 py-4">취소율 ↕</th>
-              <th className="w-[18%] px-3 py-4">점유율 ↕</th>
-              <th className="w-[10%] px-3 py-4">쿠폰전환율 ↕</th>
+              <th className="w-[12%] px-4 py-4">국가</th>
+              <th className="w-[11%] px-3 py-4">예약수</th>
+              <th className="w-[12%] px-3 py-4">총매출</th>
+              <th className="w-[12%] px-3 py-4 text-[#2FAE9B]">순매출</th>
+              <th className="w-[11%] px-3 py-4">환불율</th>
+              <th className="w-[13%] px-3 py-4">잔금전환율</th>
+              <th className="w-[11%] px-3 py-4">취소율</th>
+              <th className="w-[18%] px-3 py-4">점유율</th>
             </tr>
           </thead>
 
           <tbody className="divide-y divide-[#EEF2F6] text-[13px]">
-            {data.map((country) => (
+            {data.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="px-4 py-12 text-center text-[13px] text-[#98A2B3]">
+                  조회된 나라별 수익성 데이터가 없습니다.
+                </td>
+              </tr>
+            ) : (
+              data.map((country) => (
               <tr key={country.countryName}>
                 <td className="px-4 py-4 font-bold text-[#111827]">
                   {country.countryName}
@@ -67,10 +76,10 @@ export default function CountryProfitabilityTable({
                   {formatBookingCount(country.bookingCount)}
                 </td>
                 <td className="px-3 py-4 text-[#667085]">
-                  {formatHundredMillion(country.grossRevenue)}
+                  {formatManwon(country.grossRevenue)}
                 </td>
                 <td className="px-3 py-4 font-extrabold text-[#2FAE9B]">
-                  {formatHundredMillion(country.netRevenue)}
+                  {formatManwon(country.netRevenue)}
                 </td>
                 <td className={`px-3 py-4 font-bold ${getRateTextColor(country.refundRate)}`}>
                   {formatPercent(country.refundRate)}
@@ -94,11 +103,9 @@ export default function CountryProfitabilityTable({
                     </span>
                   </div>
                 </td>
-                <td className="px-3 py-4 text-[#667085]">
-                  {formatPercent(country.couponConversionRate)}
-                </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>

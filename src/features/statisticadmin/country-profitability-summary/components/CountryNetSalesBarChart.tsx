@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import type { CountryProfitabilityItem } from "../types";
-import { formatHundredMillion } from "../utils";
+import { formatManwon } from "../utils";
 
 type CountryNetSalesBarChartProps = {
   data: CountryProfitabilityItem[];
@@ -59,7 +59,7 @@ export default function CountryNetSalesBarChart({
 
             <XAxis
               type="number"
-              tickFormatter={(value) => formatHundredMillion(Number(value))}
+              tickFormatter={(value) => formatManwon(Number(value))}
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#98A2B3", fontSize: 12, fontWeight: 600 }}
@@ -68,7 +68,8 @@ export default function CountryNetSalesBarChart({
             <YAxis
               type="category"
               dataKey="countryName"
-              width={70}
+              width={110}
+              interval={0}
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#667085", fontSize: 12, fontWeight: 700 }}
@@ -76,7 +77,7 @@ export default function CountryNetSalesBarChart({
 
             <Tooltip
               formatter={(value) => [
-                formatHundredMillion(Number(value)),
+                formatManwon(Number(value)),
                 "순매출",
               ]}
             />

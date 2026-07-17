@@ -71,7 +71,8 @@ export default function CountryRefundCancelCompareChart({
             <YAxis
               type="category"
               dataKey="countryName"
-              width={70}
+              width={110}
+              interval={0}
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#667085", fontSize: 12, fontWeight: 700 }}
