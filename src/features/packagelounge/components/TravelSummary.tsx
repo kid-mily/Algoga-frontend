@@ -1,26 +1,16 @@
-"use client";
-
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import {
-  getSelectedRecommendedCourse,
-  type StoredRecommendedCourse,
-} from "@/features/classroom/evaluation/utils/evaluationResult.storage";
-import type { PackageDetailData } from "../packageDetail.types";
+import { CourseItem } from "@/features/classroom/components/types";
+import { PackageDetailData } from "../packageDetail.types";
 
 interface TravelSummaryProps {
   data: PackageDetailData;
+  // country 기준으로 별도 조회한 값
+  course: CourseItem | null;
 }
 
-// 예약 01단계: 여행 일정(패키지 썸네일 + 항공/숙소/선택한 강의) 요약 카드
-export default function TravelSummary({ data }: TravelSummaryProps) {
+// 예약 01단계: 여행 일정(패키지 썸네일 + 항공/숙소/강의) 요약 카드
+export default function TravelSummary({ data, course }: TravelSummaryProps) {
   const outboundFlight = data.flights[0];
-  const [selectedCourse, setSelectedCourse] =
-    useState<StoredRecommendedCourse | null>(null);
-
-  useEffect(() => {
-    setSelectedCourse(getSelectedRecommendedCourse());
-  }, []);
 
   return (
     <section className="rounded-2xl border border-[#E1E8EF] bg-white p-5 shadow-[0_8px_24px_rgba(55,88,110,0.06)] sm:p-6">
@@ -107,8 +97,8 @@ export default function TravelSummary({ data }: TravelSummaryProps) {
           </div>
         </div>
 
-        {/* 진단평가에서 선택한 강의 정보 (선택 이력이 없으면 표시하지 않음) */}
-        {selectedCourse && (
+        {/* 선택한 강의 */}
+        {course && (
           <div className="mt-3 flex gap-3 rounded-xl border border-[#E1E8EF] p-4">
             <Image
               src="/images/book.svg"
@@ -120,13 +110,11 @@ export default function TravelSummary({ data }: TravelSummaryProps) {
             <div>
               <p className="text-xs font-bold text-[#439A97]">선택한 강의</p>
               <p className="mt-1 text-sm font-bold text-[#0A1628]">
-                {selectedCourse.title}
+                {course.title}
               </p>
-              {selectedCourse.levelName && (
-                <p className="mt-1 text-xs text-[#718096]">
-                  {selectedCourse.levelName}
-                </p>
-              )}
+              <p className="mt-1 text-xs text-[#718096]">
+                {course.levelName} · {course.price.toLocaleString()}원
+              </p>
             </div>
           </div>
         )}
