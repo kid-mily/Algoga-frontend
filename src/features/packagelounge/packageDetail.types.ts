@@ -41,6 +41,8 @@ export interface PackageBookingInfo {
   depositAmount: number;
   balanceAmount: number;
   totalAmount: number;
+  // 항공편 정보를 불러오지 못하면(null) 예약을 진행할 수 없다
+  canBook: boolean;
 }
 
 export interface PackageDetailData {

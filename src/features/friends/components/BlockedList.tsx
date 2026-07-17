@@ -1,5 +1,9 @@
-import Image from "next/image";
+"use client";
 
+import Image from "next/image";
+import { useState } from "react";
+
+import Modal from "@/features/common/components/Modal";
 import type { Friend } from "../friend.types";
 import { EmptyState } from "./FriendPanel";
 
@@ -14,6 +18,15 @@ export default function BlockedList({
   processingCode,
   onUnblock,
 }: BlockedListProps) {
+  const [unblockTarget, setUnblockTarget] = useState<Friend | null>(null);
+
+  const handleConfirmUnblock = async () => {
+    if (!unblockTarget) return;
+
+    await onUnblock(unblockTarget.personalCode);
+    setUnblockTarget(null);
+  };
+
   if (blockedUsers.length === 0) {
     return (
       <div className="px-5 py-8">
@@ -26,8 +39,9 @@ export default function BlockedList({
   }
 
   return (
-    <ul className="space-y-1 px-3 py-3">
-      {blockedUsers.map((friend) => (
+    <>
+      <ul className="space-y-1 px-3 py-3">
+        {blockedUsers.map((friend) => (
         <li
           key={`${friend.userId}-${friend.personalCode}`}
           className="flex items-center gap-3 rounded-xl px-2 py-3 transition hover:bg-[#F8FBFD]"
@@ -53,14 +67,33 @@ export default function BlockedList({
 
           <button
             type="button"
-            onClick={() => void onUnblock(friend.personalCode)}
+            onClick={() => setUnblockTarget(friend)}
             disabled={processingCode === friend.personalCode}
             className="h-9 shrink-0 rounded-xl border border-[#D8E1EA] px-3 text-xs font-bold text-[#718096] transition hover:bg-[#F3F8FC] disabled:opacity-60"
           >
             차단 해제
           </button>
         </li>
-      ))}
-    </ul>
+        ))}
+      </ul>
+
+      <Modal
+        open={unblockTarget !== null}
+        title="차단을 해제할까요?"
+        description={
+          unblockTarget
+            ? `${unblockTarget.nickname}님의 차단을 해제하면 다시 친구 목록에 표시됩니다.`
+            : "차단을 해제하면 다시 친구 목록에 표시됩니다."
+        }
+        confirmText="차단 해제"
+        cancelText="취소"
+        confirmDisabled={
+          unblockTarget !== null &&
+          processingCode === unblockTarget.personalCode
+        }
+        onConfirm={() => void handleConfirmUnblock()}
+        onCancel={() => setUnblockTarget(null)}
+      />
+    </>
   );
 }

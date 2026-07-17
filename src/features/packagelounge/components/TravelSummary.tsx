@@ -4,7 +4,7 @@ import { PackageDetailData } from "../packageDetail.types";
 
 interface TravelSummaryProps {
   data: PackageDetailData;
-  // country 기준으로 별도 조회한 값
+  // 패키지와 별도로 조회한 강의 정보이며 선택하지 않은 경우 null이다.
   course: CourseItem | null;
 }
 
@@ -97,7 +97,7 @@ export default function TravelSummary({ data, course }: TravelSummaryProps) {
           </div>
         </div>
 
-        {/* 선택한 강의 */}
+        {/* 선택한 강의가 있을 때만 표시한다. */}
         {course && (
           <div className="mt-3 flex gap-3 rounded-xl border border-[#E1E8EF] p-4">
             <Image

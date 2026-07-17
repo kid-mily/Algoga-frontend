@@ -3,10 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { PackageBookingInfo } from "../packageDetail.types";
+import { buildQueryString } from "../utils/query";
 
 interface PackageBookingSummaryProps {
   booking: PackageBookingInfo;
   packageId: string;
+  courseId?: string;
+  continentCode?: string;
 }
 
 type PaymentMethod = "분할 결제" | "일시불";
@@ -15,9 +18,13 @@ type PaymentMethod = "분할 결제" | "일시불";
 export default function PackageBookingSummary({
   booking,
   packageId,
+  courseId,
+  continentCode,
 }: PackageBookingSummaryProps) {
   const [paymentMethod, setPaymentMethod] =
     useState<PaymentMethod>("분할 결제");
+  // 예약 페이지가 패키지를 다시 조회할 때 자기 countryId를 직접 얻으므로 여기서는 courseId만 이어주면 된다
+  const bookingHref = `/packagelounge/${packageId}/booking${buildQueryString({ courseId, continentCode })}`;
 
   return (
     <div className="rounded-2xl border border-[#E1E8EF] bg-white p-5 shadow-[0_8px_24px_rgba(55,88,110,0.08)]">
@@ -90,16 +97,29 @@ export default function PackageBookingSummary({
         )}
       </div>
 
-      <Link
-        href={`/packagelounge/${packageId}/booking`}
-        className="mt-4 block w-full rounded-xl bg-[#439A97] py-3 text-center text-sm font-bold text-white transition hover:bg-[#377F7C]"
-      >
-        예약하기
-      </Link>
+      {booking.canBook ? (
+        <Link
+          href={bookingHref}
+          className="mt-4 block w-full rounded-xl bg-[#439A97] py-3 text-center text-sm font-bold text-white transition hover:bg-[#377F7C]"
+        >
+          예약하기
+        </Link>
+      ) : (
+        <button
+          type="button"
+          disabled
+          className="mt-4 block w-full cursor-not-allowed rounded-xl bg-[#B8C8C7] py-3 text-center text-sm font-bold text-white"
+        >
+          예약하기
+        </button>
+      )}
 
-      <p className="mt-3 text-center text-[11px] text-[#A0AEC0]">
-        실제 결제와 예약 처리는 이후 단계에서 연동될 예정입니다.
-      </p>
+      {!booking.canBook && (
+        <p className="mt-3 text-center text-[11px] text-[#B54747]">
+          항공편 정보를 불러오지 못해 지금은 예약할 수 없습니다. 잠시 후
+          다시 시도해 주세요.
+        </p>
+      )}
     </div>
   );
 }

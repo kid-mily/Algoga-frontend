@@ -1,12 +1,14 @@
 import Image from "next/image";
 import type { PackageDetailData } from "../packageDetail.types";
+import type { CourseItem } from "@/features/classroom/components/types";
 
 interface SelectedPackageProps {
   data: PackageDetailData;
+  course: CourseItem | null;
 }
 
-// 결제 페이지: 사용자가 선택한 패키지 + 항공권/숙소 정보 카드
-export default function SelectedPackage({ data }: SelectedPackageProps) {
+// 결제 페이지: 사용자가 선택한 패키지 + 항공권/숙소/강의 정보 카드
+export default function SelectedPackage({ data, course }: SelectedPackageProps) {
   const outboundFlight = data.flights[0];
 
   return (
@@ -93,6 +95,27 @@ export default function SelectedPackage({ data }: SelectedPackageProps) {
             </p>
           </div>
         </div>
+
+        {course && (
+          <div className="mt-3 flex gap-3 rounded-xl border border-[#E1E8EF] p-4">
+            <Image
+              src="/images/book.svg"
+              alt="강의"
+              width={20}
+              height={20}
+              className="mt-0.5 shrink-0"
+            />
+            <div>
+              <p className="text-xs font-bold text-[#439A97]">선택한 강의</p>
+              <p className="mt-1 text-sm font-bold text-[#0A1628]">
+                {course.title}
+              </p>
+              <p className="mt-2 text-sm font-extrabold text-[#439A97]">
+                {course.price.toLocaleString()}원
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

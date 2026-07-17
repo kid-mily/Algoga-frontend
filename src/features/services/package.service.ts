@@ -1,9 +1,32 @@
 import type {
   AccommodationResponse,
+  BookingDetail,
+  CreateBookingRequest,
+  CreatePaymentRequest,
+  FlightInfo,
   PackageApiItem,
   PackageLoungeDetail,
+  PassengerInfo,
+  PaymentDetail,
 } from "@/features/packagelounge/types";
 import { api, type ApiResult, unwrapData } from "@/lib/api";
+
+export async function getPackagesByCountry(
+  countryId: string | number,
+  signal?: AbortSignal
+): Promise<PackageApiItem[]> {
+  const response = await api.get<ApiResult<PackageApiItem[]>>(
+    `/api/v1/countries/${countryId}/packages`,
+    {
+      signal,
+      skipAuth: true,
+      suppressGlobalError: true,
+      cache: "no-store",
+    }
+  );
+
+  return unwrapData(response) ?? [];
+}
 
 export async function getPackageDetail(
   packageId: string | number,
@@ -50,4 +73,99 @@ export async function getPackageLoungeDetail(
   );
 
   return { packageItem, accommodation };
+}
+
+// POST /bookings 응답의 data는 생성된 예약의 bookingId 하나뿐이다
+export async function createBooking(
+  payload: CreateBookingRequest,
+  signal?: AbortSignal
+): Promise<number> {
+  const response = await api.post<ApiResult<number>>(
+    "/api/v1/bookings",
+    payload,
+    {
+      signal,
+      suppressGlobalError: true,
+    }
+  );
+
+  return unwrapData(response);
+}
+
+// GET /bookings/{bookingId} 응답에서 flightInfo/returnFlightInfo/passengerInfo는
+// JSON 문자열로 내려오므로 파싱해서 BookingDetail로 변환한다
+interface RawBookingDetail
+  extends Omit<
+    BookingDetail,
+    "flightInfo" | "returnFlightInfo" | "passengerInfo"
+  > {
+  flightInfo: string | null;
+  returnFlightInfo: string | null;
+  passengerInfo: string | null;
+}
+
+function parseJsonField<T>(value: string | null): T | null {
+  if (!value) return null;
+
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
+export async function getBookingDetail(
+  bookingId: string | number,
+  signal?: AbortSignal
+): Promise<BookingDetail> {
+  const response = await api.get<ApiResult<RawBookingDetail>>(
+    `/api/v1/bookings/${bookingId}`,
+    {
+      signal,
+      suppressGlobalError: true,
+      cache: "no-store",
+    }
+  );
+
+  const raw = unwrapData(response);
+
+  return {
+    ...raw,
+    flightInfo: parseJsonField<FlightInfo>(raw.flightInfo),
+    returnFlightInfo: parseJsonField<FlightInfo>(raw.returnFlightInfo),
+    passengerInfo: parseJsonField<PassengerInfo>(raw.passengerInfo),
+  };
+}
+
+// POST /payments 응답의 data는 생성된 결제의 paymentId 하나뿐이다
+export async function createPayment(
+  payload: CreatePaymentRequest,
+  signal?: AbortSignal
+): Promise<number> {
+  const response = await api.post<ApiResult<number>>(
+    "/api/v1/payments",
+    payload,
+    {
+      signal,
+      suppressGlobalError: true,
+    }
+  );
+
+  return unwrapData(response);
+}
+
+export async function getPaymentDetail(
+  paymentId: string | number,
+  signal?: AbortSignal
+): Promise<PaymentDetail> {
+  const response = await api.get<ApiResult<PaymentDetail>>(
+    `/api/v1/payments/${paymentId}`,
+    {
+      signal,
+      suppressGlobalError: true,
+      cache: "no-store",
+    }
+  );
+
+  return unwrapData(response);
 }

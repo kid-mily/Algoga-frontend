@@ -6,12 +6,21 @@ import Image from "next/image";
 import { searchUserByCode, sendFriendRequest } from "../friend.service";
 import type { Friend } from "../friend.types";
 
-export default function FriendCodeSearch() {
+interface FriendCodeSearchProps {
+  myPersonalCode: string;
+}
+
+export default function FriendCodeSearch({ myPersonalCode }: FriendCodeSearchProps) {
   const [code, setCode] = useState("");
   const [notice, setNotice] = useState("");
   const [searchResult, setSearchResult] = useState<Friend | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const isMe = Boolean(
+    searchResult &&
+      myPersonalCode &&
+      searchResult.personalCode.toLowerCase() === myPersonalCode.toLowerCase()
+  );
 
   const handleSearch = async () => {
     const nextCode = code.trim();
@@ -24,7 +33,15 @@ export default function FriendCodeSearch() {
     try {
       setIsSearching(true);
       setNotice("");
-      setSearchResult(await searchUserByCode(nextCode));
+      const result = await searchUserByCode(nextCode);
+      setSearchResult(result);
+
+      if (
+        myPersonalCode &&
+        result.personalCode.toLowerCase() === myPersonalCode.toLowerCase()
+      ) {
+        setNotice("본인은 친구로 추가할 수 없습니다.");
+      }
     } catch (error) {
       setSearchResult(null);
       setNotice(error instanceof Error ? error.message : "사용자를 찾지 못했습니다.");
@@ -34,7 +51,7 @@ export default function FriendCodeSearch() {
   };
 
   const handleSendRequest = async () => {
-    if (!searchResult || isSending) return;
+    if (!searchResult || isSending || isMe) return;
 
     try {
       setIsSending(true);
@@ -117,10 +134,10 @@ export default function FriendCodeSearch() {
           <button
             type="button"
             onClick={() => void handleSendRequest()}
-            disabled={isSending}
+            disabled={isSending || isMe}
             className="h-9 shrink-0 rounded-xl bg-[#439A97] px-4 text-xs font-bold text-white transition hover:bg-[#357F7C] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSending ? "요청 중" : "친구 요청"}
+            {isMe ? "본인 계정" : isSending ? "요청 중" : "친구 요청"}
           </button>
         </div>
       )}

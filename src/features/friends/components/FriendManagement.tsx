@@ -139,6 +139,7 @@ export default function FriendManagement({
       setBlockedUsers((previous) =>
         previous.filter((friend) => friend.personalCode !== personalCode)
       );
+      setFriends(await getFriends());
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "차단을 해제하지 못했습니다.");
     } finally {
@@ -151,7 +152,7 @@ export default function FriendManagement({
       <section className="grid gap-4 lg:grid-cols-2">
         <FriendCode personalCode={personalCode} />
 
-        <FriendCodeSearch />
+        <FriendCodeSearch myPersonalCode={personalCode} />
       </section>
 
       <article className="overflow-hidden rounded-2xl border border-[#E5EDF5] bg-white shadow-sm">
