@@ -1,15 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { PackageDetailData } from "../packageDetail.types";
+import { createBooking } from "@/features/services/package.service";
+import { CreateBookingRequest, PackageApiItem } from "../types";
+import { PackageDetailData } from "../packageDetail.types";
+import { getPassengerInfo } from "../utils/passengerStorage";
+import { buildQueryString } from "../utils/query";
+import { CourseItem } from "@/features/classroom/components/types";
 
 interface BookingPriceProps {
   data: PackageDetailData;
+  packageItem: PackageApiItem;
   packageId: string;
-  // 탑승객 정보 필수 항목이 모두 채워졌는지 여부
-  isPassengerValid: boolean;
-  // 취소/환불 규정에 동의했는지 여부
-  isAgreed: boolean;
+  course: CourseItem | null;
+  isPassengerValid: boolean;    // 탑승객 정보 필수 항목이 모두 채워졌는지 여부
+  isAgreed: boolean;  // 취소/환불 규정에 동의했는지 여부
   // 탑승객 정보가 비어 있는 채로 버튼을 눌렀을 때 호출 (탑승객 정보 쪽에 오류를 보여주기 위함)
   onInvalidAttempt: () => void;
   // 규정에 동의하지 않은 채로 버튼을 눌렀을 때 호출 (동의 체크박스 쪽에 오류를 보여주기 위함)
@@ -17,10 +23,13 @@ interface BookingPriceProps {
 }
 
 // 예약 요약 + 결제 금액 영역 (오른쪽 사이드 카드).
-// 버튼은 항상 눌러볼 수 있고, 탑승객 정보가 비어 있거나 규정에 동의하지 않았으면 그쪽으로 안내한다
+// 버튼은 항상 눌러볼 수 있고, 탑승객 정보가 비어 있거나 규정에 동의하지 않았으면 그쪽으로 안내한다.
+// 다음 단계(결제 페이지)는 bookingId가 있어야 해서, 여기서 먼저 예약(POST /bookings)을 생성한다
 export default function BookingPrice({
   data,
+  packageItem,
   packageId,
+  course,
   isPassengerValid,
   isAgreed,
   onInvalidAttempt,
@@ -28,8 +37,11 @@ export default function BookingPrice({
 }: BookingPriceProps) {
   const router = useRouter();
   const { booking } = data;
+  const [isCreating, setIsCreating] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const totalWithCourse = booking.totalAmount + (course?.price ?? 0);
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (!isPassengerValid) {
       onInvalidAttempt();
       return;
@@ -40,7 +52,46 @@ export default function BookingPrice({
       return;
     }
 
-    router.push(`/packagelounge/${packageId}/payment`);
+    if (isCreating) return;
+
+    const passenger = getPassengerInfo();
+    if (!passenger) {
+      onInvalidAttempt();
+      return;
+    }
+
+    setIsCreating(true);
+    setErrorMessage("");
+
+    try {
+      const payload: CreateBookingRequest = {
+        accommodationId: packageItem.accommodationId,
+        flightInfo: packageItem.flightInfo,
+        returnFlightInfo: packageItem.returnFlightInfo,
+        passengerInfo: {
+          lastName: passenger.lastName,
+          firstName: passenger.firstName,
+          birthDate: passenger.birthDate,
+          passportNumber: passenger.passportNumber,
+          passportExpiry: passenger.expiryDate,
+        },
+        flightPrice: packageItem.flightPrice,
+        checkInDate: packageItem.checkInDate,
+        checkOutDate: packageItem.checkOutDate,
+        bookingSource: "LOUNGE",
+      };
+
+      const bookingId = await createBooking(payload);
+      const query = buildQueryString({
+        bookingId,
+        courseId: course?.courseId,
+      });
+      router.push(`/packagelounge/${packageId}/payment${query}`);
+    } catch (error) {
+      console.error("[packagelounge] 예약 생성 실패:", error);
+      setErrorMessage("예약 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -70,12 +121,23 @@ export default function BookingPrice({
             {booking.stayPrice.toLocaleString()}원
           </span>
         </div>
+        {course && (
+          <>
+            <div className="border-t border-dashed border-[#D6E0E8]" />
+            <div className="flex items-center justify-between text-sm text-[#0A1628]">
+              <span>강의 ({course.title})</span>
+              <span className="font-bold">
+                {course.price.toLocaleString()}원
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="mt-4 flex items-center justify-between rounded-xl bg-[#EEF8F7] p-4">
         <span className="text-sm font-bold text-[#0A1628]">총 결제 금액</span>
         <span className="text-lg font-extrabold text-[#439A97]">
-          {booking.totalAmount.toLocaleString()}원
+          {totalWithCourse.toLocaleString()}원
         </span>
       </div>
 
@@ -83,12 +145,17 @@ export default function BookingPrice({
         쿠폰과 마일리지는 다음 단계에서 적용할 수 있습니다.
       </p>
 
+      {errorMessage && (
+        <p className="mt-3 text-xs text-[#D9534F]">{errorMessage}</p>
+      )}
+
       <button
         type="button"
         onClick={handleClick}
-        className="mt-4 w-full rounded-xl bg-[#439A97] py-3 text-center text-sm font-bold text-white transition hover:bg-[#357F7C]"
+        disabled={isCreating}
+        className="mt-4 w-full rounded-xl bg-[#439A97] py-3 text-center text-sm font-bold text-white transition hover:bg-[#357F7C] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        결제 단계로 이동
+        {isCreating ? "예약 생성 중..." : "결제 단계로 이동"}
       </button>
     </div>
   );

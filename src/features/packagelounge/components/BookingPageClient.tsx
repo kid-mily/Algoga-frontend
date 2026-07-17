@@ -9,10 +9,14 @@ import PassengerForm from "./PassengerForm";
 import BookingPolicy from "./BookingPolicy";
 import BookingPrice from "./BookingPrice";
 import type { PackageDetailData } from "../packageDetail.types";
+import type { PackageApiItem } from "../types";
+import type { CourseItem } from "@/features/classroom/components/types";
 
 interface BookingPageClientProps {
   data: PackageDetailData;
+  packageItem: PackageApiItem;
   packageId: string;
+  course: CourseItem | null;
 }
 
 // 예약 페이지 전체를 조립하는 클라이언트 컴포넌트
@@ -20,7 +24,9 @@ interface BookingPageClientProps {
 // "결제 단계로 이동" 버튼을 조건이 안 채워진 채로 눌렀을 때 해당 영역에 오류를 보여주도록 연결한다
 export default function BookingPageClient({
   data,
+  packageItem,
   packageId,
+  course,
 }: BookingPageClientProps) {
   const [isPassengerValid, setIsPassengerValid] = useState(false);
   const [validateSignal, setValidateSignal] = useState(0);
@@ -45,7 +51,7 @@ export default function BookingPageClient({
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* 왼쪽: 여행 정보 확인 → 탑승객 정보 → 예약 조건 확인 */}
           <div className="space-y-6 lg:col-span-2">
-            <TravelSummary data={data} />
+            <TravelSummary data={data} course={course} />
             <PassengerForm
               returnDate={data.endDate}
               onValidityChange={setIsPassengerValid}
@@ -62,7 +68,9 @@ export default function BookingPageClient({
             <div className="lg:sticky lg:top-24">
               <BookingPrice
                 data={data}
+                packageItem={packageItem}
                 packageId={packageId}
+                course={course}
                 isPassengerValid={isPassengerValid}
                 isAgreed={isAgreed}
                 onInvalidAttempt={() => setValidateSignal((prev) => prev + 1)}

@@ -3,11 +3,8 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { FIXED_NATIONALITY, FIXED_PASSPORT_TYPE } from "../booking.data";
-import {
-  getPassengerInfo,
-  savePassengerInfo,
-} from "../utils/passengerStorage";
-import type { PassengerFormData, PassengerFormErrors } from "../booking.types";
+import { getPassengerInfo, savePassengerInfo } from "../utils/passengerStorage";
+import { PassengerFormData, PassengerFormErrors } from "../booking.types";
 
 const INITIAL_FORM: PassengerFormData = {
   lastName: "",
@@ -99,7 +96,6 @@ export default function PassengerForm({
     if (expiryError) {
       setErrors((prev) => ({ ...prev, expiryDate: expiryError }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 입력값이 바뀔 때마다 필수 항목이 모두 채워졌는지 상위에 알려준다
@@ -297,8 +293,8 @@ function FormField({
   type = "text",
   error,
 }: FormFieldProps) {
-  // 필수 항목인데 비어 있거나(블러/제출 여부와 상관없이), 오류가 있으면 항상 빨간 테두리로 보여준다
-  const isInvalid = (required && value.trim().length === 0) || Boolean(error);
+  // 검사(블러 또는 제출 시도)로 오류가 확인된 경우에만 빨간 테두리로 보여준다
+  const isInvalid = Boolean(error);
 
   return (
     <div>
@@ -324,7 +320,6 @@ function FormField({
   );
 }
 
-// 입력창과 동일한 크기/모양이지만 수정할 수 없는 고정값 필드 (국적, 여권 종류)
 function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <div>

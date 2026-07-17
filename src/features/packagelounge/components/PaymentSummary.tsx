@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import CancellationPolicyModal from "@/features/payment/CancellationPolicyModal";
 import type { PackageDetailData } from "../packageDetail.types";
+import type { CourseItem } from "@/features/classroom/components/types";
 
 interface PaymentSummaryProps {
   data: PackageDetailData;
+  course: CourseItem | null;
   packageId: string;
   productAmount: number;
   couponDiscount: number;
@@ -17,6 +21,7 @@ interface PaymentSummaryProps {
 // 결제 페이지 오른쪽 카드: 예약 정보 + 요금 상세 + 결제 버튼
 export default function PaymentSummary({
   data,
+  course,
   packageId,
   productAmount,
   couponDiscount,
@@ -27,6 +32,7 @@ export default function PaymentSummary({
 }: PaymentSummaryProps) {
   const outboundFlight = data.flights[0];
   const canPay = !isPaying && Number.isFinite(finalAmount) && finalAmount >= 0;
+  const [isPolicyOpen, setIsPolicyOpen] = useState(false);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-[#E1E8EF] bg-white shadow-[0_8px_24px_rgba(55,88,110,0.08)]">
@@ -58,12 +64,6 @@ export default function PaymentSummary({
       <div className="p-5 sm:p-6">
         <div className="space-y-2 font-mono text-sm text-[#0A1628]">
           <div className="flex items-center justify-between">
-            <span className="font-sans">강의</span>
-            <span className="font-bold">
-              {data.booking.flightPrice.toLocaleString()}원
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
             <span className="font-sans">항공권</span>
             <span className="font-bold">
               {data.booking.flightPrice.toLocaleString()}원
@@ -75,6 +75,14 @@ export default function PaymentSummary({
               {data.booking.stayPrice.toLocaleString()}원
             </span>
           </div>
+          {course && (
+            <div className="flex items-center justify-between">
+              <span className="font-sans">강의 ({course.title})</span>
+              <span className="font-bold">
+                {course.price.toLocaleString()}원
+              </span>
+            </div>
+          )}
 
           <div className="flex items-center justify-between border-t border-dashed border-[#D6E0E8] pt-2">
             <span className="font-sans">상품 금액</span>
@@ -118,11 +126,16 @@ export default function PaymentSummary({
 
         <button
           type="button"
+          onClick={() => setIsPolicyOpen(true)}
           className="mt-3 w-full text-center text-xs font-medium text-[#8A9BB0] transition hover:text-[#718096]"
         >
           환불 정책 확인하기
         </button>
       </div>
+
+      {isPolicyOpen && (
+        <CancellationPolicyModal onClose={() => setIsPolicyOpen(false)} />
+      )}
     </div>
   );
 }

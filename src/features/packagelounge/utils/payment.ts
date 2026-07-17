@@ -17,8 +17,7 @@ export function calculatePayment({
 }: CalculatePaymentParams): PaymentBreakdown {
   const lectureAmount = lecturePrice;
   const flightAmount = packageItem.flightPrice;
-  const accommodationAmount =
-    accommodation.pricePerNight * accommodation.nights;
+  const accommodationAmount = accommodation.pricePerNight * packageItem.nights;
   const travelAmount = flightAmount + accommodationAmount;
   const depositAmount = Math.trunc((travelAmount * 30) / 100);
   const balanceAmount = travelAmount - depositAmount;

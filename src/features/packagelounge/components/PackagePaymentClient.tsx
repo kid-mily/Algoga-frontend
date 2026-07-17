@@ -9,28 +9,62 @@ import SelectedPackage from "./SelectedPackage";
 import PassengerSummary from "./PassengerSummary";
 import PaymentSummary from "./PaymentSummary";
 import { usePackagePayment } from "../hooks/usePackagePayment";
-import { PAYMENT_DUMMY_PASSENGER } from "../payment.data";
 import { getPassengerInfo } from "../utils/passengerStorage";
-import type { PackageDetailData } from "../packageDetail.types";
+import { getBookingDetail } from "@/features/services/package.service";
+import { PackageDetailData } from "../packageDetail.types";
+import { BookingDetail } from "../types";
+import type { PassengerFormData } from "../booking.types";
+import { CourseItem } from "@/features/classroom/components/types";
 
 interface PackagePaymentClientProps {
   data: PackageDetailData;
+  // 예약 조회는 로그인 유저 전용 데이터라 서버가 아니라
+  // 여기(클라이언트)에서 bookingId로 직접 불러온다 (브라우저 쿠키가 자동으로 실리도록)
+  bookingId: string;
   packageId: string;
+  course: CourseItem | null;
 }
 
 // 패키지 결제 페이지 전체를 조립하는 클라이언트 컴포넌트
-// (쿠폰/마일리지/토스페이먼츠 결제 흐름은 기존 결제 기능을 그대로 재사용합니다)
 export default function PackagePaymentClient({
   data,
+  bookingId,
   packageId,
+  course,
 }: PackagePaymentClientProps) {
-  // 예약 페이지에서 입력해 둔 탑승객 정보를 불러온다 (없으면 임시 값 사용)
-  const [passenger, setPassenger] = useState(PAYMENT_DUMMY_PASSENGER);
+  // 예약 페이지에서 입력해 둔 탑승객 정보를 불러온다
+  const [passenger, setPassenger] = useState<PassengerFormData | null>(null);
+  const [booking, setBooking] = useState<BookingDetail | null>(null);
+  const [loadErrorMessage, setLoadErrorMessage] = useState("");
 
   useEffect(() => {
     const saved = getPassengerInfo();
     if (saved) setPassenger(saved);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadBooking = async () => {
+      try {
+        const result = await getBookingDetail(bookingId);
+        if (active) setBooking(result);
+      } catch (error) {
+        if (!active) return;
+
+        console.error("[packagelounge] 결제 페이지 예약 조회 실패:", error);
+        setLoadErrorMessage(
+          "예약 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."
+        );
+      }
+    };
+
+    void loadBooking();
+
+    return () => {
+      active = false;
+    };
+  }, [bookingId]);
 
   const {
     coupons,
@@ -38,6 +72,7 @@ export default function PackagePaymentClient({
     mileageBalance,
     mileageInputValue,
     usedMileage,
+    isLoadingBenefits,
     isPaying,
     errorMessage,
     productAmount,
@@ -52,9 +87,35 @@ export default function PackagePaymentClient({
   } = usePackagePayment({
     packageId,
     packageName: data.title,
-    flightPrice: data.booking.flightPrice,
-    accommodationPrice: data.booking.stayPrice,
+    bookingId: booking?.bookingId ?? 0,
+    totalPrice: booking?.totalPrice ?? 0,
+    courseId: course?.courseId ?? null,
+    coursePrice: course?.price ?? 0,
   });
+
+  if (loadErrorMessage) {
+    return (
+      <main className="min-h-screen bg-[#F3F8FC] px-4 py-16">
+        <section className="mx-auto max-w-[520px] rounded-[20px] border border-[#E1E8EF] bg-white px-6 py-8 text-center shadow-sm">
+          <p className="text-sm font-semibold text-[#172235]">
+            {loadErrorMessage}
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <main className="min-h-screen bg-[#F3F8FC] px-4 py-16">
+        <section className="mx-auto max-w-[520px] rounded-[20px] border border-[#E1E8EF] bg-white px-6 py-8 text-center shadow-sm">
+          <p className="text-sm font-bold text-[#172235]">
+            예약 정보를 불러오는 중입니다.
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#F3F8FC] px-4 py-10 sm:px-6 lg:px-8">
@@ -88,8 +149,10 @@ export default function PackagePaymentClient({
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* 왼쪽: 선택한 패키지 → 탑승객 정보 → 쿠폰 → 마일리지 */}
           <div className="space-y-6 lg:col-span-2">
-            <SelectedPackage data={data} />
-            <PassengerSummary passenger={passenger} packageId={packageId} />
+            <SelectedPackage data={data} course={course} />
+            {passenger && (
+              <PassengerSummary passenger={passenger} packageId={packageId} />
+            )}
             <CouponSelector
               coupons={coupons}
               selectedCouponId={selectedCouponId}
@@ -111,12 +174,13 @@ export default function PackagePaymentClient({
             <div className="lg:sticky lg:top-24">
               <PaymentSummary
                 data={data}
+                course={course}
                 packageId={packageId}
                 productAmount={productAmount}
                 couponDiscount={couponDiscount}
                 usedMileage={usedMileage}
                 finalAmount={finalAmount}
-                isPaying={isPaying}
+                isPaying={isPaying || isLoadingBenefits}
                 onPay={handlePay}
               />
             </div>

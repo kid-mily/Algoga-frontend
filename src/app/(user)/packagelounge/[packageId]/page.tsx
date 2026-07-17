@@ -1,31 +1,56 @@
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import PackageHero from "@/features/packagelounge/components/PackageHero";
 import PackageDetailTabs from "@/features/packagelounge/components/PackageDetailTabs";
 import PackageBookingSummary from "@/features/packagelounge/components/PackageBookingSummary";
-import { PACKAGE_DETAIL_DATA } from "@/features/packagelounge/packageDetail.data";
+import { toPackageDetailData } from "@/features/packagelounge/packageDetail.util";
+import { buildQueryString } from "@/features/packagelounge/utils/query";
+import { getPackageLoungeDetail } from "@/features/services/package.service";
+import { ApiRequestError } from "@/lib/api";
 
 interface PackageDetailPageProps {
   params: Promise<{ packageId: string }>;
+  searchParams: Promise<{ courseId?: string; continentCode?: string }>;
 }
 
-// 디자인 확인용 패키지 라운지 상세보기 페이지 (실제 API 연동 없음)
+// 패키지 라운지 상세보기 페이지
 export default async function PackageDetailPage({
   params,
+  searchParams,
 }: PackageDetailPageProps) {
   const { packageId } = await params;
-  const data = PACKAGE_DETAIL_DATA;
+  const { courseId, continentCode } = await searchParams;
+
+  let detail;
+  try {
+    detail = await getPackageLoungeDetail(packageId);
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.status === 404) {
+      notFound();
+    }
+
+    console.error("[packagelounge] 패키지 상세 조회 실패:", error);
+    throw error;
+  }
+
+  const data = toPackageDetailData(detail);
+  const backHref = `/packagelounge${buildQueryString({
+    countryId: detail.packageItem.countryId,
+    courseId,
+    continentCode,
+  })}`;
 
   return (
     <main className="min-h-screen bg-[#F3F8FC] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl">
         {/* 상단 경로 표시 */}
         <div className="flex items-center gap-2">
-          <Link href="/packagelounge" aria-label="패키지 라운지로 돌아가기">
+          <Link href={backHref} aria-label="패키지 라운지로 돌아가기">
             <Image src="/images/arrow.svg" alt="" width={16} height={16} />
           </Link>
           <Link
-            href="/packagelounge"
+            href={backHref}
             className="text-sm text-[#718096] hover:text-[#0A1628]"
           >
             패키지 라운지
@@ -51,7 +76,12 @@ export default async function PackageDetailPage({
 
           {/* 오른쪽 영역: 예약 요약 카드 */}
           <div className="lg:sticky lg:top-24 lg:self-start">
-            <PackageBookingSummary booking={data.booking} packageId={packageId} />
+            <PackageBookingSummary
+              booking={data.booking}
+              packageId={packageId}
+              courseId={courseId}
+              continentCode={continentCode}
+            />
           </div>
         </div>
       </div>
