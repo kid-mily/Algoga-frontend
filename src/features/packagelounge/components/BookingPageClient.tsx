@@ -16,7 +16,7 @@ interface BookingPageClientProps {
   data: PackageDetailData;
   packageItem: PackageApiItem;
   packageId: string;
-  course: CourseItem | null;
+  course: CourseItem | null; 
 }
 
 // 예약 페이지 전체를 조립하는 클라이언트 컴포넌트
