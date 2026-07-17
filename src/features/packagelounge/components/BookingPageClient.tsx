@@ -8,9 +8,9 @@ import TravelSummary from "./TravelSummary";
 import PassengerForm from "./PassengerForm";
 import BookingPolicy from "./BookingPolicy";
 import BookingPrice from "./BookingPrice";
-import type { PackageDetailData } from "../packageDetail.types";
-import type { PackageApiItem } from "../types";
-import type { CourseItem } from "@/features/classroom/components/types";
+import { PackageDetailData } from "../packageDetail.types";
+import { PackageApiItem } from "../types";
+import { CourseItem } from "@/features/classroom/components/types";
 
 interface BookingPageClientProps {
   data: PackageDetailData;
@@ -57,13 +57,14 @@ export default function BookingPageClient({
               onValidityChange={setIsPassengerValid}
               validateSignal={validateSignal}
             />
+            
             <BookingPolicy
               onAgreedChange={setIsAgreed}
               validateSignal={policySignal}
             />
           </div>
 
-          {/* 오른쪽: 예약 요약 + 결제 금액 (데스크톱에서만 sticky) */}
+          {/* 오른쪽: 예약 요약 + 결제 금액 */}
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-24">
               <BookingPrice
