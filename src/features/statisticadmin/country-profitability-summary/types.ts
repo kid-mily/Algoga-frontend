@@ -13,5 +13,4 @@ export type CountryProfitabilityItem = {
     balanceConversionRate: number;    // 잔금전환율
     cancelRate: number;               // 취소율
     share: number;                    // 순매출 점유율
-    couponConversionRate: number;     // 쿠폰전환율
 };

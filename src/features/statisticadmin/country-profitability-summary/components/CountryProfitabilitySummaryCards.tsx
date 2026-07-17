@@ -1,6 +1,6 @@
 import { Globe2, TrendingDown, WalletCards } from "lucide-react";
 import type { CountryProfitabilitySummary } from "../types";
-import { formatHundredMillion, formatPercent } from "../utils";
+import { formatManwon, formatPercent } from "../utils";
 
 type CountryProfitabilitySummaryCardsProps = {
   summary: CountryProfitabilitySummary;
@@ -18,7 +18,7 @@ export default function CountryProfitabilitySummaryCards({
     },
     {
       label: "총 순매출",
-      value: formatHundredMillion(summary.totalNetRevenue),
+      value: formatManwon(summary.totalNetRevenue),
       icon: WalletCards,
       iconClassName: "bg-[#F2EEFF] text-[#8B5CF6]",
     },
