@@ -97,6 +97,17 @@ describe("MoneyRefundManageClient 컴포넌트 테스트", () => {
     expect(screen.queryByText("도쿄 패키지 5일")).not.toBeInTheDocument();
   });
 
+  test("상태 필터로 환불 요청 목록을 필터링한다", async () => {
+    const user = userEvent.setup();
+
+    render(<MoneyRefundManageClient initialRefunds={refunds} hasInitialData />);
+
+    await user.selectOptions(screen.getByLabelText("환불 상태"), "환불 승인");
+
+    expect(screen.getByText("파리 패키지 7일")).toBeVisible();
+    expect(screen.queryByText("도쿄 패키지 5일")).not.toBeInTheDocument();
+  });
+
   test("승인 처리 확인 후 완료 모달을 보여준다", async () => {
     const user = userEvent.setup();
 
@@ -113,5 +124,23 @@ describe("MoneyRefundManageClient 컴포넌트 테스트", () => {
     });
     expect(getAdminRefunds).toHaveBeenCalled();
     expect(screen.getByText("환불 승인 처리가 완료되었습니다.")).toBeVisible();
+  });
+
+  test("완료 처리 확인 후 완료 모달을 보여준다", async () => {
+    const user = userEvent.setup();
+
+    render(<MoneyRefundManageClient initialRefunds={refunds} hasInitialData />);
+
+    await user.click(screen.getAllByRole("button", { name: "완료" })[1]);
+
+    expect(screen.getByText("REF002 요청을 환불 완료 처리하시겠습니까?")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "확인" }));
+
+    await waitFor(() => {
+      expect(completeRefund).toHaveBeenCalledWith(2);
+    });
+    expect(getAdminRefunds).toHaveBeenCalled();
+    expect(screen.getByText("환불 완료 처리가 완료되었습니다.")).toBeVisible();
   });
 });
