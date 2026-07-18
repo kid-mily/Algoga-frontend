@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import { Download, Search } from "lucide-react";
 import type { CountryDetailStatsTableProps } from "../types";
 
@@ -5,10 +8,36 @@ const formatNumber = (value: number) => Number(value ?? 0).toLocaleString();
 const formatMoney = (amount: number) => `${formatNumber(amount)}원`;
 const formatRate = (rate: number) => `${Number(rate ?? 0)}%`;
 
+const PAGE_SIZE = 10;
+
 export default function CountryDetailStatsTable({
   data,
   onDownloadCsv,
 }: CountryDetailStatsTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  // country-profit API가 search를 지원하지 않아 국가명 검색은 클라이언트에서 필터링합니다.
+  const filteredData = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return data;
+    return data.filter((country) =>
+      country.countryName.toLowerCase().includes(keyword)
+    );
+  }, [data, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pagedData = useMemo(() => {
+    const start = (safeCurrentPage - 1) * PAGE_SIZE;
+    return filteredData.slice(start, start + PAGE_SIZE);
+  }, [filteredData, safeCurrentPage]);
+  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+  };
+
   return (
     <article className="overflow-hidden rounded-[18px] bg-white shadow-sm">
       <header className="flex items-center justify-between border-b border-[#EEF0F3] px-5 py-4">
@@ -22,6 +51,11 @@ export default function CountryDetailStatsTable({
             <span className="sr-only">국가명 검색</span>
             <input
               type="text"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="국가명 검색..."
               className="ml-2 w-full bg-transparent text-[12px] outline-none placeholder:text-[#98A2B3]"
             />
@@ -54,7 +88,7 @@ export default function CountryDetailStatsTable({
           </thead>
 
           <tbody>
-            {data.map((country) => (
+            {pagedData.map((country) => (
               <tr
                 key={country.rank}
                 className="border-b border-[#EEF0F3] text-[13px] text-[#111827]"
@@ -89,21 +123,41 @@ export default function CountryDetailStatsTable({
       </div>
 
       <footer className="flex items-center justify-between px-5 py-4 text-[12px] text-[#98A2B3]">
-        <p>총 20개 · 1/2 페이지</p>
+        <p>
+          총 {filteredData.length}개 · {safeCurrentPage}/{totalPages} 페이지
+        </p>
         <div className="flex items-center gap-3">
-          <button type="button" className="text-[#CBD0D6]">
-            ‹
-          </button>
           <button
             type="button"
-            className="h-7 w-7 rounded-[7px] bg-[#2FAE9B] font-bold text-white"
+            onClick={() => goToPage(safeCurrentPage - 1)}
+            disabled={safeCurrentPage <= 1}
+            aria-label="이전 페이지"
+            className="text-[#667085] disabled:cursor-not-allowed disabled:text-[#CBD0D6]"
           >
-            1
+            ‹
           </button>
-          <button type="button" className="font-semibold text-[#667085]">
-            2
-          </button>
-          <button type="button" className="text-[#667085]">
+          {pageNumbers.map((page) => (
+            <button
+              key={page}
+              type="button"
+              onClick={() => goToPage(page)}
+              aria-current={page === safeCurrentPage ? "page" : undefined}
+              className={
+                page === safeCurrentPage
+                  ? "h-7 w-7 rounded-[7px] bg-[#2FAE9B] font-bold text-white"
+                  : "font-semibold text-[#667085]"
+              }
+            >
+              {page}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => goToPage(safeCurrentPage + 1)}
+            disabled={safeCurrentPage >= totalPages}
+            aria-label="다음 페이지"
+            className="text-[#667085] disabled:cursor-not-allowed disabled:text-[#CBD0D6]"
+          >
             ›
           </button>
         </div>

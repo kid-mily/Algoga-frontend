@@ -1,4 +1,11 @@
-import { SalesOverviewPeriod, SalesOverviewQuery } from "../types";
+import { SalesOverviewPeriod, SalesOverviewQuery, SalesTrendUnit } from "../types";
+
+// 차트 추이 API의 unit: 오늘→시간, 이번주·이번달→일, 올해→월
+export const getSalesTrendUnit = (period: SalesOverviewPeriod): SalesTrendUnit => {
+  if (period === "today") return "HOUR";
+  if (period === "thisYear") return "MONTH";
+  return "DAY";
+};
 
 const dateInputFormatter = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Asia/Seoul",

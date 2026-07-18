@@ -90,4 +90,6 @@ export type CourseInterestBarChartProps = {
 
 export type PopularCountryCourseRankingTableProps = {
   data: PopularCountryCourseRank[];
+  keyword: string;
+  onKeywordChange: (keyword: string) => void;
 };

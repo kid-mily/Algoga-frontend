@@ -17,6 +17,7 @@ export default function SalesFinanceManageClient() {
     selectedPeriod,
     setSelectedPeriod,
     overview,
+    trend,
     isLoading,
     error,
   } = useSalesOverview();
@@ -45,7 +46,7 @@ export default function SalesFinanceManageClient() {
       ) : overview ? (
         <>
           <SalesOverviewSummaryCards summary={overview} />
-          <SalesOverviewLineChart monthlyStats={overview.monthlyStats} />
+          <SalesOverviewLineChart trend={trend} />
           <SalesOverviewTable monthlyStats={overview.monthlyStats} />
         </>
       ) : (

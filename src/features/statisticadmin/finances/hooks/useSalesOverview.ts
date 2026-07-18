@@ -1,23 +1,35 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getSalesOverview } from "@/features/services/adminSalesOverview.service";
+import {
+  getSalesOverview,
+  getSalesOverviewTrend,
+} from "@/features/services/adminSalesOverview.service";
 import { ApiRequestError } from "@/lib/api";
 import {
   SalesOverview,
   SalesOverviewPeriod,
+  SalesTrendPoint,
 } from "../types";
-import { getSalesOverviewDateRange } from "../utils/salesOverviewFormatters";
+import {
+  getSalesOverviewDateRange,
+  getSalesTrendUnit,
+} from "../utils/salesOverviewFormatters";
 
 export const useSalesOverview = () => {
   const [selectedPeriod, setSelectedPeriod] =
     useState<SalesOverviewPeriod>("thisMonth");
   const [overview, setOverview] = useState<SalesOverview | null>(null);
+  const [trend, setTrend] = useState<SalesTrendPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
   const query = useMemo(
     () => getSalesOverviewDateRange(selectedPeriod),
+    [selectedPeriod]
+  );
+  const trendUnit = useMemo(
+    () => getSalesTrendUnit(selectedPeriod),
     [selectedPeriod]
   );
 
@@ -29,12 +41,19 @@ export const useSalesOverview = () => {
       setError("");
 
       try {
-        const data = await getSalesOverview(query, controller.signal);
-        setOverview(data);
+        // 카드·표용 overview와 차트용 trend를 동시에 불러옵니다.
+        const [overviewData, trendData] = await Promise.all([
+          getSalesOverview(query, controller.signal),
+          getSalesOverviewTrend(query, trendUnit, controller.signal),
+        ]);
+
+        setOverview(overviewData);
+        setTrend(trendData);
       } catch (loadError) {
         if (controller.signal.aborted) return;
 
         setOverview(null);
+        setTrend([]);
         setError(
           loadError instanceof ApiRequestError
             ? loadError.message
@@ -50,12 +69,13 @@ export const useSalesOverview = () => {
     void loadOverview();
 
     return () => controller.abort();
-  }, [query]);
+  }, [query, trendUnit]);
 
   return {
     selectedPeriod,
     setSelectedPeriod,
     overview,
+    trend,
     isLoading,
     error,
   };

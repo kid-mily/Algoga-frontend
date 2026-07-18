@@ -11,17 +11,9 @@ import CountryDetailStatsTable from "./CountryDetailStatsTable";
 import CourseCompletionAnalysisTable from "./CourseCompletionAnalysisTable";
 import PopularCountryCourseRankingTable from "./PopularCountryCourseRankingTable";
 import { useCountryCourseInterestStatistics } from "../hooks/useCountryCourseInterestStatistics";
-import { interestPeriodLabels, interestPeriods } from "../utils";
-
-const periodOptions = interestPeriods.map((period) => ({
-  label: interestPeriodLabels[period],
-  value: period,
-}));
 
 export default function CountryCourseInterestManageClient() {
   const {
-    period,
-    setPeriod,
     query,
     summary,
     countries,
@@ -31,6 +23,8 @@ export default function CountryCourseInterestManageClient() {
     popularCourseRanks,
     courseKeyword,
     setCourseKeyword,
+    rankKeyword,
+    setRankKeyword,
     isLoading,
     isCourseLoading,
     error,
@@ -80,7 +74,11 @@ export default function CountryCourseInterestManageClient() {
             isLoading={isCourseLoading}
             onKeywordChange={setCourseKeyword}
           />
-          <PopularCountryCourseRankingTable data={popularCourseRanks} />
+          <PopularCountryCourseRankingTable
+            data={popularCourseRanks}
+            keyword={rankKeyword}
+            onKeywordChange={setRankKeyword}
+          />
         </>
       )}
     </main>

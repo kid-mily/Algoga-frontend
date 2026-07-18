@@ -164,12 +164,16 @@ export const getCountryProfitList = async (
   }));
 };
 
+// search: 강의명 또는 나라명 부분 일치 (백엔드 배포 후 적용). 빈 값이면 전체 조회.
 export const getInterestLectures = async (
+  search?: string,
   signal?: AbortSignal
 ): Promise<PopularCountryCourseRank[]> => {
+  const trimmed = search?.trim();
   const response = await adminApi.get<ApiResult<RawInterestLecture[]>>(
     "/api/v1/admin/stats/interest/lectures",
     {
+      params: trimmed ? { search: trimmed } : undefined,
       signal,
       suppressGlobalError: true,
     }
@@ -227,9 +231,12 @@ export const downloadCountryProfitCsv = async ({ from, to }: InterestQuery) => {
   );
 };
 
-export const downloadInterestLecturesCsv = async () => {
+export const downloadInterestLecturesCsv = async (search = "") => {
+  const trimmed = search.trim();
+  const query = trimmed ? `?search=${encodeURIComponent(trimmed)}` : "";
+
   await downloadAdminCsv(
-    "/api/v1/admin/stats/interest/lectures/csv",
+    `/api/v1/admin/stats/interest/lectures/csv${query}`,
     "interest-lectures.csv"
   );
 };

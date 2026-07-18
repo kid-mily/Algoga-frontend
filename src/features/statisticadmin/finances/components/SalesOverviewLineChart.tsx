@@ -14,20 +14,20 @@ import { toMillionValue } from "../utils/salesOverviewFormatters";
 import { SalesOverviewLineChartProps,ChartDatum } from '../types'
 
 export default function SalesOverviewLineChart({
-  monthlyStats,
+  trend,
 }: SalesOverviewLineChartProps) {
-  const chartData: ChartDatum[] = monthlyStats.map((item) => ({
-    month: item.month,
-    "총매출": toMillionValue(item.grossSales),
-    "순매출": toMillionValue(item.netSales),
-    "환불": toMillionValue(item.refundAmount),
+  const chartData: ChartDatum[] = trend.map((item) => ({
+    label: item.label,
+    "총매출": toMillionValue(item.totalRevenue),
+    "순매출": toMillionValue(item.netRevenue),
+    "환불": toMillionValue(item.refund),
   }));
 
   return (
     <section className="rounded-[18px] border border-[#EAECF0] bg-white p-6 shadow-[0_12px_28px_rgba(16,24,40,0.05)]">
       <div className="mb-5">
         <h2 className="text-[17px] font-bold text-[#101828]">
-          월별 총매출 · 환불 · 순매출 추이
+          매출 추이 (총매출 · 환불 · 순매출)
         </h2>
         <p className="mt-1 text-[12px] font-medium text-[#98A2B3]">
           단위: 백만원 / 순매출 = 총매출 - 환불
@@ -39,7 +39,7 @@ export default function SalesOverviewLineChart({
           <LineChart data={chartData} margin={{ top: 8, right: 20, bottom: 0, left: 0 }}>
             <CartesianGrid stroke="#EAECF0" strokeDasharray="4 4" />
             <XAxis
-              dataKey="month"
+              dataKey="label"
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#98A2B3", fontSize: 12 }}
