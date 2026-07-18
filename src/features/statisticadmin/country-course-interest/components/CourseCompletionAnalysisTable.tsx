@@ -1,5 +1,5 @@
 import { Download, Search } from "lucide-react";
-import { downloadCourseEnrollmentCsv } from "@/features/services/adminInterestStatistics.service";
+import { downloadInterestLecturesCsv } from "@/features/services/adminInterestStatistics.service";
 import type { CourseCompletionAnalysisTableProps } from "../types";
 import { getCompletionStatusStyle } from "../utils";
 
@@ -55,7 +55,7 @@ export default function CourseCompletionAnalysisTable({
 
             <button
               type="button"
-              onClick={() => void downloadCourseEnrollmentCsv(keyword)}
+              onClick={() => void downloadInterestLecturesCsv(keyword)}
               className="flex h-9 items-center gap-1 rounded-[10px] border border-[#E4E7EC] px-3 text-[12px] font-semibold text-[#667085]"
             >
               <Download size={14} />

@@ -7,6 +7,8 @@ import { getCompletionStatusStyle } from "../utils";
 
 export default function PopularCountryCourseRankingTable({
   data,
+  keyword,
+  onKeywordChange,
 }: PopularCountryCourseRankingTableProps) {
   return (
     <section className="mt-10">
@@ -27,6 +29,8 @@ export default function PopularCountryCourseRankingTable({
               <span className="sr-only">강의명 나라 검색</span>
               <input
                 type="text"
+                value={keyword}
+                onChange={(event) => onKeywordChange(event.target.value)}
                 placeholder="강의명 나라 검색..."
                 className="ml-2 w-full bg-transparent text-[12px] outline-none placeholder:text-[#98A2B3]"
               />
@@ -34,7 +38,7 @@ export default function PopularCountryCourseRankingTable({
 
             <button
               type="button"
-              onClick={() => void downloadInterestLecturesCsv()}
+              onClick={() => void downloadInterestLecturesCsv(keyword)}
               className="flex h-9 items-center gap-1 rounded-[10px] border border-[#E4E7EC] px-3 text-[12px] font-semibold text-[#667085]"
             >
               <Download size={14} />

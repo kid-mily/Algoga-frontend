@@ -31,12 +31,22 @@ export type SalesOverviewQuery = {
   to: string;
 };
 
+// 차트 전용 추이 API (overview/trend). 기간 버튼에 맞춰 unit을 바꿔 보냅니다.
+export type SalesTrendUnit = "HOUR" | "DAY" | "MONTH";
+
+export type SalesTrendPoint = {
+  label: string;
+  totalRevenue: number;
+  refund: number;
+  netRevenue: number;
+};
+
 export type SalesOverviewLineChartProps = {
-  monthlyStats: SalesOverviewMonthlyStat[];
+  trend: SalesTrendPoint[];
 };
 
 export type ChartDatum = {
-  month: string;
+  label: string;
   "총매출": number;
   "순매출": number;
   "환불": number;

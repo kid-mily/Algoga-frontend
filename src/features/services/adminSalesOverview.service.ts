@@ -3,6 +3,8 @@ import {
   SalesOverview,
   SalesOverviewMonthlyStat,
   SalesOverviewQuery,
+  SalesTrendPoint,
+  SalesTrendUnit,
 } from "@/features/statisticadmin/finances/types";
 
 type RawSalesOverviewMonthlyStat = {
@@ -60,4 +62,34 @@ export const getSalesOverview = async (
   );
 
   return normalizeSalesOverview(unwrapData(response));
+};
+
+type RawSalesTrendPoint = {
+  label: string;
+  totalRevenue: number;
+  refund: number;
+  netRevenue: number;
+};
+
+// 차트 전용 추이 API. unit(HOUR/DAY/MONTH)에 맞춰 x축 버킷이 달라집니다.
+export const getSalesOverviewTrend = async (
+  { from, to }: SalesOverviewQuery,
+  unit: SalesTrendUnit,
+  signal?: AbortSignal
+): Promise<SalesTrendPoint[]> => {
+  const response = await adminApi.get<ApiResult<RawSalesTrendPoint[]>>(
+    "/api/v1/admin/stats/overview/trend",
+    {
+      params: { from, to, unit },
+      signal,
+      suppressGlobalError: true,
+    }
+  );
+
+  return (unwrapData(response) ?? []).map((item) => ({
+    label: item.label,
+    totalRevenue: item.totalRevenue ?? 0,
+    refund: item.refund ?? 0,
+    netRevenue: item.netRevenue ?? 0,
+  }));
 };
