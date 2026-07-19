@@ -19,8 +19,18 @@ const periodOptions = countryProfitPeriods.map((period) => ({
 }));
 
 export default function CountryProfitabilitySummaryClient() {
-  const { selectedPeriod, setSelectedPeriod, query, data, isLoading, error } =
-    useCountryProfitStatistics();
+  const {
+    selectedPeriod,
+    setSelectedPeriod,
+    search,
+    setSearch,
+    query,
+    data,
+    tableItems,
+    isLoading,
+    isTableLoading,
+    error,
+  } = useCountryProfitStatistics();
   const [csvError, setCsvError] = useState("");
   const [isDownloadingCsv, setIsDownloadingCsv] = useState(false);
 
@@ -30,7 +40,7 @@ export default function CountryProfitabilitySummaryClient() {
     try {
       setIsDownloadingCsv(true);
       setCsvError("");
-      await downloadCountryProfitCsv(query);
+      await downloadCountryProfitCsv({ ...query, search });
     } catch (downloadError) {
       setCsvError(
         downloadError instanceof Error
@@ -71,7 +81,13 @@ export default function CountryProfitabilitySummaryClient() {
             <CountryRefundCancelCompareChart data={data.items} />
           </section>
 
-          <CountryProfitabilityTable data={data.items} onDownloadCsv={handleDownloadCsv} />
+          <CountryProfitabilityTable
+            data={tableItems}
+            search={search}
+            onSearchChange={setSearch}
+            isLoading={isTableLoading}
+            onDownloadCsv={handleDownloadCsv}
+          />
         </>
       ) : null}
     </main>

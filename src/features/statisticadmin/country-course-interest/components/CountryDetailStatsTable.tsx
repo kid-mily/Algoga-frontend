@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, Search } from "lucide-react";
 import type { CountryDetailStatsTableProps } from "../types";
 
@@ -12,26 +12,24 @@ const PAGE_SIZE = 10;
 
 export default function CountryDetailStatsTable({
   data,
+  search,
+  onSearchChange,
+  isLoading = false,
   onDownloadCsv,
 }: CountryDetailStatsTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState("");
 
-  // country-profit API가 search를 지원하지 않아 국가명 검색은 클라이언트에서 필터링합니다.
-  const filteredData = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    if (!keyword) return data;
-    return data.filter((country) =>
-      country.countryName.toLowerCase().includes(keyword)
-    );
-  }, [data, search]);
+  // 서버 검색 결과(data)가 갱신되면 1페이지로 되돌립니다.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const pagedData = useMemo(() => {
     const start = (safeCurrentPage - 1) * PAGE_SIZE;
-    return filteredData.slice(start, start + PAGE_SIZE);
-  }, [filteredData, safeCurrentPage]);
+    return data.slice(start, start + PAGE_SIZE);
+  }, [data, safeCurrentPage]);
   const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
 
   const goToPage = (page: number) => {
@@ -52,10 +50,7 @@ export default function CountryDetailStatsTable({
             <input
               type="text"
               value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(event) => onSearchChange(event.target.value)}
               placeholder="국가명 검색..."
               className="ml-2 w-full bg-transparent text-[12px] outline-none placeholder:text-[#98A2B3]"
             />
@@ -88,7 +83,26 @@ export default function CountryDetailStatsTable({
           </thead>
 
           <tbody>
-            {pagedData.map((country) => (
+            {isLoading ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="px-5 py-12 text-center text-[13px] text-[#98A2B3]"
+                >
+                  국가별 상세 통계를 불러오는 중입니다...
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="px-5 py-12 text-center text-[13px] text-[#98A2B3]"
+                >
+                  조회된 국가별 상세 통계가 없습니다.
+                </td>
+              </tr>
+            ) : (
+              pagedData.map((country) => (
               <tr
                 key={country.rank}
                 className="border-b border-[#EEF0F3] text-[13px] text-[#111827]"
@@ -117,14 +131,15 @@ export default function CountryDetailStatsTable({
                   {formatRate(country.share)}
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       <footer className="flex items-center justify-between px-5 py-4 text-[12px] text-[#98A2B3]">
         <p>
-          총 {filteredData.length}개 · {safeCurrentPage}/{totalPages} 페이지
+          총 {data.length}개 · {safeCurrentPage}/{totalPages} 페이지
         </p>
         <div className="flex items-center gap-3">
           <button

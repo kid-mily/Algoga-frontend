@@ -5,25 +5,20 @@ import { formatWon, getDDayClassName, getDDayLabel } from "../utils";
 
 type OutstandingReservationTableProps = {
   data: OutstandingReservation[];
+  search: string;
+  onSearchChange: (value: string) => void;
+  isLoading?: boolean;
   onDownloadCsv: () => Promise<void>;
 };
 
 export default function OutstandingReservationTable({
   data,
+  search,
+  onSearchChange,
+  isLoading = false,
   onDownloadCsv,
 }: OutstandingReservationTableProps) {
-  const [keyword, setKeyword] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
-
-  const filteredData = data.filter((reservation) => {
-    const normalizedKeyword = keyword.trim().toLowerCase();
-    if (!normalizedKeyword) return true;
-
-    return (
-      reservation.customerName.toLowerCase().includes(normalizedKeyword) ||
-      reservation.productName.toLowerCase().includes(normalizedKeyword)
-    );
-  });
 
   const handleDownloadCsv = async () => {
     if (isDownloading) return;
@@ -49,8 +44,8 @@ export default function OutstandingReservationTable({
             <span className="sr-only">고객명 상품명 검색</span>
             <input
               type="text"
-              value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
               placeholder="고객명·상품명 검색"
               className="ml-2 w-full bg-transparent text-[12px] outline-none placeholder:text-[#98A2B3]"
             />
@@ -84,8 +79,17 @@ export default function OutstandingReservationTable({
           </thead>
 
           <tbody>
-            {filteredData.length > 0 ? (
-              filteredData.map((reservation) => (
+            {isLoading ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="px-5 py-10 text-center text-[13px] text-[#98A2B3]"
+                >
+                  미납 예약 목록을 불러오는 중입니다...
+                </td>
+              </tr>
+            ) : data.length > 0 ? (
+              data.map((reservation) => (
                 <tr
                   key={reservation.bookingNumber}
                   className="border-b border-[#EEF0F3] text-[13px] text-[#344054]"
@@ -137,7 +141,7 @@ export default function OutstandingReservationTable({
       </div>
 
       <footer className="flex items-center justify-between px-5 py-4 text-[12px] text-[#98A2B3]">
-        <p>총 {filteredData.length}개</p>
+        <p>총 {data.length}개</p>
       </footer>
     </article>
   );

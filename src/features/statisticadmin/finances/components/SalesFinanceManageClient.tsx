@@ -1,6 +1,7 @@
 "use client";
 
 import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
+import { downloadSalesOverviewCsv } from "@/features/services/adminSalesOverview.service";
 import { useSalesOverview } from "../hooks/useSalesOverview";
 import { periodLabels, salesOverviewPeriods } from "../utils/salesOverviewFormatters";
 import SalesOverviewLineChart from "./SalesOverviewLineChart";
@@ -16,11 +17,14 @@ export default function SalesFinanceManageClient() {
   const {
     selectedPeriod,
     setSelectedPeriod,
+    query,
     overview,
     trend,
     isLoading,
     error,
   } = useSalesOverview();
+
+  const handleDownloadCsv = () => downloadSalesOverviewCsv(query);
 
   return (
     <main aria-label="재무 현황" className="space-y-6">
@@ -47,7 +51,10 @@ export default function SalesFinanceManageClient() {
         <>
           <SalesOverviewSummaryCards summary={overview} />
           <SalesOverviewLineChart trend={trend} />
-          <SalesOverviewTable monthlyStats={overview.monthlyStats} />
+          <SalesOverviewTable
+            monthlyStats={overview.monthlyStats}
+            onDownloadCsv={handleDownloadCsv}
+          />
         </>
       ) : (
         <SalesOverviewStateMessage message="재무 현황 데이터가 없습니다." />

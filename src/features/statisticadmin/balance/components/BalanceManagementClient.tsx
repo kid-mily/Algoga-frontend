@@ -18,8 +18,11 @@ export default function BalanceManagementClient() {
   const {
     selectedPeriod,
     setSelectedPeriod,
+    search,
+    setSearch,
     data,
     isLoading,
+    isUnpaidLoading,
     error,
     downloadCsv,
   } = useBalanceManagement();
@@ -55,6 +58,9 @@ export default function BalanceManagementClient() {
           <section className="mt-6">
             <OutstandingReservationTable
               data={data.outstandingReservations}
+              search={search}
+              onSearchChange={setSearch}
+              isLoading={isUnpaidLoading}
               onDownloadCsv={downloadCsv}
             />
           </section>

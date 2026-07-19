@@ -1,9 +1,12 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import { Download, Search } from "lucide-react";
 import { downloadInterestLecturesCsv } from "@/features/services/adminInterestStatistics.service";
 import type { CourseCompletionAnalysisTableProps } from "../types";
 import { getCompletionStatusStyle } from "../utils";
 
-
+const PAGE_SIZE = 10;
 
 export default function CourseCompletionAnalysisTable({
   data,
@@ -11,6 +14,25 @@ export default function CourseCompletionAnalysisTable({
   isLoading = false,
   onKeywordChange,
 }: CourseCompletionAnalysisTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 새 검색 결과가 오면 1페이지로 되돌립니다.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data]);
+
+  const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pagedData = useMemo(() => {
+    const start = (safeCurrentPage - 1) * PAGE_SIZE;
+    return data.slice(start, start + PAGE_SIZE);
+  }, [data, safeCurrentPage]);
+  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+  };
+
   return (
     <section className="mt-10">
       <h2 className="flex items-center gap-2 text-[18px] font-bold text-[#111827]">
@@ -95,7 +117,7 @@ export default function CourseCompletionAnalysisTable({
                   </td>
                 </tr>
               ) : (
-                data.map((course) => {
+                pagedData.map((course) => {
                   const status = getCompletionStatusStyle(course.completionStatus);
 
                   return (
@@ -143,21 +165,41 @@ export default function CourseCompletionAnalysisTable({
         </div>
 
         <footer className="flex items-center justify-between px-5 py-4 text-[12px] text-[#98A2B3]">
-          <p>총 20개 · 1/2 페이지</p>
+          <p>
+            총 {data.length}개 · {safeCurrentPage}/{totalPages} 페이지
+          </p>
           <div className="flex items-center gap-3">
-            <button type="button" className="text-[#CBD0D6]">
-              ‹
-            </button>
             <button
               type="button"
-              className="h-7 w-7 rounded-[7px] bg-[#2FAE9B] font-bold text-white"
+              onClick={() => goToPage(safeCurrentPage - 1)}
+              disabled={safeCurrentPage <= 1}
+              aria-label="이전 페이지"
+              className="text-[#667085] disabled:cursor-not-allowed disabled:text-[#CBD0D6]"
             >
-              1
+              ‹
             </button>
-            <button type="button" className="font-semibold text-[#667085]">
-              2
-            </button>
-            <button type="button" className="text-[#667085]">
+            {pageNumbers.map((page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => goToPage(page)}
+                aria-current={page === safeCurrentPage ? "page" : undefined}
+                className={
+                  page === safeCurrentPage
+                    ? "h-7 w-7 rounded-[7px] bg-[#2FAE9B] font-bold text-white"
+                    : "font-semibold text-[#667085]"
+                }
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => goToPage(safeCurrentPage + 1)}
+              disabled={safeCurrentPage >= totalPages}
+              aria-label="다음 페이지"
+              className="text-[#667085] disabled:cursor-not-allowed disabled:text-[#CBD0D6]"
+            >
               ›
             </button>
           </div>

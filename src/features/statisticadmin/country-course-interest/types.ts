@@ -70,6 +70,9 @@ export type CountryCourseInterestSummaryCardsProps = {
 
 export type CountryDetailStatsTableProps = {
   data: CountryDetailStat[];
+  search: string;
+  onSearchChange: (value: string) => void;
+  isLoading?: boolean;
   onDownloadCsv: () => void;
 };
 

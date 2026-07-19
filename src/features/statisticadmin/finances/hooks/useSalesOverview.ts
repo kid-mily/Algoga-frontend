@@ -74,6 +74,7 @@ export const useSalesOverview = () => {
   return {
     selectedPeriod,
     setSelectedPeriod,
+    query,
     overview,
     trend,
     isLoading,

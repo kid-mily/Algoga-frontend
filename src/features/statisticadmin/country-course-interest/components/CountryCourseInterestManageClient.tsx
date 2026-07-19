@@ -21,16 +21,20 @@ export default function CountryCourseInterestManageClient() {
     countryDetails,
     courseCompletions,
     popularCourseRanks,
+    countrySearch,
+    setCountrySearch,
     courseKeyword,
     setCourseKeyword,
     rankKeyword,
     setRankKeyword,
     isLoading,
+    isCountryLoading,
     isCourseLoading,
     error,
   } = useCountryCourseInterestStatistics();
 
-  const handleDownloadCsv = () => downloadCountryProfitCsv(query);
+  const handleDownloadCsv = () =>
+    downloadCountryProfitCsv({ ...query, search: countrySearch });
 
   return (
     <main className="min-h-screen bg-[#F8FAFC]">
@@ -64,6 +68,9 @@ export default function CountryCourseInterestManageClient() {
           <section className="mt-10">
             <CountryDetailStatsTable
               data={countryDetails}
+              search={countrySearch}
+              onSearchChange={setCountrySearch}
+              isLoading={isCountryLoading}
               onDownloadCsv={handleDownloadCsv}
             />
           </section>

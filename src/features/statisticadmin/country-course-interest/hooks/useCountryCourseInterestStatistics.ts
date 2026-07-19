@@ -46,9 +46,11 @@ export const useCountryCourseInterestStatistics = () => {
   const [popularCourseRanks, setPopularCourseRanks] = useState<
     PopularCountryCourseRank[]
   >([]);
+  const [countrySearch, setCountrySearch] = useState("");
   const [courseKeyword, setCourseKeyword] = useState("");
   const [rankKeyword, setRankKeyword] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isCountryLoading, setIsCountryLoading] = useState(false);
   const [isCourseLoading, setIsCourseLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -94,15 +96,19 @@ export const useCountryCourseInterestStatistics = () => {
     };
   }, []);
 
-  // 나라별 상세 통계(country-profit)는 from/to가 필수라 선택된 기간이 바뀔 때마다 다시 조회합니다.
+  // 나라별 상세 통계(country-profit)는 기간 + 서버 검색(국가명)에 의존 — 입력을 300ms 디바운스합니다.
   useEffect(() => {
     const controller = new AbortController();
 
     const load = async () => {
       try {
+        setIsCountryLoading(true);
         setError("");
 
-        const profitData = await getCountryProfitList(query, controller.signal);
+        const profitData = await getCountryProfitList(
+          { ...query, search: countrySearch },
+          controller.signal
+        );
 
         if (controller.signal.aborted) return;
 
@@ -115,15 +121,22 @@ export const useCountryCourseInterestStatistics = () => {
             ? loadError.message
             : "나라별 상세 통계를 불러오지 못했습니다."
         );
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsCountryLoading(false);
+        }
       }
     };
 
-    void load();
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 300);
 
     return () => {
+      window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [query]);
+  }, [query, countrySearch]);
 
   // 강의별 수강 현황: interest/lectures?search= (강의명·나라 부분 일치)
   useEffect(() => {
@@ -182,8 +195,8 @@ export const useCountryCourseInterestStatistics = () => {
 
         if (controller.signal.aborted) return;
 
-        const trimmed = rankKeyword.trim();
-        setPopularCourseRanks(trimmed ? lectures : lectures.slice(0, 10));
+        // 표는 전체 목록을 받아 클라이언트 페이지네이션으로 자릅니다(백엔드 페이징 없음).
+        setPopularCourseRanks(lectures);
       } catch (loadError: unknown) {
         if (controller.signal.aborted) return;
 
@@ -205,14 +218,16 @@ export const useCountryCourseInterestStatistics = () => {
     };
   }, [rankKeyword]);
 
-  const courses: CourseInterestItem[] = useMemo(
-    () =>
-      popularCourseRanks.map((course) => ({
-        courseTitle: course.courseTitle,
-        enrollmentCount: course.enrollmentCount,
-      })),
-    [popularCourseRanks]
-  );
+  // 강의별 관심도 바차트는 검색이 없을 때 상위 10개만, 검색 시 전체 매칭을 보여줍니다.
+  const courses: CourseInterestItem[] = useMemo(() => {
+    const trimmed = rankKeyword.trim();
+    const source = trimmed ? popularCourseRanks : popularCourseRanks.slice(0, 10);
+
+    return source.map((course) => ({
+      courseTitle: course.courseTitle,
+      enrollmentCount: course.enrollmentCount,
+    }));
+  }, [popularCourseRanks, rankKeyword]);
 
   return {
     period,
@@ -224,11 +239,14 @@ export const useCountryCourseInterestStatistics = () => {
     countryDetails,
     courseCompletions,
     popularCourseRanks,
+    countrySearch,
+    setCountrySearch,
     courseKeyword,
     setCourseKeyword,
     rankKeyword,
     setRankKeyword,
     isLoading,
+    isCountryLoading,
     isCourseLoading,
     error,
   };
