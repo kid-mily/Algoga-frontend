@@ -1,7 +1,9 @@
 import type {
   AccommodationResponse,
   BookingDetail,
+  BundlePaymentResponse,
   CreateBookingRequest,
+  CreateBundlePaymentRequest,
   CreatePaymentRequest,
   FlightInfo,
   PackageApiItem,
@@ -114,6 +116,15 @@ function parseJsonField<T>(value: string | null): T | null {
   }
 }
 
+function toBookingDetail(raw: RawBookingDetail): BookingDetail {
+  return {
+    ...raw,
+    flightInfo: parseJsonField<FlightInfo>(raw.flightInfo),
+    returnFlightInfo: parseJsonField<FlightInfo>(raw.returnFlightInfo),
+    passengerInfo: parseJsonField<PassengerInfo>(raw.passengerInfo),
+  };
+}
+
 export async function getBookingDetail(
   bookingId: string | number,
   signal?: AbortSignal
@@ -127,14 +138,26 @@ export async function getBookingDetail(
     }
   );
 
-  const raw = unwrapData(response);
+  return toBookingDetail(unwrapData(response));
+}
 
-  return {
-    ...raw,
-    flightInfo: parseJsonField<FlightInfo>(raw.flightInfo),
-    returnFlightInfo: parseJsonField<FlightInfo>(raw.returnFlightInfo),
-    passengerInfo: parseJsonField<PassengerInfo>(raw.passengerInfo),
-  };
+// 로그인 유저의 전체 예약 목록. countryId를 넘기면 해당 나라 예약만 필터링된다
+export async function getMyBookings(
+  countryId?: string | number,
+  signal?: AbortSignal
+): Promise<BookingDetail[]> {
+  const response = await api.get<ApiResult<RawBookingDetail[]>>(
+    "/api/v1/bookings/me",
+    {
+      signal,
+      params: countryId !== undefined ? { countryId } : undefined,
+      suppressGlobalError: true,
+      cache: "no-store",
+    }
+  );
+
+  const raw = unwrapData(response) ?? [];
+  return raw.map(toBookingDetail);
 }
 
 // POST /payments 응답의 data는 생성된 결제의 paymentId 하나뿐이다
@@ -144,6 +167,23 @@ export async function createPayment(
 ): Promise<number> {
   const response = await api.post<ApiResult<number>>(
     "/api/v1/payments",
+    payload,
+    {
+      signal,
+      suppressGlobalError: true,
+    }
+  );
+
+  return unwrapData(response);
+}
+
+// PortOne 결제 1회로 예약(패키지) + 강의를 함께 결제한다 (courseIds가 있을 때만 사용)
+export async function createBundlePayment(
+  payload: CreateBundlePaymentRequest,
+  signal?: AbortSignal
+): Promise<BundlePaymentResponse> {
+  const response = await api.post<ApiResult<BundlePaymentResponse>>(
+    "/api/v1/payments/bundle",
     payload,
     {
       signal,

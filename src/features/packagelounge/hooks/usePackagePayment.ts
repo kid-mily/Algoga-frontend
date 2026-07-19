@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { requestTossPayment } from "@/features/services/portone.service";
-import { createPayment } from "@/features/services/package.service";
+import { createBundlePayment, createPayment } from "@/features/services/package.service";
 import { getMyCoupons, getMyMileages } from "@/features/services/myBenefit.service";
-import { createLecturePayment } from "@/features/services/SinglePayment.service";
 import { getCouponDiscount, normalizeMileageInput } from "@/features/payment/utils";
 import type { MyCoupon } from "@/features/mypage/benefits/components/types";
 import { ApiRequestError } from "@/lib/api";
@@ -19,6 +18,7 @@ interface UsePackagePaymentParams {
   // 강의는 패키지와 백엔드에서 연결돼 있지 않아 별도 결제(POST /payments/lecture)로 처리한다. 없으면 null
   courseId: number | null;
   coursePrice: number;
+  courseName: string | null;
 }
 
 // 백엔드 응답의 errorCode별 안내 문구
@@ -27,6 +27,9 @@ const PAYMENT_ERROR_MESSAGE: Record<string, string> = {
   PAY_003: "결제 금액이 올바르지 않습니다.",
   PAY_004: "이미 처리된 결제입니다.",
   PAY_005: "결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+  PAY_007: "강의 정보를 찾을 수 없습니다.",
+  PAY_015: "이 예약은 일시불(전액) 결제만 가능합니다.",
+  PAY_016: "통합 결제는 예약금 또는 일시불만 가능합니다.",
 };
 
 // 패키지 결제 페이지의 쿠폰/마일리지/결제 요청 상태를 관리하는 훅
@@ -37,6 +40,7 @@ export function usePackagePayment({
   totalPrice,
   courseId,
   coursePrice,
+  courseName,
 }: UsePackagePaymentParams) {
   const router = useRouter();
   const [coupons, setCoupons] = useState<MyCoupon[]>([]);
@@ -140,56 +144,42 @@ export function usePackagePayment({
     setIsPaying(true);
     setErrorMessage("");
 
-    const discountTotal = couponDiscount + usedMileage;
-    const packageDiscount = Math.min(discountTotal, totalPrice);
-    const packageAmount = totalPrice - packageDiscount;
-    const lectureAmount = Math.max(coursePrice - (discountTotal - packageDiscount), 0);
-
-    let packagePaid = false;
-
     try {
       let portonePaymentId = "";
 
       if (finalAmount > 0) {
         portonePaymentId = await requestTossPayment({
-          orderName: packageName,
+          orderName: courseId ? `${packageName} + ${courseName ?? "강의"}` : packageName,
           totalAmount: finalAmount,
         });
       }
 
-      await createPayment({
-        bookingId,
-        paymentType: "FULL",
-        amount: packageAmount,
-        usedMileage,
-        usedCouponId: selectedCouponId,
-        portonePaymentId,
-      });
-      packagePaid = true;
-
+      // 강의가 있으면 결제 1건으로 패키지+강의를 함께 처리하는 통합 결제 API를 쓴다
+      // (쿠폰/마일리지는 백엔드가 알아서 패키지분에만 적용하고, 강의는 항상 정가로 계산됨)
       if (courseId) {
-        try {
-          await createLecturePayment({
-            courseId,
-            amount: lectureAmount,
-            usedMileage: 0,
-            usedCouponId: null,
-            portonePaymentId,
-          });
-        } catch (lectureError) {
-          console.error("[packagelounge] 강의 결제 실패:", lectureError);
-          setErrorMessage(
-            "패키지 결제는 완료됐지만 강의 결제 처리에 실패했습니다. 고객센터로 문의해 주세요."
-          );
-          return;
-        }
+        await createBundlePayment({
+          bookingId,
+          courseIds: [courseId],
+          paymentType: "FULL",
+          amount: finalAmount,
+          usedMileage,
+          usedCouponId: selectedCouponId,
+          portonePaymentId,
+        });
+      } else {
+        await createPayment({
+          bookingId,
+          paymentType: "FULL",
+          amount: finalAmount,
+          usedMileage,
+          usedCouponId: selectedCouponId,
+          portonePaymentId,
+        });
       }
 
       // 현재 결제 페이지는 항상 전액을 한 번에 결제하므로 "일시불"로 이동한다
       router.push(`/packagelounge/${packageId}/payment/success?mode=full`);
     } catch (error) {
-      if (packagePaid) return;
-
       if (error instanceof ApiRequestError) {
         const errorCode = (error.body as { errorCode?: string } | null)
           ?.errorCode;
@@ -209,14 +199,12 @@ export function usePackagePayment({
   }, [
     isPaying,
     finalAmount,
-    couponDiscount,
-    usedMileage,
-    totalPrice,
-    coursePrice,
     courseId,
+    courseName,
     packageName,
     packageId,
     bookingId,
+    usedMileage,
     selectedCouponId,
     router,
   ]);

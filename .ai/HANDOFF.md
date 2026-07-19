@@ -7,48 +7,61 @@
 
 ## 현재 목표
 
-- 커뮤니티 목록에 "내가 쓴 글" 체크 필터 연동 (같은 화면에서 `/api/v1/posts` ↔ `/api/v1/users/me/posts` 전환)
+- 마이페이지 "내 정보 수정" 진입 게이트를 비밀번호 인증 → 이메일 인증으로 전환 완료 (직전 작업)
+- 그 전 단계로 패키지 라운지 결제 통합(`payments/bundle`)·마이페이지 예약내역 연동까지 이어서 완료됨
 
 ## 완료한 작업
 
-- `types.ts` → `types/` 폴더 도메인별 분리 (category/post/comment/reaction/report/common) + 죽은 타입 제거 + 중복 타입(`CommunityCardProps`, `CommunityHeaderProps`) 정리
-- `getMyCommunityPosts` 서비스 함수 추가 및 `CommunityPageClient`/`CommunityHeader`/`CommunityCategory`에 체크박스·나라필터 비활성화 로직 연동
+- 패키지 라운지 목록/상세/예약/결제 전체 API 연동
+- 결제 페이지 쿠폰/마일리지 실 API 연동, 환불 정책 모달 연결
+- 패키지+강의 합산 결제를 `POST /payments/bundle`(신규 통합 결제 API)로 전환 — 이전 "결제창 2번 + 수동 분배" 우회 로직 완전 제거
+- 마이페이지 예약내역 "이용 전"/"이용 후" 탭 `GET /bookings/me` 연동
+- 진단평가→패키지 라운지 `courseId` 유실 버그 수정 (`TabNavigation.tsx` `continentid`→`continentCode`)
+- 마이페이지 "내 정보 수정" 이메일 인증 전환 마무리
 
 ## 수정한 파일
 
-- `src/features/community/types/*` — 파일 분리 (신규 6개 파일 + index.ts)
-- `src/features/services/community.service.ts` — `getMyCommunityPosts`, `parseCommunityPostPage` 공통화
-- `src/features/community/components/main/CommunityPageClient.tsx` — `isMyPostsOnly` 상태, API 분기, 로그인 가드
-- `src/features/community/components/common/CommunityHeader.tsx` — 체크박스 UI, 나라 탭 비활성화
-- `src/features/community/components/main/CommunityCategory.tsx` — `disabled` prop 지원
+- `src/features/packagelounge/types.ts` — `CreateBundlePaymentRequest`/`BundlePaymentResponse` 등 추가
+- `src/features/services/package.service.ts` — `createBundlePayment`, `getMyBookings`, `toBookingDetail` 헬퍼
+- `src/features/packagelounge/hooks/usePackagePayment.ts` — `handlePay` 대폭 단순화
+- `src/features/packagelounge/components/{BookingPrice,PackagePaymentClient,PaymentSummary}.tsx`
+- `src/features/mypage/reservations/reservation.util.ts` (신규), `ReservationPage.tsx`, `ReservationDetail.tsx`
+- `src/features/classroom/components/TabNavigation.tsx`
+- `src/app/(user)/mypage/page.tsx`
+- 삭제: `src/features/mypage/PasswordVerifyModal.tsx`
+- 전부 **커밋 안 됨** (`fix/myinfo-email#573` 브랜치, working tree에 그대로 있음)
 
 ## 남은 작업
 
-- [ ] 로컬 브라우저(`npm run dev`, 포트 17000)에서 "내가 쓴 글" 체크박스 실제 토글 확인 — Chrome 확장 연결 실패로 이번 세션에서 미완료
-- [ ] `GET /api/v1/users/me/posts` 백엔드 실제 구현 여부 확인 (가이드 문서 기준으로만 연동, Swagger 미확인)
-- [ ] 비로그인 상태에서 이 엔드포인트 401 응답 시 실제 에러 처리 확인
+- [ ] 로그인 후 브라우저 실제 확인: 패키지 결제(강의 포함/미포함), 마이페이지 예약내역, 내 정보 수정 이메일 인증 — 이 세션에서 로그인 자격 증명이 없어 시각 검증 못함
+- [ ] 확인되면 커밋 (AI는 git push/커밋 안 함, 사용자가 직접)
+- [ ] 분할 결제(1차 DEPOSIT+강의 전액 / 2차 BALANCE만) 선택 UI — 미구현
+- [ ] 환불 내역 탭(`GET /refund-requests/me`), 환불 요청 생성(`POST /refund-requests`) — 미구현, `paymentId` 확보 방법도 아직 미정
 
 ## 실행한 검증
 
-- [x] `npm run lint` (community 관련 신규 에러 없음)
-- [x] `tsc --noEmit` (무관한 기존 classroom 테스트 에러 2건 제외 통과)
+- [x] `tsc --noEmit` (전체 통과, 무관한 기존 이슈 없음)
+- [x] `npm run lint` (변경 파일 한정, 신규 에러/경고 없음 — 기존에 있던 무관한 경고 몇 개만 남음)
+- [ ] 로컬 브라우저 로그인 후 실제 동작 확인 — **미완료** (로그인 계정 정보 없음)
 - [ ] `npm run build`
-- [ ] 로컬 실행(`npm run dev`, port 17000) 확인 — 미완료
-- [ ] test (해당 시)
+- [ ] test
 
 ## 주의사항 / 함정
 
 - **깃허브 절대 건드리지 말 것** (커밋 push, PR, issue 생성 전부 금지 — 사용자 지시)
-- "내가 쓴 글" 모드에서는 나라(countryId) 필터 백엔드 미지원 → UI에서 비활성화만 하고 숨기지 않음
-- 이번 세션에서 Chrome 브라우저 확장이 연결되지 않아 시각적 동작 확인을 못 했음 — 다음 세션에서 우선 확인 필요
+- `src/lib/api.ts`는 공통 파일이라 수정 안 함
+- 예약(booking)과 강의(course)는 백엔드에서 서로 참조 안 하는 완전 별도 도메인 — `courseId`는 프론트가 화면 이동마다 쿼리 파라미터로 직접 이어줘야 함 (`buildQueryString` 헬퍼 사용)
+- `POST /payments/bundle`의 `courseIds`는 `minItems:1`이라 빈 배열 불가 — 강의 없는 예약은 기존 `POST /payments`로 분기 유지 중
+- 결제 관련 모든 API 검증은 "PortOne 실제 승인액 = 요청 amount" 규칙을 따름 — 토스페이 결제창 호출과 백엔드 결제 생성 API 호출은 반드시 1:1로 짝지어야 함
 
 ## 먼저 볼 파일
 
 - `AGENTS.md`
-- `src/features/community/components/main/CommunityPageClient.tsx`
-- `src/features/services/community.service.ts`
-- `src/features/community/types/index.ts`
+- `.ai/API.md` (엔드포인트별 상세 + 최근 변경 이력)
+- `src/features/packagelounge/hooks/usePackagePayment.ts`
+- `src/app/(user)/mypage/page.tsx`
+- `src/features/mypage/reservations/reservation.util.ts`
 
 ---
 
-_작성: 2026-07-11 / 작성자(도구): Claude Code_
+_작성: 2026-07-19 / 작성자(도구): Claude Code_

@@ -4,12 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import MyPageInfoCard from "@/features/mypage/MyPageInfoCard";
 import MyPageSummaryCard from "@/features/mypage/MyPageSummaryCard";
-import PasswordVerifyModal from "@/features/mypage/PasswordVerifyModal";
+import EmailAuthVerifyModal from "@/features/mypage/EmailAuthVerifyModal";
 import { useMyPageData } from "@/features/mypage/MyPageDataProvider";
 
 export default function MyPage() {
   const router = useRouter();
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isEmailAuthModalOpen, setIsEmailAuthModalOpen] = useState(false);
 
   const { user, summary } = useMyPageData();
 
@@ -18,7 +18,7 @@ export default function MyPage() {
   const userInitial = user.name[0] ?? user.nickname[0] ?? "?";
 
   const handleEditSuccess = () => {
-    setIsPasswordModalOpen(false);
+    setIsEmailAuthModalOpen(false);
     router.push("/mypage/edit");
   };
 
@@ -32,7 +32,7 @@ export default function MyPage() {
         <MyPageInfoCard
           user={user}
           initial={userInitial}
-          onEdit={() => setIsPasswordModalOpen(true)}
+          onEdit={() => setIsEmailAuthModalOpen(true)}
         />
 
         <section
@@ -68,9 +68,10 @@ export default function MyPage() {
         </div>
       </div>
 
-      <PasswordVerifyModal
-        open={isPasswordModalOpen}
-        onClose={() => setIsPasswordModalOpen(false)}
+      <EmailAuthVerifyModal
+        open={isEmailAuthModalOpen}
+        email={user.email}
+        onClose={() => setIsEmailAuthModalOpen(false)}
         onSuccess={handleEditSuccess}
       />
     </>

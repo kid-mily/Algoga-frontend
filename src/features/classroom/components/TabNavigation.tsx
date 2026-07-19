@@ -9,7 +9,7 @@ export default function TabNavigation() {
   const router = useRouter();
 
   const params = useParams();
-  const { continentid, countryid } = params;
+  const { continentCode, countryid } = params;
 
   const handlePackageClick = () => {
     setIsModalOpen(true);
@@ -17,7 +17,7 @@ export default function TabNavigation() {
 
   const handleModalConfirm = () => {
     setIsModalOpen(false);
-    router.push(`/classroom/${continentid}/${countryid}/evaluation`); 
+    router.push(`/classroom/${continentCode}/${countryid}/evaluation`);
   };
 
   return (

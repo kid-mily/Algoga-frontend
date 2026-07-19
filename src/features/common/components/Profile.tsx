@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "@/features/services/auth.service";
 import { deleteCookie } from "@/lib/cookie";
+import HeaderNotificationBell from "@/features/notifications/HeaderNotificationBell";
 
 type Props = {
   user: {
@@ -128,13 +129,7 @@ export default function Profile({ user }: Props) {
         )}
       </button>
 
-      <Image
-        src="/images/NoticeIcon.svg"
-        alt="알림"
-        width={24}
-        height={24}
-        className="cursor-pointer"
-      />
+      <HeaderNotificationBell isLoggedIn={Boolean(user)} />
 
       {user ? (
         <div ref={menuRef} className="relative">

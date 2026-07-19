@@ -45,7 +45,7 @@ export default function CouponCard({
 }: CouponCardProps) {
   return (
     <article
-      className={`relative min-h-[170px] overflow-hidden rounded-2xl border p-6 shadow-lg ${
+      className={`relative min-h-[110px] overflow-hidden rounded-xl border p-4 shadow-md ${
         coupon.usable
           ? "border-[#4F8D89] bg-[#5F9C98] text-white"
           : "border-gray-300 bg-gray-200 text-gray-600"
@@ -53,9 +53,9 @@ export default function CouponCard({
     >
 
       <div className="relative z-10">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-3">
           <p
-            className={`truncate text-sm font-semibold ${
+            className={`truncate text-xs font-semibold ${
               coupon.usable ? "text-white" : "text-gray-700"
             }`}
           >
@@ -63,7 +63,7 @@ export default function CouponCard({
           </p>
 
           <span
-            className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
               coupon.usable
                 ? "bg-white/20 text-white"
                 : "bg-white text-gray-500"
@@ -74,7 +74,7 @@ export default function CouponCard({
         </div>
 
         <p
-          className={`mt-3 text-4xl font-bold ${
+          className={`mt-2 text-2xl font-bold ${
             coupon.usable ? "text-white" : "text-gray-700"
           }`}
         >
@@ -82,7 +82,7 @@ export default function CouponCard({
         </p>
 
         <p
-          className={`mt-4 truncate text-sm ${
+          className={`mt-2 truncate text-xs ${
             coupon.usable ? "text-white/90" : "text-gray-600"
           }`}
         >
@@ -90,7 +90,7 @@ export default function CouponCard({
         </p>
 
         <p
-          className={`mt-3 text-xs ${
+          className={`mt-1.5 text-[11px] ${
             coupon.usable ? "text-white/80" : "text-gray-500"
           }`}
         >

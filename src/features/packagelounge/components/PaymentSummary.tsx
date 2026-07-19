@@ -77,7 +77,7 @@ export default function PaymentSummary({
           </div>
           {course && (
             <div className="flex items-center justify-between">
-              <span className="font-sans">강의 ({course.title})</span>
+              <span className="font-sans">강의</span>
               <span className="font-bold">
                 {course.price.toLocaleString()}원
               </span>

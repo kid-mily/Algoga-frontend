@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/features/friends/components/FriendPanel";
 import {
   DUMMY_TODAY,
   getReservationsWithSessionState,
   markReservationRefundRequested,
 } from "./reservation.data";
+import { loadMyReservations } from "./reservation.util";
 import { ReservationItem, ReservationTab } from "./reservation.types";
 import ReservationCard from "./ReservationCard";
 import RefundRequestModal from "./RefundRequestModal";
@@ -19,16 +20,50 @@ const TABS: { value: ReservationTab; label: string }[] = [
 
 const REFUND_STATUSES = ["refund_pending", "refunded", "refund_rejected"];
 
-// 마이페이지 예약 내역 화면 (디자인 확인용 더미 데이터, API 연동 없음)
-// 예약 상세는 모달이 아니라 별도 페이지(/mypage/reservations/[reservationId])에서 확인한다
+// 마이페이지 예약 내역 화면
+// 이용 전/이용 후 탭은 실제 예약(GET /bookings/me)을 사용하고,
+// 환불 내역 탭은 아직 더미 데이터 그대로 둔다 (환불 API 연동은 다음 작업)
 export default function ReservationPage() {
   const [reservations, setReservations] = useState<ReservationItem[]>(() =>
-    getReservationsWithSessionState()
+    getReservationsWithSessionState().filter((item) =>
+      REFUND_STATUSES.includes(item.status)
+    )
   );
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadErrorMessage, setLoadErrorMessage] = useState("");
   const [activeTab, setActiveTab] = useState<ReservationTab>("upcoming");
   const [refundTarget, setRefundTarget] = useState<ReservationItem | null>(
     null
   );
+
+  // 예약 목록은 로그인 유저 전용 데이터라 서버가 아니라 여기(클라이언트)에서 직접 불러온다
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      try {
+        const myReservations = await loadMyReservations();
+        if (!active) return;
+
+        setReservations((prev) => [
+          ...myReservations,
+          ...prev.filter((item) => REFUND_STATUSES.includes(item.status)),
+        ]);
+      } catch (error) {
+        if (!active) return;
+        console.error("[mypage] 예약 내역 조회 실패:", error);
+        setLoadErrorMessage("예약 내역을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const grouped = useMemo(
     () => ({
@@ -108,7 +143,15 @@ export default function ReservationPage() {
 
       {/* 목록 */}
       <div className="mt-4 space-y-3">
-        {visibleList.length === 0 ? (
+        {isLoading && activeTab !== "refund" ? (
+          <div className="rounded-2xl border border-[#E5EDF5] bg-white py-6 text-center text-sm text-[#8A9BB0] shadow-sm">
+            예약 내역을 불러오는 중입니다...
+          </div>
+        ) : loadErrorMessage && activeTab !== "refund" ? (
+          <div className="rounded-2xl border border-[#E5EDF5] bg-white py-6 text-center text-sm text-[#B54747] shadow-sm">
+            {loadErrorMessage}
+          </div>
+        ) : visibleList.length === 0 ? (
           <div className="rounded-2xl border border-[#E5EDF5] bg-white py-6 shadow-sm">
             {activeTab === "upcoming" && (
               <EmptyState

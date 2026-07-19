@@ -126,6 +126,26 @@ export interface CreatePaymentRequest {
   portonePaymentId: string;
 }
 
+// POST /payments/bundle 요청 - PortOne 결제 1회로 예약(패키지) + 강의를 함께 결제한다.
+// 쿠폰/마일리지는 패키지분에만 적용되고 강의는 항상 정가 전액으로 청구된다 (백엔드가 내부적으로 나눔)
+export interface CreateBundlePaymentRequest {
+  bookingId: number;
+  courseIds: number[];
+  paymentType: "DEPOSIT" | "FULL";
+  amount: number;
+  usedMileage: number;
+  usedCouponId: number | null;
+  portonePaymentId: string;
+}
+
+export interface BundlePaymentResponse {
+  bookingPaymentId: number;
+  lecturePaymentIds: number[];
+  bookingAmount: number;
+  lectureAmount: number;
+  totalAmount: number;
+}
+
 // GET /payments/{paymentId} 응답 - 예약 결제와 강의 단독 결제가 같은 엔드포인트를 공유해서
 // bookingId/courseId 둘 다 optional이다 (예약 결제면 courseId가 null, 강의 결제면 bookingId가 null)
 export interface PaymentDetail {

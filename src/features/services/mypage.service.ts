@@ -6,9 +6,10 @@ import type {
   MyPageUser,
   UpdateProfileRequest,
   UpdateProfileResponse,
-  VerifyPasswordRequest,
+  VerifyEmailCodeRequest,
 } from "@/features/mypage/types";
 import { getMyCoupons } from "@/features/services/myBenefit.service";
+import { getMyBookings } from "@/features/services/package.service";
 import { getMe } from "@/features/services/user.service";
 
 export class MyPageApiError extends Error {
@@ -98,8 +99,15 @@ export async function getMyPageUser(): Promise<MyPageUser> {
   return toMyPageUser(user);
 }
 
-export async function getMyPageData(): Promise<MyPageData> {
-  const [user, coupons, courseCount] = await Promise.all([
+export async function getMyPageData(
+  options?: { includeReservationCount?: boolean }
+): Promise<MyPageData> {
+  // 예약 목록 페이지(ReservationPage)가 같은 GET /bookings/me를 자체적으로 또 호출하므로,
+  // 그 페이지에서까지 여기서 중복 호출하면 동시 요청 2개가 나가 백엔드에서 500이 났다.
+  // 그 숫자를 실제로 보여주는 /mypage 화면에서만 이 요청을 같이 보낸다.
+  const includeReservationCount = options?.includeReservationCount ?? true;
+
+  const [user, coupons, courseCount, bookings] = await Promise.all([
     getMyPageUser(),
 
     getMyCoupons().catch((error) => {
@@ -111,24 +119,49 @@ export async function getMyPageData(): Promise<MyPageData> {
       console.error("수강 강의 개수 조회 실패:", error);
       return 0;
     }),
+
+    includeReservationCount
+      ? getMyBookings().catch((error) => {
+          console.error("예약 내역 조회 실패:", error);
+          return [];
+        })
+      : Promise.resolve([]),
   ]);
 
   return {
     user,
     summary: {
       courseCount,
-      reservationCount: 0,
+      reservationCount: bookings.length,
       couponCount: Array.isArray(coupons) ? coupons.length : 0,
     },
   };
 }
 
-export async function verifyMyPassword(
-  payload: VerifyPasswordRequest
+// 정보 수정 진입 전 이메일 인증코드 발송 (로그인 유저 본인 이메일로 발송)
+export async function sendMyPageAuthCode(): Promise<void> {
+  try {
+    await api.post<ApiResponse<unknown>>(
+      "/api/v1/users/me/email/send-code",
+      undefined,
+      {
+        suppressGlobalError: true,
+      }
+    );
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error("인증번호 발송에 실패했습니다.");
+  }
+}
+
+// 정보 수정 진입 전 이메일 인증코드 검증
+export async function verifyMyPageAuthCode(
+  payload: VerifyEmailCodeRequest
 ): Promise<void> {
   try {
     await api.post<ApiResponse<unknown>>(
-      "/api/v1/users/me/verify-password",
+      "/api/v1/users/me/email/verify",
       payload,
       {
         suppressGlobalError: true,
@@ -137,7 +170,7 @@ export async function verifyMyPassword(
   } catch (error) {
     throw error instanceof Error
       ? error
-      : new Error("비밀번호 확인에 실패했습니다.");
+      : new Error("인증번호 확인에 실패했습니다.");
   }
 }
 

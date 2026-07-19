@@ -5,7 +5,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type {
   MyPageData,
   MyPageSummary,
@@ -24,6 +24,7 @@ const initialSummary: MyPageSummary = {
 
 export function useMyPage() {
   const router = useRouter();
+  const pathname = usePathname();
 
   const [user, setUser] =
     useState<MyPageUser | null>(null);
@@ -40,7 +41,9 @@ export function useMyPage() {
       setErrorMessage("");
 
       const data: MyPageData =
-        await getMyPageData();
+        await getMyPageData({
+          includeReservationCount: pathname === "/mypage",
+        });
 
       setUser(data.user);
       setSummary(data.summary);
@@ -64,11 +67,38 @@ export function useMyPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, pathname]);
 
   useEffect(() => {
     void fetchMyPage();
   }, [fetchMyPage]);
+
+  useEffect(() => {
+    const handleProfileUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ nickname?: string; profileImageUrl?: string | null }>).detail;
+
+      if (!detail) return;
+
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              nickname: detail.nickname ?? prev.nickname,
+              profileImageUrl:
+                detail.profileImageUrl === undefined
+                  ? prev.profileImageUrl
+                  : detail.profileImageUrl,
+            }
+          : prev
+      );
+    };
+
+    window.addEventListener("profile-updated", handleProfileUpdated);
+
+    return () => {
+      window.removeEventListener("profile-updated", handleProfileUpdated);
+    };
+  }, []);
 
   return {
     user,
