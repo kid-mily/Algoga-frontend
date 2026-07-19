@@ -125,7 +125,7 @@ export default function BookingPrice({
           <>
             <div className="border-t border-dashed border-[#D6E0E8]" />
             <div className="flex items-center justify-between text-sm text-[#0A1628]">
-              <span>강의 ({course.title})</span>
+              <span>강의</span>
               <span className="font-bold">
                 {course.price.toLocaleString()}원
               </span>

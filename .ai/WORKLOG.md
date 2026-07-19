@@ -4,6 +4,97 @@
 
 ---
 
+## 2026-07-19 (2) — 내 정보 수정 이미지 반영 지연 버그, 비활성 필드 구분 안 되는 문제 수정
+
+### 작업 요약
+
+- "내 정보 수정" 저장 후 프로필 이미지가 새로고침 전까지 반영 안 되던 버그 수정. 원인: `MyPageEditForm.tsx`가 저장 후 `profile-updated` 커스텀 이벤트를 쏘지만, 실제 상태를 들고 있는 `useMyPage` 훅은 마운트 시 한 번만 fetch할 뿐 이 이벤트를 듣지 않았음. `/mypage/edit` → `/mypage` 이동은 레이아웃에 물린 `MyPageDataProvider`가 리마운트 없이 유지되는 클라이언트 내비게이션이라 `router.refresh()`도 효과가 없었음 → `useMyPage`에 `profile-updated` 리스너를 추가해 이벤트 detail로 로컬 상태를 즉시 갱신하도록 수정
+- "내 정보 수정" 페이지에서 수정 불가 필드(성명/사용자 코드/아이디/성별/생년월일)가 입력 가능 필드와 시각적으로 잘 구분되지 않던 문제 개선. 자물쇠 아이콘 추가, `disabled:cursor-not-allowed` 및 배경/텍스트 대비 강화
+
+### 수정 파일
+
+- `src/features/mypage/hooks/userMyPage.ts` — `profile-updated` 이벤트 리스너 추가
+- `src/features/mypage/edit/MyPageEditForm.tsx` — 비활성 필드 자물쇠 아이콘 + 스타일 강화
+
+### 실행한 검증
+
+- `tsc --noEmit`: 통과
+- `npm run lint` (변경 파일 한정): 기존에도 있던 `userMyPage.ts`의 `react-hooks/set-state-in-effect` 에러 1건(내가 건드리지 않은 기존 `fetchMyPage` 호출부) 외 신규 에러 없음
+- 브라우저: 비로그인 상태로 `/mypage/edit` 접근 시 콘솔에 로그인 필요 에러만 있고 신규 런타임 에러 없음 확인. 로그인 후 실제 이미지 반영/자물쇠 아이콘 시각 확인은 이 세션에서도 로그인 자격 증명이 없어 못함
+
+### 다음 참고사항
+
+- 로그인 계정으로 (1) 프로필 이미지 변경 후 저장 시 새로고침 없이 바로 반영되는지, (2) 비활성 필드 자물쇠 아이콘이 의도대로 보이는지 확인 필요
+
+## 2026-07-19 — 결제 통합 API(bundle) 전환, 마이페이지 이메일 인증 전환 마무리
+
+### 작업 요약
+
+- `POST /api/v1/payments/bundle`(패키지+강의 통합 결제) 신규 연동. 07-17에 만들었던 "토스페이 2번 + `POST /payments`+`POST /payments/lecture` 순차 호출" 우회 구조와 그 안의 쿠폰/마일리지 수동 분배 로직을 전부 제거하고 이 API로 교체 — 결제창 1번만 뜨고, 쿠폰/마일리지는 백엔드가 패키지분에만 자동 적용
+- `courseIds`가 `minItems:1`이라 강의가 없는 예약은 이 API를 못 써서, 강의 있으면 `createBundlePayment`, 없으면 기존 `createPayment`로 분기
+- 마이페이지 "내 정보 수정" 진입 게이트를 비밀번호 인증 → 이메일 인증으로 바꾸는 작업 마무리. 서비스/타입/새 모달(`EmailAuthVerifyModal.tsx`)은 이미 만들어져 있었고, `mypage/page.tsx`가 삭제된 옛날 state(`isPasswordModalOpen`)를 여전히 참조해 빌드가 깨져 있던 것만 `isEmailAuthModalOpen`/`EmailAuthVerifyModal`로 교체. 더는 안 쓰이던 `PasswordVerifyModal.tsx` 삭제
+
+### 수정/삭제 파일
+
+- `src/features/packagelounge/types.ts` — `CreateBundlePaymentRequest`/`BundlePaymentResponse` 추가
+- `src/features/services/package.service.ts` — `createBundlePayment` 추가
+- `src/features/packagelounge/hooks/usePackagePayment.ts` — `handlePay` 대폭 단순화 (분배 계산 로직 제거)
+- `src/app/(user)/mypage/page.tsx` — 이메일 인증 모달로 교체
+- 삭제: `src/features/mypage/PasswordVerifyModal.tsx`
+
+### 실행한 검증
+
+- `tsc --noEmit`: 통과
+- `npm run lint` (해당 파일 한정): 통과, 신규 에러/경고 없음
+- 브라우저: 마이페이지 이메일 인증은 로그인 상태에서 콘솔 에러 없음 확인. 결제 실제 흐름은 로그인 필요해 사용자 확인 대기 중
+
+### 다음 참고사항
+
+- 분할 결제(1차 DEPOSIT+강의 전액 / 2차 BALANCE만) 선택 UI는 아직 없음
+- 환불 내역 탭(`GET /refund-requests/me`) 연동은 여전히 다음 작업 대상
+- 상세 내용은 [`API.md`](API.md)의 "최근 변경된 API" 참고
+
+---
+
+## 2026-07-18 — 마이페이지 예약내역 연동, 진단평가 라우팅 버그 수정
+
+### 작업 요약
+
+- 마이페이지 예약 내역 "이용 전"/"이용 후" 탭을 실제 API(`GET /bookings/me`)로 연동. 환불 내역 탭/버튼은 범위 제외하고 기존 더미(sessionStorage 기반) 그대로 유지
+- 진단평가 → 패키지 라운지 진입 흐름에서 `courseId`가 계속 유실되는 버그의 근본 원인 발견: API 문제가 아니라 `TabNavigation.tsx`가 Next.js 동적 라우트 파라미터를 실제 폴더명(`[continentCode]`)이 아닌 존재하지 않는 키(`continentid`)로 꺼내서 URL에 `undefined`가 그대로 들어가던 것 — `continentCode`로 수정
+
+### 수정/삭제 파일
+
+- `src/features/services/package.service.ts` — `getMyBookings` 추가, `toBookingDetail` 헬퍼로 리팩터
+- `src/features/mypage/reservations/reservation.util.ts` — 신규 (예약 API → 화면용 타입 매핑)
+- `src/features/mypage/reservations/ReservationPage.tsx`, `ReservationDetail.tsx` — 실 데이터 연동
+- `src/features/classroom/components/TabNavigation.tsx` — `continentid` → `continentCode`
+
+### 실행한 검증
+
+- `tsc --noEmit` / `npm run lint`: 통과
+- 브라우저: 로그인 필요해 실제 목록 렌더링은 사용자 확인 필요
+
+### 다음 참고사항
+
+- 환불 요청 생성(`POST /refund-requests`, `paymentId` 확보 방법 포함)은 다음 작업 대상
+
+---
+
+## 2026-07-17 — 패키지 결제 쿠폰/마일리지 실연동, 환불 정책 모달 연결
+
+### 작업 요약
+
+- 결제 페이지 더미 쿠폰/마일리지를 `GET /my/coupons`, `GET /my/mileages` 실 API로 교체
+- 패키지+강의 합산 결제 시도 (이후 07-19에 bundle API로 대체됨 — 과정에서 PortOne 실 승인액과 분할 요청 금액 불일치로 `PAY_003` 발생 → 결제창 2번으로 임시 수정)
+- 결제 페이지 "환불 정책 확인하기" 버튼에 onClick이 없던 것을 발견, 기존 `CancellationPolicyModal.tsx` 연결
+
+### 다음 참고사항
+
+- 상세 내용은 [`API.md`](API.md)의 07-17 항목들 참고 (이 날짜에 항목이 여러 개라 API.md가 더 정확함)
+
+---
+
 ## 2026-07-14 — 컨텐츠매니저 컴포넌트/테스트, 통계매니저 3개 페이지 개발
 
 ### 오늘 한 일

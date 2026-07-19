@@ -48,8 +48,9 @@ export interface UpdateProfileResponse {
   profileImageUrl?: string | null;
 }
 
-export interface VerifyPasswordRequest {
-  password: string;
+export interface VerifyEmailCodeRequest {
+  email: string;
+  code: string;
 }
 
 export interface ChangePasswordRequest {

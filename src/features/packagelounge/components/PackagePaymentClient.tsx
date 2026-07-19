@@ -91,6 +91,7 @@ export default function PackagePaymentClient({
     totalPrice: booking?.totalPrice ?? 0,
     courseId: course?.courseId ?? null,
     coursePrice: course?.price ?? 0,
+    courseName: course?.title ?? null,
   });
 
   if (loadErrorMessage) {

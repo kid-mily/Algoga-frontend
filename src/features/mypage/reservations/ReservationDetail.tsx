@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DUMMY_TODAY, getReservationsWithSessionState, markReservationRefundRequested } from "./reservation.data";
+import { loadMyReservationDetail } from "./reservation.util";
 import { PAYMENT_TYPE_LABEL, RESERVATION_STATUS_BADGE_CLASS, RESERVATION_STATUS_LABEL, ReservationItem } from "./reservation.types";
 import RefundRequestModal from "./RefundRequestModal";
 
@@ -10,16 +11,77 @@ interface ReservationDetailProps {
   reservationId: number;
 }
 
-// 예약 상세 페이지 (디자인 확인용 더미 데이터, API 연동 없음)
+// 예약 상세 페이지
+// 실제 예약(bookingId)이면 API로 조회하고, 못 찾으면(더미 환불 항목 등) 더미 데이터에서 찾는다
 export default function ReservationDetail({
   reservationId,
 }: ReservationDetailProps) {
-  const [reservations, setReservations] = useState<ReservationItem[]>(() =>
-    getReservationsWithSessionState()
+  const [reservation, setReservation] = useState<ReservationItem | null | undefined>(
+    undefined
   );
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      try {
+        const found = await loadMyReservationDetail(reservationId);
+        if (!active) return;
+
+        if (found) {
+          setReservation(found);
+          return;
+        }
+      } catch (error) {
+        console.error("[mypage] 예약 상세 조회 실패:", error);
+      }
+
+      if (!active) return;
+
+      const dummyMatch = getReservationsWithSessionState().find(
+        (item) => item.id === reservationId
+      );
+      setReservation(dummyMatch ?? null);
+    };
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, [reservationId]);
+
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
-  const reservation = reservations.find((item) => item.id === reservationId);
+  const handleConfirmRefund = (reason: string) => {
+    if (!reservation) return;
+
+    markReservationRefundRequested(reservation.id, reason);
+
+    setReservation((prev) =>
+      prev
+        ? {
+            ...prev,
+            status: "refund_pending",
+            refundReason: reason,
+            refundRequestedAt: DUMMY_TODAY,
+            refundRejectedReason: undefined,
+            refundRejectedAt: undefined,
+            refundedAt: undefined,
+          }
+        : prev
+    );
+
+    setIsRefundModalOpen(false);
+  };
+
+  if (reservation === undefined) {
+    return (
+      <p className="rounded-2xl border border-[#E5EDF5] bg-white p-8 text-center text-sm text-[#8A9BB0] shadow-sm">
+        예약 정보를 불러오는 중입니다...
+      </p>
+    );
+  }
 
   if (!reservation) {
     return (
@@ -35,28 +97,6 @@ export default function ReservationDetail({
     reservation.paymentType === "installment" &&
     reservation.remainingAmount > 0 &&
     isReserved;
-
-  const handleConfirmRefund = (reason: string) => {
-    markReservationRefundRequested(reservation.id, reason);
-
-    setReservations((prev) =>
-      prev.map((item) =>
-        item.id === reservation.id
-          ? {
-              ...item,
-              status: "refund_pending",
-              refundReason: reason,
-              refundRequestedAt: DUMMY_TODAY,
-              refundRejectedReason: undefined,
-              refundRejectedAt: undefined,
-              refundedAt: undefined,
-            }
-          : item
-      )
-    );
-
-    setIsRefundModalOpen(false);
-  };
 
   return (
     <div className="space-y-3">

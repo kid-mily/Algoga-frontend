@@ -27,6 +27,7 @@ export default function MyPageEditForm({
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   const displayInitial = useMemo(
     () => nickname.trim().slice(0, 1) || initial,
@@ -81,6 +82,11 @@ export default function MyPageEditForm({
       return;
     }
 
+    if (currentPassword && newPassword && currentPassword === newPassword) {
+      alert("새 비밀번호는 현재 비밀번호와 달라야 합니다.");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -112,9 +118,7 @@ export default function MyPageEditForm({
 
       window.dispatchEvent(new Event("auth-state-changed"));
 
-      alert("회원 정보가 수정되었습니다.");
-      router.push("/mypage");
-      router.refresh();
+      setIsSuccessModalOpen(true);
     } catch (error) {
       console.error("회원 정보 수정 실패:", error);
 
@@ -128,7 +132,14 @@ export default function MyPageEditForm({
     }
   };
 
+  const handleSuccessConfirm = () => {
+    setIsSuccessModalOpen(false);
+    router.push("/mypage");
+    router.refresh();
+  };
+
   return (
+    <>
     <form onSubmit={handleSubmit} className="flex h-full w-full flex-col">
       <div className="mb-4 flex items-center justify-between">
         <button
@@ -150,7 +161,6 @@ export default function MyPageEditForm({
           <div className="flex items-center gap-5">
             <label className="relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-[#5f9c98] text-3xl font-bold text-white">
               {previewUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={previewUrl}
                   alt="프로필 이미지"
@@ -277,6 +287,33 @@ export default function MyPageEditForm({
         </button>
       </div>
     </form>
+
+    {isSuccessModalOpen && (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4">
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mypage-edit-success-title"
+          className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl"
+        >
+          <h2
+            id="mypage-edit-success-title"
+            className="text-lg font-bold text-slate-900"
+          >
+            회원 정보가 수정되었습니다.
+          </h2>
+
+          <button
+            type="button"
+            onClick={handleSuccessConfirm}
+            className="mt-6 h-11 w-full rounded-xl bg-[#5f9c98] text-sm font-bold text-white hover:bg-[#528d89]"
+          >
+            확인
+          </button>
+        </section>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -308,7 +345,7 @@ function Field({
         onChange={(event) =>
           onChange?.(event.target.value)
         }
-        className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#5f9c98] disabled:bg-slate-50 disabled:text-slate-400"
+        className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#5f9c98] disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200! disabled:text-slate-500!"
       />
     </label>
   );

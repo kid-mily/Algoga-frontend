@@ -243,6 +243,55 @@
 
 ---
 
+### POST /api/v1/payments/bundle
+
+#### Used In
+
+- `src/features/services/package.service.ts` (`createBundlePayment`) — 패키지 결제 페이지(`usePackagePayment.ts`)에서 courseId가 있을 때(강의 선택 후 예약한 경우)만 사용. courseId가 없으면 기존 `POST /payments`를 그대로 씀
+
+#### Request Fields
+
+- `bookingId`, `paymentType`("FULL" 고정, 통합 결제는 DEPOSIT/FULL만 허용), `amount`(`finalAmount` — 패키지+강의 합산 후 쿠폰/마일리지 적용된 최종 금액), `usedMileage`, `usedCouponId`, `portonePaymentId`
+- `courseIds`: `[courseId]` — **minItems 1이라 빈 배열을 보낼 수 없음.** 그래서 강의가 없는 경우는 아예 이 API를 호출하지 않고 기존 `POST /payments`로 분기
+
+#### Response Fields Used
+
+- `data`: `BundlePaymentResponse` — `bookingPaymentId`, `lecturePaymentIds`, `bookingAmount`, `lectureAmount`, `totalAmount`. 현재 화면에서는 결제 완료 페이지로 이동만 하고 이 값들은 별도로 사용하지 않음
+
+#### Error Handling
+
+- `PAYMENT_ERROR_MESSAGE`(`usePackagePayment.ts`)에 `PAY_007`(강의 없음), `PAY_015`(일시불만 가능한 예약), `PAY_016`(통합 결제는 DEPOSIT/FULL만 허용) 추가
+
+#### Notes
+
+- **이 API 도입 전엔 토스페이 결제창을 2번 띄우고 `POST /payments` + `POST /payments/lecture`를 따로 호출하는 우회 구조였음** (2026-07-17 항목 참고). PortOne 실제 승인액과 각 API에 보내는 amount가 안 맞아 `PAY_003`이 나던 문제가 있었는데, 이 통합 API로 바뀌면서 결제창 1번 + 백엔드가 내부적으로 쿠폰/마일리지를 패키지분에만 적용해 나눠주는 구조로 완전히 대체됨 → **프론트의 수동 분배 계산 로직은 전부 제거함**
+- 완강 후 예약(`installmentAllowed: false`)은 `FULL`만 가능, 이미 결제한 강의(`isPaid: true`)를 `courseIds`에 넣으면 `PAY_004`(중복 결제)
+
+---
+
+### GET /api/v1/bookings/me
+
+#### Used In
+
+- `src/features/services/package.service.ts` (`getMyBookings`) — 마이페이지 예약 내역(`src/features/mypage/reservations/reservation.util.ts`의 `loadMyReservations`), "이용 전"/"이용 후" 탭
+
+#### Response Fields Used
+
+- `BookingDetail[]` — `GET /bookings/{id}`와 동일한 응답 형태(`toBookingDetail` 공유, `flightInfo`/`returnFlightInfo`/`passengerInfo` JSON 문자열 파싱 동일)
+
+#### Error Handling
+
+- 실패 시 목록 화면에 에러 문구 표시 (`ReservationPage.tsx`의 `loadErrorMessage`)
+
+#### Notes
+
+- **이 API 응답엔 상품명/숙소명이 없음** (accommodationId만 있음) — 화면에 보여줄 숙소명은 `GET /accommodations/{id}`를 accommodationId별로 추가 조회해서 채움 (`loadMyReservations`)
+- 백엔드 `status`(`PENDING/DEPOSIT_PAID/FULL_PAID/CANCEL_REQUESTED/REFUNDED`)엔 "이용 완료" 개념이 없어서, **체크아웃 날짜를 오늘과 비교해 이용 전/이용 후를 프론트가 직접 계산**(`reservation.util.ts`의 `resolveReservationStatus`)
+- `CANCEL_REQUESTED`/`REFUNDED` 상태 예약은 이번 작업 범위에서 목록에서 제외함 — **환불 내역 탭은 아직 더미 데이터 그대로**, `GET /refund-requests/me` 연동은 다음 작업 대상
+- `PassengerInfo`엔 성별/국적이 없어서 상세 화면에 표시할 값이 없음 (`"-"`로 표시)
+
+---
+
 ## 최근 변경된 API
 
 <!-- 백엔드 변경으로 프론트가 대응했거나 대응해야 하는 항목. 날짜 + 요약 + 영향 파일. -->
@@ -253,4 +302,10 @@
 - 2026-07-15 — `POST /api/v1/payments`(결제 생성), `GET /api/v1/payments/{paymentId}` 신규 연동. 예약(`/booking`) 페이지의 "결제 단계로 이동" 버튼이 `POST /bookings`를 먼저 호출해 bookingId를 확보한 뒤 결제 페이지(`?bookingId=`)로 이동하도록 구조를 바꿈. 결제 페이지는 이 bookingId로 예약을 다시 조회(`GET /bookings/{id}`)해 실제 `totalPrice`를 결제 금액으로 쓰고, PortOne 결제 후 `POST /payments`로 저장. courseId 전달용으로 남겨뒀던 `countryId` 쿼리 파라미터는 예약 페이지가 패키지를 직접 재조회하면서 불필요해져 제거 / 영향: `src/features/packagelounge/types.ts`, `src/features/services/package.service.ts`, `src/features/packagelounge/components/BookingPrice.tsx`, `src/features/packagelounge/components/BookingPageClient.tsx`, `src/app/(user)/packagelounge/[packageId]/booking/page.tsx`, `src/app/(user)/packagelounge/[packageId]/payment/page.tsx`, `src/features/packagelounge/components/PackagePaymentClient.tsx`, `src/features/packagelounge/hooks/usePackagePayment.ts`. **미반영**: 분할 결제(`DEPOSIT`), 강의+패키지 동시 결제, `PaymentSummary.tsx`의 "강의" 금액 표시(기존에 `flightPrice`를 잘못 재사용하고 있던 표시 버그, 이번 작업 범위 밖이라 그대로 둠)
 - 2026-07-15 — 로그인 필요 API를 서버 컴포넌트에서 직접 호출하면 브라우저 쿠키가 안 실려 401(로그인 화면)이 뜨는 문제 발견 및 수정. `GET /bookings/{id}`(로그인 유저 전용)를 서버 `page.tsx`에서 부르던 걸, 단과 결제 페이지(`SingleLecturePaymentClient.tsx`) 패턴대로 클라이언트 컴포넌트에서 직접 호출하도록 이동 — 공개 데이터(`GET /packages/{id}`, `GET /countries/{id}/packages` 등)는 그대로 서버에서 유지. `lib/api.ts`는 공통 파일이라 수정하지 않음 / 영향: `src/app/(user)/packagelounge/booking/[bookingId]/page.tsx`, `src/features/packagelounge/components/BookingConfirmation.tsx`, `src/app/(user)/packagelounge/[packageId]/payment/page.tsx`, `src/features/packagelounge/components/PackagePaymentClient.tsx`
 - 2026-07-17 — 결제 페이지에 남아있던 더미 쿠폰/마일리지를 실제 API로 교체. `GET /my/coupons`, `GET /my/mileages`(둘 다 로그인 유저 전용, `myBenefit.service.ts`의 기존 `getMyCoupons`/`getMyMileages` 재사용)를 결제 페이지 진입 시 클라이언트에서 호출해 보유 쿠폰(ISSUED && usable 전체, 강의 결제와 달리 courseId로 필터링하지 않음)과 마일리지 잔액을 채움. 로딩 중엔 결제 버튼 비활성화(`isLoadingBenefits`, 단과 결제와 동일 패턴). `payment.data.ts`의 더미 쿠폰/마일리지 상수(`PAYMENT_DUMMY_COUPONS`, `PAYMENT_DUMMY_MILEAGE_BALANCE`)는 삭제 / 영향: `src/features/packagelounge/hooks/usePackagePayment.ts`, `src/features/packagelounge/components/PackagePaymentClient.tsx`, `src/features/packagelounge/payment.data.ts`. **미반영**: 분할 결제(`DEPOSIT`), 강의+패키지 동시 결제는 여전히 다음 작업 대상
-- 2026-07-17 — 패키지 결제에 강의(단과) 금액을 합산 반영 (일시불/FULL만). 사용자 제공 도메인 명세 기준: 강의(courseId)와 패키지(bookingId)는 백엔드에서 서로 저장/참조되지 않는 완전 별도 도메인이라, "합산 결제 API"가 따로 있는 게 아니라 **결제 화면에서는 하나로 묶어 보여주고, 실제 결제는 `POST /payments`(패키지분) + `POST /payments/lecture`(강의분, 기존 단과 결제 API인 `SinglePayment.service.ts`의 `createLecturePayment` 재사용)를 순차 호출**하는 구조로 구현. `courseId`를 예약 페이지 → 결제 페이지까지 쿼리 파라미터로 전달하도록 확장(`buildQueryString`)하고, 결제 페이지에서 `getCourseDetail`로 강의를 재조회. 결제 금액(`productAmount`)은 `booking.totalPrice + course.price`. 쿠폰/마일리지 할인은 패키지 금액에서 먼저 차감하고 남는 할인만 강의 금액에 적용(패키지분에 우선 배분) — **이 분배 규칙은 프론트 임시 결정이라 백엔드 확인 필요**. 강의 결제(`POST /payments/lecture`) 호출이 실패하면 패키지 결제는 이미 완료된 상태이므로 성공 페이지로 넘기지 않고 "고객센터 문의" 안내만 표시 / 영향: `src/features/packagelounge/hooks/usePackagePayment.ts`, `src/features/packagelounge/components/PackagePaymentClient.tsx`, `src/features/packagelounge/components/SelectedPackage.tsx`, `src/features/packagelounge/components/PaymentSummary.tsx`, `src/features/packagelounge/components/BookingPrice.tsx`, `src/features/packagelounge/components/BookingPageClient.tsx`, `src/app/(user)/packagelounge/[packageId]/payment/page.tsx`. **미반영**: 분할 결제(1차=DEPOSIT+강의 전액/2차=BALANCE만)는 아직 결제 방식 선택 UI 자체가 없어 다음 작업 대상
+- 2026-07-17 — 패키지 결제에 강의(단과) 금액을 합산 반영 (일시불/FULL만). 사용자 제공 도메인 명세 기준: 강의(courseId)와 패키지(bookingId)는 백엔드에서 서로 저장/참조되지 않는 완전 별도 도메인이라, "합산 결제 API"가 따로 있는 게 아니라 **결제 화면에서는 하나로 묶어 보여주고, 실제 결제는 `POST /payments`(패키지분) + `POST /payments/lecture`(강의분, 기존 단과 결제 API인 `SinglePayment.service.ts`의 `createLecturePayment` 재사용)를 순차 호출**하는 구조로 구현. `courseId`를 예약 페이지 → 결제 페이지까지 쿼리 파라미터로 전달하도록 확장(`buildQueryString`)하고, 결제 페이지에서 `getCourseDetail`로 강의를 재조회. 결제 금액(`productAmount`)은 `booking.totalPrice + course.price`. 쿠폰/마일리지 할인은 패키지 금액에서 먼저 차감하고 남는 할인만 강의 금액에 적용(패키지분에 우선 배분) — **이 분배 규칙은 프론트 임시 결정이라 백엔드 확인 필요**. 강의 결제(`POST /payments/lecture`) 호출이 실패하면 패키지 결제는 이미 완료된 상태이므로 성공 페이지로 넘기지 않고 "고객센터 문의" 안내만 표시 / 영향: `src/features/packagelounge/hooks/usePackagePayment.ts`, `src/features/packagelounge/components/PackagePaymentClient.tsx`, `src/features/packagelounge/components/SelectedPackage.tsx`, `src/features/packagelounge/components/PaymentSummary.tsx`, `src/features/packagelounge/components/BookingPrice.tsx`, `src/features/packagelounge/components/BookingPageClient.tsx`, `src/app/(user)/packagelounge/[packageId]/payment/page.tsx`. **미반영(당시)**: 분할 결제(1차=DEPOSIT+강의 전액/2차=BALANCE만)는 아직 결제 방식 선택 UI 자체가 없어 다음 작업 대상
+- 2026-07-17 (같은 날, 후속) — 위 "순차 2회 호출" 방식이 실제로 `PAY_003`(결제 금액이 올바르지 않습니다) 에러를 유발함을 확인. 원인: 토스페이 결제창을 패키지+강의 합산 금액(`finalAmount`)으로 1번만 띄우고, `POST /payments`/`POST /payments/lecture`에는 그보다 작은 분할 금액(`packageAmount`/`lectureAmount`)을 보내서 "PortOne 실제 승인액 = 요청 amount" 검증이 깨짐. **해결책으로 토스페이 결제창을 2번(패키지분/강의분 각각) 띄우는 구조로 변경** — 각 API 호출이 자기 몫의 실제 PortOne 결제 건을 참조하도록 수정 / 영향: `src/features/packagelounge/hooks/usePackagePayment.ts`. **07-19에 `POST /payments/bundle` 도입으로 이 구조 자체가 통째로 대체됨** (아래 항목 참고) — 지금은 해당 없는 내용
+- 2026-07-17 — 결제 페이지 "환불 정책 확인하기" 버튼에 onClick이 없어 아무 반응이 없던 것을 수정. 이미 구현돼 있던 `src/features/payment/CancellationPolicyModal.tsx`(단과 결제 쪽 `CancellationPolicyClient.tsx`와 같은 패턴)를 그대로 연결 / 영향: `src/features/packagelounge/components/PaymentSummary.tsx`
+- 2026-07-18 — 진단평가 → 패키지 라운지 진입 흐름이 `courseId`를 잃어버리는 문제의 근본 원인 발견·수정. 원인은 API가 아니라 프론트 라우팅 버그: `TabNavigation.tsx`가 Next.js 동적 라우트 파라미터를 실제 폴더명(`[continentCode]`)이 아닌 존재하지 않는 키(`continentid`)로 꺼내서 `undefined`가 URL에 그대로 들어감(`/classroom/undefined/...`) → 이후 진단평가 결과 페이지 전체가 깨진 continentCode를 물려받음. `continentid` → `continentCode`로 수정 / 영향: `src/features/classroom/components/TabNavigation.tsx`
+- 2026-07-18 — 마이페이지 예약 내역 "이용 전"/"이용 후" 탭을 실제 API(`GET /bookings/me`)로 연동 (상세 위 Used Endpoints 섹션 참고). 환불 내역 탭/버튼은 이번 범위에서 제외하고 기존 더미(`reservation.data.ts`, sessionStorage 기반) 그대로 유지 / 영향: `src/features/services/package.service.ts`(`getMyBookings` 추가, `toBookingDetail` 헬퍼로 리팩터), `src/features/mypage/reservations/reservation.util.ts`(신규), `src/features/mypage/reservations/ReservationPage.tsx`, `src/features/mypage/reservations/ReservationDetail.tsx`
+- 2026-07-19 — `POST /api/v1/payments/bundle`(패키지+강의 통합 결제) 신규 연동. 상세는 위 Used Endpoints 섹션 참고. **07-17에 만들었던 "결제창 2번 + `POST /payments`+`POST /payments/lecture` 순차 호출" 구조와 그 안의 쿠폰/마일리지 수동 분배 로직을 전부 제거**하고 이 API로 교체 — 결제창 1번, 백엔드가 쿠폰/마일리지를 패키지분에만 자동 적용 / 영향: `src/features/packagelounge/types.ts`(`CreateBundlePaymentRequest`/`BundlePaymentResponse` 추가), `src/features/services/package.service.ts`(`createBundlePayment` 추가), `src/features/packagelounge/hooks/usePackagePayment.ts`(`handlePay` 대폭 단순화). **미반영**: `courseIds`가 `minItems:1`이라 강의 없는 예약엔 이 API를 못 써서 기존 `POST /payments`와 분기 유지 중, 분할 결제(1차/2차) UI는 여전히 다음 작업 대상
+- 2026-07-19 — 마이페이지 "내 정보 수정" 진입 게이트를 비밀번호 인증 → 이메일 인증(`POST /users/me/email/send-code`, `POST /users/me/email/verify`)으로 전환하는 작업 마무리. 서비스/타입(`mypage.service.ts`, `types.ts`)과 새 모달(`EmailAuthVerifyModal.tsx`)은 이미 완성돼 있었고, `src/app/(user)/mypage/page.tsx`가 옛날 `PasswordVerifyModal`/`isPasswordModalOpen`(이미 삭제된 state)을 여전히 참조해 빌드가 깨져 있던 것만 `EmailAuthVerifyModal`/`isEmailAuthModalOpen`으로 교체. 더 이상 안 쓰이고 빌드를 깨던 `PasswordVerifyModal.tsx`는 삭제 / 영향: `src/app/(user)/mypage/page.tsx`, `src/features/mypage/PasswordVerifyModal.tsx`(삭제)
