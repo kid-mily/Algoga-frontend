@@ -1,6 +1,7 @@
 ﻿import type { Metadata } from "next";
 import ChatWidget from "@/features/chat/components/ChatWidget";
 import FriendPanel from "@/features/friends/components/FriendPanel";
+import AiChatbotWidget from "@/features/chatbot/components/AiChatbotWidget";
 import { getSiteUrl } from "@/features/seo/site";
 import "./globals.css";
 
@@ -65,6 +66,7 @@ export default function RootLayout({
       <body>
         <ChatWidget />
         <FriendPanel />
+        <AiChatbotWidget />
         {children}
       </body>
     </html>
