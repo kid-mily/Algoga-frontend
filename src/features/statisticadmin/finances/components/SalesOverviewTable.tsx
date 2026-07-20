@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { ArrowDownToLine } from "lucide-react";
 import {
   formatMillionAmount,
@@ -9,21 +12,37 @@ import { SalesOverviewTableProps } from '../types';
 
 export default function SalesOverviewTable({
   monthlyStats,
+  onDownloadCsv,
 }: SalesOverviewTableProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadCsv = async () => {
+    if (isDownloading) return;
+
+    try {
+      setIsDownloading(true);
+      await onDownloadCsv();
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <section className="overflow-hidden rounded-[18px] border border-[#EAECF0] bg-white shadow-[0_12px_28px_rgba(16,24,40,0.05)]">
       <header className="flex items-center justify-between px-6 py-5">
         <h2 className="text-[17px] font-bold text-[#101828]">월별 매출 상세</h2>
         <button
           type="button"
-          className="flex h-[32px] cursor-pointer items-center gap-1.5 rounded-[10px] border border-[#E4E7EC] bg-white px-3 text-[12px] font-semibold text-[#667085]"
+          onClick={() => void handleDownloadCsv()}
+          disabled={isDownloading}
+          className="flex h-[32px] cursor-pointer items-center gap-1.5 rounded-[10px] border border-[#E4E7EC] bg-white px-3 text-[12px] font-semibold text-[#667085] disabled:opacity-60"
         >
           <ArrowDownToLine
             aria-hidden="true"
             className="h-[14px] w-[14px]"
             strokeWidth={2}
           />
-          CSV
+          {isDownloading ? "다운로드 중..." : "CSV"}
         </button>
       </header>
 

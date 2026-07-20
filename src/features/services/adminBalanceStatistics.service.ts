@@ -1,6 +1,5 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import {
-  BalanceManagementData,
   BalanceQuery,
   BalanceSummary,
   CountryBalanceConversion,
@@ -131,15 +130,16 @@ export const getBalanceAging = async (
   };
 };
 
-// 미납 예약 목록
+// 미납 예약 목록. search(고객명 또는 상품명 부분 일치)가 있으면 서버 검색으로 함께 보냅니다.
 export const getUnpaidBookings = async (
-  { from, to }: BalanceQuery,
+  { from, to, search }: BalanceQuery & { search?: string },
   signal?: AbortSignal
 ): Promise<OutstandingReservation[]> => {
+  const trimmed = search?.trim();
   const response = await adminApi.get<ApiResult<RawOutstandingReservation[]>>(
     "/api/v1/admin/stats/balance/unpaid",
     {
-      params: { from, to },
+      params: { from, to, search: trimmed || undefined },
       suppressGlobalError: true,
       signal,
     }
@@ -148,25 +148,11 @@ export const getUnpaidBookings = async (
   return (unwrapData(response) ?? []).map(normalizeOutstandingReservation);
 };
 
-export const getBalanceManagementData = async (
-  query: BalanceQuery,
-  signal?: AbortSignal
-): Promise<BalanceManagementData> => {
-  const [summary, aging, outstandingReservations] = await Promise.all([
-    getBalanceSummary(query, signal),
-    getBalanceAging(query, signal),
-    getUnpaidBookings(query, signal),
-  ]);
-
-  return {
-    summary,
-    recoveryRates: aging.recoveryRates,
-    countryConversions: aging.countryConversions,
-    outstandingReservations,
-  };
-};
-
-export const downloadUnpaidBookingsCsv = async ({ from, to }: BalanceQuery) => {
+export const downloadUnpaidBookingsCsv = async ({
+  from,
+  to,
+  search,
+}: BalanceQuery & { search?: string }) => {
   if (!API_BASE_URL) {
     throw new Error("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
   }
@@ -174,6 +160,11 @@ export const downloadUnpaidBookingsCsv = async ({ from, to }: BalanceQuery) => {
   const url = new URL(`${API_BASE_URL}/api/v1/admin/stats/balance/unpaid/csv`);
   url.searchParams.set("from", from);
   url.searchParams.set("to", to);
+
+  const trimmedSearch = search?.trim();
+  if (trimmedSearch) {
+    url.searchParams.set("search", trimmedSearch);
+  }
 
   const response = await fetch(url.toString(), {
     method: "GET",

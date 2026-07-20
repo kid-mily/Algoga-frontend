@@ -67,4 +67,5 @@ export type SalesOverviewSummaryCardsProps = {
 
 export type SalesOverviewTableProps = {
   monthlyStats: SalesOverviewMonthlyStat[];
+  onDownloadCsv: () => void | Promise<void>;
 };

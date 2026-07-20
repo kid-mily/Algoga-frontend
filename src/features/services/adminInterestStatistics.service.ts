@@ -23,6 +23,7 @@ type RawInterestCountry = {
 
 type RawCountryProfit = {
   countryId: number;
+  rank?: number;
   countryName: string;
   bookingCount: number;
   grossRevenue: number;
@@ -138,21 +139,23 @@ export const getInterestCountries = async (
 };
 
 // 나라별 예약수·총매출·순매출·환불율·잔금전환율·취소율·점유율 — 국가별 상세 통계 테이블용
+// search(국가명 부분 일치)가 있으면 서버 검색으로 걸러진 목록을 받습니다. 빈 값이면 전체 조회.
 export const getCountryProfitList = async (
-  { from, to }: InterestQuery,
+  { from, to, search }: InterestQuery & { search?: string },
   signal?: AbortSignal
 ): Promise<CountryDetailStat[]> => {
   const response = await adminApi.get<ApiResult<RawCountryProfit[]>>(
     "/api/v1/admin/stats/country-profit",
     {
-      params: { from, to },
+      params: { from, to, search: search?.trim() || undefined },
       signal,
       suppressGlobalError: true,
     }
   );
 
+  // 순위는 백엔드가 전체 기준으로 내려주면 그 값을 쓰고(재계산 금지), 없으면 응답 순서로 대체합니다.
   return unwrapData(response).map((country, index) => ({
-    rank: index + 1,
+    rank: toNumber(country.rank) || index + 1,
     countryName: country.countryName,
     bookingCount: toNumber(country.bookingCount),
     grossRevenue: toNumber(country.grossRevenue),
@@ -222,8 +225,17 @@ export const getCourseEnrollmentStatistics = async (
   });
 };
 
-export const downloadCountryProfitCsv = async ({ from, to }: InterestQuery) => {
+export const downloadCountryProfitCsv = async ({
+  from,
+  to,
+  search,
+}: InterestQuery & { search?: string }) => {
   const params = new URLSearchParams({ from, to });
+
+  const trimmed = search?.trim();
+  if (trimmed) {
+    params.set("search", trimmed);
+  }
 
   await downloadAdminCsv(
     `/api/v1/admin/stats/country-profit/csv?${params.toString()}`,
@@ -238,6 +250,17 @@ export const downloadInterestLecturesCsv = async (search = "") => {
   await downloadAdminCsv(
     `/api/v1/admin/stats/interest/lectures/csv${query}`,
     "interest-lectures.csv"
+  );
+};
+
+// 관심도 나라별 수강 수 CSV. search(나라명 부분 일치)가 있으면 함께 보냅니다.
+export const downloadInterestCountriesCsv = async (search = "") => {
+  const trimmed = search.trim();
+  const query = trimmed ? `?search=${encodeURIComponent(trimmed)}` : "";
+
+  await downloadAdminCsv(
+    `/api/v1/admin/stats/interest/countries/csv${query}`,
+    "interest-countries.csv"
   );
 };
 

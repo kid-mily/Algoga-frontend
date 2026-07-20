@@ -66,34 +66,46 @@ const getSummaryRaw = (query: CountryProfitQuery, signal?: AbortSignal) =>
     { params: query, suppressGlobalError: true, signal }
   );
 
-const getListRaw = (query: CountryProfitQuery, signal?: AbortSignal) =>
+// search(국가명 부분 일치)는 목록에만 적용합니다. 빈 값이면 전체 조회.
+const getListRaw = (
+  { from, to, search }: CountryProfitQuery & { search?: string },
+  signal?: AbortSignal
+) =>
   adminApi.get<ApiResult<RawCountryProfit[]>>("/api/v1/admin/stats/country-profit", {
-    params: query,
+    params: { from, to, search: search?.trim() || undefined },
     suppressGlobalError: true,
     signal,
   });
 
-export const getCountryProfitData = async (
+// 요약·점유율(topCountryShare 등)은 전체 기준이라 search를 보내지 않습니다.
+export const getCountryProfitSummary = async (
   query: CountryProfitQuery,
   signal?: AbortSignal
-): Promise<CountryProfitData> => {
-  const [summaryRes, listRes] = await Promise.all([
-    getSummaryRaw(query, signal),
-    getListRaw(query, signal),
-  ]);
+): Promise<CountryProfitabilitySummary> =>
+  normalizeSummary(unwrapData(await getSummaryRaw(query, signal)));
 
-  return {
-    summary: normalizeSummary(unwrapData(summaryRes)),
-    items: normalizeItems(unwrapData(listRes) ?? []),
-  };
-};
+// 나라별 수익성 목록. search가 있으면 서버 검색으로 걸러진 목록을 받습니다.
+export const getCountryProfitItems = async (
+  query: CountryProfitQuery & { search?: string },
+  signal?: AbortSignal
+): Promise<CountryProfitabilityItem[]> =>
+  normalizeItems(unwrapData(await getListRaw(query, signal)) ?? []);
 
-export const downloadCountryProfitCsv = async ({ from, to }: CountryProfitQuery) => {
+export const downloadCountryProfitCsv = async ({
+  from,
+  to,
+  search,
+}: CountryProfitQuery & { search?: string }) => {
   if (!API_BASE_URL) {
     throw new Error("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
   }
 
   const params = new URLSearchParams({ from, to });
+
+  const trimmedSearch = search?.trim();
+  if (trimmedSearch) {
+    params.set("search", trimmedSearch);
+  }
 
   const response = await fetch(
     `${API_BASE_URL}/api/v1/admin/stats/country-profit/csv?${params.toString()}`,

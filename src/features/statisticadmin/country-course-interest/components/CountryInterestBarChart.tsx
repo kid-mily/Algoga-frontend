@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Download } from "lucide-react";
 import {
   Bar,
@@ -9,12 +10,26 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { downloadInterestCountriesCsv } from "@/features/services/adminInterestStatistics.service";
 import type { CountryInterestBarChartProps} from "../types";
 
 
 export default function CountryInterestBarChart({
   data,
 }: CountryInterestBarChartProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadCsv = async () => {
+    if (isDownloading) return;
+
+    try {
+      setIsDownloading(true);
+      await downloadInterestCountriesCsv();
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <article className="rounded-[20px] bg-white p-6 shadow-sm">
       <header className="flex items-center justify-between">
@@ -24,7 +39,9 @@ export default function CountryInterestBarChart({
 
         <button
           type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-[8px] border border-[#E4E7EC] text-[#667085]"
+          onClick={() => void handleDownloadCsv()}
+          disabled={isDownloading}
+          className="flex h-9 w-9 items-center justify-center rounded-[8px] border border-[#E4E7EC] text-[#667085] disabled:opacity-60"
           aria-label="나라별 수강자 수 CSV 다운로드"
         >
           <Download size={18} />
