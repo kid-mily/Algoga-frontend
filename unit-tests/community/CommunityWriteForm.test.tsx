@@ -35,6 +35,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("next/image", () => {
   return function ImageMock({ alt, src }: { alt: string; src: string }) {
+    // eslint-disable-next-line @next/next/no-img-element
     return <img alt={alt} src={src} />;
   };
 });
@@ -46,7 +47,7 @@ const countries = [
 
 describe("CommunityWriteForm 컴포넌트 테스트", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     searchParamsPostId = null;
 
     (getCommunityContinents as jest.Mock).mockResolvedValue(continents);
@@ -159,6 +160,73 @@ describe("CommunityWriteForm 컴포넌트 테스트", () => {
     expect(pushMock).toHaveBeenCalledWith("/community");
   });
 
+  test("글 작성 시 이미지 파일을 첨부하면 등록 payload에 포함된다", async () => {
+    const user = userEvent.setup();
+    const imageFile = new File(["image"], "osaka.png", { type: "image/png" });
+
+    Object.defineProperty(URL, "createObjectURL", {
+      writable: true,
+      value: jest.fn(() => "blob:osaka"),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      writable: true,
+      value: jest.fn(),
+    });
+
+    (createCommunityPost as jest.Mock).mockResolvedValueOnce(undefined);
+
+    const { container } = render(<CommunityWriteForm />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("태그")).toBeVisible();
+    });
+
+    await user.selectOptions(screen.getByLabelText("태그"), "QUESTION");
+    await user.type(screen.getByPlaceholderText("어떤 여행이었나요?"), "오사카 질문");
+    await user.type(
+      screen.getByPlaceholderText("여행 이야기를 자유롭게 나눠주세요"),
+      "숙소 위치 추천이 궁금합니다."
+    );
+    const imageInput = container.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+
+    await user.upload(imageInput, imageFile);
+
+    expect(screen.getByAltText("첨부 이미지 1")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "작성 완료" }));
+
+    await waitFor(() => {
+      expect(createCommunityPost).toHaveBeenCalledWith(
+        expect.objectContaining({
+          images: [imageFile],
+        })
+      );
+    });
+  });
+
+  test("자유 태그가 아닌 카테고리를 선택하면 커스텀 태그를 초기화한다", async () => {
+    const user = userEvent.setup();
+
+    render(<CommunityWriteForm />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("태그")).toBeVisible();
+    });
+
+    await user.selectOptions(screen.getByLabelText("태그"), "FREE");
+    await user.type(screen.getByPlaceholderText("최대 10자"), "혼자여행");
+    await user.click(screen.getByRole("button", { name: "추가" }));
+
+    expect(screen.getByText("#혼자여행")).toBeVisible();
+
+    await user.selectOptions(screen.getByLabelText("태그"), "QUESTION");
+
+    expect(screen.queryByText("#혼자여행")).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("최대 10자")).not.toBeInTheDocument();
+  });
+
   test("게시글 등록에 실패하면 에러 메시지가 보인다", async () => {
     const user = userEvent.setup();
 
@@ -269,5 +337,39 @@ describe("CommunityWriteForm 컴포넌트 테스트", () => {
     });
 
     expect(await screen.findByText("게시글 수정 완료")).toBeVisible();
+  });
+
+  test("수정 모드에서 기존 이미지를 삭제하면 삭제 목록에 포함된다", async () => {
+    const user = userEvent.setup();
+    searchParamsPostId = "42";
+
+    (getCommunityPost as jest.Mock).mockResolvedValueOnce({
+      postId: 42,
+      title: "기존 제목",
+      content: "기존 내용",
+      categoryCode: "TIP_INFO",
+      imageUrls: ["/images/community-1.png"],
+      countryId: undefined,
+    });
+    (updateCommunityPost as jest.Mock).mockResolvedValueOnce(undefined);
+
+    render(<CommunityWriteForm />);
+
+    await screen.findByDisplayValue("기존 제목");
+    expect(screen.getByAltText("기존 첨부 이미지 1")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "기존 첨부 이미지 삭제" })
+    );
+    await user.click(screen.getByRole("button", { name: "수정 완료" }));
+
+    await waitFor(() => {
+      expect(updateCommunityPost).toHaveBeenCalledWith(
+        expect.objectContaining({
+          existingImageUrls: [],
+          deletedImageUrls: ["/images/community-1.png"],
+        })
+      );
+    });
   });
 });
