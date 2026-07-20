@@ -146,6 +146,36 @@ export interface BundlePaymentResponse {
   totalAmount: number;
 }
 
+// GET /payments/bundle/preview 요청 - 통합 결제창을 띄우기 전에 결제 가능 여부와
+// 서버가 계산한 정확한 금액(expectedTotal)을 미리 확인한다 (2026-07-20 PR #584)
+export interface BundlePaymentPreviewParams {
+  bookingId: number;
+  courseIds?: number[];
+  paymentType: "DEPOSIT" | "FULL";
+  usedMileage?: number;
+  usedCouponId?: number | null;
+}
+
+export type BundlePaymentBlockReason =
+  | "DUPLICATE_PAYMENT"
+  | "INSTALLMENT_NOT_ALLOWED"
+  | "INVALID_PAYMENT_TYPE"
+  | "BOOKING_NOT_FOUND"
+  | "COURSE_NOT_FOUND"
+  | "COUPON_INVALID"
+  | "INSUFFICIENT_MILEAGE"
+  | "INVALID_PAYMENT_AMOUNT";
+
+export interface BundlePaymentPreview {
+  payable: boolean;
+  blockReason: BundlePaymentBlockReason | null;
+  blockMessage: string | null;
+  alreadyPaidCourseIds: number[];
+  packageAmount: number;
+  lectureAmount: number;
+  expectedTotal: number;
+}
+
 // GET /payments/{paymentId} 응답 - 예약 결제와 강의 단독 결제가 같은 엔드포인트를 공유해서
 // bookingId/courseId 둘 다 optional이다 (예약 결제면 courseId가 null, 강의 결제면 bookingId가 null)
 export interface PaymentDetail {

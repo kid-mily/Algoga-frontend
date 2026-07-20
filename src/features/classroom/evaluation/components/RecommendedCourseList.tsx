@@ -44,11 +44,7 @@ function CourseCard({
     >
       <div className={`absolute left-0 top-0 h-full w-1 ${courseLevelStyle.accent}`} />
 
-      <button
-        type="button"
-        onClick={() => onSingleCourseClick(course)}
-        className="group block w-full text-left"
-      >
+      <div className="group block w-full text-left">
         <div className="relative h-[125px] overflow-hidden bg-[#EAF2F5]">
           {course.thumbnailUrl ? (
             <Image
@@ -98,7 +94,7 @@ function CourseCard({
             </div>
           ) : null}
         </div>
-      </button>
+      </div>
 
       <div className="grid grid-cols-2 gap-2 px-5 pb-4 pl-6">
         <button

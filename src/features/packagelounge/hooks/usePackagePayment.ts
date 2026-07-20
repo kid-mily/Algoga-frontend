@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { requestTossPayment } from "@/features/services/portone.service";
-import { createBundlePayment, createPayment } from "@/features/services/package.service";
+import {
+  createBundlePayment,
+  createPayment,
+  getBundlePaymentPreview,
+} from "@/features/services/package.service";
 import { getMyCoupons, getMyMileages } from "@/features/services/myBenefit.service";
 import { getCouponDiscount, normalizeMileageInput } from "@/features/payment/utils";
 import type { MyCoupon } from "@/features/mypage/benefits/components/types";
@@ -15,6 +19,10 @@ interface UsePackagePaymentParams {
   bookingId: number;
   // 예약 조회(GET /bookings/{id})로 받은 실제 총 결제 금액 (숙소+항공, 강의 제외)
   totalPrice: number;
+  // 예약금(전체의 30%). paymentType이 DEPOSIT일 때 패키지분으로 사용
+  depositPrice: number;
+  // false면 예약금 분할 결제 불가, FULL만 가능 (완강 후 예약 등)
+  installmentAllowed: boolean;
   // 강의는 패키지와 백엔드에서 연결돼 있지 않아 별도 결제(POST /payments/lecture)로 처리한다. 없으면 null
   courseId: number | null;
   coursePrice: number;
@@ -38,6 +46,8 @@ export function usePackagePayment({
   packageName,
   bookingId,
   totalPrice,
+  depositPrice,
+  installmentAllowed,
   courseId,
   coursePrice,
   courseName,
@@ -51,6 +61,8 @@ export function usePackagePayment({
   const [isLoadingBenefits, setIsLoadingBenefits] = useState(true);
   const [isPaying, setIsPaying] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  // FULL: 일시불(전액) / DEPOSIT: 예약금(30%)만 먼저 결제. installmentAllowed가 false면 FULL 고정
+  const [paymentType, setPaymentType] = useState<"FULL" | "DEPOSIT">("FULL");
 
   // 보유 쿠폰 전체(사용 가능한 것)와 마일리지 잔액을 조회한다 
   useEffect(() => {
@@ -90,9 +102,10 @@ export function usePackagePayment({
     };
   }, []);
 
-  // 패키지(숙소+항공) 금액에 강의 금액을 합쳐서 하나의 결제 금액으로 보여준다.
-  // 강의와 패키지는 백엔드에서 서로 연결돼 있지 않아, 실제 결제는 아래 handlePay에서 두 API로 나눠 호출한다.
-  const productAmount = totalPrice + coursePrice;
+  // 패키지분: paymentType이 DEPOSIT이면 예약금(30%), FULL이면 전액. 강의는 분할 없이 항상 정가 전액
+  const packageAmount = paymentType === "DEPOSIT" ? depositPrice : totalPrice;
+  // 화면 표시용 상품 금액(패키지분 + 강의). 쿠폰/마일리지 차감 전 금액
+  const productAmount = packageAmount + coursePrice;
 
   const selectedCoupon = useMemo(
     () =>
@@ -101,19 +114,26 @@ export function usePackagePayment({
     [coupons, selectedCouponId]
   );
 
+  // 쿠폰/마일리지는 패키지분에서만 차감하고 강의(정가)에는 적용하지 않는다
   const couponDiscount = useMemo(
-    () => getCouponDiscount(selectedCoupon, productAmount),
-    [selectedCoupon, productAmount]
+    () => getCouponDiscount(selectedCoupon, packageAmount),
+    [selectedCoupon, packageAmount]
   );
 
   const maxMileage = useMemo(
-    () => Math.min(mileageBalance, Math.max(productAmount - couponDiscount, 0)),
-    [mileageBalance, productAmount, couponDiscount]
+    () => Math.min(mileageBalance, Math.max(packageAmount - couponDiscount, 0)),
+    [mileageBalance, packageAmount, couponDiscount]
+  );
+
+  // 강의 없이 패키지분만 결제할 때 쓰는 금액 (통합결제 사전 검증에서 강의가 제외될 때도 재사용)
+  const packageOnlyAmount = useMemo(
+    () => Math.max(packageAmount - couponDiscount - usedMileage, 0),
+    [packageAmount, couponDiscount, usedMileage]
   );
 
   const finalAmount = useMemo(
-    () => Math.max(productAmount - couponDiscount - usedMileage, 0),
-    [productAmount, couponDiscount, usedMileage]
+    () => packageOnlyAmount + coursePrice,
+    [packageOnlyAmount, coursePrice]
   );
 
   const handleCouponChange = useCallback((couponId: number | null) => {
@@ -122,6 +142,18 @@ export function usePackagePayment({
     setUsedMileage(0);
     setMileageInputValue("");
   }, []);
+
+  const handlePaymentTypeChange = useCallback(
+    (nextType: "FULL" | "DEPOSIT") => {
+      if (nextType === "DEPOSIT" && !installmentAllowed) return;
+
+      setPaymentType(nextType);
+      // 패키지분 금액이 바뀌므로 적용된 마일리지 초기화 (쿠폰 할인은 재계산됨)
+      setUsedMileage(0);
+      setMileageInputValue("");
+    },
+    [installmentAllowed]
+  );
 
   const handleMileageInputChange = useCallback((value: string) => {
     setMileageInputValue(value);
@@ -145,23 +177,56 @@ export function usePackagePayment({
     setErrorMessage("");
 
     try {
+      // 강의가 있으면 결제창을 띄우기 전에 통합결제 사전 검증(GET /payments/bundle/preview)부터 한다.
+      // 이미 결제한 강의가 껴 있으면(DUPLICATE_PAYMENT) 그 강의를 빼고 패키지만 결제하는 걸로 자동 전환하고,
+      // 그 외 사유로 막히면 결제창 자체를 띄우지 않는다
+      let useBundle = Boolean(courseId);
+      let paymentAmount = finalAmount;
+
+      if (useBundle && courseId) {
+        const preview = await getBundlePaymentPreview({
+          bookingId,
+          courseIds: [courseId],
+          paymentType,
+          usedMileage,
+          usedCouponId: selectedCouponId,
+        });
+
+        if (!preview.payable) {
+          if (
+            preview.blockReason === "DUPLICATE_PAYMENT" &&
+            preview.alreadyPaidCourseIds.includes(courseId)
+          ) {
+            useBundle = false;
+            paymentAmount = packageOnlyAmount;
+          } else {
+            setErrorMessage(preview.blockMessage || "결제를 진행할 수 없습니다.");
+            return;
+          }
+        } else {
+          // amount는 반드시 preview의 expectedTotal을 그대로 써야 한다 (직접 계산하면 1원 오차로 거부될 수 있음)
+          paymentAmount = preview.expectedTotal;
+        }
+      }
+
       let portonePaymentId = "";
 
-      if (finalAmount > 0) {
+      if (paymentAmount > 0) {
         portonePaymentId = await requestTossPayment({
-          orderName: courseId ? `${packageName} + ${courseName ?? "강의"}` : packageName,
-          totalAmount: finalAmount,
+          orderName:
+            useBundle && courseId
+              ? `${packageName} + ${courseName ?? "강의"}`
+              : packageName,
+          totalAmount: paymentAmount,
         });
       }
 
-      // 강의가 있으면 결제 1건으로 패키지+강의를 함께 처리하는 통합 결제 API를 쓴다
-      // (쿠폰/마일리지는 백엔드가 알아서 패키지분에만 적용하고, 강의는 항상 정가로 계산됨)
-      if (courseId) {
+      if (useBundle && courseId) {
         await createBundlePayment({
           bookingId,
           courseIds: [courseId],
-          paymentType: "FULL",
-          amount: finalAmount,
+          paymentType,
+          amount: paymentAmount,
           usedMileage,
           usedCouponId: selectedCouponId,
           portonePaymentId,
@@ -169,16 +234,17 @@ export function usePackagePayment({
       } else {
         await createPayment({
           bookingId,
-          paymentType: "FULL",
-          amount: finalAmount,
+          paymentType,
+          amount: paymentAmount,
           usedMileage,
           usedCouponId: selectedCouponId,
           portonePaymentId,
         });
       }
 
-      // 현재 결제 페이지는 항상 전액을 한 번에 결제하므로 "일시불"로 이동한다
-      router.push(`/packagelounge/${packageId}/payment/success?mode=full`);
+      router.push(
+        `/packagelounge/${packageId}/payment/success?mode=${paymentType === "DEPOSIT" ? "deposit" : "full"}`
+      );
     } catch (error) {
       if (error instanceof ApiRequestError) {
         const errorCode = (error.body as { errorCode?: string } | null)
@@ -199,11 +265,13 @@ export function usePackagePayment({
   }, [
     isPaying,
     finalAmount,
+    packageOnlyAmount,
     courseId,
     courseName,
     packageName,
     packageId,
     bookingId,
+    paymentType,
     usedMileage,
     selectedCouponId,
     router,
@@ -218,6 +286,7 @@ export function usePackagePayment({
     isLoadingBenefits,
     isPaying,
     errorMessage,
+    paymentType,
     productAmount,
     couponDiscount,
     maxMileage,
@@ -226,6 +295,7 @@ export function usePackagePayment({
     handleMileageInputChange,
     handleApplyMileage,
     handleUseAllMileage,
+    handlePaymentTypeChange,
     handlePay,
   };
 }

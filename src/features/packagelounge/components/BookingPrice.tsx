@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBooking } from "@/features/services/package.service";
 import { CreateBookingRequest, PackageApiItem } from "../types";
@@ -8,6 +9,7 @@ import { PackageDetailData } from "../packageDetail.types";
 import { getPassengerInfo } from "../utils/passengerStorage";
 import { buildQueryString } from "../utils/query";
 import { CourseItem } from "@/features/classroom/components/types";
+import { ApiRequestError } from "@/lib/api";
 
 interface BookingPriceProps {
   data: PackageDetailData;
@@ -39,6 +41,8 @@ export default function BookingPrice({
   const { booking } = data;
   const [isCreating, setIsCreating] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  // 완강하지 않은 유저가 패키지 예약을 시도할 때 (BK_004) - 안내 문구 + 강의 이어듣기 링크를 따로 보여준다
+  const [isCompletionRequired, setIsCompletionRequired] = useState(false);
   const totalWithCourse = booking.totalAmount + (course?.price ?? 0);
 
   const handleClick = async () => {
@@ -62,6 +66,7 @@ export default function BookingPrice({
 
     setIsCreating(true);
     setErrorMessage("");
+    setIsCompletionRequired(false);
 
     try {
       const payload: CreateBookingRequest = {
@@ -89,7 +94,18 @@ export default function BookingPrice({
       router.push(`/packagelounge/${packageId}/payment${query}`);
     } catch (error) {
       console.error("[packagelounge] 예약 생성 실패:", error);
-      setErrorMessage("예약 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+
+      const errorCode =
+        error instanceof ApiRequestError
+          ? (error.body as { errorCode?: string } | null)?.errorCode
+          : undefined;
+
+      if (errorCode === "BK_004") {
+        setIsCompletionRequired(true);
+      } else {
+        setErrorMessage("예약 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      }
+
       setIsCreating(false);
     }
   };
@@ -145,8 +161,20 @@ export default function BookingPrice({
         쿠폰과 마일리지는 다음 단계에서 적용할 수 있습니다.
       </p>
 
-      {errorMessage && (
-        <p className="mt-3 text-xs text-[#D9534F]">{errorMessage}</p>
+      {isCompletionRequired ? (
+        <div className="mt-3 rounded-xl border border-[#F3D2D2] bg-[#FDECEC] px-4 py-3 text-xs text-[#B54747]">
+          <p>강의를 완강하셔야 패키지 예약이 가능합니다.</p>
+          <Link
+            href="/mypage/coursedetails"
+            className="mt-1.5 inline-block font-bold underline"
+          >
+            강의 이어듣기
+          </Link>
+        </div>
+      ) : (
+        errorMessage && (
+          <p className="mt-3 text-xs text-[#D9534F]">{errorMessage}</p>
+        )
       )}
 
       <button

@@ -8,7 +8,7 @@ export default function BookingHeader() {
       </span>
 
       <h1 className="mt-2 text-2xl font-extrabold text-[#0A1628] sm:text-3xl">
-        패키지 예약
+        패키지&강의 예약
       </h1>
 
       <p className="mt-2 text-sm text-[#718096]">
