@@ -9,8 +9,6 @@ export type HistoryStatus = "COMPLETED" | "FILTERED" | "PENDING" | "ANSWERED";
 
 export type InquiryCategory = "RESERVATION" | "REFUND" | "COURSE" | "ETC";
 
-export type InquiryStatus = "PENDING" | "ANSWERED";
-
 export const INQUIRY_CATEGORY_LABEL: Record<InquiryCategory, string> = {
   RESERVATION: "예약",
   REFUND: "환불",

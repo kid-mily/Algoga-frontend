@@ -1,10 +1,6 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import { SignupPathChannelRevenue, SignupPathSummary } from "@/features/statisticadmin/user/types";
-import {
-  normalizeSignupPathKey,
-  normalizeSignupPathLabel,
-  signupPathColors,
-} from "@/features/statisticadmin/user/utils";
+import { signupPathColors } from "@/features/statisticadmin/user/utils";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -47,9 +43,7 @@ export const getInflowSummary = async (
   return {
     totalSignupCount: Number(data?.totalSignups || 0),
     totalNetSales: Number(data?.totalNetRevenue || 0),
-    bestEfficiencyPathLabel: data?.topChannel
-      ? normalizeSignupPathLabel(data.topChannel)
-      : "-",
+    bestEfficiencyPathLabel: data?.topChannel || "-",
     bestEfficiencyPathArpu: Number(data?.topChannelArpu || 0),
   };
 };
@@ -75,12 +69,12 @@ export const getInflowChannelRevenue = async (
 
   return items
     .map((item, index) => {
-      const signupPath = normalizeSignupPathKey(item.channel);
       const signupCount = Number(item.signupCount || 0);
 
+      // 백엔드가 채널당 1행·한글 라벨로 통일해 내려주므로 channel을 그대로 라벨/키로 사용
       return {
-        signupPath,
-        label: normalizeSignupPathLabel(item.channel || signupPath),
+        signupPath: item.channel,
+        label: item.channel,
         signupCount,
         ratio: totalSignupCount > 0 ? (signupCount / totalSignupCount) * 100 : 0,
         netSales: Number(item.netRevenue || 0),

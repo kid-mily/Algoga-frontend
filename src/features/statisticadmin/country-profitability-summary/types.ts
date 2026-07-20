@@ -14,3 +14,13 @@ export type CountryProfitabilityItem = {
     cancelRate: number;               // 취소율
     share: number;                    // 순매출 점유율
 };
+
+export type CountryProfitQuery = {
+  from: string;
+  to: string;
+};
+
+export type CountryProfitData = {
+  summary: CountryProfitabilitySummary;
+  items: CountryProfitabilityItem[];
+};

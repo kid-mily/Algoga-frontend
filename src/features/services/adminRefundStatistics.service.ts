@@ -45,12 +45,14 @@ type RawRefundTiming = {
   policyRate: number;
   count: number;
   amount: number;
+  ratio?: number; // 백엔드가 % 단위(소수점 2자리)로 내려줌
 };
 
 type RawRefundReason = {
   reason: string;
   count: number;
   amount: number;
+  ratio?: number; // 백엔드가 % 단위(소수점 2자리)로 내려줌
 };
 
 type RawRefundByCountry = {
@@ -73,16 +75,14 @@ const normalizeMonthlyTrends = (
     netRevenue: item.netRevenue ?? 0,
   }));
 
-const normalizeRefundTimings = (items: RawRefundTiming[]): RefundTiming[] => {
-  const totalCount = items.reduce((sum, item) => sum + Number(item.count || 0), 0);
-
-  return items.map((item, index) => ({
+// rate는 백엔드가 내려주는 ratio(%, 반올림)를 그대로 사용한다.
+const normalizeRefundTimings = (items: RawRefundTiming[]): RefundTiming[] =>
+  items.map((item, index) => ({
     label: `${item.bucket} 취소 (${item.policyRate}% 환불)`,
     count: item.count ?? 0,
-    rate: totalCount > 0 ? (Number(item.count || 0) / totalCount) * 100 : 0,
+    rate: item.ratio ?? 0,
     color: timingColors[index % timingColors.length],
   }));
-};
 
 const normalizeCancellationStages = (
   raw: RawCancelStats
@@ -103,15 +103,12 @@ const normalizeCancellationStages = (
   }));
 };
 
-const normalizeRefundReasons = (items: RawRefundReason[]): RefundReason[] => {
-  const totalCount = items.reduce((sum, item) => sum + Number(item.count || 0), 0);
-
-  return items.map((item) => ({
+const normalizeRefundReasons = (items: RawRefundReason[]): RefundReason[] =>
+  items.map((item) => ({
     reason: item.reason,
     count: item.count ?? 0,
-    rate: totalCount > 0 ? (Number(item.count || 0) / totalCount) * 100 : 0,
+    rate: item.ratio ?? 0,
   }));
-};
 
 // refundRate/grade는 이미 %·평가문구로 내려옴 (×100 하지 않음)
 const normalizeCountryRefundRates = (

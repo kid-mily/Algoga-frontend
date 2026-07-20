@@ -2,14 +2,10 @@ import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import type {
   CountryProfitabilityItem,
   CountryProfitabilitySummary,
+  CountryProfitQuery,
 } from "@/features/statisticadmin/country-profitability-summary/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-export type CountryProfitQuery = {
-  from: string;
-  to: string;
-};
 
 type RawCountryProfitSummary = {
   countryCount: number;
@@ -30,11 +26,6 @@ type RawCountryProfit = {
   balanceConversionRate: number;
   cancelRate: number;
   share: number;
-};
-
-export type CountryProfitData = {
-  summary: CountryProfitabilitySummary;
-  items: CountryProfitabilityItem[];
 };
 
 const toNumber = (value: number | null | undefined) => Number(value ?? 0);

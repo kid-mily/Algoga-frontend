@@ -59,15 +59,6 @@ export const getSignupPathDateRange = (
   return { from: toDateInputValue(from), to: toDateInputValue(now) };
 };
 
-export const signupPathLabels: Record<string, string> = {
-  search: "검색 엔진",
-  social: "소셜 미디어",
-  friend: "지인 추천",
-  ad: "광고",
-  etc: "기타",
-  "": "미입력",
-};
-
 export const signupPathColors = [
   "#439A97",
   "#D4529C",
@@ -101,43 +92,6 @@ export const formatWon = (value: number) => {
   }
 
   return `${amount.toLocaleString("ko-KR")}원`;
-};
-
-export const normalizeSignupPathLabel = (value: string) => {
-  const key = value.trim();
-  const normalizedKey = key.toLowerCase();
-
-  return signupPathLabels[normalizedKey] ?? (key || "미입력");
-};
-
-const signupPathAliases: Record<string, string> = {
-  search: "search",
-  "검색 엔진": "search",
-  검색엔진: "search",
-  검색: "search",
-  social: "social",
-  "소셜 미디어": "social",
-  소셜미디어: "social",
-  소셜: "social",
-  sns: "social",
-  friend: "friend",
-  "지인 추천": "friend",
-  지인추천: "friend",
-  추천: "friend",
-  referral: "friend",
-  ad: "ad",
-  ads: "ad",
-  광고: "ad",
-  etc: "etc",
-  기타: "etc",
-};
-
-export const normalizeSignupPathKey = (value: string) => {
-  const key = value.trim().toLowerCase();
-
-  if (!key) return "";
-
-  return signupPathAliases[key] ?? "etc";
 };
 
 const trimDecimal = (value: number) =>

@@ -1,7 +1,6 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import type {
   CountryDetailStat,
-  CourseCompletionStat,
   CountryInterestItem,
   InterestQuery,
   InterestSummary,
@@ -42,30 +41,6 @@ type RawInterestLecture = {
   averageProgressRate: number;
   completionRate: number;
   completionStatus: "NORMAL" | "WARNING" | "RISK";
-};
-
-type RawCourseEnrollment = {
-  courseId: number;
-  courseTitle: string;
-  studentCount: number;
-  averageProgressRate: number;
-  completionRate: number;
-  averageLearningHours: number;
-};
-
-// 이 API는 completionStatus를 안 내려줘서, completionRate 기준으로 프론트에서 직접 분류합니다.
-// (interest/lectures와 같은 기준: 60%↑ 정상 / 30~59% 주의 / 30% 미만 위험)
-const getCompletionStatus = (completionRate: number): "NORMAL" | "WARNING" | "RISK" => {
-  if (completionRate >= 60) return "NORMAL";
-  if (completionRate >= 30) return "WARNING";
-  return "RISK";
-};
-
-type RawCourseEnrollmentPage = {
-  totalElements: number;
-  page: number;
-  size: number;
-  content: RawCourseEnrollment[];
 };
 
 const toNumber = (value: number | null | undefined) => Number(value ?? 0);
@@ -193,38 +168,6 @@ export const getInterestLectures = async (
   }));
 };
 
-export const getCourseEnrollmentStatistics = async (
-  query: { keyword?: string; page?: number; size?: number } = {},
-  signal?: AbortSignal
-): Promise<CourseCompletionStat[]> => {
-  const response = await adminApi.get<ApiResult<RawCourseEnrollmentPage>>(
-    "/api/v1/admin/statistics/courses/enrollment",
-    {
-      params: {
-        keyword: query.keyword,
-        page: query.page ?? 0,
-        size: query.size ?? 10,
-      },
-      signal,
-      suppressGlobalError: true,
-    }
-  );
-
-  return unwrapData(response).content.map((course) => {
-    const completionRate = toNumber(course.completionRate);
-
-    return {
-      courseId: toNumber(course.courseId),
-      courseTitle: course.courseTitle,
-      enrollmentCount: toNumber(course.studentCount),
-      averageProgressRate: toNumber(course.averageProgressRate),
-      completionRate,
-      averageLearningHours: toNumber(course.averageLearningHours),
-      completionStatus: getCompletionStatus(completionRate),
-    };
-  });
-};
-
 export const downloadCountryProfitCsv = async ({
   from,
   to,
@@ -261,14 +204,5 @@ export const downloadInterestCountriesCsv = async (search = "") => {
   await downloadAdminCsv(
     `/api/v1/admin/stats/interest/countries/csv${query}`,
     "interest-countries.csv"
-  );
-};
-
-export const downloadCourseEnrollmentCsv = async (keyword = "") => {
-  const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
-
-  await downloadAdminCsv(
-    `/api/v1/admin/statistics/courses/enrollment/csv${query}`,
-    "course-enrollment-statistics.csv"
   );
 };

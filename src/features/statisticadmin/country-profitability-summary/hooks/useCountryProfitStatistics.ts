@@ -2,12 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  CountryProfitData,
   getCountryProfitItems,
   getCountryProfitSummary,
 } from "@/features/services/adminCountryProfitStatistics.service";
 import { ApiRequestError } from "@/lib/api";
-import type { CountryProfitabilityItem } from "../types";
+import type { CountryProfitabilityItem, CountryProfitData } from "../types";
 import {
   CountryProfitPeriod,
   getCountryProfitDateRange,
