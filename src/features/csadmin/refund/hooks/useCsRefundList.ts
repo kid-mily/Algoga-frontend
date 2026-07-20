@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getAdminRefunds } from "@/features/services/adminRefund.service";
-import { CsRefund, CsRefundStatus } from "../types";
+import {
+  CsRefund,
+  CsRefundStatus,
+  sortRefundsByRequestedAtDesc,
+} from "../types";
 
 export const useCsRefundList = (initialRefunds: CsRefund[]) => {
   const [refunds, setRefunds] = useState<CsRefund[]>(initialRefunds);
@@ -19,7 +23,7 @@ export const useCsRefundList = (initialRefunds: CsRefund[]) => {
 
       if (signal?.aborted) return;
 
-      setRefunds(data);
+      setRefunds(sortRefundsByRequestedAtDesc(data));
     } catch (fetchError: unknown) {
       if (signal?.aborted) return;
 
@@ -50,7 +54,7 @@ export const useCsRefundList = (initialRefunds: CsRefund[]) => {
   const filteredRefunds = useMemo(() => {
     const keyword = searchKeyword.trim().toLowerCase();
 
-    return refunds.filter((refund) => {
+    return sortRefundsByRequestedAtDesc(refunds).filter((refund) => {
       const statusMatched =
         selectedStatus === "ALL" || refund.status === selectedStatus;
       const keywordMatched =

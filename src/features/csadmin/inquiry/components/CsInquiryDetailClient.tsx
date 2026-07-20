@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import SubHeader from "@/features/common/components/SubHeader";
 import CompleteModal from "@/features/common/components/CompleteModal";
@@ -18,6 +19,7 @@ type CsInquiryDetailClientProps = {
 export default function CsInquiryDetailClient({
   inquiryId,
 }: CsInquiryDetailClientProps) {
+  const router = useRouter();
   const [inquiry, setInquiry] = useState<CsInquiry | null>(null);
   const [answer, setAnswer] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -204,7 +206,10 @@ export default function CsInquiryDetailClient({
         title="답변 완료"
         description="문의 답변이 등록되었습니다."
         buttonText="확인"
-        onConfirm={() => setCompleteOpen(false)}
+        onConfirm={() => {
+          setCompleteOpen(false);
+          router.push("/csadmin/inquiry");
+        }}
       />
     </main>
   );

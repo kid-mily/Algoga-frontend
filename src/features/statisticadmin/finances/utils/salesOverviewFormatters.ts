@@ -63,6 +63,22 @@ export const getSalesOverviewDateRange = (
   };
 };
 
+export const getSalesTrendDateRange = (
+  period: SalesOverviewPeriod
+): SalesOverviewQuery => {
+  const query = getSalesOverviewDateRange(period);
+
+  if (period !== "thisWeek") return query;
+
+  const weekEnd = new Date(`${query.from}T00:00:00+09:00`);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+
+  return {
+    from: query.from,
+    to: toDateInputValue(weekEnd),
+  };
+};
+
 export const formatKoreanMoney = (amount: number) => {
   const safeAmount = Number.isFinite(amount) ? amount : 0;
   const absoluteAmount = Math.abs(safeAmount);
@@ -90,6 +106,12 @@ export const formatRateValue = (value: number) =>
   `${trimDecimal(Number.isFinite(value) ? value : 0)}%`;
 
 export const toMillionValue = (amount: number) => Math.round(amount / 1_000_000);
+
+export const isFutureDailyLabel = (label: string, now = new Date()) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(label)) return false;
+
+  return label > toDateInputValue(now);
+};
 
 const trimDecimal = (value: number) =>
   Number.isInteger(value) ? String(value) : value.toFixed(1);

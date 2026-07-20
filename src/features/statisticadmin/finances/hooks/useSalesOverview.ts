@@ -13,6 +13,7 @@ import {
 } from "../types";
 import {
   getSalesOverviewDateRange,
+  getSalesTrendDateRange,
   getSalesTrendUnit,
 } from "../utils/salesOverviewFormatters";
 
@@ -26,6 +27,10 @@ export const useSalesOverview = () => {
 
   const query = useMemo(
     () => getSalesOverviewDateRange(selectedPeriod),
+    [selectedPeriod]
+  );
+  const trendQuery = useMemo(
+    () => getSalesTrendDateRange(selectedPeriod),
     [selectedPeriod]
   );
   const trendUnit = useMemo(
@@ -44,7 +49,7 @@ export const useSalesOverview = () => {
         // 카드·표용 overview와 차트용 trend를 동시에 불러옵니다.
         const [overviewData, trendData] = await Promise.all([
           getSalesOverview(query, controller.signal),
-          getSalesOverviewTrend(query, trendUnit, controller.signal),
+          getSalesOverviewTrend(trendQuery, trendUnit, controller.signal),
         ]);
 
         setOverview(overviewData);
@@ -69,7 +74,7 @@ export const useSalesOverview = () => {
     void loadOverview();
 
     return () => controller.abort();
-  }, [query, trendUnit]);
+  }, [query, trendQuery, trendUnit]);
 
   return {
     selectedPeriod,

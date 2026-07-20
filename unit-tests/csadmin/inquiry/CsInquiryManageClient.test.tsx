@@ -3,8 +3,16 @@ import userEvent from "@testing-library/user-event";
 import CsInquiryManageClient from "@/features/csadmin/inquiry/components/CsInquiryManageClient";
 import { useCsInquiryList } from "@/features/csadmin/inquiry/hooks/useCsInquiryList";
 
+const pushMock = jest.fn();
+
 jest.mock("@/features/csadmin/inquiry/hooks/useCsInquiryList", () => ({
   useCsInquiryList: jest.fn(),
+}));
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: pushMock,
+  }),
 }));
 
 const hookValue = {
@@ -16,7 +24,9 @@ const hookValue = {
       id: "INQ001",
       inquiryId: 1,
       userId: 10,
-      writer: "회원 #10",
+      userName: "김진도",
+      userNickname: "jindo",
+      writer: "jindo",
       category: "REFUND",
       type: "환불",
       title: "환불 처리는 언제 되나요?",
@@ -31,7 +41,9 @@ const hookValue = {
       id: "INQ002",
       inquiryId: 2,
       userId: 11,
-      writer: "회원 #11",
+      userName: "박여행",
+      userNickname: null,
+      writer: "박여행",
       category: "COURSE",
       type: "강의",
       title: "강의 재생이 안 됩니다",
@@ -71,6 +83,18 @@ describe("CsInquiryManageClient 컴포넌트 테스트", () => {
     expect(screen.getByText("1건")).toBeVisible();
     expect(screen.getAllByText("미처리")).toHaveLength(2);
     expect(screen.getAllByText("답변 완료")).toHaveLength(2);
+  });
+
+  test("문의 행 전체를 클릭하면 상세 페이지로 이동한다", async () => {
+    const user = userEvent.setup();
+
+    render(<CsInquiryManageClient initialInquiries={[]} />);
+
+    await user.click(
+      screen.getByRole("link", { name: "환불 처리는 언제 되나요? 상세 보기" })
+    );
+
+    expect(pushMock).toHaveBeenCalledWith("/csadmin/inquiry/1");
   });
 
   test("검색어와 필터를 변경하면 hook setter를 호출한다", async () => {

@@ -3,7 +3,6 @@ import {
   Coins,
   CreditCard,
   RefreshCcw,
-  type LucideIcon,
 } from "lucide-react";
 
 import {

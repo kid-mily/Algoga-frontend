@@ -10,18 +10,27 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { toMillionValue } from "../utils/salesOverviewFormatters";
+import {
+  isFutureDailyLabel,
+  toMillionValue,
+} from "../utils/salesOverviewFormatters";
 import { SalesOverviewLineChartProps,ChartDatum } from '../types'
 
 export default function SalesOverviewLineChart({
   trend,
 }: SalesOverviewLineChartProps) {
-  const chartData: ChartDatum[] = trend.map((item) => ({
-    label: item.label,
-    "총매출": toMillionValue(item.totalRevenue),
-    "순매출": toMillionValue(item.netRevenue),
-    "환불": toMillionValue(item.refund),
-  }));
+  const chartData: ChartDatum[] = trend.map((item) => {
+    const shouldHideFutureValue = isFutureDailyLabel(item.label);
+
+    return {
+      label: item.label,
+      "총매출": shouldHideFutureValue
+        ? null
+        : toMillionValue(item.totalRevenue),
+      "순매출": shouldHideFutureValue ? null : toMillionValue(item.netRevenue),
+      "환불": shouldHideFutureValue ? null : toMillionValue(item.refund),
+    };
+  });
 
   return (
     <section className="rounded-[18px] border border-[#EAECF0] bg-white p-6 shadow-[0_12px_28px_rgba(16,24,40,0.05)]">
