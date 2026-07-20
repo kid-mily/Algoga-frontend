@@ -222,4 +222,135 @@ describe("QuizForm 컴포넌트 테스트", () => {
     expect(screen.getByRole("button", { name: "삭제" })).toBeDisabled();
     expect(deleteQuizAction).not.toHaveBeenCalled();
   });
+
+  test("퀴즈 목록이 비어 있으면 빈 목록 문구가 보인다", () => {
+    render(<QuizList quizzes={[]} />);
+
+    expect(screen.getByText("등록된 퀴즈가 없습니다.")).toBeVisible();
+  });
+
+  test("퀴즈 수정 버튼을 누르면 수정 페이지로 이동한다", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <QuizList
+        quizzes={[
+          {
+            courseId: 100,
+            quizId: 7,
+            lectureTitle: "오사카 여행 준비",
+            question: "오사카 대표 공항은?",
+            option1: "간사이 공항",
+            option2: "김포 공항",
+            option3: "인천 공항",
+            option4: "제주 공항",
+            correctOption: 1,
+            explanation: "간사이 공항을 이용합니다.",
+          },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "퀴즈 수정" }));
+
+    expect(pushMock).toHaveBeenCalledWith(
+      "/contentadmin/quiz/7/edit?courseId=100"
+    );
+  });
+
+  test("퀴즈 삭제에 성공하면 완료 모달 확인 후 onDeleted를 호출한다", async () => {
+    const user = userEvent.setup();
+    const onDeleted = jest.fn();
+
+    render(
+      <QuizList
+        quizzes={[
+          {
+            courseId: 100,
+            quizId: 1,
+            lectureTitle: "오사카 여행 준비",
+            question: "라피트는 어떤 교통수단인가요?",
+            option1: "공항철도",
+            option2: "버스",
+            option3: "택시",
+            option4: "배",
+            correctOption: 1,
+            explanation: "간사이 공항과 난바를 연결합니다.",
+          },
+          {
+            courseId: 100,
+            quizId: 2,
+            lectureTitle: "오사카 여행 준비",
+            question: "도톤보리는 어느 지역에 있나요?",
+            option1: "난바",
+            option2: "우메다",
+            option3: "교토",
+            option4: "나라",
+            correctOption: 1,
+            explanation: "난바 근처에 있습니다.",
+          },
+        ]}
+        quizCountByCourse={{ 100: 2 }}
+        onDeleted={onDeleted}
+      />
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "퀴즈 삭제" })[0]);
+    await user.click(await screen.findByRole("button", { name: "삭제" }));
+
+    await waitFor(() => {
+      expect(deleteQuizAction).toHaveBeenCalledWith(100, 1);
+    });
+
+    expect(await screen.findByText("삭제 완료")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "확인" }));
+
+    expect(onDeleted).toHaveBeenCalledTimes(1);
+  });
+
+  test("퀴즈 삭제 실패 시 에러 메시지를 보여준다", async () => {
+    const user = userEvent.setup();
+
+    (deleteQuizAction as jest.Mock).mockRejectedValueOnce(
+      new Error("퀴즈 삭제에 실패했습니다.")
+    );
+
+    render(
+      <QuizList
+        quizzes={[
+          {
+            courseId: 100,
+            quizId: 1,
+            lectureTitle: "오사카 여행 준비",
+            question: "라피트는 어떤 교통수단인가요?",
+            option1: "공항철도",
+            option2: "버스",
+            option3: "택시",
+            option4: "배",
+            correctOption: 1,
+            explanation: "간사이 공항과 난바를 연결합니다.",
+          },
+          {
+            courseId: 100,
+            quizId: 2,
+            lectureTitle: "오사카 여행 준비",
+            question: "도톤보리는 어느 지역에 있나요?",
+            option1: "난바",
+            option2: "우메다",
+            option3: "교토",
+            option4: "나라",
+            correctOption: 1,
+            explanation: "난바 근처에 있습니다.",
+          },
+        ]}
+        quizCountByCourse={{ 100: 2 }}
+      />
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "퀴즈 삭제" })[0]);
+    await user.click(await screen.findByRole("button", { name: "삭제" }));
+
+    expect(await screen.findByText("퀴즈 삭제에 실패했습니다.")).toBeVisible();
+  });
 });

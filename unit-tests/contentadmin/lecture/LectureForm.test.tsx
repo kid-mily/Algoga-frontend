@@ -200,4 +200,108 @@ describe("LectureForm 컴포넌트 테스트", () => {
 
     expect(await screen.findByText("수정 완료")).toBeVisible();
   });
+
+  test("강의 수정 폼에서 필수 값을 비우면 에러 문구가 보이고 제출하지 않는다", async () => {
+    const user = userEvent.setup();
+    const onSubmit = jest.fn();
+
+    render(
+      <LectureUpdateForm
+        initialData={{
+          country: "일본",
+          title: "기존 강의",
+          description: "기존 설명",
+          price: "50000",
+          mileage: "500",
+          level: "BEGINNER",
+          isPublic: "false",
+          thumbnailUrl: "/images/thumb.png",
+        }}
+        onSubmit={onSubmit}
+      />
+    );
+
+    await user.clear(screen.getByLabelText("강의 제목 *"));
+    await user.clear(screen.getByLabelText("강의 설명 *"));
+    await user.clear(screen.getByLabelText("가격 *"));
+
+    await user.click(screen.getByRole("button", { name: "수정하기" }));
+
+    expect(screen.getByText("강의 제목을 입력해주세요.")).toBeVisible();
+    expect(screen.getByText("강의 설명을 입력해주세요.")).toBeVisible();
+    expect(screen.getByText("올바른 가격을 입력해주세요.")).toBeVisible();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  test("강의 수정 폼에서 새 첨부자료를 추가하고 삭제할 수 있다", async () => {
+    const user = userEvent.setup();
+    const onSubmit = jest.fn().mockResolvedValue(true);
+    const attachment = new File(["lecture"], "lecture-note.pdf", {
+      type: "application/pdf",
+    });
+
+    render(
+      <LectureUpdateForm
+        initialData={{
+          country: "일본",
+          title: "기존 강의",
+          description: "기존 설명",
+          price: "50000",
+          mileage: "500",
+          level: "BEGINNER",
+          isPublic: "false",
+          thumbnailUrl: "/images/thumb.png",
+          files: [
+            {
+              fileUrl: "/files/original.pdf",
+              fileOrder: 1,
+              originalFileName: "기존자료.pdf",
+            },
+          ],
+        }}
+        onSubmit={onSubmit}
+      />
+    );
+
+    expect(screen.getByText("기존자료.pdf")).toBeVisible();
+
+    await user.upload(screen.getByLabelText("첨부 자료"), attachment);
+
+    expect(screen.getByText("lecture-note.pdf")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "lecture-note.pdf 첨부 취소" })
+    );
+
+    expect(screen.queryByText("lecture-note.pdf")).not.toBeInTheDocument();
+  });
+
+  test("강의 수정 폼 제출 실패 시 완료 모달을 보여주지 않는다", async () => {
+    const user = userEvent.setup();
+    const onSubmit = jest.fn().mockResolvedValue(false);
+
+    render(
+      <LectureUpdateForm
+        initialData={{
+          country: "일본",
+          title: "기존 강의",
+          description: "기존 설명",
+          price: "50000",
+          mileage: "500",
+          level: "BEGINNER",
+          isPublic: "false",
+          thumbnailUrl: "/images/thumb.png",
+        }}
+        onSubmit={onSubmit}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "수정하기" }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalled();
+    });
+
+    expect(screen.queryByText("수정 완료")).not.toBeInTheDocument();
+  });
 });
