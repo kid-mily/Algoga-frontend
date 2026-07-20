@@ -6,16 +6,26 @@ import {
   getAdminInquiryById,
 } from "@/features/services/adminInquiry.service";
 
+const pushMock = jest.fn();
+
 jest.mock("@/features/services/adminInquiry.service", () => ({
   answerAdminInquiry: jest.fn(),
   getAdminInquiryById: jest.fn(),
+}));
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: pushMock,
+  }),
 }));
 
 const inquiry = {
   id: "INQ001",
   inquiryId: 1,
   userId: 10,
-  writer: "회원 #10",
+  userName: "김진도",
+  userNickname: "jindo",
+  writer: "jindo",
   category: "REFUND",
   type: "환불",
   title: "환불 처리는 언제 되나요?",
@@ -72,5 +82,9 @@ describe("CsInquiryDetailClient 컴포넌트 테스트", () => {
       );
     });
     expect(screen.getByText("문의 답변이 등록되었습니다.")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "확인" }));
+
+    expect(pushMock).toHaveBeenCalledWith("/csadmin/inquiry");
   });
 });

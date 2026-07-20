@@ -127,4 +127,23 @@ export const toRefundFormData = (refund: CsRefund): CsRefundFormData => ({
   rejectReason: refund.rejectReason,
 });
 
+const getRequestedAtTime = (refund: CsRefund) => {
+  const requestedTime = new Date(refund.requestDateTime).getTime();
+
+  if (!Number.isNaN(requestedTime)) return requestedTime;
+
+  const requestedDate = new Date(refund.requestedAt).getTime();
+
+  return Number.isNaN(requestedDate) ? 0 : requestedDate;
+};
+
+export const sortRefundsByRequestedAtDesc = (refunds: CsRefund[]) =>
+  [...refunds].sort((left, right) => {
+    const timeDiff = getRequestedAtTime(right) - getRequestedAtTime(left);
+
+    if (timeDiff !== 0) return timeDiff;
+
+    return right.refundId - left.refundId;
+  });
+
 export const mockCsRefunds: CsRefund[] = [];

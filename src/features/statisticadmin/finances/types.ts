@@ -47,9 +47,9 @@ export type SalesOverviewLineChartProps = {
 
 export type ChartDatum = {
   label: string;
-  "총매출": number;
-  "순매출": number;
-  "환불": number;
+  "총매출": number | null;
+  "순매출": number | null;
+  "환불": number | null;
 };
 
 export type SummaryCard = {

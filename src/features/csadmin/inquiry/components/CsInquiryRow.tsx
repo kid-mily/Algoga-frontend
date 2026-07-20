@@ -1,4 +1,7 @@
-import Link from "next/link";
+"use client";
+
+import { KeyboardEvent } from "react";
+import { useRouter } from "next/navigation";
 import { CsInquiry, CsInquiryType } from "../types";
 
 type CsInquiryRowProps = {
@@ -13,10 +16,30 @@ const typeStyle: Record<CsInquiryType, string> = {
 };
 
 export default function CsInquiryRow({ inquiry }: CsInquiryRowProps) {
+  const router = useRouter();
   const isPending = inquiry.status === "미처리";
+  const detailHref = `/csadmin/inquiry/${inquiry.inquiryId}`;
+
+  const goToDetail = () => {
+    router.push(detailHref);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLTableRowElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      goToDetail();
+    }
+  };
 
   return (
-    <tr className="border-b border-[#EEF0F3] text-[14px] text-[#344054] last:border-b-0">
+    <tr
+      role="link"
+      tabIndex={0}
+      aria-label={`${inquiry.title} 상세 보기`}
+      onClick={goToDetail}
+      onKeyDown={handleKeyDown}
+      className="cursor-pointer border-b border-[#EEF0F3] text-[14px] text-[#344054] last:border-b-0 hover:bg-[#F9FAFB]"
+    >
       <td className="px-6 py-5">{inquiry.id}</td>
       <td className="px-6 py-5 font-semibold">{inquiry.writer}</td>
       <td className="px-6 py-5">
@@ -27,12 +50,9 @@ export default function CsInquiryRow({ inquiry }: CsInquiryRowProps) {
         </span>
       </td>
       <td className="px-6 py-5 font-semibold text-[#111827]">
-        <Link
-          href={`/csadmin/inquiry/${inquiry.inquiryId}`}
-          className="block truncate hover:text-[#439A97]"
-        >
+        <span className="block truncate">
           {inquiry.title}
-        </Link>
+        </span>
       </td>
       <td className="px-6 py-5 text-[#667085]">{inquiry.date}</td>
       <td className="px-6 py-5">

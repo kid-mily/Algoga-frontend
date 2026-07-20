@@ -7,6 +7,8 @@ export type CsInquiry = {
   id: string;
   inquiryId: number;
   userId: number;
+  userName: string | null;
+  userNickname: string | null;
   writer: string;
   category: CsInquiryCategoryCode;
   type: CsInquiryType;
@@ -35,6 +37,8 @@ export type CsInquiryPage = {
 export type InquiryAdminResponse = {
   inquiryId: number;
   userId: number;
+  userName: string | null;
+  userNickname: string | null;
   category: CsInquiryCategoryCode;
   title: string;
   content: string;
