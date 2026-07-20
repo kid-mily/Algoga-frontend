@@ -31,6 +31,12 @@ const menus: AdminSidebarMenuItem[] = [
     activeIcon: "/images/banner-active.svg",
   },
   {
+    name: "챗봇 관리",
+    href: "/csadmin/chatbot",
+    icon: "/images/chat-sidebar.svg",
+    activeIcon: "/images/chat-sidebar-active.svg",
+  },
+  {
     name: "유저 활동 관리",
     href: "/csadmin/user",
     icon: "/images/users.svg",

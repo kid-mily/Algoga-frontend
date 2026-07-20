@@ -198,9 +198,6 @@ export default function AiChatbotWidget() {
                 <div className="shrink-0 border-t border-[#E6EEF3] bg-white">
                   {suggestions.length > 0 && (
                     <div className="px-4 pt-3">
-                      <p className="mb-2 text-xs font-semibold text-[#64748B]">
-                        이런 걸 물어보실 수 있어요
-                      </p>
                       <div className="flex flex-wrap gap-2">
                         {suggestions.map((question) => (
                           <button
