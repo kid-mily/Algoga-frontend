@@ -30,7 +30,7 @@ const refunds: MoneyRefund[] = [
     reason: "일정 변경",
     rejectReason: "",
     status: "정산 검토중",
-    statusCode: "UPPER_REVIEW",
+    statusCode: "UNDER_REVIEW",
     paymentAmount: 900000,
     refundAmount: 700000,
     paymentMethod: "카드",
@@ -131,7 +131,7 @@ describe("MoneyRefundManageClient 컴포넌트 테스트", () => {
 
     render(<MoneyRefundManageClient initialRefunds={refunds} hasInitialData />);
 
-    await user.click(screen.getAllByRole("button", { name: "완료" })[1]);
+    await user.click(screen.getByRole("button", { name: "완료" }));
 
     expect(screen.getByText("REF002 요청을 환불 완료 처리하시겠습니까?")).toBeVisible();
 

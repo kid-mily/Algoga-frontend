@@ -51,12 +51,13 @@ const renderRow = (refund: MoneyRefund, onAction = jest.fn()) => {
 describe("MoneyRefundRow 컴포넌트 테스트", () => {
   test("정산 검토중 상태에서는 승인 버튼만 활성화된다", async () => {
     const user = userEvent.setup();
-    const refund = createRefund("정산 검토중", "UPPER_REVIEW");
+    const refund = createRefund("정산 검토중", "UNDER_REVIEW");
     const onAction = renderRow(refund);
 
     expect(screen.getByText("정산 검토중")).toBeVisible();
     expect(screen.getByRole("button", { name: "승인" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "완료" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "반려" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "완료" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "승인" }));
 
@@ -67,7 +68,8 @@ describe("MoneyRefundRow 컴포넌트 테스트", () => {
     renderRow(createRefund("정산 검토중", "UNDER_REVIEW"));
 
     expect(screen.getByRole("button", { name: "승인" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "완료" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "반려" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "완료" })).not.toBeInTheDocument();
   });
 
   test("환불 승인 상태에서는 완료 버튼만 활성화된다", async () => {
@@ -75,7 +77,8 @@ describe("MoneyRefundRow 컴포넌트 테스트", () => {
     const refund = createRefund("환불 승인", "APPROVED");
     const onAction = renderRow(refund);
 
-    expect(screen.getByRole("button", { name: "승인" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "승인" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "반려" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "완료" })).toBeEnabled();
 
     await user.click(screen.getByRole("button", { name: "완료" }));
@@ -86,7 +89,9 @@ describe("MoneyRefundRow 컴포넌트 테스트", () => {
   test("종료 상태에서는 처리 버튼이 비활성화된다", () => {
     renderRow(createRefund("환불 완료", "COMPLETED"));
 
-    expect(screen.getByRole("button", { name: "승인" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "완료" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "승인" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "완료" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "반려" })).not.toBeInTheDocument();
+    expect(screen.getByText("-")).toBeVisible();
   });
 });
