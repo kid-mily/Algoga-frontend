@@ -102,14 +102,15 @@ export const getCsNextStatusOptions = (
   return [];
 };
 
-// 정산매니저 화면 전용: 반려는 CS매니저 단계(REQUESTED)에서만 가능한 액션이라 정산매니저는 승인/완료만 다룹니다.
+// 정산매니저 화면 전용: 정산 검토중 단계에서 CS 통과분을 재심사해 승인 또는 반려할 수 있습니다.
+// 승인(APPROVED) 후에는 완료만 가능하고, 반려는 검토중 단계에서만 허용합니다.
 export const getMoneyNextStatusOptions = (
   statusCode: RefundApiStatus
 ): CsRefundStatus[] => {
   const normalized = String(statusCode ?? "").trim().toUpperCase();
 
   if (normalized === "UPPER_REVIEW" || normalized === "UNDER_REVIEW") {
-    return ["환불 승인"];
+    return ["환불 승인", "반려"];
   }
 
   if (normalized === "APPROVED") {
