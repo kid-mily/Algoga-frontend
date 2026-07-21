@@ -30,6 +30,7 @@ export default function ChatWidgetContent() {
     handleCurrentRoomMessage,
     handleRoomUpdated,
     handleSelectRoom,
+    handleRoomDeleted,
     markRoomAsRead,
     requestLeaveRoom,
     cancelLeaveRoom,
@@ -86,6 +87,7 @@ export default function ChatWidgetContent() {
               onClose={handleClose}
               onReadRoom={markRoomAsRead}
               onRoomMessage={handleCurrentRoomMessage}
+              onRoomDeleted={handleRoomDeleted}
               onLeaveRoom={requestLeaveRoom}
               onRoomUpdated={handleRoomUpdated}
               isLeaving={isProcessing}
