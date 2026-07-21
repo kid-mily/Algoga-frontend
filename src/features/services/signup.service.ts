@@ -1,7 +1,7 @@
 import { SignupRequest, SocialSignupRequest } from "@/features/auth/types";
 import { api, ApiResult, unwrapData } from "@/lib/api";
 
-type UsernameCheckResponse = {
+type DuplicateCheckResponse = {
   available?: boolean;
   duplicated?: boolean;
   isDuplicate?: boolean;
@@ -43,7 +43,7 @@ export const checkUsernameDuplicate = async (
   username: string,
   signal?: AbortSignal
 ): Promise<boolean> => {
-  const response = await api.get<ApiResult<boolean | UsernameCheckResponse>>(
+  const response = await api.get<ApiResult<boolean | DuplicateCheckResponse>>(
     "/api/v1/auth/username/check",
     {
       params: { username },
@@ -79,4 +79,44 @@ export const checkUsernameDuplicate = async (
   }
 
   throw new Error("아이디 중복 확인 응답 형식이 올바르지 않습니다.");
+};
+
+// 전화번호 실시간 중복확인. 아이디 체크와 동일 규격 (data: true=사용 가능).
+// 하이픈 포함 형식(010-1234-5678) 그대로 전송한다.
+export const checkPhoneDuplicate = async (
+  phone: string,
+  signal?: AbortSignal
+): Promise<boolean> => {
+  const response = await api.get<ApiResult<boolean | DuplicateCheckResponse>>(
+    "/api/v1/auth/phone/check",
+    {
+      params: { phone },
+      skipAuth: true,
+      signal,
+    }
+  );
+
+  const result = unwrapData(response);
+
+  if (typeof result === "boolean") {
+    return result;
+  }
+
+  if (!result || typeof result !== "object") {
+    throw new Error("전화번호 중복 확인 응답 형식이 올바르지 않습니다.");
+  }
+
+  if (result.available !== undefined) {
+    return result.available;
+  }
+
+  if (result.duplicated !== undefined) {
+    return !result.duplicated;
+  }
+
+  if (result.isDuplicate !== undefined) {
+    return !result.isDuplicate;
+  }
+
+  throw new Error("전화번호 중복 확인 응답 형식이 올바르지 않습니다.");
 };

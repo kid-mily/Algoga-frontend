@@ -137,4 +137,5 @@ export type ValidateRegisterInfoOptions = {
   isSocialSignup?: boolean;
   isUsernameChecked?: boolean;
   isEmailVerified?: boolean;
+  isPhoneChecked?: boolean;
 };

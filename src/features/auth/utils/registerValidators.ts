@@ -9,6 +9,7 @@ export const REGISTER_REQUIRED_EMAIL_MESSAGE = REGISTER_INVALID_EMAIL_MESSAGE;
 export const REGISTER_REQUIRED_NICKNAME_MESSAGE ="닉네임은 필수이며 50자 이내여야 합니다.";
 export const REGISTER_PASSWORD_CONFIRM_MESSAGE = "비밀번호가 일치하지 않습니다.";
 export const REGISTER_USERNAME_CHECK_MESSAGE ="아이디 중복 확인을 완료해주세요.";
+export const REGISTER_PHONE_CHECK_MESSAGE = "전화번호 중복 확인을 완료해주세요.";
 export const REGISTER_EMAIL_VERIFY_MESSAGE = "이메일 인증을 완료해주세요.";
 export const REGISTER_INVALID_PHONE_MESSAGE ="올바른 전화번호 형식을 입력해주세요. (예: 010-1234-5678)";
 export const REGISTER_REQUIRED_BIRTH_DATE_MESSAGE = "생년월일은 필수입니다.";
@@ -49,6 +50,7 @@ export const validateRegisterInfoForm = (
     isSocialSignup = false,
     isUsernameChecked = false,
     isEmailVerified = false,
+    isPhoneChecked = false,
   }: ValidateRegisterInfoOptions = {}
 ) => {
   const errors: Record<string, string> = {};
@@ -81,6 +83,8 @@ export const validateRegisterInfoForm = (
 
   if (!formData.phone || !phoneRegex.test(formData.phone)) {
     errors.phone = REGISTER_INVALID_PHONE_MESSAGE;
+  } else if (!isPhoneChecked) {
+    errors.phone = REGISTER_PHONE_CHECK_MESSAGE;
   }
 
   if (!formData.birthDate) errors.birthDate = REGISTER_REQUIRED_BIRTH_DATE_MESSAGE;

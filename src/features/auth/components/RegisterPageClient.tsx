@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { signup, socialSignup } from "@/features/services/signup.service";
 import type { SocialType } from "@/features/auth/types";
+import { getErrorCode } from "@/features/auth/utils/authError";
 import CompleteModal from "@/features/common/components/CompleteModal";
 import RegisterAgreeForm from "./RegisterAgreeForm";
 import RegisterCompleteForm from "./RegisterCompleteForm";
@@ -114,6 +115,14 @@ export default function RegisterPageClient() {
 
       if (errorMessage.includes("아이디")) {
         setServerError({ field: "username", message: errorMessage });
+        setStep(1);
+        return;
+      }
+
+      // 전화번호 중복(USER_005) 메시지에 "사용"이 들어있어 이메일 분기에 먼저 걸리므로,
+      // 이메일 검사보다 앞서 전화번호로 라우팅한다.
+      if (getErrorCode(error) === "USER_005" || errorMessage.includes("전화")) {
+        setServerError({ field: "phone", message: errorMessage });
         setStep(1);
         return;
       }

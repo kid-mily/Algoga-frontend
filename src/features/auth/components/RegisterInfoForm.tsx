@@ -8,6 +8,7 @@ import {  RegisterInfoFormProps  } from "../types";
 import { emailRegex, validateRegisterInfoForm } from "../utils/registerValidators";
 import { useEmailVerification } from "../hooks/useEmailVerification";
 import { useUsernameDuplicateCheck } from "../hooks/useUsernameDuplicateCheck";
+import { usePhoneDuplicateCheck } from "../hooks/usePhoneDuplicateCheck";
 
 
 export default function RegisterInfoForm({
@@ -23,11 +24,13 @@ export default function RegisterInfoForm({
   const [isEtcRoute, setIsEtcRoute] = useState(formData.signupPath !== "" && !["search", "social", "friend", "ad"].includes(formData.signupPath));
   const usernameCheck = useUsernameDuplicateCheck();
   const emailVerification = useEmailVerification();
+  const phoneCheck = usePhoneDuplicateCheck();
 
   useEffect(() => {
     return () => {
       usernameCheck.reset();
       emailVerification.reset();
+      phoneCheck.reset();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -41,6 +44,7 @@ export default function RegisterInfoForm({
       isSocialSignup,
       isUsernameChecked: usernameCheck.isChecked,
       isEmailVerified: emailVerification.isVerified,
+      isPhoneChecked: phoneCheck.isChecked,
     });
 
     setErrors(newErrors);
@@ -82,8 +86,34 @@ export default function RegisterInfoForm({
     }
   };
 
+  const handlePhoneChange = (rawValue: string) => {
+    const onlyNumber = rawValue.replace(/[^0-9]/g, "");
+    let formatted = onlyNumber;
+    if (onlyNumber.length < 4) {
+      formatted = onlyNumber;
+    } else if (onlyNumber.length < 8) {
+      formatted = `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3)}`;
+    } else {
+      formatted = `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3, 7)}-${onlyNumber.slice(7, 11)}`;
+    }
+
+    // 번호가 바뀌면 이전 중복확인 결과를 초기화한다 → 다시 "중복 확인"을 눌러야 하고,
+    // "한 번 중복 뜨면 다른 번호에도 계속 중복 뜨는" 잔여 상태 버그가 재발하지 않는다.
+    phoneCheck.reset();
+    onChange("phone", formatted);
+
+    // 전화번호를 바꾸면 이전 제출 실패의 중복 에러(잔여 상태)도 지운다.
+    if (serverError?.field === "phone" && setServerError) {
+      setServerError({ field: "", message: "" });
+    }
+  };
+
   const handleUsernameCheck = () => {
     void usernameCheck.check(formData.username, setFieldError("username"));
+  };
+
+  const handlePhoneCheck = () => {
+    void phoneCheck.check(formData.phone, setFieldError("phone"));
   };
 
   const handleSendEmailCode = () => {
@@ -107,7 +137,7 @@ export default function RegisterInfoForm({
             value={formData.name}
             onChange={(e) => onChange("name", e.target.value)}
             placeholder="홍길동"
-            className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+            className="h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
             disabled={isLoading || (isSocialSignup && Boolean(formData.name))}
           />
           {errors.name && <p className="mt-1 text-[13px] text-red-500">{errors.name}</p>}
@@ -293,26 +323,41 @@ export default function RegisterInfoForm({
         {/* 전화번호 */}
         <div className="col-span-2">
           <FormLabel required>전화번호</FormLabel>
-          <input
-            type="text"
-            value={formData.phone}
-            onChange={(e) => {
-              const onlyNumber = e.target.value.replace(/[^0-9]/g, '');
-              let formatted = onlyNumber;
-              if (onlyNumber.length < 4) {
-                formatted = onlyNumber;
-              } else if (onlyNumber.length < 8) {
-                formatted = `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3)}`;
-              } else {
-                formatted = `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3, 7)}-${onlyNumber.slice(7, 11)}`;
+          <div className="mt-3 flex gap-2">
+            <input
+              type="text"
+              value={formData.phone}
+              onChange={(e) => handlePhoneChange(e.target.value)}
+              placeholder="010-0000-0000"
+              aria-invalid={serverError?.field === "phone" || !!errors.phone}
+              className="h-[35px] min-w-0 flex-1 rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
+              disabled={isLoading}
+            />
+            <button
+              type="button"
+              onClick={handlePhoneCheck}
+              disabled={isLoading || phoneCheck.isChecking || !formData.phone.trim()}
+              aria-label={
+                phoneCheck.isChecking
+                  ? "중복 확인: 전화번호 검사 중"
+                  : "중복 확인: 전화번호 검사"
               }
-              onChange("phone", formatted);
-            }}
-            placeholder="010-0000-0000"
-            className="mt-3 h-[35px] w-full rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
-            disabled={isLoading}
-          />
+              className="h-[35px] shrink-0 rounded-[14px] bg-[#439A97] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+            >
+              {phoneCheck.isChecking ? "확인 중" : "중복 확인"}
+            </button>
+          </div>
           {errors.phone && <p className="mt-1 text-[13px] text-red-500">{errors.phone}</p>}
+          {!errors.phone && phoneCheck.message && (
+            <p aria-live="polite" className="mt-1 text-[13px] text-[#439A97]">
+              {phoneCheck.message}
+            </p>
+          )}
+
+          {/* 전화번호 중복 관련 백엔드 에러 표시 */}
+          {serverError?.field === "phone" && !errors.phone && (
+            <p className="mt-1 text-[13px] text-red-500">{serverError.message}</p>
+          )}
         </div>
 
         {/* 생년월일 */}
