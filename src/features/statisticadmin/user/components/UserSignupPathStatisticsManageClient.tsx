@@ -1,7 +1,10 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import ChartSkeleton from "@/features/statisticadmin/common/components/ChartSkeleton";
 import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
 import { downloadInflowChannelsCsv } from "@/features/services/adminUserStatistics.service";
 import { useSignupPathStatistics } from "../hooks/useSignupPathStatistics";
@@ -12,10 +15,17 @@ import {
   signupPathPeriodLabels,
   signupPathPeriods,
 } from "../utils";
-import SignupPathNetSalesBarChart from "./SignupPathNetSalesBarChart";
-import SignupPathPieChart from "./SignupPathPieChart";
 import SignupPathSummaryCards from "./SignupPathSummaryCards";
 import SignupPathTable from "./SignupPathTable";
+
+const SignupPathNetSalesBarChart = dynamic(
+  () => import("./SignupPathNetSalesBarChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={300} /> },
+);
+const SignupPathPieChart = dynamic(() => import("./SignupPathPieChart"), {
+  ssr: false,
+  loading: () => <ChartSkeleton height={300} />,
+});
 
 const periodOptions = signupPathPeriods.map((period) => ({
   label: signupPathPeriodLabels[period],

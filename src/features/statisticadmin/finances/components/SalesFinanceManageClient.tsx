@@ -1,12 +1,19 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
+import ChartSkeleton from "@/features/statisticadmin/common/components/ChartSkeleton";
 import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
 import { downloadSalesOverviewCsv } from "@/features/services/adminSalesOverview.service";
 import { useSalesOverview } from "../hooks/useSalesOverview";
 import { periodLabels, salesOverviewPeriods } from "../utils/salesOverviewFormatters";
-import SalesOverviewLineChart from "./SalesOverviewLineChart";
 import SalesOverviewSummaryCards from "./SalesOverviewSummaryCards";
 import SalesOverviewTable from "./SalesOverviewTable";
+
+const SalesOverviewLineChart = dynamic(
+  () => import("./SalesOverviewLineChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={300} /> },
+);
 
 const periodOptions = salesOverviewPeriods.map((period) => ({
   label: periodLabels[period],

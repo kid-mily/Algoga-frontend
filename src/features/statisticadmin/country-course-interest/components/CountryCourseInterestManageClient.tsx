@@ -1,16 +1,26 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import ChartSkeleton from "@/features/statisticadmin/common/components/ChartSkeleton";
 import { downloadCountryProfitCsv } from "@/features/services/adminInterestStatistics.service";
 import CountryCourseInterestSummaryCards from "./CountryCourseInterestSummaryCards";
-import CountryInterestBarChart from "./CountryInterestBarChart";
-import CourseInterestBarChart from "./CourseInterestBarChart";
 import CountryDetailStatsTable from "./CountryDetailStatsTable";
 import CourseCompletionAnalysisTable from "./CourseCompletionAnalysisTable";
 import PopularCountryCourseRankingTable from "./PopularCountryCourseRankingTable";
 import { useCountryCourseInterestStatistics } from "../hooks/useCountryCourseInterestStatistics";
+
+const CountryInterestBarChart = dynamic(
+  () => import("./CountryInterestBarChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={360} /> },
+);
+const CourseInterestBarChart = dynamic(
+  () => import("./CourseInterestBarChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={360} /> },
+);
 
 export default function CountryCourseInterestManageClient() {
   const {
