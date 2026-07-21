@@ -4,12 +4,14 @@ import { useState } from "react";
 import RegisterInfoForm from "@/features/auth/components/RegisterInfoForm";
 import type { RegisterFormData } from "@/features/auth/types";
 import {
+  checkPhoneDuplicate,
   checkUsernameDuplicate,
   sendSignupEmailCode,
   verifySignupEmailCode,
 } from "@/features/services/signup.service";
 
 jest.mock("@/features/services/signup.service", () => ({
+  checkPhoneDuplicate: jest.fn(),
   checkUsernameDuplicate: jest.fn(),
   sendSignupEmailCode: jest.fn(),
   verifySignupEmailCode: jest.fn(),
@@ -476,6 +478,7 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
     const onNext = jest.fn();
 
     (checkUsernameDuplicate as jest.Mock).mockResolvedValueOnce(true);
+    (checkPhoneDuplicate as jest.Mock).mockResolvedValueOnce(true);
     (sendSignupEmailCode as jest.Mock).mockResolvedValueOnce(undefined);
     (verifySignupEmailCode as jest.Mock).mockResolvedValueOnce(undefined);
 
@@ -504,6 +507,9 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
     await user.click(screen.getByRole("button", { name: "확인: 이메일 인증번호 확인" }));
     expect(await screen.findByText("이메일 인증이 완료되었습니다.")).toBeVisible();
 
+    await user.click(screen.getByRole("button", { name: "중복 확인: 전화번호 검사" }));
+    expect(await screen.findByText("사용 가능한 전화번호입니다.")).toBeVisible();
+
     await user.click(screen.getByRole("button", { name: "다음 단계로 이동" }));
 
     expect(onNext).toHaveBeenCalledTimes(1);
@@ -512,6 +518,8 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
   test("소셜 회원가입은 아이디와 비밀번호 없이 다음 단계로 이동할 수 있다", async () => {
     const user = userEvent.setup();
     const onNext = jest.fn();
+
+    (checkPhoneDuplicate as jest.Mock).mockResolvedValueOnce(true);
 
     render(
       <RegisterInfoForm
@@ -529,6 +537,9 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
         isSocialSignup
       />
     );
+
+    await user.click(screen.getByRole("button", { name: "중복 확인: 전화번호 검사" }));
+    expect(await screen.findByText("사용 가능한 전화번호입니다.")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "다음 단계로 이동" }));
 

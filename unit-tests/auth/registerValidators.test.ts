@@ -124,6 +124,7 @@ describe("회원가입 유효성 검사 단위 테스트", () => {
     const result = validateRegisterInfoForm(createValidRegisterFormData(), {
       isUsernameChecked: true,
       isEmailVerified: true,
+      isPhoneChecked: true,
     });
 
     expect(result).toEqual({});
