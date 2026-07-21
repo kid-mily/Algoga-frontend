@@ -107,6 +107,7 @@ export const useChatRoomMessages = ({
 
   const handleTypingEvent = useCallback(
     (event: TypingEvent) => {
+      if (event.roomId !== room.roomId) return;
       if (!currentUserId || event.userId === currentUserId) return;
 
       if (typingTimersRef.current[event.userId]) {
@@ -137,7 +138,7 @@ export const useChatRoomMessages = ({
         delete typingTimersRef.current[event.userId];
       }, 2500);
     },
-    [currentUserId]
+    [currentUserId, room.roomId]
   );
 
   const { isConnected, sendMessage, sendRead, sendTyping } = useChatSocket({

@@ -42,6 +42,7 @@ export interface ReadEvent {
 }
 
 export interface TypingEvent {
+  roomId: number;
   userId: number;
   nickname: string;
   isTyping: boolean;
