@@ -5,7 +5,10 @@ export interface AdminCoupon {
   courseId: number;
   managerId: number;
   couponName: string;
-  percent: number;
+  // 신 응답: discountType("RATE"|"AMOUNT") + discountValue. percent는 구 응답 호환용 폴백.
+  discountType?: string;
+  discountValue?: number;
+  percent?: number;
   validDays: number;
   active: boolean;
   createdAt: string;

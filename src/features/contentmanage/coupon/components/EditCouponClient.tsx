@@ -8,7 +8,7 @@ import { getLectureListAction } from "@/features/contentmanage/lecture/actions";
 import { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { updateCouponAction } from "../actions";
 import { AdminCouponPayload, EditCouponClientProps } from "../types";
-import { getCouponName } from "../utils/couponFormatters";
+import { getCouponDiscountValue, getCouponName } from "../utils/couponFormatters";
 import { useAdminCouponDetail } from "../hooks/useAdminCouponDetail";
 import CouponForm from "./CouponForm";
 
@@ -78,7 +78,7 @@ export default function EditCouponClient({
           initialData={{
             courseId: String(coupon.courseId || courseId),
             couponName: getCouponName(coupon),
-            percent: String(coupon.percent || ""),
+            percent: String(getCouponDiscountValue(coupon) ?? ""),
             active: String(coupon.active !== false),
           }}
           onSubmit={handleEdit}
