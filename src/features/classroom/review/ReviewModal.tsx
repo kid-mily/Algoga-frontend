@@ -139,6 +139,10 @@ export default function ReviewModal({
               수료한 강의에 대한 후기를 남겨주세요. 후기 작성은 선택
               사항입니다.
             </p>
+
+            <p className="mt-1 text-xs font-semibold text-[#B54747]">
+              등록한 후기는 이후 수정·삭제가 불가능합니다.
+            </p>
           </div>
 
           <button
