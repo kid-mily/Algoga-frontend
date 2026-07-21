@@ -162,6 +162,7 @@
 #### Request Fields
 
 - `accommodationId`, `flightInfo`, `returnFlightInfo`, `flightPrice`, `checkInDate`, `checkOutDate`: 패키지 상세 응답(`PackageApiItem`) 값을 그대로 전달
+- `courseId`: number (optional) — 진단평가 추천에서 선택한 강의가 있으면 해당 ID를 전달. 전달 시 그 강의만 완강 여부를 검사하고, 미전달 시 기존 국가 단위 검사로 폴백
 - `passengerInfo`: `{ lastName, firstName, birthDate, passportNumber, passportExpiry }` — `PassengerForm.tsx`에서 입력받아 sessionStorage(`passengerStorage.ts`)에 저장된 값을 제출 시점에 읽어와 매핑
 - `bookingSource`: `"LOUNGE"` 고정 (완강 후 예약인 `"COMPLETION"` 플로우는 별도 작업 대상, 아직 미구현)
 
@@ -173,7 +174,7 @@
 
 - `flightInfo`/`returnFlightInfo` 중 하나라도 없으면(null) 버튼 자체를 비활성화해 호출을 막음
 - 실패 시 화면에 에러 문구 표시, 재시도 가능 (`suppressGlobalError: true`)
-- 403 `BK_004`("해당 국가의 강의를 완강해야 패키지를 예약할 수 있습니다") 시 공통 에러 문구 대신 전용 안내 + `/mypage/coursedetails`(강의 이어듣기) 링크 표시 (`BookingPrice.tsx`의 `isCompletionRequired`, 2026-07-20 PR #584)
+- 403 `BK_004`(전달한 `courseId`의 구매 강의가 미완강이거나, `courseId` 미전달 시 해당 국가의 구매 강의가 미완강) 시 공통 에러 문구 대신 전용 안내 + `/mypage/coursedetails`(강의 이어듣기) 링크 표시 (`BookingPrice.tsx`의 `isCompletionRequired`)
 
 #### Notes
 
@@ -310,15 +311,18 @@
 #### Used In
 
 - `src/features/services/myCourse.service.ts` (`getMyCourses`) — 마이페이지 수강 내역(`coursedetails`), 강의 완강 상태 표시(`useCourseCompletionStatus`)
-- `src/features/classroom/evaluation/EvaluationResultContent.tsx`(`handlePackageClick`) — 진단평가 결과에서 "패키지 선택" 클릭 시, `POST /bookings`의 `BK_004`(완강 안 한 나라는 예약 불가)와 같은 조건을 예약 생성 전에 미리 확인해 페이지 이동 자체를 막음 (2026-07-20 추가)
+- `src/features/classroom/evaluation/EvaluationResultContent.tsx`(`handlePackageClick`) — 진단평가 결과에서 "패키지 선택" 클릭 시, `POST /bookings`의 `BK_004`와 비슷한 조건을 예약 생성 전에 미리 확인해 페이지 이동 자체를 막음 (2026-07-20 추가, 2026-07-21 나라 단위→강의 단위로 변경)
+- `src/features/classroom/evaluation/EvaluationResultContent.tsx`(`handleSingleCourseClick`) — "강의 선택" 클릭 시 `/study`(바로 학습)로 보낼지 강의 소개 페이지로 보낼지 판단 (진단평가 응답의 `course.enrolled`/`course.paid`를 못 믿어서 이 API로 재확인, 2026-07-21 추가)
 
 #### Response Fields Used
 
-- `data.content[]`: `MyCourse` — `courseId`, `countryId`, `learningStatus`(`IN_PROGRESS`/`COMPLETED`) 위주로 사용. 완강 여부 판정은 `isMyCourseCompleted(course)`(`myCourse.service.ts`) 공용 헬퍼 재사용
+- `data.content[]`: `MyCourse` — `courseId`, `countryId`, `title`, `learningStatus`(`IN_PROGRESS`/`COMPLETED`) 위주로 사용. 완강 여부 판정은 `isMyCourseCompleted(course)`(`myCourse.service.ts`) 공용 헬퍼 재사용
 
 #### Notes
 
-- `EvaluationResultContent.tsx`에서는 `countryId`가 일치하는 항목을 전부 걸러서 하나라도 `COMPLETED`가 아니면 차단(`completionBlocked`) + `/mypage/coursedetails` 링크 표시. 그 나라 강의를 산 적이 없으면(목록에 없으면) 통과시켜 패키지+강의 동시 구매 흐름은 막지 않음
+- **2026-07-21 — `handlePackageClick`의 차단 기준을 나라 단위에서 강의 단위로 변경.** 원래(2026-07-20)는 "그 나라에서 산 강의 중 하나라도 미완강이면 차단"이었는데, 진단평가가 같은 나라의 여러 강의를 추천할 때 전혀 다른 강의 하나 때문에 나머지 추천 강의가 전부 막혀버리는 문제가 있어서, **지금 클릭한 그 강의 자체**를 구매했고 미완강인 경우에만 차단하도록 사용자 지시로 변경함.
+- **⚠️ 백엔드 `BK_004`와 기준이 다를 수 있음(확인 필요)** — PR #584 명세의 에러 메시지는 "해당 국가의 강의를 완강해야 패키지를 예약할 수 있습니다"로 나라 단위로 읽힘. 백엔드가 실제로도 나라 단위로 차단한다면, 이 프론트 사전 체크(강의 단위)를 통과해서 패키지 라운지·예약 페이지까지 들어갔는데 실제 예약 생성(`POST /bookings`) 시점에 `BK_004`로 막히는 케이스가 생길 수 있음. 백엔드 담당자에게 `BK_004`가 나라 단위인지 강의 단위인지 확인 필요.
+- 그 강의를 산 적이 없으면(목록에 없으면) 통과시켜 패키지+강의 동시 구매 흐름은 막지 않음. 차단 시 토스트에 강의명을 표시함(`CompletionRequiredToast`의 `courseName`)
 - 이 사전 체크는 `page=0, size=100`로 한 번에 가져오는 방식이라(기존 `useCourseCompletionStatus`와 동일 패턴) 강의 수가 100개를 넘는 유저는 놓칠 수 있음 — 프론트 임시 체크일 뿐이고, 최종 차단은 어차피 `POST /bookings`의 `BK_004`가 담당하므로 조회 실패/누락 시에도 페이지 이동은 막지 않음(에러는 콘솔 로그만)
 
 #### Used In
@@ -339,7 +343,9 @@
 - 백엔드 `status`(`PENDING/DEPOSIT_PAID/FULL_PAID/CANCEL_REQUESTED/REFUNDED`)엔 "이용 완료" 개념이 없어서, **체크아웃 날짜를 오늘과 비교해 이용 전/이용 후를 프론트가 직접 계산**(`reservation.util.ts`의 `resolveReservationStatus`)
 - `CANCEL_REQUESTED`/`REFUNDED` 상태 예약은 "이용 전"/"이용 후" 목록에서 제외하고 환불 내역 탭으로 보냄 (아래 `GET /refund-requests/me` 참고)
 - `PassengerInfo`엔 성별/국적이 없어서 상세 화면에 표시할 값이 없음 (`"-"`로 표시)
-- 2026-07-20 — `PENDING`(예약만 생성되고 결제가 끝나지 않은 건) 상태도 "이용 전"/"이용 후" 목록에서 제외하도록 변경(`resolveReservationStatus`). 원인: 예약 생성(`POST /bookings`)이 실제 결제보다 먼저 일어나는 구조라, 결제 페이지까지 갔다가 이탈한 예약이 실제 결제 기록 없이 그대로 "예약 완료"처럼 노출되고 있었음 — 이 상태에서 "환불 요청"을 누르면 `GET /payments/me`에 해당 bookingId의 결제가 없어 `submitRefundRequest`가 항상 실패했음(실제 버그 사례로 확인). 상세 페이지(`loadMyReservationDetail`)도 동일하게 PENDING 예약은 null 처리 후 환불 요청 목록에서 못 찾으면 "예약 정보를 찾을 수 없습니다"로 표시됨 / 영향: `src/features/mypage/reservations/reservation.util.ts`
+- 2026-07-20 — `PENDING`(예약만 생성되고 결제가 끝나지 않은 건) 상태도 "이용 전"/"이용 후" 목록에서 제외하도록 변경(`resolveReservationStatus`). 원인: 예약 생성(`POST /bookings`)이 실제 결제보다 먼저 일어나는 구조라, 결제 페이지까지 갔다가 이탈한 예약이 실제 결제 기록 없이 그대로 "예약 완료"처럼 노출되고 있었음 — 이 상태에서 "환불 요청"을 누르면 `GET /payments/me`에 해당 bookingId의 결제가 없어 `submitRefundRequest`가 항상 실패했음(실제 버그 사례로 확인, `bookingId=12`).
+- **2026-07-21 — 백엔드가 원인 자체를 수정 완료.** `GET /bookings/me`, `GET /bookings/me?countryId=` 응답에서 `PENDING` 상태 예약을 서버가 직접 제외하도록 변경됨(백엔드 담당자 확인 회신 기준). 그래서 위 07-20 프론트 임시 필터(`resolveReservationStatus`의 `PENDING` 분기)는 제거함 — 이제 `CANCEL_REQUESTED`/`REFUNDED`만 걸러내면 됨. **주의**: PENDING 예약 데이터 자체는 DB에서 안 지워지고 그대로 남아있음(백엔드가 노출만 막은 상태) — 주기적 만료/정리 배치는 별도 작업으로 추후 예정이라고 함. 탈퇴 시 "진행 중인 예약 있음" 검증(`hasActiveBooking`)은 PENDING도 여전히 "진행 중"으로 보고 그대로 유지된다고 확인함(영향 없음)
+- **미해결로 남은 부분**: AI 일정 추천의 `GET /itineraries/purchased-trips`(구매한 여행 선택지, `PurchasedTripPicker.tsx`)는 이번 백엔드 수정 대상에 포함되지 않았음. 이 API도 같은 방식(예약 생성이 결제보다 먼저 일어나는 구조)을 쓴다면 PENDING이 여전히 섞여 내려올 수 있어, 필요시 프론트에서 `status === "PENDING"` 방어 필터를 추가하거나 백엔드에 이 엔드포인트도 같이 고쳐졌는지 확인 필요
 
 ---
 
@@ -434,6 +440,77 @@
 
 ---
 
+### POST /api/v1/itineraries/recommend
+
+#### Used In
+
+- `src/features/services/itinerary.service.ts` (`recommendItinerary`) — `/aischedule` 페이지(`useItineraryRecommend.ts`)의 "AI 일정 만들기" 버튼
+
+#### Request Fields
+
+- `tripType`(`"BOOKING"` | `"PACKAGE"` | `"FREE"`)에 따라 셋 중 하나만 함께 보냄: `BOOKING`→`bookingId`, `PACKAGE`→`packageId`, `FREE`→`destination`+`startDate`+`endDate`
+- 공통 필수: `preferences`(`TravelPreference[]`, 최소 1개), `purpose`, `companion`, `budget`, `headcount`
+- 프론트에서 서버 규칙과 동일한 선검증 수행(`useItineraryRecommend.ts`의 `validate`): `bookingId`/`packageId`/`destination`+기간 누락, `endDate < startDate`, `preferences` 빈 배열, `budget`/`headcount` 형식
+
+#### Response Fields Used
+
+- `data`: `ItineraryResponse` — `itineraryId`, `destination`, `startDate`/`endDate`/`totalDays`, `headcount`, `packageTrip`, `purpose`/`purposeLabel`, `companion`/`companionLabel`, `preferences[]`(code+label), `budget`, `estimatedCost`(`packagePrice`/`foodCost`/`totalEstimated`), `days[]`(`day`/`date`/`slots[]`), `comment`
+
+#### Error Handling
+
+- AI 생성이 수 초~수십 초 걸릴 수 있어 기본 15초가 아니라 `timeoutMs: 60000`으로 호출 (`itinerary.service.ts`)
+- `errorCode`별 안내(`useItineraryRecommend.ts`의 `ITINERARY_ERROR_MESSAGE`): `ITN_001`(503, AI 서버 연결 실패/지연)만 재시도 안내 문구로 오버라이드하고, 나머지(`ITN_002`~`ITN_007`)는 서버가 내려주는 `message`를 그대로 표시
+
+#### Notes
+
+- 2026-07-21 사용자 제공 명세 기준으로 신규 구현. 로그인 계정이 없어 실제 API 응답으로는 검증 못 함(lint/타입체크 + 로그인 없는 상태의 401 처리만 브라우저로 확인)
+
+---
+
+### GET /api/v1/itineraries/purchased-trips
+
+#### Used In
+
+- `src/features/services/itinerary.service.ts` (`getPurchasedTrips`) — `tripType=BOOKING` 선택 시 `PurchasedTripPicker.tsx`
+
+#### Response Fields Used
+
+- `data[]`: `PurchasedTripResponse` — `bookingId`, `destination`, `accommodationName`, `startDate`/`endDate`, `nights`, `price`, `status`, `bookingNumber`. `CANCEL_REQUESTED`/`REFUNDED` 예약은 서버가 이미 제외하고 내려줌
+
+#### Notes
+
+- 목록이 비어 있으면 "패키지를 먼저 예약해 주세요" 빈 상태 + 패키지 라운지 링크 노출
+
+---
+
+### GET /api/v1/itineraries · GET /api/v1/itineraries/{id}
+
+#### Used In
+
+- `src/features/services/itinerary.service.ts` (`getMyItineraries`, `getItineraryDetail`) — `/aischedule/history`(목록), `/aischedule/history/{id}`(상세)
+
+#### Response Fields Used
+
+- 목록(`ItinerarySummaryResponse[]`)은 `slots` 없이 가벼운 요약만, 상세는 `POST /itineraries/recommend`와 동일한 `ItineraryResponse` 전체 구조
+
+#### Error Handling
+
+- 상세 조회 404(`ITN_004`) 시 "일정 정보를 찾을 수 없습니다" 표시 (`ItineraryDetailClient.tsx`)
+
+---
+
+### GET /api/v1/packages (전체 카탈로그, 나라 필터 없음)
+
+#### Used In
+
+- `src/features/services/package.service.ts` (`getAllPackages`, 신규) — `tripType=PACKAGE` 선택 시 `PackagePicker.tsx`
+
+#### Notes
+
+- 기존엔 `countryId` 없는 전체 목록 API가 프론트에서 미사용이었는데(2026-07-15 기록 참고), AI 일정 추천의 "전체 패키지" 선택지에서 처음 사용함
+
+---
+
 ## 최근 변경된 API
 
 <!-- 백엔드 변경으로 프론트가 대응했거나 대응해야 하는 항목. 날짜 + 요약 + 영향 파일. -->
@@ -452,4 +529,6 @@
 - 2026-07-19 — `POST /api/v1/payments/bundle`(패키지+강의 통합 결제) 신규 연동. 상세는 위 Used Endpoints 섹션 참고. **07-17에 만들었던 "결제창 2번 + `POST /payments`+`POST /payments/lecture` 순차 호출" 구조와 그 안의 쿠폰/마일리지 수동 분배 로직을 전부 제거**하고 이 API로 교체 — 결제창 1번, 백엔드가 쿠폰/마일리지를 패키지분에만 자동 적용 / 영향: `src/features/packagelounge/types.ts`(`CreateBundlePaymentRequest`/`BundlePaymentResponse` 추가), `src/features/services/package.service.ts`(`createBundlePayment` 추가), `src/features/packagelounge/hooks/usePackagePayment.ts`(`handlePay` 대폭 단순화). **미반영**: `courseIds`가 `minItems:1`이라 강의 없는 예약엔 이 API를 못 써서 기존 `POST /payments`와 분기 유지 중, 분할 결제(1차/2차) UI는 여전히 다음 작업 대상
 - 2026-07-19 — 마이페이지 "내 정보 수정" 진입 게이트를 비밀번호 인증 → 이메일 인증(`POST /users/me/email/send-code`, `POST /users/me/email/verify`)으로 전환하는 작업 마무리. 서비스/타입(`mypage.service.ts`, `types.ts`)과 새 모달(`EmailAuthVerifyModal.tsx`)은 이미 완성돼 있었고, `src/app/(user)/mypage/page.tsx`가 옛날 `PasswordVerifyModal`/`isPasswordModalOpen`(이미 삭제된 state)을 여전히 참조해 빌드가 깨져 있던 것만 `EmailAuthVerifyModal`/`isEmailAuthModalOpen`으로 교체. 더 이상 안 쓰이고 빌드를 깨던 `PasswordVerifyModal.tsx`는 삭제 / 영향: `src/app/(user)/mypage/page.tsx`, `src/features/mypage/PasswordVerifyModal.tsx`(삭제)
 - 2026-07-20 — 회원 탈퇴 페이지 신규 구현. `DELETE /api/v1/users/me`가 이번에 이메일 인증 필수로 바뀌어(사용자 제공 명세 기준), 마이페이지 메인의 "회원 탈퇴하기" 버튼 → `/mypage/withdraw` 이동 → 안내/경고 확인 팝업 → 기존 `EmailAuthVerifyModal` 재사용으로 본인확인 → 탈퇴 API 호출 → 성공 시 메인 페이지 이동 순서로 구현. 상세는 위 Used Endpoints 섹션 참고. 백엔드 실제 동작(에러 응답의 `errorCode` 필드명, 탈퇴 후 실제 쿠키 삭제 여부)은 로컬에 로그인 가능한 테스트 계정이 없어 아직 실제 API 호출로는 검증 못 함(lint/타입체크만 확인) / 영향: `src/features/services/mypage.service.ts`(`withdrawMyAccount` 추가), `src/features/mypage/withdraw/WithdrawPageClient.tsx`(신규), `src/app/(user)/mypage/withdraw/page.tsx`(신규), `src/app/(user)/mypage/page.tsx`
+- 2026-07-21 — AI 일정 추천(`/aischedule`) 신규 구현. 기존엔 `"ai 일정 추천"` 텍스트만 있는 빈 페이지였음. 사용자 제공 API 명세(`POST /itineraries/recommend`, `GET /itineraries/purchased-trips`, `GET /itineraries`, `GET /itineraries/{id}`) 기준으로 여행 유형 3-모드(구매한 여행/전체 패키지/자유 여행) 선택 → 취향·목적·동행자·예산·인원 입력 → AI 생성(최대 60초) → 일자별 일정 결과 화면까지 구현. 이력 목록/상세(`/aischedule/history`, `/aischedule/history/{id}`) 페이지도 함께 구현 / 영향: `src/features/aischedule/`(신규 폴더 전체: `types.ts`, `components/*`, `hooks/useItineraryRecommend.ts`), `src/features/services/itinerary.service.ts`(신규), `src/features/services/package.service.ts`(`getAllPackages` 추가), `src/app/(user)/aischedule/page.tsx`, `src/app/(user)/aischedule/history/page.tsx`(신규), `src/app/(user)/aischedule/history/[id]/page.tsx`(신규). 로그인 계정이 없어 401 처리 경로만 브라우저로 확인, 실제 추천 생성/이력 조회는 미검증
 - 2026-07-20 — `POST /api/v1/payments/bundle` 요청을 사용자 제공 "패키지+강의 통합 결제 연동 가이드"에 맞춰 수정. (1) `paymentType`을 `"FULL"` 고정에서 결제 페이지의 일시불/예약금 토글로 선택하도록 변경(`installmentAllowed: false`인 예약은 토글에서 `DEPOSIT` 비활성화). (2) `amount` 계산식을 가이드 공식(`패키지분(depositPrice|totalPrice) + 강의 정가 - 쿠폰할인 - 마일리지`, 쿠폰/마일리지는 패키지분에서만 차감)에 맞게 수정 — 기존엔 쿠폰/마일리지가 패키지+강의 합산 금액 전체에서 차감돼 가이드와 어긋나 있었음. `courseId`가 없는 경우 쓰는 기존 `POST /payments`도 동일한 `paymentType`/`amount` 로직을 공유하도록 함께 수정 / 영향: `src/features/packagelounge/hooks/usePackagePayment.ts`, `src/features/packagelounge/components/PackagePaymentClient.tsx`, `src/features/packagelounge/components/PaymentSummary.tsx`. 실제 로그인 세션으로 결제창까지 눌러보는 E2E 검증은 로컬에 테스트 계정/예약 데이터가 없어 못 함(lint/타입체크만 확인) — **미반영**: 강의 여러 개 선택(`courseIds` 다중, `GET /courses/countries/{countryId}` 연동)은 이번 범위 밖
+- 2026-07-21 — `POST /api/v1/bookings`에 optional `courseId` 추가. 진단평가 추천에서 이어진 강의가 있으면 예약 생성 payload에 ID를 전달해 해당 강의만 완강 게이트를 검사하고, 강의 없는 일반 패키지 진입은 필드를 생략해 기존 국가 단위 폴백을 유지 / 영향: `src/features/packagelounge/types.ts`, `src/features/packagelounge/components/BookingPrice.tsx`, `src/features/packagelounge/components/ReservationSummary.tsx`
