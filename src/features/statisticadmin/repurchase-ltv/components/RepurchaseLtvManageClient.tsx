@@ -1,17 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import ChartSkeleton from "@/features/statisticadmin/common/components/ChartSkeleton";
 import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
 import { downloadTopCustomersCsv } from "@/features/services/adminRepurchaseLtvStatistics.service";
 import { useRepurchaseLtvStatistics } from "../hooks/useRepurchaseLtvStatistics";
 import { repurchaseLtvPeriodLabels, repurchaseLtvPeriods } from "../utils";
-import CohortLtvLineChart from "./CohortLtvLineChart";
 import CohortRetentionHeatmap from "./CohortRetentionHeatmap";
 import RepurchaseLtvSummaryCards from "./RepurchaseLtvSummaryCards";
 import TopCustomerTable from "./TopCustomerTable";
+
+const CohortLtvLineChart = dynamic(() => import("./CohortLtvLineChart"), {
+  ssr: false,
+  loading: () => <ChartSkeleton height={330} />,
+});
 
 const periodOptions = repurchaseLtvPeriods.map((period) => ({
   label: repurchaseLtvPeriodLabels[period],

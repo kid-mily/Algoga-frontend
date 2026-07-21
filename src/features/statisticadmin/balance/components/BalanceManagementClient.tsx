@@ -1,13 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import ChartSkeleton from "@/features/statisticadmin/common/components/ChartSkeleton";
 import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
 import { useBalanceManagement } from "../hooks/useBalanceManagement";
 import { balancePeriodLabels, balancePeriods } from "../utils";
-import BalanceRecoveryLineChart from "./BalanceRecoveryLineChart";
 import BalanceSummaryCards from "./BalanceSummaryCards";
-import CountryBalanceConversionBarChart from "./CountryBalanceConversionBarChart";
 import OutstandingReservationTable from "./OutstandingReservationTable";
+
+const BalanceRecoveryLineChart = dynamic(
+  () => import("./BalanceRecoveryLineChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={260} /> },
+);
+const CountryBalanceConversionBarChart = dynamic(
+  () => import("./CountryBalanceConversionBarChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={260} /> },
+);
 
 const periodOptions = balancePeriods.map((period) => ({
   label: balancePeriodLabels[period],

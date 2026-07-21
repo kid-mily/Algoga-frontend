@@ -1,17 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import ChartSkeleton from "@/features/statisticadmin/common/components/ChartSkeleton";
 import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
 import { downloadCountryProfitCsv } from "@/features/services/adminCountryProfitStatistics.service";
 import { useCountryProfitStatistics } from "../hooks/useCountryProfitStatistics";
 import { countryProfitPeriodLabels, countryProfitPeriods } from "../utils";
-import CountryNetSalesBarChart from "./CountryNetSalesBarChart";
 import CountryProfitabilitySummaryCards from "./CountryProfitabilitySummaryCards";
 import CountryProfitabilityTable from "./CountryProfitabilityTable";
-import CountryRefundCancelCompareChart from "./CountryRefundCancelCompareChart";
+
+const CountryNetSalesBarChart = dynamic(
+  () => import("./CountryNetSalesBarChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={330} /> },
+);
+const CountryRefundCancelCompareChart = dynamic(
+  () => import("./CountryRefundCancelCompareChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={330} /> },
+);
 
 const periodOptions = countryProfitPeriods.map((period) => ({
   label: countryProfitPeriodLabels[period],

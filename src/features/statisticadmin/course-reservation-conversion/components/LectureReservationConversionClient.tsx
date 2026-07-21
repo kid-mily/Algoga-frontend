@@ -1,16 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import ChartSkeleton from "@/features/statisticadmin/common/components/ChartSkeleton";
 import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
 import { downloadLectureCountryConversionCsv } from "@/features/services/adminLectureConversionStatistics.service";
 import { useCourseReservationConversion } from "../hooks/useCourseReservationConversion";
 import { lectureConversionPeriodLabels, lectureConversionPeriods } from "../utils";
 import LectureConversionFunnel from "./LectureConversionFunnel";
-import LectureConversionRankingCharts from "./LectureConversionRankingCharts";
 import LectureConversionSummaryCards from "./LectureConversionSummaryCards";
 import LectureCountryConversionTable from "./LectureCountryConversionTable";
+
+const LectureConversionRankingCharts = dynamic(
+  () => import("./LectureConversionRankingCharts"),
+  { ssr: false, loading: () => <ChartSkeleton height={220} /> },
+);
 
 const periodOptions = lectureConversionPeriods.map((period) => ({
   label: lectureConversionPeriodLabels[period],

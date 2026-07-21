@@ -1,15 +1,25 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import ChartSkeleton from "@/features/statisticadmin/common/components/ChartSkeleton";
 import StatisticPeriodFilter from "@/features/statisticadmin/common/components/StatisticPeriodFilter";
 import { useRefundManagement } from "../hooks/useRefundManagement";
 import { refundPeriodLabels, refundPeriods } from "../utils";
-import CancellationStageDonutChart from "./CancellationStageDonutChart";
 import CountryRefundRateTable from "./CountryRefundRateTable";
-import RefundMonthlyTrendChart from "./RefundMonthlyTrendChart";
 import RefundReasonTable from "./RefundReasonTable";
 import RefundSummaryCards from "./RefundSummaryCards";
 import RefundTimingDistribution from "./RefundTimingDistribution";
+
+const CancellationStageDonutChart = dynamic(
+  () => import("./CancellationStageDonutChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={210} /> },
+);
+const RefundMonthlyTrendChart = dynamic(
+  () => import("./RefundMonthlyTrendChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={300} /> },
+);
 
 const periodOptions = refundPeriods.map((period) => ({
   label: refundPeriodLabels[period],

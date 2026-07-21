@@ -1,8 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import ChartSkeleton from "@/features/statisticadmin/common/components/ChartSkeleton";
 import LectureCountryConversionTable from "@/features/statisticadmin/course-reservation-conversion/components/LectureCountryConversionTable";
 import {
   ALL_TIME_QUERY,
@@ -13,7 +16,11 @@ import { downloadLectureCountryConversionCsv } from "@/features/services/adminLe
 import { useCouponConversion } from "../hooks/useCouponConversion";
 import CouponConversionSummaryCards from "./CouponConversionSummaryCards";
 import CouponPerformanceTable from "./CouponPerformanceTable";
-import LectureCouponUsageChart from "./LectureCouponUsageChart";
+
+const LectureCouponUsageChart = dynamic(
+  () => import("./LectureCouponUsageChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={420} /> },
+);
 
 export default function CouponReservationConversionClient() {
   const { data, isLoading, error } = useCouponConversion();
