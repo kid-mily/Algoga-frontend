@@ -1,5 +1,5 @@
 import { api, type ApiResult, unwrapData } from "@/lib/api";
-import type { Friend } from "./friend.types";
+import type { Friend, FriendSearchResult } from "./friend.types";
 
 type FriendResponse = {
   relationId: number;
@@ -43,13 +43,33 @@ export const getFriends = async (
   return getFriendList(response).filter((friend) => friend.relationId > 0);
 };
 
-export const searchUserByCode = async (code: string): Promise<Friend> => {
-  const response = await api.get<ApiResult<FriendResponse>>("/api/v1/users/search", {
-    params: { code },
-    suppressGlobalError: true,
-  });
+type UserSearchResponse = FriendResponse & {
+  requestAvailable: boolean;
+  unavailableMessage: string | null;
+};
 
-  return normalizeFriend(unwrapData(response));
+export const searchUserByCode = async (
+  code: string
+): Promise<FriendSearchResult> => {
+  const response = await api.get<ApiResult<UserSearchResponse>>(
+    "/api/v1/users/search",
+    {
+      params: { code },
+      suppressGlobalError: true,
+    }
+  );
+
+  const user = unwrapData(response);
+
+  return {
+    userId: user.userId,
+    nickname: user.nickname,
+    personalCode: user.personalCode,
+    profileImageUrl: user.profileImageUrl || null,
+    isOnline: user.isOnline,
+    requestAvailable: user.requestAvailable,
+    unavailableMessage: user.unavailableMessage,
+  };
 };
 
 export const sendFriendRequest = async (targetUserCode: string): Promise<void> => {

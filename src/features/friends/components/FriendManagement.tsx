@@ -152,7 +152,7 @@ export default function FriendManagement({
       <section className="grid gap-4 lg:grid-cols-2">
         <FriendCode personalCode={personalCode} />
 
-        <FriendCodeSearch myPersonalCode={personalCode} />
+        <FriendCodeSearch />
       </section>
 
       <article className="overflow-hidden rounded-2xl border border-[#E5EDF5] bg-white shadow-sm">
