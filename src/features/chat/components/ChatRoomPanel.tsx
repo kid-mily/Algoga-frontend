@@ -13,6 +13,7 @@ type ChatRoomPanelProps = {
   onClose: () => void;
   onReadRoom?: (roomId: number) => void;
   onRoomMessage?: (message: ChatMessage) => void;
+  onRoomDeleted?: () => void;
   onLeaveRoom?: (room: ChatRoom) => void;
   onRoomUpdated?: (room: ChatRoom) => void;
   isLeaving?: boolean;
@@ -47,6 +48,7 @@ export default function ChatRoomPanel({
   onClose,
   onReadRoom,
   onRoomMessage,
+  onRoomDeleted,
   onLeaveRoom,
   onRoomUpdated,
   isLeaving,
@@ -65,6 +67,7 @@ export default function ChatRoomPanel({
     room,
     onReadRoom,
     onRoomMessage,
+    onRoomDeleted,
   });
 
   const {

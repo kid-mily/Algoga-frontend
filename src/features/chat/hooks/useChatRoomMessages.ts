@@ -1,6 +1,7 @@
 ﻿// 채팅방 내부 메시지와 WebSocket을 담당
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMe } from "@/features/services/user.service";
+import { ApiRequestError } from "@/lib/api";
 import { getChatMessages } from "../../services/chat.service";
 import { useChatSocket } from "./useChatSocket";
 import type { ChatMessage, ChatRoom, ReadEvent, TypingEvent } from "../types";
@@ -9,6 +10,7 @@ type UseChatRoomMessagesOptions = {
   room: ChatRoom;
   onReadRoom?: (roomId: number) => void;
   onRoomMessage?: (message: ChatMessage) => void;
+  onRoomDeleted?: () => void;
 };
 
 const mergeMessage = (messages: ChatMessage[], nextMessage: ChatMessage) => {
@@ -23,6 +25,7 @@ export const useChatRoomMessages = ({
   room,
   onReadRoom,
   onRoomMessage,
+  onRoomDeleted,
 }: UseChatRoomMessagesOptions) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentUserId, setCurrentUserId] = useState<number>();
@@ -51,6 +54,15 @@ export const useChatRoomMessages = ({
       } catch (error) {
         if (signal?.aborted) return;
 
+        if (
+          error instanceof ApiRequestError &&
+          error.status === 404 &&
+          error.code === "CHAT_001"
+        ) {
+          onRoomDeleted?.();
+          return;
+        }
+
         setErrorMessage(
           error instanceof Error ? error.message : "채팅 내역을 불러오지 못했습니다."
         );
@@ -60,7 +72,7 @@ export const useChatRoomMessages = ({
         }
       }
     },
-    [room.roomId]
+    [onRoomDeleted, room.roomId]
   );
 
   const handleSocketMessage = useCallback(

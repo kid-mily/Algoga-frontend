@@ -520,6 +520,15 @@ export const useChatWidget = ({
     setView("room");
   };
 
+  const handleRoomDeleted = useCallback(() => {
+    setSelectedRoom(null);
+    setView("list");
+
+    void loadRooms(undefined, {
+      showLoading: false,
+    });
+  }, [loadRooms]);
+
   const requestLeaveRoom = (room: ChatRoom) => {
     if (isProcessing) return;
 
@@ -591,6 +600,7 @@ export const useChatWidget = ({
     handleCurrentRoomMessage,
     handleRoomUpdated,
     handleSelectRoom,
+    handleRoomDeleted,
     markRoomAsRead,
     requestLeaveRoom,
     cancelLeaveRoom,
