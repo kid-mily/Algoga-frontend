@@ -2,25 +2,32 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ApiRequestError } from "@/lib/api";
 
 import { searchUserByCode, sendFriendRequest } from "../friend.service";
-import type { Friend } from "../friend.types";
+import type { FriendSearchResult } from "../friend.types";
 
-interface FriendCodeSearchProps {
-  myPersonalCode: string;
-}
+// 검색 자체가 실패하는 경우: FRIEND_006(내가 차단한 유저)만 실제 사유를 보여주고,
+// 그 외(FRIEND_001 등, 나를 차단한 유저 포함)는 전부 "결과 없음"으로 뭉뚱그린다
+const getSearchErrorMessage = (error: unknown): string => {
+  if (error instanceof ApiRequestError) {
+    const errorCode =
+      (error.body as { errorCode?: string } | null)?.errorCode || error.code;
 
-export default function FriendCodeSearch({ myPersonalCode }: FriendCodeSearchProps) {
+    if (errorCode === "FRIEND_006") {
+      return error.message;
+    }
+  }
+
+  return "검색 결과가 없습니다.";
+};
+
+export default function FriendCodeSearch() {
   const [code, setCode] = useState("");
   const [notice, setNotice] = useState("");
-  const [searchResult, setSearchResult] = useState<Friend | null>(null);
+  const [searchResult, setSearchResult] = useState<FriendSearchResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const isMe = Boolean(
-    searchResult &&
-      myPersonalCode &&
-      searchResult.personalCode.toLowerCase() === myPersonalCode.toLowerCase()
-  );
 
   const handleSearch = async () => {
     const nextCode = code.trim();
@@ -36,22 +43,19 @@ export default function FriendCodeSearch({ myPersonalCode }: FriendCodeSearchPro
       const result = await searchUserByCode(nextCode);
       setSearchResult(result);
 
-      if (
-        myPersonalCode &&
-        result.personalCode.toLowerCase() === myPersonalCode.toLowerCase()
-      ) {
-        setNotice("본인은 친구로 추가할 수 없습니다.");
+      if (!result.requestAvailable && result.unavailableMessage) {
+        setNotice(result.unavailableMessage);
       }
     } catch (error) {
       setSearchResult(null);
-      setNotice(error instanceof Error ? error.message : "사용자를 찾지 못했습니다.");
+      setNotice(getSearchErrorMessage(error));
     } finally {
       setIsSearching(false);
     }
   };
 
   const handleSendRequest = async () => {
-    if (!searchResult || isSending || isMe) return;
+    if (!searchResult || isSending || !searchResult.requestAvailable) return;
 
     try {
       setIsSending(true);
@@ -134,10 +138,10 @@ export default function FriendCodeSearch({ myPersonalCode }: FriendCodeSearchPro
           <button
             type="button"
             onClick={() => void handleSendRequest()}
-            disabled={isSending || isMe}
+            disabled={isSending || !searchResult.requestAvailable}
             className="h-9 shrink-0 rounded-xl bg-[#439A97] px-4 text-xs font-bold text-white transition hover:bg-[#357F7C] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isMe ? "본인 계정" : isSending ? "요청 중" : "친구 요청"}
+            {isSending ? "요청 중" : "친구 요청"}
           </button>
         </div>
       )}
