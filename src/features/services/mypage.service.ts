@@ -209,3 +209,10 @@ export async function changeMyPassword(
     }
   );
 }
+
+// 회원 탈퇴 - 이메일 인증(sendMyPageAuthCode/verifyMyPageAuthCode)이 30분 이내 선행되어야 함
+export async function withdrawMyAccount(): Promise<void> {
+  await api.delete<ApiResponse<unknown>>("/api/v1/users/me", {
+    suppressGlobalError: true,
+  });
+}

@@ -61,6 +61,7 @@ export default function MyPage() {
         <div className="mt-6 text-center">
           <button
             type="button"
+            onClick={() => router.push("/mypage/withdraw")}
             className="text-sm font-medium text-[#A0AEC0] transition hover:text-red-500"
           >
             회원 탈퇴하기
