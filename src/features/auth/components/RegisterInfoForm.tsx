@@ -35,6 +35,20 @@ export default function RegisterInfoForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 회원가입 제출이 실패해 특정 필드로 서버 에러가 도착하면, 그 필드의 확인/인증 상태만 초기화한다.
+  // (다른 필드 문제로 실패한 경우엔 여기서 건드리지 않으므로 이메일 인증·아이디 확인 플래그가 유지된다.)
+  useEffect(() => {
+    if (serverError?.field === "phone") {
+      phoneCheck.reset();
+    } else if (serverError?.field === "username") {
+      usernameCheck.reset();
+    } else if (serverError?.field === "email") {
+      // 이메일 중복(AUTH_001) / 인증 만료(AUTH_014) 모두 이메일 재인증이 필요하다.
+      emailVerification.reset();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverError?.field]);
+
   const setFieldError = (field: string) => (message: string) => {
     setErrors((prev) => ({ ...prev, [field]: message }));
   };
