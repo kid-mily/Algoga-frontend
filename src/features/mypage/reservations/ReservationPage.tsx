@@ -2,12 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/features/friends/components/FriendPanel";
-import {
-  DUMMY_TODAY,
-  getReservationsWithSessionState,
-  markReservationRefundRequested,
-} from "./reservation.data";
-import { loadMyReservations } from "./reservation.util";
+import { loadMyReservations, submitRefundRequest } from "./reservation.util";
 import { ReservationItem, ReservationTab } from "./reservation.types";
 import ReservationCard from "./ReservationCard";
 import RefundRequestModal from "./RefundRequestModal";
@@ -20,21 +15,17 @@ const TABS: { value: ReservationTab; label: string }[] = [
 
 const REFUND_STATUSES = ["refund_pending", "refunded", "refund_rejected"];
 
-// 마이페이지 예약 내역 화면
-// 이용 전/이용 후 탭은 실제 예약(GET /bookings/me)을 사용하고,
-// 환불 내역 탭은 아직 더미 데이터 그대로 둔다 (환불 API 연동은 다음 작업)
+// 마이페이지 예약 내역 화면 (이용 전/이용 후/환불 내역 전부 실제 API 데이터)
 export default function ReservationPage() {
-  const [reservations, setReservations] = useState<ReservationItem[]>(() =>
-    getReservationsWithSessionState().filter((item) =>
-      REFUND_STATUSES.includes(item.status)
-    )
-  );
+  const [reservations, setReservations] = useState<ReservationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadErrorMessage, setLoadErrorMessage] = useState("");
   const [activeTab, setActiveTab] = useState<ReservationTab>("upcoming");
   const [refundTarget, setRefundTarget] = useState<ReservationItem | null>(
     null
   );
+  const [isSubmittingRefund, setIsSubmittingRefund] = useState(false);
+  const [refundErrorMessage, setRefundErrorMessage] = useState("");
 
   // 예약 목록은 로그인 유저 전용 데이터라 서버가 아니라 여기(클라이언트)에서 직접 불러온다
   useEffect(() => {
@@ -45,10 +36,7 @@ export default function ReservationPage() {
         const myReservations = await loadMyReservations();
         if (!active) return;
 
-        setReservations((prev) => [
-          ...myReservations,
-          ...prev.filter((item) => REFUND_STATUSES.includes(item.status)),
-        ]);
+        setReservations(myReservations);
       } catch (error) {
         if (!active) return;
         console.error("[mypage] 예약 내역 조회 실패:", error);
@@ -78,29 +66,29 @@ export default function ReservationPage() {
 
   const visibleList = grouped[activeTab];
 
-  const handleConfirmRefund = (reason: string) => {
+  const handleConfirmRefund = async (reason: string) => {
     if (!refundTarget) return;
 
-    markReservationRefundRequested(refundTarget.id, reason);
+    setIsSubmittingRefund(true);
+    setRefundErrorMessage("");
 
-    setReservations((prev) =>
-      prev.map((reservation) =>
-        reservation.id === refundTarget.id
-          ? {
-              ...reservation,
-              status: "refund_pending",
-              refundReason: reason,
-              refundRequestedAt: DUMMY_TODAY,
-              refundRejectedReason: undefined,
-              refundRejectedAt: undefined,
-              refundedAt: undefined,
-            }
-          : reservation
-      )
-    );
+    try {
+      await submitRefundRequest(refundTarget.id, reason);
 
-    setRefundTarget(null);
-    setActiveTab("refund");
+      setRefundTarget(null);
+      setActiveTab("refund");
+
+      // 취소/환불 요청 반영 후의 실제 서버 상태로 목록을 다시 불러온다
+      const myReservations = await loadMyReservations();
+      setReservations(myReservations);
+    } catch (error) {
+      console.error("[mypage] 환불 요청 실패:", error);
+      setRefundErrorMessage(
+        error instanceof Error ? error.message : "환불 요청에 실패했습니다."
+      );
+    } finally {
+      setIsSubmittingRefund(false);
+    }
   };
 
   // 잔금 결제는 디자인만 구현 (실제 결제 기능은 다음 단계에서 연결)
@@ -171,7 +159,10 @@ export default function ReservationPage() {
             <ReservationCard
               key={reservation.id}
               reservation={reservation}
-              onRefundRequest={setRefundTarget}
+              onRefundRequest={(target) => {
+                setRefundErrorMessage("");
+                setRefundTarget(target);
+              }}
               onPayBalance={handlePayBalance}
             />
           ))
@@ -183,8 +174,13 @@ export default function ReservationPage() {
         <RefundRequestModal
           key={refundTarget.id}
           reservation={refundTarget}
-          onCancel={() => setRefundTarget(null)}
+          onCancel={() => {
+            setRefundTarget(null);
+            setRefundErrorMessage("");
+          }}
           onConfirm={handleConfirmRefund}
+          isSubmitting={isSubmittingRefund}
+          errorMessage={refundErrorMessage}
         />
       )}
     </div>

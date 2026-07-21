@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { DUMMY_TODAY, getReservationsWithSessionState, markReservationRefundRequested } from "./reservation.data";
-import { loadMyReservationDetail } from "./reservation.util";
+import { loadMyReservationDetail, submitRefundRequest } from "./reservation.util";
 import { PAYMENT_TYPE_LABEL, RESERVATION_STATUS_BADGE_CLASS, RESERVATION_STATUS_LABEL, ReservationItem } from "./reservation.types";
 import RefundRequestModal from "./RefundRequestModal";
 
@@ -28,20 +27,12 @@ export default function ReservationDetail({
         const found = await loadMyReservationDetail(reservationId);
         if (!active) return;
 
-        if (found) {
-          setReservation(found);
-          return;
-        }
+        setReservation(found);
       } catch (error) {
+        if (!active) return;
         console.error("[mypage] 예약 상세 조회 실패:", error);
+        setReservation(null);
       }
-
-      if (!active) return;
-
-      const dummyMatch = getReservationsWithSessionState().find(
-        (item) => item.id === reservationId
-      );
-      setReservation(dummyMatch ?? null);
     };
 
     void load();
@@ -52,27 +43,31 @@ export default function ReservationDetail({
   }, [reservationId]);
 
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [isSubmittingRefund, setIsSubmittingRefund] = useState(false);
+  const [refundErrorMessage, setRefundErrorMessage] = useState("");
 
-  const handleConfirmRefund = (reason: string) => {
+  const handleConfirmRefund = async (reason: string) => {
     if (!reservation) return;
 
-    markReservationRefundRequested(reservation.id, reason);
+    setIsSubmittingRefund(true);
+    setRefundErrorMessage("");
 
-    setReservation((prev) =>
-      prev
-        ? {
-            ...prev,
-            status: "refund_pending",
-            refundReason: reason,
-            refundRequestedAt: DUMMY_TODAY,
-            refundRejectedReason: undefined,
-            refundRejectedAt: undefined,
-            refundedAt: undefined,
-          }
-        : prev
-    );
+    try {
+      await submitRefundRequest(reservation.id, reason);
 
-    setIsRefundModalOpen(false);
+      setIsRefundModalOpen(false);
+
+      // 취소/환불 요청 반영 후의 실제 서버 상태로 다시 불러온다
+      const refreshed = await loadMyReservationDetail(reservation.id);
+      setReservation(refreshed);
+    } catch (error) {
+      console.error("[mypage] 환불 요청 실패:", error);
+      setRefundErrorMessage(
+        error instanceof Error ? error.message : "환불 요청에 실패했습니다."
+      );
+    } finally {
+      setIsSubmittingRefund(false);
+    }
   };
 
   if (reservation === undefined) {
@@ -351,7 +346,10 @@ export default function ReservationDetail({
         {isReserved && (
           <button
             type="button"
-            onClick={() => setIsRefundModalOpen(true)}
+            onClick={() => {
+              setRefundErrorMessage("");
+              setIsRefundModalOpen(true);
+            }}
             className="rounded-xl bg-[#D95C5C] px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-[#BF4747]"
           >
             환불 요청
@@ -363,8 +361,13 @@ export default function ReservationDetail({
         <RefundRequestModal
           key={reservation.id}
           reservation={reservation}
-          onCancel={() => setIsRefundModalOpen(false)}
+          onCancel={() => {
+            setIsRefundModalOpen(false);
+            setRefundErrorMessage("");
+          }}
           onConfirm={handleConfirmRefund}
+          isSubmitting={isSubmittingRefund}
+          errorMessage={refundErrorMessage}
         />
       )}
     </div>

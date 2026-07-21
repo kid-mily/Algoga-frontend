@@ -1,12 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import CompletionRequiredToast from "./components/CompletionRequiredToast";
 import EvaluationResultEmpty from "./components/EvaluationResultEmpty";
 import EvaluationResultHero from "./components/EvaluationResultHero";
 import RecommendedCourseList from "./components/RecommendedCourseList";
 import { useEvaluationResult } from "./hooks/useEvaluationResult";
 import  { RecommendedCourse } from "./evaluationResult.types";
 import { LEVEL_STYLES } from "./utils/evaluationResult.util";
+import {
+  getMyCourses,
+  isMyCourseCompleted,
+} from "@/features/services/myCourse.service";
 
 interface EvaluationResultContentProps {
   continentCode: string;
@@ -20,6 +26,8 @@ export default function EvaluationResultContent({
   resultId,
 }: EvaluationResultContentProps) {
   const router = useRouter();
+  // 이미 구매한 강의를 완강하지 않아 패키지로 못 넘어갈 때 보여줄 안내 (BK_004와 같은 조건)
+  const [completionBlocked, setCompletionBlocked] = useState(false);
 
   const {
     pathContinentCode,
@@ -49,10 +57,31 @@ export default function EvaluationResultContent({
     router.push(nextHref);
   };
 
-  const handlePackageClick = (course: RecommendedCourse) => {
+  const handlePackageClick = async (course: RecommendedCourse) => {
     setSelectedCourseId(course.courseId);
+    setCompletionBlocked(false);
 
     const packageCountryId = course.countryId ?? Number(countryId);
+
+    // 백엔드(BK_004)와 같은 조건: 그 나라에서 이미 구매한 강의가 있는데 완강하지 않았으면 패키지로 못 넘어간다.
+    // 아예 산 적 없는 나라는 통과(신규 구매는 패키지+강의 동시 구매로 처리됨)
+    try {
+      const { content } = await getMyCourses(0, 100);
+      const purchasedInCountry = content.filter(
+        (myCourse) => myCourse.countryId === packageCountryId
+      );
+      const hasIncompleteCourse = purchasedInCountry.some(
+        (myCourse) => !isMyCourseCompleted(myCourse)
+      );
+
+      if (hasIncompleteCourse) {
+        setCompletionBlocked(true);
+        return;
+      }
+    } catch (error) {
+      // 확인 자체가 실패해도 최종적으로는 예약 생성 시점(BK_004)에서 백엔드가 막아주므로 이동은 막지 않는다
+      console.error("[evaluation] 완강 여부 확인 실패:", error);
+    }
 
     const packageLoungeHref =
       `/packagelounge?countryId=${encodeURIComponent(String(packageCountryId))}` +
@@ -101,6 +130,10 @@ export default function EvaluationResultContent({
           onPackageClick={handlePackageClick}
         />
       </div>
+
+      {completionBlocked && (
+        <CompletionRequiredToast onClose={() => setCompletionBlocked(false)} />
+      )}
     </main>
   );
 }

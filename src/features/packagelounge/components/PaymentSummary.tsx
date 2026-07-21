@@ -10,6 +10,9 @@ interface PaymentSummaryProps {
   data: PackageDetailData;
   course: CourseItem | null;
   packageId: string;
+  paymentType: "FULL" | "DEPOSIT";
+  installmentAllowed: boolean;
+  onPaymentTypeChange: (nextType: "FULL" | "DEPOSIT") => void;
   productAmount: number;
   couponDiscount: number;
   usedMileage: number;
@@ -23,6 +26,9 @@ export default function PaymentSummary({
   data,
   course,
   packageId,
+  paymentType,
+  installmentAllowed,
+  onPaymentTypeChange,
   productAmount,
   couponDiscount,
   usedMileage,
@@ -62,6 +68,40 @@ export default function PaymentSummary({
 
       {/* 하단: 요금 상세 + 결제 */}
       <div className="p-5 sm:p-6">
+        <div className="mb-4">
+          <p className="mb-2 text-xs font-bold text-[#0A1628]">결제 방식</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onPaymentTypeChange("FULL")}
+              className={`rounded-xl border py-2 text-sm font-bold transition ${
+                paymentType === "FULL"
+                  ? "border-[#439A97] bg-[#EEF8F7] text-[#439A97]"
+                  : "border-[#E1E8EF] text-[#718096] hover:bg-[#F3F8FC]"
+              }`}
+            >
+              일시불
+            </button>
+            <button
+              type="button"
+              onClick={() => onPaymentTypeChange("DEPOSIT")}
+              disabled={!installmentAllowed}
+              className={`rounded-xl border py-2 text-sm font-bold transition ${
+                paymentType === "DEPOSIT"
+                  ? "border-[#439A97] bg-[#EEF8F7] text-[#439A97]"
+                  : "border-[#E1E8EF] text-[#718096] hover:bg-[#F3F8FC]"
+              } disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`}
+            >
+              예약금(분할)
+            </button>
+          </div>
+          {!installmentAllowed && (
+            <p className="mt-1.5 text-xs text-[#A0AEC0]">
+              이 예약은 일시불 결제만 가능합니다.
+            </p>
+          )}
+        </div>
+
         <div className="space-y-2 font-mono text-sm text-[#0A1628]">
           <div className="flex items-center justify-between">
             <span className="font-sans">항공권</span>

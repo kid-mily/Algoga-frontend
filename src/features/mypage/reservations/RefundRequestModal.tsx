@@ -12,6 +12,8 @@ interface RefundRequestModalProps {
   reservation: ReservationItem;
   onCancel: () => void;
   onConfirm: (reason: string) => void;
+  isSubmitting: boolean;
+  errorMessage?: string;
 }
 
 // 환불 요청 확인 안내 문구 (공통 Modal은 폼을 담기 어려워 이 화면 전용으로 직접 구현)
@@ -28,13 +30,14 @@ export default function RefundRequestModal({
   reservation,
   onCancel,
   onConfirm,
+  isSubmitting,
+  errorMessage,
 }: RefundRequestModalProps) {
   const [reason, setReason] = useState("");
   const [agreed, setAgreed] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   const reasonError = getRefundReasonError(reason);
-  const canSubmit = !reasonError && agreed && !submitting;
+  const canSubmit = !reasonError && agreed && !isSubmitting;
 
   const refundRate = getRefundRate(reservation.daysUntilDeparture);
   const estimatedAmount =
@@ -42,7 +45,6 @@ export default function RefundRequestModal({
 
   const handleConfirm = () => {
     if (!canSubmit) return;
-    setSubmitting(true);
     onConfirm(reason.trim());
   };
 
@@ -160,6 +162,12 @@ export default function RefundRequestModal({
               환불 규정과 안내 사항을 모두 확인했습니다.
             </span>
           </label>
+
+          {errorMessage && (
+            <p className="mt-3 rounded-xl bg-[#FDECEC] px-3 py-2 text-xs font-semibold text-[#B54747]">
+              {errorMessage}
+            </p>
+          )}
         </div>
 
         {/* F. 하단 버튼 */}
@@ -177,7 +185,7 @@ export default function RefundRequestModal({
             onClick={handleConfirm}
             className="h-[42px] flex-1 rounded-xl bg-[#D95C5C] text-sm font-semibold text-white transition-colors hover:bg-[#BF4747] disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
           >
-            환불 요청
+            {isSubmitting ? "요청 처리 중..." : "환불 요청"}
           </button>
         </div>
       </div>

@@ -75,6 +75,7 @@ export default function PackagePaymentClient({
     isLoadingBenefits,
     isPaying,
     errorMessage,
+    paymentType,
     productAmount,
     couponDiscount,
     maxMileage,
@@ -83,12 +84,15 @@ export default function PackagePaymentClient({
     handleMileageInputChange,
     handleApplyMileage,
     handleUseAllMileage,
+    handlePaymentTypeChange,
     handlePay,
   } = usePackagePayment({
     packageId,
     packageName: data.title,
     bookingId: booking?.bookingId ?? 0,
     totalPrice: booking?.totalPrice ?? 0,
+    depositPrice: booking?.depositPrice ?? 0,
+    installmentAllowed: booking?.installmentAllowed ?? false,
     courseId: course?.courseId ?? null,
     coursePrice: course?.price ?? 0,
     courseName: course?.title ?? null,
@@ -177,6 +181,9 @@ export default function PackagePaymentClient({
                 data={data}
                 course={course}
                 packageId={packageId}
+                paymentType={paymentType}
+                installmentAllowed={booking.installmentAllowed}
+                onPaymentTypeChange={handlePaymentTypeChange}
                 productAmount={productAmount}
                 couponDiscount={couponDiscount}
                 usedMileage={usedMileage}

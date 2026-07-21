@@ -1,6 +1,8 @@
 import type {
   AccommodationResponse,
   BookingDetail,
+  BundlePaymentPreview,
+  BundlePaymentPreviewParams,
   BundlePaymentResponse,
   CreateBookingRequest,
   CreateBundlePaymentRequest,
@@ -194,6 +196,33 @@ export async function createBundlePayment(
   return unwrapData(response);
 }
 
+// GET /payments/bundle/preview - 통합 결제창을 띄우기 전에 결제 가능 여부(payable)와
+// 서버가 계산한 정확한 금액(expectedTotal)을 미리 확인한다 (2026-07-20 PR #584)
+// 주의: lib/api.ts의 params는 배열을 반복 쿼리(courseIds=1&courseIds=2)로 못 보내고 콤마 문자열이
+// 돼버려서(공통 파일이라 수정 안 함), 프론트가 강의 1개만 지원하는 현재 범위에서만 courseIds[0] 하나로 보낸다
+export async function getBundlePaymentPreview(
+  { bookingId, courseIds, paymentType, usedMileage, usedCouponId }: BundlePaymentPreviewParams,
+  signal?: AbortSignal
+): Promise<BundlePaymentPreview> {
+  const response = await api.get<ApiResult<BundlePaymentPreview>>(
+    "/api/v1/payments/bundle/preview",
+    {
+      signal,
+      suppressGlobalError: true,
+      cache: "no-store",
+      params: {
+        bookingId,
+        courseIds: courseIds?.[0],
+        paymentType,
+        usedMileage,
+        usedCouponId: usedCouponId ?? undefined,
+      },
+    }
+  );
+
+  return unwrapData(response);
+}
+
 export async function getPaymentDetail(
   paymentId: string | number,
   signal?: AbortSignal
@@ -208,4 +237,21 @@ export async function getPaymentDetail(
   );
 
   return unwrapData(response);
+}
+
+// 로그인 유저의 결제 내역 전체(예약 결제 + 강의 결제 공용, PaymentDetail과 응답 형태 동일).
+// bookingId로 paymentId를 역조회할 다른 방법이 없어서, 환불 요청 시 이 목록에서 필터링해 찾는다
+export async function getMyPayments(
+  signal?: AbortSignal
+): Promise<PaymentDetail[]> {
+  const response = await api.get<ApiResult<PaymentDetail[]>>(
+    "/api/v1/payments/me",
+    {
+      signal,
+      suppressGlobalError: true,
+      cache: "no-store",
+    }
+  );
+
+  return unwrapData(response) ?? [];
 }
