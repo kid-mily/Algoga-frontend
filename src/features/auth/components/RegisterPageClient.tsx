@@ -110,28 +110,50 @@ export default function RegisterPageClient() {
 
       setStep(3);
     } catch (error: unknown) {
+      const errorCode = getErrorCode(error);
       const errorMessage =
         error instanceof Error ? error.message : "서버 오류가 발생했습니다.";
 
-      if (errorMessage.includes("아이디")) {
+      // 회원가입 실패 시 에러 코드를 우선으로 보고, 문제가 된 필드만 초기화한다.
+      // 이메일 인증 완료 / 아이디 중복확인 통과 플래그는 서버(Redis)에 30분간 유지되므로
+      // 다른 필드 문제로 실패했을 때 굳이 재인증·재확인시키지 않는다.
+
+      // 아이디 중복(AUTH_002): 아이디 입력값만 초기화, 이메일 인증·전화 확인 등은 유지.
+      if (errorCode === "AUTH_002" || (!errorCode && errorMessage.includes("아이디"))) {
+        setFormData((prev) => ({ ...prev, username: "" }));
         setServerError({ field: "username", message: errorMessage });
         setStep(1);
         return;
       }
 
-      // 전화번호 중복(USER_005) 메시지에 "사용"이 들어있어 이메일 분기에 먼저 걸리므로,
-      // 이메일 검사보다 앞서 전화번호로 라우팅한다.
-      if (getErrorCode(error) === "USER_005" || errorMessage.includes("전화")) {
+      // 전화번호 중복(USER_005): 전화번호 입력값만 초기화, 나머지 값·인증 상태는 유지.
+      // (USER_005 메시지에 "사용"이 들어 있어 이메일 분기보다 앞서 라우팅한다.)
+      if (errorCode === "USER_005" || (!errorCode && errorMessage.includes("전화"))) {
+        setFormData((prev) => ({ ...prev, phone: "" }));
         setServerError({ field: "phone", message: errorMessage });
         setStep(1);
         return;
       }
 
+      // 이메일 미인증/인증 만료(AUTH_014): 30분 경과 등으로 서버 인증 상태가 사라진 경우.
+      // 이메일 주소와 나머지 입력값은 그대로 두고, 이메일 인증 단계만 다시 요구한다.
+      if (errorCode === "AUTH_014") {
+        setServerError({
+          field: "email",
+          message: "이메일 인증이 만료되었어요. 이메일 인증을 다시 진행해주세요.",
+        });
+        setStep(1);
+        return;
+      }
+
+      // 이메일 중복(AUTH_001): 이메일 자체가 문제이므로 인증도 다시 필요하다.
       if (
-        errorMessage.includes("이메일") ||
-        errorMessage.includes("사용") ||
-        errorMessage.includes("중복") ||
-        errorMessage.includes("존재")
+        errorCode === "AUTH_001" ||
+        (!errorCode &&
+          (errorMessage.includes("이메일") ||
+            errorMessage.includes("사용") ||
+            errorMessage.includes("중복") ||
+            errorMessage.includes("존재")))
       ) {
         setServerError({ field: "email", message: errorMessage });
         setStep(1);
@@ -155,16 +177,23 @@ export default function RegisterPageClient() {
         <RegisterStepHeader currentStep={step} />
 
         <section className="mt-3">
-          {step === 1 && (
-            <RegisterInfoForm
-              formData={formData}
-              onChange={handleChange}
-              onNext={handleNextStep1}
-              isLoading={isLoading}
-              serverError={serverError}
-              setServerError={setServerError}
-              isSocialSignup={isSocialSignup}
-            />
+          {/*
+            step 1 ↔ 2 를 오갈 때 RegisterInfoForm 을 언마운트하지 않고 감추기만 한다.
+            언마운트하면 이메일 인증 완료 / 아이디·전화 중복확인 상태가 사라져,
+            제출 실패로 step 1 로 되돌아왔을 때 다시 인증해야 하는 문제가 생긴다.
+          */}
+          {step !== 3 && (
+            <div className={step === 1 ? "" : "hidden"} aria-hidden={step !== 1}>
+              <RegisterInfoForm
+                formData={formData}
+                onChange={handleChange}
+                onNext={handleNextStep1}
+                isLoading={isLoading}
+                serverError={serverError}
+                setServerError={setServerError}
+                isSocialSignup={isSocialSignup}
+              />
+            </div>
           )}
 
           {step === 2 && (

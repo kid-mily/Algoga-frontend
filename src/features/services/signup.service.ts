@@ -9,11 +9,18 @@ type DuplicateCheckResponse = {
 };
 
 export const signup = async (data: SignupRequest) => {
-  return api.post("/api/v1/auth/signup", data);
+  // 회원가입 실패(중복/미인증 등)는 전역 에러 모달이 아니라 폼에서 필드별로 처리한다.
+  return api.post("/api/v1/auth/signup", data, {
+    skipAuth: true,
+    suppressGlobalError: true,
+  });
 };
 
 export const socialSignup = async (data: SocialSignupRequest) => {
-  return api.post("/api/v1/auth/social/signup", data, { skipAuth: true });
+  return api.post("/api/v1/auth/social/signup", data, {
+    skipAuth: true,
+    suppressGlobalError: true,
+  });
 };
 
 export const sendSignupEmailCode = async (
