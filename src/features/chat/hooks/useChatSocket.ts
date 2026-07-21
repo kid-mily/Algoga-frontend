@@ -44,6 +44,7 @@ const parseTypingEvent = (body: unknown): TypingEvent | null => {
   if (!body || typeof body !== "object") return null;
 
   const record = body as RawRecord;
+  const roomId = getNumber(record, ["roomId"]);
   const userId = getNumber(record, ["userId"]);
   const nicknameValue = record.nickname;
   const isTypingValue = record.isTyping;
@@ -51,6 +52,7 @@ const parseTypingEvent = (body: unknown): TypingEvent | null => {
   if (userId <= 0 || typeof nicknameValue !== "string") return null;
 
   return {
+    roomId,
     userId,
     nickname: nicknameValue,
     isTyping: Boolean(isTypingValue),
