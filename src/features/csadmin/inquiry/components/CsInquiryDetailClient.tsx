@@ -134,6 +134,14 @@ export default function CsInquiryDetailClient({
             </h2>
 
             <dl className="grid grid-cols-[120px_1fr] gap-x-4 gap-y-4 text-[14px]">
+              <dt className="font-semibold text-[#344054]">작성자</dt>
+              <dd className="text-[#111827]">
+                {inquiry.writer}
+                <span className="ml-1 text-[13px] text-[#98A2B3]">
+                  (회원 #{inquiry.userId})
+                </span>
+              </dd>
+
               <dt className="font-semibold text-[#344054]">문의 유형</dt>
               <dd className="text-[#111827]">{inquiry.type}</dd>
 

@@ -205,7 +205,7 @@ export default function AiChatbotWidget() {
                             type="button"
                             onClick={() => void askSuggested(question)}
                             disabled={isInputDisabled}
-                            className="cursor-pointer rounded-full border border-[#CDE7E5] bg-[#EEF6FD] px-3 py-1.5 text-xs font-bold text-[#439A97] transition hover:bg-[#E1F0F0] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="cursor-pointer rounded-full border border-[#CDE7E5] bg-[#EEF6FD] px-3 py-1.5 text-xs font-bold text-[#439A97] transition hover:border-[#8FCBC7] hover:bg-[#D2ECEA] hover:text-[#2F7F7C] disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {question.question}
                           </button>
@@ -251,7 +251,7 @@ export default function AiChatbotWidget() {
                       type="submit"
                       aria-label="메시지 보내기"
                       disabled={isInputDisabled || !input.trim()}
-                      className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#A7D6D3] text-white transition hover:bg-[#439A97] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#439A97] text-white transition hover:bg-[#2F7F7C] disabled:cursor-not-allowed disabled:bg-[#A7D6D3] disabled:opacity-100"
                     >
                       <Send size={20} />
                     </button>
