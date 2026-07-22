@@ -35,10 +35,8 @@ export type CommunityCommentItemProps = {
   onReport: (commentId: number) => void;
   onReply: (commentId: number, content: string) => void;
   activeReplyCommentId?: number | null;
-  replyContent?: string;
   isReplySubmitting?: boolean;
   canReply?: boolean;
-  onReplyContentChange?: (value: string) => void;
   onCancelReply?: () => void;
   onOpenReply?: (commentId: number) => void;
 };

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -6,7 +7,7 @@ import type {
   CommunityStatProps,
 } from "@/features/community/types";
 
-export default function CommunityCard({
+function CommunityCard({
   postId,
   authorName,
   authorInitial,
@@ -129,3 +130,7 @@ function CommunityStat({ icon, label, count }: CommunityStatProps) {
     </div>
   );
 }
+
+// props가 모두 안정적인 원시값(post 객체 spread)이라, 무한스크롤로 새 페이지가
+// append돼도 기존 카드는 얕은 비교로 재렌더를 건너뛴다.
+export default memo(CommunityCard);

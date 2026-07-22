@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createCommunityComment,
   deleteCommunityComment,
@@ -68,7 +68,6 @@ export const useCommunityComments = ({
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [reportTargetId, setReportTargetId] = useState<number | null>(null);
   const [replyTargetId, setReplyTargetId] = useState<number | null>(null);
-  const [replyContent, setReplyContent] = useState("");
   const [textDialog, setTextDialog] = useState<CommunityCommentTextDialogState>(null);
   const [isReportCompleteOpen, setIsReportCompleteOpen] = useState(false);
   const [isAlreadyReportedOpen, setIsAlreadyReportedOpen] = useState(false);
@@ -77,27 +76,43 @@ export const useCommunityComments = ({
     openLoginRequiredModal,
     closeLoginRequiredModal,
   } = useLoginRequiredModal();
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  // 댓글 작성 후 재요청을 이탈 시 취소하기 위한 컨트롤러.
+  const refetchAbortRef = useRef<AbortController | null>(null);
 
   const commentCount = useMemo(() => {
     const counted = countComments(comments);
     return counted || initialCommentCount;
   }, [comments, initialCommentCount]);
 
-  useEffect(() => {
-    setComments(initialComments);
-    setIsLoading(false);
-  }, [initialComments]);
+  // 섹션은 게시글 로드 완료 후에만 마운트되고 이후 initialComments 참조가 바뀌지 않으므로
+  // useState 초기값으로 충분하다. (다른 게시글로 전환 시엔 부모가 key로 리마운트)
 
-  const refreshCommentsFromPost = async (signal?: AbortSignal) => {
-    const post = await getCommunityPost(postId, signal);
-    setComments(post.comments);
-    onCommentCountChange?.(
-      post.comments.length > 0 ? countComments(post.comments) : post.commentCount
-    );
-  };
+  useEffect(() => () => refetchAbortRef.current?.abort(), []);
+
+  const refreshCommentsFromPost = useCallback(async () => {
+    refetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    refetchAbortRef.current = controller;
+
+    try {
+      const post = await getCommunityPost(postId, controller.signal);
+      if (controller.signal.aborted) return;
+
+      setComments(post.comments);
+      onCommentCountChange?.(
+        post.comments.length > 0 ? countComments(post.comments) : post.commentCount
+      );
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      throw error;
+    } finally {
+      if (refetchAbortRef.current === controller) {
+        refetchAbortRef.current = null;
+      }
+    }
+  }, [postId, onCommentCountChange]);
 
   const handleCreate = async () => {
     const nextContent = content.trim();
@@ -124,61 +139,66 @@ export const useCommunityComments = ({
     }
   };
 
-  const handleCreateReply = async (parentId: number, replyValue: string) => {
-    const nextContent = replyValue.trim();
-    if (!nextContent || isSubmitting) return;
+  const handleCreateReply = useCallback(
+    async (parentId: number, replyValue: string) => {
+      const nextContent = replyValue.trim();
+      if (!nextContent || isSubmitting) return;
 
-    if (!currentUserId) {
-      openLoginRequiredModal();
-      return;
-    }
+      if (!currentUserId) {
+        openLoginRequiredModal();
+        return;
+      }
 
-    try {
-      setIsSubmitting(true);
-      await createCommunityComment({
-        postId,
-        parentId,
-        content: nextContent,
-      });
-      setReplyTargetId(null);
-      setReplyContent("");
-      await refreshCommentsFromPost();
-    } catch (error) {
-      setErrorMessage(getRequestErrorMessage(error, "대댓글 등록에 실패했습니다."));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+      try {
+        setIsSubmitting(true);
+        await createCommunityComment({
+          postId,
+          parentId,
+          content: nextContent,
+        });
+        setReplyTargetId(null);
+        await refreshCommentsFromPost();
+      } catch (error) {
+        setErrorMessage(getRequestErrorMessage(error, "대댓글 등록에 실패했습니다."));
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [isSubmitting, currentUserId, openLoginRequiredModal, postId, refreshCommentsFromPost]
+  );
 
-  const handleReaction = async (commentId: number, isLike: boolean) => {
-    if (pendingCommentId) return;
+  const handleReaction = useCallback(
+    async (commentId: number, isLike: boolean) => {
+      if (pendingCommentId) return;
 
-    if (!currentUserId) {
-      openLoginRequiredModal();
-      return;
-    }
+      if (!currentUserId) {
+        openLoginRequiredModal();
+        return;
+      }
 
-    try {
-      setPendingCommentId(commentId);
-      const result = await reactToCommunityComment({ commentId, isLike });
+      try {
+        setPendingCommentId(commentId);
+        const result = await reactToCommunityComment({ commentId, isLike });
 
-      setComments((prev) =>
-        updateCommentInTree(prev, commentId, (comment) => ({
-          ...comment,
-          likeCount: result.likeCount,
-          dislikeCount: result.dislikeCount,
-        }))
-      );
-      setReactionByCommentId((prev) => ({
-        ...prev,
-        [commentId]: result.status === "REMOVED" ? null : isLike,
-      }));
-    } catch (error) {
-      setErrorMessage(getRequestErrorMessage(error, "댓글 반응 처리에 실패했습니다."));
-    } finally {
-      setPendingCommentId(null);
-    }
-  };
+        setComments((prev) =>
+          updateCommentInTree(prev, commentId, (comment) => ({
+            ...comment,
+            likeCount: result.likeCount,
+            dislikeCount: result.dislikeCount,
+          }))
+        );
+        setReactionByCommentId((prev) => ({
+          ...prev,
+          [commentId]: result.status === "REMOVED" ? null : isLike,
+        }));
+      } catch (error) {
+        setErrorMessage(getRequestErrorMessage(error, "댓글 반응 처리에 실패했습니다."));
+      } finally {
+        setPendingCommentId(null);
+      }
+    },
+    [pendingCommentId, currentUserId, openLoginRequiredModal]
+  );
 
   const handleUpdate = async () => {
     if (!textDialog || textDialog.type !== "edit") return;
@@ -260,29 +280,33 @@ export const useCommunityComments = ({
     }
   };
 
-  const handleOpenReport = (commentId: number) => {
-    if (!currentUserId) {
-      openLoginRequiredModal();
-      return;
-    }
+  const handleOpenReport = useCallback(
+    (commentId: number) => {
+      if (!currentUserId) {
+        openLoginRequiredModal();
+        return;
+      }
 
-    setReportTargetId(commentId);
-  };
+      setReportTargetId(commentId);
+    },
+    [currentUserId, openLoginRequiredModal]
+  );
 
-  const handleOpenReply = (commentId: number) => {
-    if (!currentUserId) {
-      openLoginRequiredModal();
-      return;
-    }
+  const handleOpenReply = useCallback(
+    (commentId: number) => {
+      if (!currentUserId) {
+        openLoginRequiredModal();
+        return;
+      }
 
-    setReplyTargetId(commentId);
-    setReplyContent("");
-  };
+      setReplyTargetId(commentId);
+    },
+    [currentUserId, openLoginRequiredModal]
+  );
 
-  const handleCancelReply = () => {
+  const handleCancelReply = useCallback(() => {
     setReplyTargetId(null);
-    setReplyContent("");
-  };
+  }, []);
 
   return {
     comments,
@@ -292,12 +316,10 @@ export const useCommunityComments = ({
     deleteTargetId,
     reportTargetId,
     replyTargetId,
-    replyContent,
     textDialog,
     isReportCompleteOpen,
     isAlreadyReportedOpen,
     isLoginRequiredOpen,
-    isLoading,
     isSubmitting,
     errorMessage,
     commentCount,
@@ -305,7 +327,6 @@ export const useCommunityComments = ({
     setContent,
     setDeleteTargetId,
     setReportTargetId,
-    setReplyContent,
     setTextDialog,
     setIsReportCompleteOpen,
     setIsAlreadyReportedOpen,

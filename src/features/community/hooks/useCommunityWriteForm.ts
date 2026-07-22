@@ -11,8 +11,8 @@ import {
   updateCommunityPost,
 } from "@/features/services/community.service";
 import { getRequestErrorMessage } from "@/features/community/utils/communityErrors";
+import { DEFAULT_COMMUNITY_FILTERS } from "@/features/community/utils/communityDefaults";
 import {
-  COMMUNITY_CATEGORIES,
   type CommunityCategoryCode,
   type CommunityFilter,
 } from "@/features/community/types";
@@ -25,20 +25,13 @@ export const MAX_CUSTOM_TAG_COUNT = 10;
 export const MAX_CUSTOM_TAG_LENGTH = 10;
 export { MAX_IMAGE_COUNT } from "./useCommunityImageUpload";
 
-const DEFAULT_TAGS: CommunityFilter[] = COMMUNITY_CATEGORIES.map((category) => ({
-  id: category.id,
-  tagType: "CATEGORY",
-  tagName: category.label,
-  category: category.id,
-}));
-
 export const useCommunityWriteForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editPostId = Number(searchParams.get("postId"));
   const isEditMode = Number.isSafeInteger(editPostId) && editPostId > 0;
 
-  const [tags, setTags] = useState<CommunityFilter[]>(DEFAULT_TAGS);
+  const [tags, setTags] = useState<CommunityFilter[]>(DEFAULT_COMMUNITY_FILTERS);
   const [tagType, setTagType] = useState<CommunityCategoryCode | "">("");
   const [customTagInput, setCustomTagInput] = useState("");
   const [customTags, setCustomTags] = useState<string[]>([]);
@@ -78,11 +71,17 @@ export const useCommunityWriteForm = () => {
           imageUpload.resetForEdit(postData.imageUrls);
 
           if (postData.countryId) {
-            for (const continent of continentData) {
-              const countryData = await getCommunityCountries(
-                continent.continentCode,
-                controller.signal
-              );
+            // 대륙별 국가 목록을 병렬로 조회한 뒤 저장된 countryId가 속한 대륙을 찾는다
+            // (기존엔 대륙마다 순차 await라 최악의 경우 대륙 수만큼 직렬 요청).
+            const countriesByContinent = await Promise.all(
+              continentData.map((continent) =>
+                getCommunityCountries(continent.continentCode, controller.signal).then(
+                  (countryData) => ({ continent, countryData })
+                )
+              )
+            );
+
+            for (const { continent, countryData } of countriesByContinent) {
               const matchedCountry = countryData.find(
                 (country) => country.countryId === postData.countryId
               );

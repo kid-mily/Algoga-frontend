@@ -1,9 +1,7 @@
 "use client";
 
 import { ChevronLeft } from "lucide-react";
-import CommunityActionModal from "@/features/community/components/common/CommunityActionModal";
-import CommunityReportModal from "@/features/community/components/common/CommunityReportModal";
-import CommunityReportStatusModals from "@/features/community/components/common/CommunityReportStatusModals";
+import CommunityPostModals from "@/features/community/components/PostDetail/CommunityPostModals";
 import CommunityCommentSection from "@/features/community/components/PostDetail/CommunityCommentSection";
 import CommunityPostHeader from "@/features/community/components/PostDetail/CommunityPostHeader";
 import CommunityPostImageCarousel from "@/features/community/components/PostDetail/CommunityPostImageCarousel";
@@ -49,41 +47,23 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
 
   return (
     <main className="min-h-screen bg-[#F3F8FC] px-4 py-7">
-      <CommunityActionModal
-        open={isDeleteConfirmOpen}
-        title="게시글 삭제"
-        description="삭제한 게시글은 되돌릴 수 없습니다."
-        confirmLabel="삭제"
-        cancelLabel="취소"
-        isPending={isDeleting}
-        onCancel={() => setIsDeleteConfirmOpen(false)}
-        onConfirm={handleDelete}
-      />
-
-      <CommunityActionModal
-        open={isDeleteCompleteOpen}
-        title="게시글 삭제 완료"
-        description="게시글이 삭제되었습니다."
-        confirmLabel="목록으로"
-        onConfirm={handleBackToList}
-      />
-
-      <CommunityReportStatusModals
-        targetLabel="게시글"
+      <CommunityPostModals
+        isDeleteConfirmOpen={isDeleteConfirmOpen}
+        isDeleting={isDeleting}
+        onCancelDelete={() => setIsDeleteConfirmOpen(false)}
+        onConfirmDelete={handleDelete}
+        isDeleteCompleteOpen={isDeleteCompleteOpen}
+        onConfirmDeleteComplete={handleBackToList}
         isReportCompleteOpen={isReportCompleteOpen}
         onCloseReportComplete={() => setIsReportCompleteOpen(false)}
         isAlreadyReportedOpen={isAlreadyReportedOpen}
         onCloseAlreadyReported={() => setIsAlreadyReportedOpen(false)}
         isLoginRequiredOpen={isLoginRequiredOpen}
         onCloseLoginRequired={closeLoginRequiredModal}
-      />
-
-      <CommunityReportModal
-        open={isReportModalOpen}
-        targetType="게시글"
-        isPending={isReporting}
-        onCancel={() => setIsReportModalOpen(false)}
-        onSubmit={handleReport}
+        isReportModalOpen={isReportModalOpen}
+        isReporting={isReporting}
+        onCancelReport={() => setIsReportModalOpen(false)}
+        onSubmitReport={handleReport}
       />
 
       <button
@@ -146,6 +126,7 @@ export default function CommunityPostDetail({ postId }: CommunityPostDetailProps
             />
 
             <CommunityCommentSection
+              key={post.postId}
               postId={post.postId}
               initialCommentCount={post.commentCount}
               initialComments={post.comments}

@@ -139,16 +139,22 @@ export default function CommunityPageClient({
   const shouldFetchPosts = hasSelectedFilter || isMyPostsOnly;
 
   useEffect(() => {
-    if (!shouldFetchPosts) {
-      setPosts(initialPosts);
-      setLastPostId(initialLastPostId);
-      setHasNext(initialHasNext);
-      setErrorMessage(initialErrorMessage);
-      return;
-    }
-
     const controller = new AbortController();
-    void loadPosts({ signal: controller.signal });
+
+    const syncPosts = async () => {
+      // 필터가 없으면 서버가 내려준 초기 데이터로 되돌리고, 있으면 필터 조회.
+      if (!shouldFetchPosts) {
+        setPosts(initialPosts);
+        setLastPostId(initialLastPostId);
+        setHasNext(initialHasNext);
+        setErrorMessage(initialErrorMessage);
+        return;
+      }
+
+      await loadPosts({ signal: controller.signal });
+    };
+
+    void syncPosts();
 
     return () => {
       controller.abort();
@@ -162,17 +168,31 @@ export default function CommunityPageClient({
     loadPosts,
   ]);
 
+  // 옵저버 콜백이 최신 값을 ref로 읽게 해서, 상태가 바뀔 때마다 옵저버를
+  // 재생성(disconnect/observe)하지 않고 한 번만 만든다.
+  const infiniteScrollRef = useRef({ hasNext, isLoading, isLoadingMore, lastPostId });
+  useEffect(() => {
+    infiniteScrollRef.current = { hasNext, isLoading, isLoadingMore, lastPostId };
+  }, [hasNext, isLoading, isLoadingMore, lastPostId]);
+
+  const loadPostsRef = useRef(loadPosts);
+  useEffect(() => {
+    loadPostsRef.current = loadPosts;
+  }, [loadPosts]);
+
   useEffect(() => {
     const target = loadMoreRef.current;
     if (!target) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
+        const { hasNext, isLoading, isLoadingMore, lastPostId } =
+          infiniteScrollRef.current;
         if (!entries[0]?.isIntersecting || isLoading || isLoadingMore || !hasNext) {
           return;
         }
 
-        void loadPosts({ nextLastPostId: lastPostId, append: true });
+        void loadPostsRef.current({ nextLastPostId: lastPostId, append: true });
       },
       { rootMargin: "320px" }
     );
@@ -180,7 +200,7 @@ export default function CommunityPageClient({
     observer.observe(target);
 
     return () => observer.disconnect();
-  }, [hasNext, isLoading, isLoadingMore, lastPostId, loadPosts]);
+  }, []);
 
   const handleFilterChange = (filterId: string) => {
     if (filterId === ALL_CATEGORY_ID) {
