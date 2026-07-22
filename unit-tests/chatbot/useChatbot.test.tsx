@@ -116,11 +116,12 @@ describe("useChatbot 훅 테스트", () => {
     const { result } = renderHook(() => useChatbot(true));
     await waitFor(() => expect(result.current.authStatus).toBe("authed"));
 
-    act(() => result.current.setInput("  예약 취소 방법  "));
-    await act(async () => result.current.send());
+    await act(async () => result.current.send("  예약 취소 방법  "));
 
-    expect(askChatbot).toHaveBeenCalledWith("예약 취소 방법");
-    expect(result.current.input).toBe("");
+    expect(askChatbot).toHaveBeenCalledWith(
+      "예약 취소 방법",
+      expect.any(AbortSignal)
+    );
     expect(result.current.bubbles.slice(-2).map((bubble) => bubble.content)).toEqual([
       "예약 취소 방법", normalAnswer.answer,
     ]);
@@ -131,8 +132,7 @@ describe("useChatbot 훅 테스트", () => {
     const { result } = renderHook(() => useChatbot(true));
     await waitFor(() => expect(result.current.authStatus).toBe("authed"));
 
-    act(() => result.current.setInput("   "));
-    await act(async () => result.current.send());
+    await act(async () => result.current.send("   "));
     expect(askChatbot).not.toHaveBeenCalled();
   });
 
@@ -141,8 +141,7 @@ describe("useChatbot 훅 테스트", () => {
     const { result } = renderHook(() => useChatbot(true));
     await waitFor(() => expect(result.current.authStatus).toBe("authed"));
 
-    act(() => result.current.setInput("질문"));
-    await act(async () => result.current.send());
+    await act(async () => result.current.send("질문"));
 
     expect(result.current.bubbles.at(-1)).toEqual(
       expect.objectContaining({ content: "답변 서버 오류", mode: "REJECTED" })
@@ -157,8 +156,7 @@ describe("useChatbot 훅 테스트", () => {
     const { result } = renderHook(() => useChatbot(true));
     await act(async () => { await Promise.resolve(); await Promise.resolve(); });
 
-    act(() => result.current.setInput("질문"));
-    await act(async () => result.current.send());
+    await act(async () => result.current.send("질문"));
     expect(result.current.lockSeconds).toBe(2);
 
     act(() => jest.advanceTimersByTime(1000));
@@ -180,8 +178,7 @@ describe("useChatbot 훅 테스트", () => {
     const { result } = renderHook(() => useChatbot(true));
     await waitFor(() => expect(result.current.authStatus).toBe("authed"));
 
-    act(() => result.current.setInput("날짜 변경"));
-    await act(async () => result.current.send());
+    await act(async () => result.current.send("날짜 변경"));
 
     expect(result.current.view).toBe("inquiry");
     expect(result.current.handoffSummary).toBe("예약 변경 문의");
@@ -243,7 +240,10 @@ describe("useChatbot 훅 테스트", () => {
 
     await act(async () => result.current.askSuggested(suggestion));
 
-    expect(askSuggestedQuestion).toHaveBeenCalledWith(7);
+    expect(askSuggestedQuestion).toHaveBeenCalledWith(
+      7,
+      expect.any(AbortSignal)
+    );
     expect(result.current.bubbles.slice(-2).map((bubble) => bubble.content)).toEqual([
       "환불 규정", normalAnswer.answer,
     ]);

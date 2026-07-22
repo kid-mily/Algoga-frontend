@@ -88,7 +88,6 @@ export const useChatbot = (isOpen: boolean) => {
   const [authStatus, setAuthStatus] = useState<ChatbotAuthStatus>("unknown");
   const [bubbles, setBubbles] = useState<ChatBubble[]>([GREETING]);
   const [suggestions, setSuggestions] = useState<SuggestedQuestion[]>([]);
-  const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [lockSeconds, setLockSeconds] = useState(0);
   const [view, setView] = useState<ChatbotView>("chat");
@@ -106,6 +105,9 @@ export const useChatbot = (isOpen: boolean) => {
 
   const dataLoadedRef = useRef(false);
   const keyRef = useRef(0);
+  // 진행 중인 전송(직접 질문/예상질문)을 취소하기 위한 컨트롤러.
+  // 위젯이 닫히거나 언마운트되면 abort해 stale 응답이 append되는 것을 막는다.
+  const sendAbortRef = useRef<AbortController | null>(null);
   const nextKey = () => `live-${(keyRef.current += 1)}`;
 
   // 인증 확인: 챗봇을 열 때마다, 그리고 로그인/로그아웃 이벤트 시 다시 확인한다.
@@ -167,6 +169,14 @@ export const useChatbot = (isOpen: boolean) => {
     return () => controller.abort();
   }, [isOpen, authStatus]);
 
+  // 위젯이 닫히거나 언마운트되면 진행 중인 전송을 취소해 stale 응답을 막는다.
+  useEffect(() => {
+    if (isOpen) return;
+    sendAbortRef.current?.abort();
+  }, [isOpen]);
+
+  useEffect(() => () => sendAbortRef.current?.abort(), []);
+
   // 레이트리밋 카운트다운
   useEffect(() => {
     if (lockSeconds <= 0) return;
@@ -194,63 +204,75 @@ export const useChatbot = (isOpen: boolean) => {
     []
   );
 
-  // 2-4. 직접 질문
-  const send = useCallback(async () => {
-    const question = input.trim();
-    if (
-      !question ||
-      isSending ||
-      lockSeconds > 0 ||
-      authStatus !== "authed"
-    ) {
-      return;
-    }
-
-    setInput("");
-    setBubbles((prev) => [
-      ...prev,
-      { key: nextKey(), role: "user", content: question },
-    ]);
-    setIsSending(true);
-
-    try {
-      const result = await askChatbot(question);
-      appendAssistant(result.answer, result.mode);
-
-      if (result.mode === "RATE_LIMITED") {
-        setLockSeconds(
-          result.retryAfterSeconds && result.retryAfterSeconds > 0
-            ? result.retryAfterSeconds
-            : DEFAULT_RATE_LIMIT_LOCK
-        );
-      } else if (result.mode === "AGENT_HANDOFF") {
-        setHandoffSummary(result.handoffSummary);
-        setInquiryContent(result.handoffInquiry ?? question);
-        await ensureCategoriesLoaded();
-        setView("inquiry");
+  // 2-4. 직접 질문. 입력값은 입력 폼(ChatInputForm)에서 인자로 받는다
+  // (input을 클로저로 잡지 않아 타이핑마다 send가 재생성되지 않음).
+  const send = useCallback(
+    async (rawQuestion: string) => {
+      const question = rawQuestion.trim();
+      if (
+        !question ||
+        isSending ||
+        lockSeconds > 0 ||
+        authStatus !== "authed"
+      ) {
+        return;
       }
-    } catch (error) {
-      const message =
-        error instanceof ChatbotApiError || error instanceof Error
-          ? error.message
-          : "챗봇 답변에 실패했습니다.";
-      appendAssistant(message, "REJECTED");
-    } finally {
-      setIsSending(false);
-    }
-  }, [
-    input,
-    isSending,
-    lockSeconds,
-    authStatus,
-    appendAssistant,
-    ensureCategoriesLoaded,
-  ]);
+
+      sendAbortRef.current?.abort();
+      const controller = new AbortController();
+      sendAbortRef.current = controller;
+
+      setBubbles((prev) => [
+        ...prev,
+        { key: nextKey(), role: "user", content: question },
+      ]);
+      setIsSending(true);
+
+      try {
+        const result = await askChatbot(question, controller.signal);
+        if (controller.signal.aborted) return;
+
+        appendAssistant(result.answer, result.mode);
+
+        if (result.mode === "RATE_LIMITED") {
+          setLockSeconds(
+            result.retryAfterSeconds && result.retryAfterSeconds > 0
+              ? result.retryAfterSeconds
+              : DEFAULT_RATE_LIMIT_LOCK
+          );
+        } else if (result.mode === "AGENT_HANDOFF") {
+          setHandoffSummary(result.handoffSummary);
+          setInquiryContent(result.handoffInquiry ?? question);
+          await ensureCategoriesLoaded();
+          setView("inquiry");
+        }
+      } catch (error) {
+        if (controller.signal.aborted) return;
+
+        const message =
+          error instanceof ChatbotApiError || error instanceof Error
+            ? error.message
+            : "챗봇 답변에 실패했습니다.";
+        appendAssistant(message, "REJECTED");
+      } finally {
+        // 더 새로운 전송이 시작됐다면 그쪽이 상태를 소유하므로 건드리지 않는다.
+        if (sendAbortRef.current === controller) {
+          sendAbortRef.current = null;
+          setIsSending(false);
+        }
+      }
+    },
+    [isSending, lockSeconds, authStatus, appendAssistant, ensureCategoriesLoaded]
+  );
 
   // 2-3. 예상 질문 클릭
   const askSuggested = useCallback(
     async (question: SuggestedQuestion) => {
       if (isSending || lockSeconds > 0 || authStatus !== "authed") return;
+
+      sendAbortRef.current?.abort();
+      const controller = new AbortController();
+      sendAbortRef.current = controller;
 
       setBubbles((prev) => [
         ...prev,
@@ -259,16 +281,26 @@ export const useChatbot = (isOpen: boolean) => {
       setIsSending(true);
 
       try {
-        const result = await askSuggestedQuestion(question.suggestedQuestionId);
+        const result = await askSuggestedQuestion(
+          question.suggestedQuestionId,
+          controller.signal
+        );
+        if (controller.signal.aborted) return;
+
         appendAssistant(result.answer, result.mode);
       } catch (error) {
+        if (controller.signal.aborted) return;
+
         const message =
           error instanceof Error
             ? error.message
             : "답변을 불러오지 못했습니다.";
         appendAssistant(message, "REJECTED");
       } finally {
-        setIsSending(false);
+        if (sendAbortRef.current === controller) {
+          sendAbortRef.current = null;
+          setIsSending(false);
+        }
       }
     },
     [isSending, lockSeconds, authStatus, appendAssistant]
@@ -355,8 +387,6 @@ export const useChatbot = (isOpen: boolean) => {
     view,
     bubbles,
     suggestions,
-    input,
-    setInput,
     isSending,
     lockSeconds,
     send,

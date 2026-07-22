@@ -57,12 +57,13 @@ export const getSuggestedQuestions = async (
 
 // 2-3. 예상 질문 클릭 → 저장된 답변 (항상 NORMAL)
 export const askSuggestedQuestion = async (
-  suggestedQuestionId: number
+  suggestedQuestionId: number,
+  signal?: AbortSignal
 ): Promise<ChatbotAnswerResponse> => {
   const response = await api.post<ApiResponse<ChatbotAnswerResponse>>(
     "/api/v1/chatbot/suggested-questions/ask",
     { suggestedQuestionId },
-    { suppressGlobalError: true }
+    { suppressGlobalError: true, signal }
   );
 
   return unwrapData(response);
@@ -72,7 +73,8 @@ export const askSuggestedQuestion = async (
 // 성공/실패는 HTTP 코드가 아니라 data.mode/isSuccess로 판단해야 한다.
 // Retry-After 헤더를 읽어야 해서 공통 클라이언트 대신 fetch를 직접 사용한다.
 export const askChatbot = async (
-  question: string
+  question: string,
+  signal?: AbortSignal
 ): Promise<ChatbotAskResult> => {
   if (!BASE_URL) {
     throw new ChatbotApiError("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
@@ -86,6 +88,7 @@ export const askChatbot = async (
       Accept: "application/json",
     },
     body: JSON.stringify({ question }),
+    signal,
   });
 
   const payload = await response.json().catch(() => null);
