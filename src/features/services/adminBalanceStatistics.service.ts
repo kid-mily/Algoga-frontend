@@ -1,4 +1,5 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { downloadAdminFile } from "@/lib/downloadFile";
 import {
   BalanceQuery,
   BalanceSummary,
@@ -7,8 +8,6 @@ import {
   RecoveryRatePoint,
 } from "@/features/statisticadmin/balance/types";
 import { formatDisplayDate } from "@/features/statisticadmin/balance/utils";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type RawBalanceSummary = {
   balanceConversionRate: number;
@@ -148,44 +147,12 @@ export const getUnpaidBookings = async (
   return (unwrapData(response) ?? []).map(normalizeOutstandingReservation);
 };
 
-export const downloadUnpaidBookingsCsv = async ({
+export const downloadUnpaidBookingsCsv = ({
   from,
   to,
   search,
-}: BalanceQuery & { search?: string }) => {
-  if (!API_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
-  }
-
-  const url = new URL(`${API_BASE_URL}/api/v1/admin/stats/balance/unpaid/csv`);
-  url.searchParams.set("from", from);
-  url.searchParams.set("to", to);
-
-  const trimmedSearch = search?.trim();
-  if (trimmedSearch) {
-    url.searchParams.set("search", trimmedSearch);
-  }
-
-  const response = await fetch(url.toString(), {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      Accept: "text/csv",
-    },
+}: BalanceQuery & { search?: string }) =>
+  downloadAdminFile("/api/v1/admin/stats/balance/unpaid/csv", {
+    params: { from, to, search: search?.trim() },
+    filename: "unpaid-bookings.csv",
   });
-
-  if (!response.ok) {
-    throw new Error("CSV 다운로드에 실패했습니다.");
-  }
-
-  const blob = await response.blob();
-  const objectUrl = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = objectUrl;
-  link.download = "unpaid-bookings.csv";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(objectUrl);
-};

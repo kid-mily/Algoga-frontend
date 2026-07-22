@@ -1,4 +1,5 @@
 import { adminApi, ApiRequestError, ApiResult, unwrapData } from "@/lib/api";
+import { downloadAdminFile } from "@/lib/downloadFile";
 import type {
   AdminChatLog,
   ChatbotPage,
@@ -8,7 +9,6 @@ import type {
 } from "@/features/csadmin/chatbot/types";
 
 const BASE_PATH = "/api/v1/admin/chatbot/suggested-questions";
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 // 5. 예상 질문 목록 (관리자)
 export const getAdminSuggestedQuestions = async (
@@ -160,58 +160,22 @@ export const getAdminRagSourceStats = async (
   return normalizeChatbotPage(unwrapData(response), 20);
 };
 
-// ③ CSV 다운로드 — 인증 쿠키가 필요하고 응답이 파일(text/csv)이라 공통 클라이언트 대신 fetch를 직접 쓴다.
-const downloadCsv = async (
-  path: string,
-  params: Record<string, string | boolean | undefined>,
-  fileName: string
-) => {
-  if (!BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
-  }
-
-  const url = new URL(`${BASE_URL}${path}`);
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== "") {
-      url.searchParams.set(key, String(value));
-    }
-  });
-
-  const response = await fetch(url.toString(), { credentials: "include" });
-
-  if (!response.ok) {
-    throw new Error("CSV 다운로드에 실패했습니다.");
-  }
-
-  const blob = await response.blob();
-  const objectUrl = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = objectUrl;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.URL.revokeObjectURL(objectUrl);
-};
-
 export const downloadChatLogsCsv = (query: ChatLogQuery = {}) =>
-  downloadCsv(
-    `${CHAT_LOGS_PATH}/export`,
-    {
+  downloadAdminFile(`${CHAT_LOGS_PATH}/export`, {
+    params: {
       filtered: query.filtered,
       from: emptyToUndefined(query.from),
       to: emptyToUndefined(query.to),
       keyword: emptyToUndefined(query.keyword),
     },
-    "chatbot-chat-logs.csv"
-  );
+    filename: "chatbot-chat-logs.csv",
+  });
 
 export const downloadRagSourceStatsCsv = (query: RagStatQuery = {}) =>
-  downloadCsv(
-    `${RAG_STATS_PATH}/export`,
-    {
+  downloadAdminFile(`${RAG_STATS_PATH}/export`, {
+    params: {
       from: emptyToUndefined(query.from),
       to: emptyToUndefined(query.to),
     },
-    "chatbot-rag-source-stats.csv"
-  );
+    filename: "chatbot-rag-source-stats.csv",
+  });

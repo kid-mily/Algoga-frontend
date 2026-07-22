@@ -129,20 +129,17 @@ describe("AiChatbotWidget 컴포넌트 테스트", () => {
   });
 
   test("메시지 입력과 form 제출을 훅에 전달한다", () => {
-    const setInput = jest.fn();
     const send = jest.fn();
-    (useChatbot as jest.Mock).mockReturnValue(
-      createChatbotMock({ input: "예약 문의", setInput, send })
-    );
+    (useChatbot as jest.Mock).mockReturnValue(createChatbotMock({ send }));
     render(<AiChatbotWidget />);
     openWidget();
 
+    // 입력값은 ChatInputForm 로컬 상태로 관리되고, 제출 시 send(text)로 전달된다.
     fireEvent.change(screen.getByPlaceholderText("메시지를 입력하세요..."), {
       target: { value: "변경된 질문" },
     });
-    expect(setInput).toHaveBeenCalledWith("변경된 질문");
     fireEvent.click(screen.getByRole("button", { name: "메시지 보내기" }));
-    expect(send).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledWith("변경된 질문");
   });
 
   test("레이트리밋 중에는 남은 시간을 표시하고 입력을 비활성화한다", () => {

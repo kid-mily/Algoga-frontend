@@ -1,4 +1,5 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { downloadAdminFile } from "@/lib/downloadFile";
 import type {
   CountryLectureConversion,
   CourseReservationConversionData,
@@ -8,8 +9,6 @@ import type {
   LectureReservationSummary,
 } from "@/features/statisticadmin/course-reservation-conversion/types";
 import { getCountryEvaluation } from "@/features/statisticadmin/course-reservation-conversion/utils";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type RawLectureToTripSummary = {
   lectureBuyers: number;
@@ -163,43 +162,11 @@ export const getCourseReservationConversionData = async (
   };
 };
 
-const downloadAdminCsv = async (path: string, filename: string) => {
-  if (!API_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      Accept: "text/csv",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("CSV 다운로드에 실패했습니다.");
-  }
-
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-};
-
-export const downloadLectureCountryConversionCsv = async ({
+export const downloadLectureCountryConversionCsv = ({
   from,
   to,
-}: LectureConversionQuery) => {
-  const params = new URLSearchParams({ from, to });
-
-  await downloadAdminCsv(
-    `/api/v1/admin/stats/lecture-to-trip/by-country/csv?${params.toString()}`,
-    "lecture-to-trip-by-country.csv"
-  );
-};
+}: LectureConversionQuery) =>
+  downloadAdminFile("/api/v1/admin/stats/lecture-to-trip/by-country/csv", {
+    params: { from, to },
+    filename: "lecture-to-trip-by-country.csv",
+  });

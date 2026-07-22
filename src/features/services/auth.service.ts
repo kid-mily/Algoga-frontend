@@ -2,7 +2,6 @@ import {
   FindIdRequest,
   FindIdResponse,
   FindPasswordRequest,
-  AuthSessionInfo,
   LoginRequest,
   LoginResponse,
   ResetPasswordRequest,
@@ -121,18 +120,4 @@ export const logout = async () => {
     skipAuth: true,
     suppressGlobalError: true,
   });
-};
-
-export const getAuthSession = async (
-  signal?: AbortSignal
-): Promise<AuthSessionInfo> => {
-  const response = await api.get<ApiResult<AuthSessionInfo>>(
-    "/api/v1/auth/session",
-    {
-      signal,
-      suppressGlobalError: true,
-    }
-  );
-
-  return unwrapData<AuthSessionInfo>(response);
 };

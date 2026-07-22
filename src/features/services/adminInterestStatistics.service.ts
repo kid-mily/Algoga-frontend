@@ -1,4 +1,5 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { downloadAdminFile } from "@/lib/downloadFile";
 import type {
   CountryDetailStat,
   CountryInterestItem,
@@ -6,8 +7,6 @@ import type {
   InterestSummary,
   PopularCountryCourseRank,
 } from "@/features/statisticadmin/country-course-interest/types";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type RawInterestSummary = {
   totalEnrollments: number;
@@ -44,35 +43,6 @@ type RawInterestLecture = {
 };
 
 const toNumber = (value: number | null | undefined) => Number(value ?? 0);
-
-const downloadAdminCsv = async (path: string, filename: string) => {
-  if (!API_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      Accept: "text/csv",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("CSV 다운로드에 실패했습니다.");
-  }
-
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-};
 
 export const getInterestSummary = async (
   signal?: AbortSignal
@@ -168,41 +138,25 @@ export const getInterestLectures = async (
   }));
 };
 
-export const downloadCountryProfitCsv = async ({
+export const downloadCountryProfitCsv = ({
   from,
   to,
   search,
-}: InterestQuery & { search?: string }) => {
-  const params = new URLSearchParams({ from, to });
+}: InterestQuery & { search?: string }) =>
+  downloadAdminFile("/api/v1/admin/stats/country-profit/csv", {
+    params: { from, to, search: search?.trim() },
+    filename: "country-profit.csv",
+  });
 
-  const trimmed = search?.trim();
-  if (trimmed) {
-    params.set("search", trimmed);
-  }
-
-  await downloadAdminCsv(
-    `/api/v1/admin/stats/country-profit/csv?${params.toString()}`,
-    "country-profit.csv"
-  );
-};
-
-export const downloadInterestLecturesCsv = async (search = "") => {
-  const trimmed = search.trim();
-  const query = trimmed ? `?search=${encodeURIComponent(trimmed)}` : "";
-
-  await downloadAdminCsv(
-    `/api/v1/admin/stats/interest/lectures/csv${query}`,
-    "interest-lectures.csv"
-  );
-};
+export const downloadInterestLecturesCsv = (search = "") =>
+  downloadAdminFile("/api/v1/admin/stats/interest/lectures/csv", {
+    params: { search: search.trim() },
+    filename: "interest-lectures.csv",
+  });
 
 // 관심도 나라별 수강 수 CSV. search(나라명 부분 일치)가 있으면 함께 보냅니다.
-export const downloadInterestCountriesCsv = async (search = "") => {
-  const trimmed = search.trim();
-  const query = trimmed ? `?search=${encodeURIComponent(trimmed)}` : "";
-
-  await downloadAdminCsv(
-    `/api/v1/admin/stats/interest/countries/csv${query}`,
-    "interest-countries.csv"
-  );
-};
+export const downloadInterestCountriesCsv = (search = "") =>
+  downloadAdminFile("/api/v1/admin/stats/interest/countries/csv", {
+    params: { search: search.trim() },
+    filename: "interest-countries.csv",
+  });

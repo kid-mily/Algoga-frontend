@@ -1,4 +1,5 @@
 ﻿// 실제 채팅방 화면
+import Image from "next/image";
 import { ArrowLeft, MoreVertical, X } from "lucide-react";
 import { useChatRoomMembersPanel } from "../hooks/useChatRoomMembersPanel";
 import { useChatRoomMessages } from "../hooks/useChatRoomMessages";
@@ -26,11 +27,12 @@ const ChatRoomHeaderAvatar = ({ room, roomName }: { room: ChatRoom; roomName: st
 
   if (shouldShowProfileImage) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={room.profileImageUrl ?? ""}
         alt=""
         aria-hidden="true"
+        width={40}
+        height={40}
         className="h-10 w-10 shrink-0 rounded-full border border-[#E4E7EC] object-cover"
       />
     );

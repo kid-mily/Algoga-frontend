@@ -1,5 +1,6 @@
 ﻿// 메시지 목록 렌더링
 import { Fragment, memo, useLayoutEffect, useRef } from "react";
+import Image from "next/image";
 import type { ChatMessage, ChatRoomType } from "../types";
 
 type ChatMessageListProps = {
@@ -40,10 +41,12 @@ const MessageAvatar = ({
 }) => {
   if (imageUrl) {
     return (
-      <img
+      <Image
         src={imageUrl}
         alt=""
         aria-hidden="true"
+        width={32}
+        height={32}
         className="mt-5 h-8 w-8 shrink-0 rounded-full border border-[#E4E7EC] object-cover"
       />
     );

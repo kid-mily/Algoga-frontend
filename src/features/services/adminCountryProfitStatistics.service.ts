@@ -1,11 +1,10 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { downloadAdminFile } from "@/lib/downloadFile";
 import type {
   CountryProfitabilityItem,
   CountryProfitabilitySummary,
   CountryProfitQuery,
 } from "@/features/statisticadmin/country-profitability-summary/types";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type RawCountryProfitSummary = {
   countryCount: number;
@@ -82,46 +81,13 @@ export const getCountryProfitItems = async (
 ): Promise<CountryProfitabilityItem[]> =>
   normalizeItems(unwrapData(await getListRaw(query, signal)) ?? []);
 
-export const downloadCountryProfitCsv = async ({
+export const downloadCountryProfitCsv = ({
   from,
   to,
   search,
-}: CountryProfitQuery & { search?: string }) => {
-  if (!API_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
-  }
-
-  const params = new URLSearchParams({ from, to });
-
-  const trimmedSearch = search?.trim();
-  if (trimmedSearch) {
-    params.set("search", trimmedSearch);
-  }
-
-  const response = await fetch(
-    `${API_BASE_URL}/api/v1/admin/stats/country-profit/csv?${params.toString()}`,
-    {
-      method: "GET",
-      credentials: "include",
-      headers: { Accept: "text/csv" },
-    }
-  );
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(
-      errorData?.message || `CSV 다운로드에 실패했습니다. (status: ${response.status})`
-    );
-  }
-
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = "country-profit.csv";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-};
+}: CountryProfitQuery & { search?: string }) =>
+  downloadAdminFile("/api/v1/admin/stats/country-profit/csv", {
+    params: { from, to, search: search?.trim() },
+    filename: "country-profit.csv",
+    errorFromResponse: true,
+  });

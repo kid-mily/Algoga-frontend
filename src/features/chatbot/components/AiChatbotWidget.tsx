@@ -4,10 +4,19 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Bot, ChevronLeft, MessageCircle, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { INQUIRY_CATEGORY_LABEL, InquiryCategory } from "../types";
+import {
+  INQUIRY_CATEGORY_LABEL,
+  InquiryCategory,
+  type InquiryCategoryOption,
+} from "../types";
 import { useChatbot } from "../hooks/useChatbot";
 import ChatInputForm from "./ChatInputForm";
 import MessageBubble from "./MessageBubble";
+
+// 서버 카테고리 조회 전/실패 시 쓰는 정적 fallback (렌더마다 재생성하지 않도록 모듈 상수로).
+const FALLBACK_INQUIRY_CATEGORIES: InquiryCategoryOption[] = (
+  Object.keys(INQUIRY_CATEGORY_LABEL) as InquiryCategory[]
+).map((code) => ({ code, description: INQUIRY_CATEGORY_LABEL[code] }));
 
 const hiddenPathPrefixes = [
   "/auth",
@@ -227,12 +236,7 @@ export default function AiChatbotWidget() {
                     </option>
                     {(categories.length > 0
                       ? categories
-                      : (
-                          Object.keys(INQUIRY_CATEGORY_LABEL) as InquiryCategory[]
-                        ).map((code) => ({
-                          code,
-                          description: INQUIRY_CATEGORY_LABEL[code],
-                        }))
+                      : FALLBACK_INQUIRY_CATEGORIES
                     ).map((category) => (
                       <option key={category.code} value={category.code}>
                         {category.description}
