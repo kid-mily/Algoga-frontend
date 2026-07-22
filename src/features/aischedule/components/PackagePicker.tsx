@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAllPackages } from "@/features/services/package.service";
-import type { PackageApiItem } from "@/features/packagelounge/types";
+import { getSelectablePackages } from "@/features/services/itinerary.service";
+import type { SelectablePackageResponse } from "../types";
 
 interface PackagePickerProps {
   selectedPackageId: number | null;
@@ -14,7 +14,7 @@ export default function PackagePicker({
   selectedPackageId,
   onSelect,
 }: PackagePickerProps) {
-  const [packages, setPackages] = useState<PackageApiItem[]>([]);
+  const [packages, setPackages] = useState<SelectablePackageResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -23,7 +23,7 @@ export default function PackagePicker({
 
     const load = async () => {
       try {
-        const result = await getAllPackages();
+        const result = await getSelectablePackages();
         if (active) setPackages(result);
       } catch (error) {
         if (!active) return;
@@ -86,14 +86,14 @@ export default function PackagePicker({
                   {packageItem.name}
                 </p>
                 <p className="text-sm font-extrabold text-[#439A97]">
-                  {packageItem.totalPrice.toLocaleString()}원
+                  {packageItem.price.toLocaleString()}원
                 </p>
               </div>
               <p className="mt-0.5 text-xs text-[#718096]">
-                {packageItem.countryName}
+                {packageItem.destination}
               </p>
               <p className="mt-1 text-xs text-[#8A9BB0]">
-                {packageItem.checkInDate} ~ {packageItem.checkOutDate} ·{" "}
+                {packageItem.startDate} ~ {packageItem.endDate} ·{" "}
                 {packageItem.nights}박
               </p>
             </button>
