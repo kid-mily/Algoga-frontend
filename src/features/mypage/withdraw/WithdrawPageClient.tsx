@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiRequestError } from "@/lib/api";
 import EmailAuthVerifyModal from "@/features/mypage/EmailAuthVerifyModal";
@@ -13,16 +14,16 @@ interface WithdrawPageClientProps {
 }
 
 const POLICY_NOTES = [
-  "탈퇴 즉시 로그아웃되며, 동일한 이메일로는 30일간 재가입할 수 없습니다.",
+  "탈퇴 즉시 로그아웃되며, 탈퇴일로부터 30일 동안 동일한 이메일로 다시 가입할 수 없습니다.",
   "쿠폰, 마일리지, 친구, 채팅, 캘린더, 알림, 수료증, Q&A 정보는 탈퇴 즉시 삭제됩니다.",
-  "게시글, 댓글, 결제, 예약, 환불, 문의, 챗봇 상담 내역, 강의 후기는 삭제되지 않고 그대로 보관됩니다.",
-  "진행 중인 예약 또는 환불이 있으면 탈퇴할 수 없습니다. 취소·완료 후 다시 시도해 주세요.",
+  "게시글, 댓글, 결제, 예약, 환불, 문의, 챗봇 상담 내역, 강의 후기는 삭제되지 않고 보관됩니다.",
+  "진행 중인 예약 또는 환불이 있으면 탈퇴할 수 없습니다. 해당 처리가 완료된 후 다시 시도해 주세요.",
 ];
 
-// 백엔드 응답의 errorCode별 안내 문구 (AUTH_014/USER_007은 별도 처리가 필요해 handleEmailAuthSuccess에서 분기)
+// 백엔드 응답의 errorCode별 안내 문구
 const WITHDRAW_ERROR_MESSAGE: Record<string, string> = {
-  USER_010: "진행 중인 예약이 있어 탈퇴할 수 없습니다.",
-  USER_011: "진행 중인 환불이 있어 탈퇴할 수 없습니다.",
+  USER_010: "진행 중인 예약이 있습니다. 예약 이용이 완료되거나 취소된 후 다시 시도해 주세요.",
+  USER_011: "진행 중인 환불이 있습니다. 환불 처리가 완료된 후 다시 시도해 주세요.",
 };
 
 const getWithdrawErrorCode = (error: unknown): string | undefined => {
@@ -62,25 +63,27 @@ export default function WithdrawPageClient({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
 
   const hasInProgressCourses = summary.courseCount > 0;
+  // USER_010(예약)/USER_011(환불)일 때만 예약 내역 페이지로 바로 갈 수 있는 CTA를 보여준다
+  const showReservationCta = errorCode === "USER_010" || errorCode === "USER_011";
 
   const handleWithdrawClick = () => {
     setErrorMessage("");
+    setErrorCode(undefined);
     setIsConfirmOpen(true);
   };
 
-  const handleConfirmProceed = () => {
-    setIsConfirmOpen(false);
-    setIsEmailAuthOpen(true);
-  };
-
-  const handleEmailAuthSuccess = async () => {
-    setIsEmailAuthOpen(false);
-
+  // 탈퇴 확인 시 인증 모달을 바로 띄우지 않고 DELETE /me를 먼저 호출한다.
+  // AUTH_014(이메일 미인증)일 때만 인증 모달을 띄우고, 그 외 에러(예약/환불 진행 중 등)는
+  // 인증 모달 없이 바로 안내해 예약/환불 때문에 막힐 사용자가 인증 절차를 아예 안 겪게 한다.
+  // USER_010/USER_011 등은 확인 팝업을 닫지 않고 그 안에서 바로 에러를 보여준다.
+  const attemptWithdraw = async () => {
     try {
       setIsSubmitting(true);
       setErrorMessage("");
+      setErrorCode(undefined);
 
       await withdrawMyAccount();
 
@@ -91,28 +94,40 @@ export default function WithdrawPageClient({
         })
       );
 
+      setIsConfirmOpen(false);
       setIsSuccessOpen(true);
     } catch (error) {
       console.error("회원 탈퇴 실패:", error);
 
-      const errorCode = getWithdrawErrorCode(error);
+      const code = getWithdrawErrorCode(error);
 
-      if (errorCode === "AUTH_014") {
-        setErrorMessage("본인 인증을 다시 진행해주세요.");
+      if (code === "AUTH_014") {
+        setIsConfirmOpen(false);
         setIsEmailAuthOpen(true);
         return;
       }
 
-      if (errorCode === "USER_007") {
+      if (code === "USER_007") {
+        setIsConfirmOpen(false);
         setErrorMessage("이미 탈퇴한 계정입니다.");
         router.replace("/auth/login");
         return;
       }
 
+      setErrorCode(code);
       setErrorMessage(getWithdrawErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleConfirmProceed = () => {
+    void attemptWithdraw();
+  };
+
+  const handleEmailAuthSuccess = () => {
+    setIsEmailAuthOpen(false);
+    void attemptWithdraw();
   };
 
   const handleSuccessConfirm = () => {
@@ -140,7 +155,7 @@ export default function WithdrawPageClient({
               탈퇴 전 꼭 확인해 주세요
             </h2>
             <p className="mt-1 text-xs text-[#8A9BB0]">
-              {user.nickname || user.name}님, 탈퇴하시면 아래 내용이 적용됩니다.
+              {user.nickname}님, 회원 탈퇴 전에 아래 내용을 확인해 주세요.
             </p>
           </div>
 
@@ -155,13 +170,12 @@ export default function WithdrawPageClient({
             </ul>
 
             {hasInProgressCourses && (
-              <p className="mt-4 rounded-xl bg-[#FDF3F3] px-4 py-3 text-xs font-semibold leading-5 text-[#B54747]">
-                현재 수강 중인 강좌가 {summary.courseCount}개 있습니다. 탈퇴 시
-                학습 진행 내역이 모두 사라지며 복구할 수 없습니다.
+              <p className="mt-4 rounded-xl bg-[#FFF4D8] px-4 py-3 text-xs font-semibold leading-5 text-[#B7791F]">
+                현재 수강 중인 강좌가 {summary.courseCount}개 있습니다. 탈퇴하면 해당 강좌의 학습 진행 내역이 모두 삭제되며 복구할 수 없습니다.
               </p>
             )}
 
-            {errorMessage && (
+            {errorMessage && !isConfirmOpen && (
               <p className="mt-4 break-words rounded-xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-500">
                 {errorMessage}
               </p>
@@ -189,6 +203,7 @@ export default function WithdrawPageClient({
         </div>
       </div>
 
+      {/* 최종 확인 모달 */}
       {isConfirmOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4">
           <section
@@ -201,27 +216,36 @@ export default function WithdrawPageClient({
               id="withdraw-confirm-title"
               className="text-lg font-bold text-[#0A1628]"
             >
-              정말 탈퇴하시겠습니까?
+              정말 회원 탈퇴하시겠습니까?
             </h2>
 
             <p className="mt-2 text-xs leading-5 text-[#8A9BB0]">
-              탈퇴 후에는 동일 이메일로 30일간 재가입할 수 없습니다. 게시글,
-              댓글, 결제·예약 내역은 삭제되지 않고 그대로 남으며, 진행 중인
-              예약이나 환불이 있으면 먼저 취소·완료해 주세요.
+              탈퇴하면 즉시 로그아웃되며, 이 작업은 되돌릴 수 없습니다.
             </p>
 
-            {hasInProgressCourses && (
-              <p className="mt-3 rounded-xl bg-[#FDF3F3] px-3 py-2 text-xs font-semibold leading-5 text-[#B54747]">
-                수강 중인 강좌 {summary.courseCount}개의 학습 진행 내역이 모두
-                사라집니다.
-              </p>
+            {errorMessage && (
+              <div className="mt-3 rounded-xl bg-red-50 px-3 py-2">
+                <p className="break-words text-xs font-semibold text-red-500">
+                  {errorMessage}
+                </p>
+
+                {showReservationCta && (
+                  <Link
+                    href="/mypage/reservations"
+                    className="mt-1.5 inline-block text-xs font-bold text-red-600 underline underline-offset-2"
+                  >
+                    예약·환불 내역 확인하러 가기
+                  </Link>
+                )}
+              </div>
             )}
 
             <div className="mt-5 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setIsConfirmOpen(false)}
-                className="h-11 rounded-xl border border-[#E4EAF2] bg-white text-sm font-bold text-[#8A9BB0] hover:bg-[#F8FAFC]"
+                disabled={isSubmitting}
+                className="h-11 rounded-xl border border-[#E4EAF2] bg-white text-sm font-bold text-[#8A9BB0] hover:bg-[#F8FAFC] disabled:cursor-not-allowed"
               >
                 취소
               </button>
@@ -229,9 +253,10 @@ export default function WithdrawPageClient({
               <button
                 type="button"
                 onClick={handleConfirmProceed}
-                className="h-11 rounded-xl bg-[#D95C5C] text-sm font-bold text-white hover:bg-[#BF4747]"
+                disabled={isSubmitting}
+                className="h-11 rounded-xl bg-[#D95C5C] text-sm font-bold text-white hover:bg-[#BF4747] disabled:cursor-not-allowed disabled:bg-[#E9B4B4]"
               >
-                본인 확인하기
+                {isSubmitting ? "확인 중..." : "회원 탈퇴"}
               </button>
             </div>
           </section>
@@ -261,8 +286,7 @@ export default function WithdrawPageClient({
             </h2>
 
             <p className="mt-2 text-xs leading-5 text-[#8A9BB0]">
-              동일한 이메일로는 30일간 재가입할 수 없습니다. 그동안 알고가를
-              이용해 주셔서 감사합니다.
+              탈퇴 후 30일 동안은 동일한 이메일로 다시 가입할 수 없습니다. 그동안 알고가와 함께해 주셔서 감사합니다.
             </p>
 
             <button
