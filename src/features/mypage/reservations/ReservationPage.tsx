@@ -2,10 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/features/friends/components/FriendPanel";
-import { loadMyReservations, submitRefundRequest } from "./reservation.util";
+import {
+  loadMyReservations,
+  payReservationBalance,
+  submitRefundRequest,
+} from "./reservation.util";
 import { ReservationItem, ReservationTab } from "./reservation.types";
 import ReservationCard from "./ReservationCard";
 import RefundRequestModal from "./RefundRequestModal";
+import BalancePaymentConfirmModal from "./BalancePaymentConfirmModal";
 
 const TABS: { value: ReservationTab; label: string }[] = [
   { value: "upcoming", label: "이용 전" },
@@ -26,6 +31,10 @@ export default function ReservationPage() {
   );
   const [isSubmittingRefund, setIsSubmittingRefund] = useState(false);
   const [refundErrorMessage, setRefundErrorMessage] = useState("");
+  const [payingBalanceId, setPayingBalanceId] = useState<number | null>(null);
+  const [balanceErrorMessage, setBalanceErrorMessage] = useState("");
+  const [balanceTarget, setBalanceTarget] = useState<ReservationItem | null>(null);
+  const [balanceSuccessMessage, setBalanceSuccessMessage] = useState("");
 
   // 예약 목록은 로그인 유저 전용 데이터라 서버가 아니라 여기(클라이언트)에서 직접 불러온다
   useEffect(() => {
@@ -91,9 +100,27 @@ export default function ReservationPage() {
     }
   };
 
-  // 잔금 결제는 디자인만 구현 (실제 결제 기능은 다음 단계에서 연결)
-  const handlePayBalance = (reservation: ReservationItem) => {
-    console.log("잔금 결제하기(디자인 전용):", reservation.reservationNumber);
+  const handlePayBalance = async (reservation: ReservationItem) => {
+    if (payingBalanceId !== null) return;
+
+    setPayingBalanceId(reservation.id);
+    setBalanceErrorMessage("");
+    setBalanceSuccessMessage("");
+
+    try {
+      await payReservationBalance(reservation.id);
+      setReservations(await loadMyReservations());
+      setBalanceSuccessMessage(
+        `잔금 ${reservation.remainingAmount.toLocaleString()}원 결제가 완료되었습니다.`
+      );
+      setBalanceTarget(null);
+    } catch (error) {
+      setBalanceErrorMessage(
+        error instanceof Error ? error.message : "잔금 결제에 실패했습니다."
+      );
+    } finally {
+      setPayingBalanceId(null);
+    }
   };
 
   return (
@@ -130,6 +157,16 @@ export default function ReservationPage() {
       </div>
 
       {/* 목록 */}
+      {balanceErrorMessage && (
+        <p className="mt-4 rounded-xl border border-[#F3D2D2] bg-[#FDECEC] px-4 py-3 text-sm text-[#B54747]">
+          {balanceErrorMessage}
+        </p>
+      )}
+      {balanceSuccessMessage && (
+        <p className="mt-4 rounded-xl border border-[#B7DAD7] bg-[#EEF8F7] px-4 py-3 text-sm text-[#287A76]">
+          {balanceSuccessMessage}
+        </p>
+      )}
       <div className="mt-4 space-y-3">
         {isLoading && activeTab !== "refund" ? (
           <div className="rounded-2xl border border-[#E5EDF5] bg-white py-6 text-center text-sm text-[#8A9BB0] shadow-sm">
@@ -163,7 +200,11 @@ export default function ReservationPage() {
                 setRefundErrorMessage("");
                 setRefundTarget(target);
               }}
-              onPayBalance={handlePayBalance}
+              onPayBalance={(target) => {
+                setBalanceErrorMessage("");
+                setBalanceSuccessMessage("");
+                setBalanceTarget(target);
+              }}
             />
           ))
         )}
@@ -181,6 +222,15 @@ export default function ReservationPage() {
           onConfirm={handleConfirmRefund}
           isSubmitting={isSubmittingRefund}
           errorMessage={refundErrorMessage}
+        />
+      )}
+      {balanceTarget && (
+        <BalancePaymentConfirmModal
+          amount={balanceTarget.remainingAmount}
+          dueDate={balanceTarget.balanceDueDate}
+          isPaying={payingBalanceId === balanceTarget.id}
+          onCancel={() => setBalanceTarget(null)}
+          onConfirm={() => void handlePayBalance(balanceTarget)}
         />
       )}
     </div>

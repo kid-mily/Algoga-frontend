@@ -157,11 +157,12 @@
 
 #### Used In
 
-- `src/features/services/package.service.ts` (`createBooking`) — 예약 확인 화면(`ReservationSummary.tsx`)의 "예약하기" 버튼
+- `src/features/services/package.service.ts` (`createBooking`) — 패키지 상세의 예약 요약 카드(`BookingPrice.tsx`) "결제 단계로 이동" 버튼, 완강 후 마이페이지에서 예약하는 확인 화면(`ReservationSummary.tsx`)의 "예약하기" 버튼
 
 #### Request Fields
 
 - `accommodationId`, `flightInfo`, `returnFlightInfo`, `flightPrice`, `checkInDate`, `checkOutDate`: 패키지 상세 응답(`PackageApiItem`) 값을 그대로 전달
+- `packageId`: number (optional) — 패키지 상세의 `packageId`를 그대로 전달. **2026-07-22 백엔드 확인: 이 값이 있어야 예약이 패키지와 연결 저장되고, 이후 `GET /bookings/me`·`GET /bookings/{id}` 응답의 `packageName`이 채워짐.** 안 보내면 `packageId=null`로 저장되어 직접예약 취급(마이페이지에서 숙소명 폴백으로 표시됨) — `BookingPrice.tsx`/`ReservationSummary.tsx` 둘 다 패키지 경유 흐름이라 항상 `packageItem.packageId`를 채워 보냄
 - `courseId`: number (optional) — 진단평가 추천에서 선택한 강의가 있으면 해당 ID를 전달. 전달 시 그 강의만 완강 여부를 검사하고, 미전달 시 기존 국가 단위 검사로 폴백
 - `passengerInfo`: `{ lastName, firstName, birthDate, passportNumber, passportExpiry }` — `PassengerForm.tsx`에서 입력받아 sessionStorage(`passengerStorage.ts`)에 저장된 값을 제출 시점에 읽어와 매핑
 - `bookingSource`: `"LOUNGE"` 고정 (완강 후 예약인 `"COMPLETION"` 플로우는 별도 작업 대상, 아직 미구현)
@@ -178,8 +179,10 @@
 
 #### Notes
 
-- 400 `BK_003`(예약 가능한 패키지가 없음) 등 세부 에러 코드별 안내 문구는 아직 미분기 처리 — 공통 에러 문구만 표시 중
+- 400 `BK_005`(출발일이 이미 지남), 400 `BK_003`(숙소를 못 찾음), 여권 만료일이 귀국일보다 빠른 경우의 유효성 에러 — 세부 에러 코드별 안내 문구는 아직 미분기 처리, 공통 에러 문구만 표시 중(백엔드가 2026-07-22 Swagger 명세로 전체 에러 코드 확인해줌)
 - 2026-07-20 (PR #584) — 강의를 구매했지만 완강하지 않은 유저의 패키지 예약을 막는 `BK_004` 검사 추가. `bookingSource`(LOUNGE/COMPLETION) 값과 무관하게 항상 검사되며, `bookingSource`는 이제 분할/일시불 허용 여부(`installmentAllowed`)만 결정함
+- `bookingSource=COMPLETION`이면 분할 결제 불가(일시불 FULL만) — 잘못 보내면 결제 단계에서 `INSTALLMENT_NOT_ALLOWED`(백엔드 확인, 아직 COMPLETION 플로우 자체가 미구현이라 프론트 영향 없음)
+- 예약만 만들고 결제하지 않으면 `PENDING` 상태로 남고, 마이페이지 목록엔 결제 완료 전까지 노출 안 됨 (관련: 아래 `GET /my/courses` 섹션의 PENDING 노출 이력 참고)
 
 ---
 
@@ -191,7 +194,7 @@
 
 #### Response Fields Used
 
-- `data`: `bookingId`, `status`, `totalPrice`, `depositPrice`, `balancePrice`, `bookingNumber`, `checkInDate`, `checkOutDate`, `nights`, `installmentAllowed`
+- `data`: `bookingId`, `status`, `totalPrice`, `depositPrice`, `balancePrice`, `bookingNumber`, `checkInDate`, `checkOutDate`, `nights`, `installmentAllowed`, `packageId`, `packageName`(2026-07-22 추가, 패키지 경유 예약이 아니면 둘 다 `null` 가능)
 - `data.flightInfo` / `data.returnFlightInfo` / `data.passengerInfo`: **주의 — 이 응답에서는 객체가 아니라 JSON 문자열로 내려온다.** `getBookingDetail`에서 `JSON.parse` 후 매핑(파싱 실패/누락 시 `null`)
 
 #### Error Handling
@@ -331,7 +334,7 @@
 
 #### Response Fields Used
 
-- `BookingDetail[]` — `GET /bookings/{id}`와 동일한 응답 형태(`toBookingDetail` 공유, `flightInfo`/`returnFlightInfo`/`passengerInfo` JSON 문자열 파싱 동일)
+- `BookingDetail[]` — `GET /bookings/{id}`와 동일한 응답 형태(`toBookingDetail` 공유, `flightInfo`/`returnFlightInfo`/`passengerInfo` JSON 문자열 파싱 동일, `packageId`/`packageName`도 동일하게 포함)
 
 #### Error Handling
 
@@ -339,10 +342,10 @@
 
 #### Notes
 
-- **이 API 응답엔 상품명/숙소명이 없음** (accommodationId만 있음) — 화면에 보여줄 숙소명은 `GET /accommodations/{id}`를 accommodationId별로 추가 조회해서 채움 (`loadMyReservations`)
+- ~~이 API 응답엔 상품명/숙소명이 없음~~ **2026-07-22부터 `packageName` 포함** — 패키지 경유 예약이면 이 값을 우선 쓰고, 아니면(패키지 경유가 아닌 예약 등, `packageName`이 `null`) 기존처럼 `GET /accommodations/{id}`로 채운 숙소명으로 대체 표시 (`reservation.util.ts`의 `toReservationItem`/`toRefundReservationItem`)
 - 백엔드 `status`(`PENDING/DEPOSIT_PAID/FULL_PAID/CANCEL_REQUESTED/REFUNDED`)엔 "이용 완료" 개념이 없어서, **체크아웃 날짜를 오늘과 비교해 이용 전/이용 후를 프론트가 직접 계산**(`reservation.util.ts`의 `resolveReservationStatus`)
 - `CANCEL_REQUESTED`/`REFUNDED` 상태 예약은 "이용 전"/"이용 후" 목록에서 제외하고 환불 내역 탭으로 보냄 (아래 `GET /refund-requests/me` 참고)
-- `PassengerInfo`엔 성별/국적이 없어서 상세 화면에 표시할 값이 없음 (`"-"`로 표시)
+- ~~`PassengerInfo`엔 성별/국적이 없어서 상세 화면에 표시할 값이 없음~~ **2026-07-22 백엔드가 `gender`/`nationality` 필드 추가**(nullable, 이 배포 이전 예약은 값 없음 → `"-"`로 대체 표시). `gender`는 `"M"`/`"F"` 문자열 그대로 저장·반환되고 한글 라벨(남/여) 매핑은 백엔드가 안 하므로 FE 몫 — 지금은 폼이 자유 입력(placeholder `예: M / F`)이라 매핑 없이 입력값 그대로 표시하기로 함(라벨 매핑은 나중에 select로 바꾸면 같이 하는 게 안전)
 - 2026-07-20 — `PENDING`(예약만 생성되고 결제가 끝나지 않은 건) 상태도 "이용 전"/"이용 후" 목록에서 제외하도록 변경(`resolveReservationStatus`). 원인: 예약 생성(`POST /bookings`)이 실제 결제보다 먼저 일어나는 구조라, 결제 페이지까지 갔다가 이탈한 예약이 실제 결제 기록 없이 그대로 "예약 완료"처럼 노출되고 있었음 — 이 상태에서 "환불 요청"을 누르면 `GET /payments/me`에 해당 bookingId의 결제가 없어 `submitRefundRequest`가 항상 실패했음(실제 버그 사례로 확인, `bookingId=12`).
 - **2026-07-21 — 백엔드가 원인 자체를 수정 완료.** `GET /bookings/me`, `GET /bookings/me?countryId=` 응답에서 `PENDING` 상태 예약을 서버가 직접 제외하도록 변경됨(백엔드 담당자 확인 회신 기준). 그래서 위 07-20 프론트 임시 필터(`resolveReservationStatus`의 `PENDING` 분기)는 제거함 — 이제 `CANCEL_REQUESTED`/`REFUNDED`만 걸러내면 됨. **주의**: PENDING 예약 데이터 자체는 DB에서 안 지워지고 그대로 남아있음(백엔드가 노출만 막은 상태) — 주기적 만료/정리 배치는 별도 작업으로 추후 예정이라고 함. 탈퇴 시 "진행 중인 예약 있음" 검증(`hasActiveBooking`)은 PENDING도 여전히 "진행 중"으로 보고 그대로 유지된다고 확인함(영향 없음)
 - **미해결로 남은 부분**: AI 일정 추천의 `GET /itineraries/purchased-trips`(구매한 여행 선택지, `PurchasedTripPicker.tsx`)는 이번 백엔드 수정 대상에 포함되지 않았음. 이 API도 같은 방식(예약 생성이 결제보다 먼저 일어나는 구조)을 쓴다면 PENDING이 여전히 섞여 내려올 수 있어, 필요시 프론트에서 `status === "PENDING"` 방어 필터를 추가하거나 백엔드에 이 엔드포인트도 같이 고쳐졌는지 확인 필요
@@ -545,3 +548,6 @@
 - 2026-07-20 — `POST /api/v1/payments/bundle` 요청을 사용자 제공 "패키지+강의 통합 결제 연동 가이드"에 맞춰 수정. (1) `paymentType`을 `"FULL"` 고정에서 결제 페이지의 일시불/예약금 토글로 선택하도록 변경(`installmentAllowed: false`인 예약은 토글에서 `DEPOSIT` 비활성화). (2) `amount` 계산식을 가이드 공식(`패키지분(depositPrice|totalPrice) + 강의 정가 - 쿠폰할인 - 마일리지`, 쿠폰/마일리지는 패키지분에서만 차감)에 맞게 수정 — 기존엔 쿠폰/마일리지가 패키지+강의 합산 금액 전체에서 차감돼 가이드와 어긋나 있었음. `courseId`가 없는 경우 쓰는 기존 `POST /payments`도 동일한 `paymentType`/`amount` 로직을 공유하도록 함께 수정 / 영향: `src/features/packagelounge/hooks/usePackagePayment.ts`, `src/features/packagelounge/components/PackagePaymentClient.tsx`, `src/features/packagelounge/components/PaymentSummary.tsx`. 실제 로그인 세션으로 결제창까지 눌러보는 E2E 검증은 로컬에 테스트 계정/예약 데이터가 없어 못 함(lint/타입체크만 확인) — **미반영**: 강의 여러 개 선택(`courseIds` 다중, `GET /courses/countries/{countryId}` 연동)은 이번 범위 밖
 - 2026-07-22 — AI 일정 추천 "전체 패키지" 목록 조회를 `GET /api/v1/packages` → `GET /api/v1/itineraries/selectable-packages`로 교체 (백엔드 요청). 실측 결과 기존 `GET /packages`는 패키지마다 항공편을 외부 API로 실시간 조회해 15초 이상 걸려 프론트 기본 타임아웃으로 항상 실패하고 있었음(같은 백엔드의 국가 필터 버전은 7초 정도로 그나마 응답은 왔음) — 새 엔드포인트는 항공편 조회 없이 가벼워 빠르게 응답함(로그인 없이도 401 응답 자체는 즉시 옴, 실제 성공 케이스는 로그인 계정이 없어 미검증). 필드명 변경(`countryName→destination`, `checkInDate→startDate`, `checkOutDate→endDate`, `totalPrice→price`) 반영 / 영향: `src/features/aischedule/types.ts`(`SelectablePackageResponse` 추가), `src/features/services/itinerary.service.ts`(`getSelectablePackages` 추가), `src/features/aischedule/components/PackagePicker.tsx`. `package.service.ts`의 `getAllPackages`/`GET /packages`는 백엔드가 계속 유지한다고 확인해줘서 그대로 남겨둠(더 이상 호출하는 곳은 없음)
 - 2026-07-21 — `POST /api/v1/bookings`에 optional `courseId` 추가. 진단평가 추천에서 이어진 강의가 있으면 예약 생성 payload에 ID를 전달해 해당 강의만 완강 게이트를 검사하고, 강의 없는 일반 패키지 진입은 필드를 생략해 기존 국가 단위 폴백을 유지 / 영향: `src/features/packagelounge/types.ts`, `src/features/packagelounge/components/BookingPrice.tsx`, `src/features/packagelounge/components/ReservationSummary.tsx`
+- 2026-07-22 — `GET /bookings/me`, `GET /bookings/{id}` 응답에 `packageId`/`packageName` 추가(백엔드 확인 회신, Swagger 응답 예시 기준). 패키지 경유 예약이 아니면 둘 다 `null`. 마이페이지 예약 목록/상세에서 그동안 대체 표시하던 숙소명 대신 이 값을 우선 사용하도록 변경(`toReservationItem`/`toRefundReservationItem`이 `booking.packageName ?? accommodation?.name ?? "예약 패키지"` 순으로 폴백) / 영향: `src/features/packagelounge/types.ts`(`BookingDetail`), `src/features/mypage/reservations/reservation.util.ts`. `package.service.ts`의 `toBookingDetail`은 두 필드가 스칼라라 `Omit`+스프레드로 이미 그대로 통과되어 수정 불필요
+- 2026-07-22 — 위 항목 적용 후 실기기 테스트에서 패키지로 예약했는데도 `packageName`이 계속 `null`(숙소명 폴백)로 나오는 문제 발견 → 원인은 `POST /api/v1/bookings` 요청에 `packageId`를 아예 안 보내고 있었던 것(응답 필드만 추가하고 요청 필드 추가를 놓침). 백엔드 확인: "예약 생성 시 패키지 상세의 `packageId`를 실어 보내야 저장되고, 그래야 조회 시 `packageName`이 채워진다"는 것으로 원인 확정. `CreateBookingRequest`에 `packageId?: number` 추가하고, 패키지 경유 예약 생성 지점 두 곳에서 `packageItem.packageId`를 채워 보내도록 수정 / 영향: `src/features/packagelounge/types.ts`, `src/features/packagelounge/components/BookingPrice.tsx`, `src/features/packagelounge/components/ReservationSummary.tsx`. **주의**: 이 수정 이전에 생성된(필드 추가 전) 예약은 `packageId`가 저장 안 되어 있어 계속 숙소명 폴백으로 표시됨(백엔드 백필 여부는 미확인, 필요시 별도 문의)
+- 2026-07-22 — 예약 상세의 탑승객 정보에 성별/국적이 항상 `"-"`로 나오는 문제로 백엔드에 `passengerInfo.gender`/`nationality` 추가 요청 → 백엔드가 필드 추가 완료 확인(nullable, `gender`는 `"M"`/`"F"` 원문 그대로 저장·반환, 라벨 매핑은 FE 몫). `PassengerInfo` 타입에 두 필드 추가하고, 예약 생성 payload(`BookingPrice.tsx`/`ReservationSummary.tsx`)에서 폼에 이미 입력받던 `passenger.gender`/`passenger.nationality`를 실어 보내도록 수정, `reservation.util.ts`의 `toReservationPassenger`도 하드코딩된 `"-"` 대신 실제 값(`?? "-"`로 이전 예약 폴백) 사용하도록 변경 / 영향: `src/features/packagelounge/types.ts`, `src/features/packagelounge/components/BookingPrice.tsx`, `src/features/packagelounge/components/ReservationSummary.tsx`, `src/features/mypage/reservations/reservation.util.ts`. 한글 라벨(남/여) 매핑은 폼이 자유 입력이라 안 함(원문 그대로 표시) — 나중에 select로 바꾸면 같이 적용 검토. **주의**: 백엔드가 아직 develop 머지 대기 중이라 배포 전까지는 실제로 저장 안 됨

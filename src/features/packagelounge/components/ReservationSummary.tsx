@@ -67,12 +67,16 @@ export default function ReservationSummary({
     try {
       const payload: CreateBookingRequest = {
         accommodationId: packageItem.accommodationId,
+        packageId: packageItem.packageId,
+        courseId: course.courseId,
         flightInfo: packageItem.flightInfo,
         returnFlightInfo: packageItem.returnFlightInfo,
         passengerInfo: {
           lastName: passenger.lastName,
           firstName: passenger.firstName,
+          gender: passenger.gender,
           birthDate: passenger.birthDate,
+          nationality: passenger.nationality,
           passportNumber: passenger.passportNumber,
           passportExpiry: passenger.expiryDate,
         },

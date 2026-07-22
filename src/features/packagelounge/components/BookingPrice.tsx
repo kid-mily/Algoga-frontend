@@ -10,6 +10,7 @@ import { getPassengerInfo } from "../utils/passengerStorage";
 import { buildQueryString } from "../utils/query";
 import { CourseItem } from "@/features/classroom/components/types";
 import { ApiRequestError } from "@/lib/api";
+import { formatBalanceDueDate } from "../utils/payment";
 
 interface BookingPriceProps {
   data: PackageDetailData;
@@ -43,7 +44,10 @@ export default function BookingPrice({
   const [errorMessage, setErrorMessage] = useState("");
   // 완강하지 않은 유저가 패키지 예약을 시도할 때 (BK_004) - 안내 문구 + 강의 이어듣기 링크를 따로 보여준다
   const [isCompletionRequired, setIsCompletionRequired] = useState(false);
-  const totalWithCourse = booking.totalAmount + (course?.price ?? 0);
+  const coursePrice = course?.price ?? 0;
+  const totalWithCourse = booking.totalAmount + coursePrice;
+  const firstPaymentAmount = booking.depositAmount + coursePrice;
+  const balanceDueDate = formatBalanceDueDate(packageItem.checkInDate);
 
   const handleClick = async () => {
     if (!isPassengerValid) {
@@ -71,12 +75,16 @@ export default function BookingPrice({
     try {
       const payload: CreateBookingRequest = {
         accommodationId: packageItem.accommodationId,
+        packageId: packageItem.packageId,
+        ...(course ? { courseId: course.courseId } : {}),
         flightInfo: packageItem.flightInfo,
         returnFlightInfo: packageItem.returnFlightInfo,
         passengerInfo: {
           lastName: passenger.lastName,
           firstName: passenger.firstName,
+          gender: passenger.gender,
           birthDate: passenger.birthDate,
+          nationality: passenger.nationality,
           passportNumber: passenger.passportNumber,
           passportExpiry: passenger.expiryDate,
         },
@@ -150,15 +158,29 @@ export default function BookingPrice({
         )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-xl bg-[#EEF8F7] p-4">
-        <span className="text-sm font-bold text-[#0A1628]">총 결제 금액</span>
-        <span className="text-lg font-extrabold text-[#439A97]">
-          {totalWithCourse.toLocaleString()}원
-        </span>
+      <div className="mt-4 rounded-xl bg-[#EEF8F7] p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-[#56706F]">일시불</span>
+          <strong className="text-base text-[#439A97]">
+            {totalWithCourse.toLocaleString()}원
+          </strong>
+        </div>
+        <div className="mt-2 border-t border-dashed border-[#B7DAD7] pt-2 text-xs text-[#56706F]">
+          <div className="flex items-center justify-between">
+            <span>분할 1차</span>
+            <strong className="text-[#0A1628]">
+              {firstPaymentAmount.toLocaleString()}원
+            </strong>
+          </div>
+          <p className="mt-1">
+            2차 잔금 <strong>{booking.balanceAmount.toLocaleString()}원</strong> · {balanceDueDate}까지
+          </p>
+          {course && <p className="mt-1">강의 금액은 1차에 전액 포함됩니다.</p>}
+        </div>
       </div>
 
       <p className="mt-3 text-xs text-[#718096]">
-        쿠폰과 마일리지는 다음 단계에서 적용할 수 있습니다.
+        결제 방식 선택과 쿠폰·마일리지 적용은 다음 단계에서 진행합니다.
       </p>
 
       {isCompletionRequired ? (

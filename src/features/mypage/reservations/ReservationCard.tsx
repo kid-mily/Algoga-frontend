@@ -39,7 +39,13 @@ export default function ReservationCard({
   const canPayBalance =
     reservation.paymentType === "installment" &&
     reservation.remainingAmount > 0 &&
-    isReserved;
+    isReserved &&
+    !reservation.balanceDeadlinePassed;
+  const isBalanceDeadlinePassed =
+    reservation.paymentType === "installment" &&
+    reservation.remainingAmount > 0 &&
+    isReserved &&
+    reservation.balanceDeadlinePassed === true;
 
   const dDayLabel = isReserved ? getDDayLabel(reservation.startDate) : null;
 
@@ -97,7 +103,7 @@ export default function ReservationCard({
       {/* 결제/환불 정보 */}
       {!isRefundState ? (
         <div className="mt-3 rounded-xl bg-[#F8FBFD] p-3 text-xs">
-          {reservation.paymentType === "full" || !canPayBalance ? (
+          {reservation.paymentType === "full" ? (
             <div className="flex items-center justify-between">
               <span className="text-[#0A1628]">총 결제 금액</span>
               <span className="font-bold text-[#439A97]">
@@ -105,13 +111,30 @@ export default function ReservationCard({
               </span>
             </div>
           ) : (
-            <p className="text-[#0A1628]">
-              잔금{" "}
-              <span className="font-bold text-[#439A97]">
-                {reservation.remainingAmount.toLocaleString()}원
-              </span>
-              을 {reservation.balanceDueDate}까지 결제해 주세요.
-            </p>
+            <div className="space-y-1.5 text-[#0A1628]">
+              <div className="flex items-center justify-between">
+                <span>분할 결제 · 결제 완료</span>
+                <span className="font-bold text-[#439A97]">
+                  {reservation.paidAmount.toLocaleString()}원
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>남은 잔금</span>
+                <span className="font-bold text-[#0A1628]">
+                  {reservation.remainingAmount.toLocaleString()}원
+                </span>
+              </div>
+              {canPayBalance && reservation.balanceDueDate && (
+                <p className="text-[#718096]">
+                  {reservation.balanceDueDate}까지 결제해 주세요.
+                </p>
+              )}
+              {isBalanceDeadlinePassed && (
+                <p className="text-[#B54747]">
+                  잔금 결제 기한(출발 7일 전)이 지나 결제할 수 없습니다. 고객센터로 문의해 주세요.
+                </p>
+              )}
+            </div>
           )}
         </div>
       ) : (

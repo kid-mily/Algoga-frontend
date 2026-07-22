@@ -180,7 +180,6 @@ export default function PackagePaymentClient({
               <PaymentSummary
                 data={data}
                 course={course}
-                packageId={packageId}
                 paymentType={paymentType}
                 installmentAllowed={booking.installmentAllowed}
                 onPaymentTypeChange={handlePaymentTypeChange}
@@ -188,6 +187,7 @@ export default function PackagePaymentClient({
                 couponDiscount={couponDiscount}
                 usedMileage={usedMileage}
                 finalAmount={finalAmount}
+                balanceAmount={booking.balancePrice}
                 isPaying={isPaying || isLoadingBenefits}
                 onPay={handlePay}
               />

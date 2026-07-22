@@ -71,10 +71,13 @@ export interface PaymentBreakdown {
 }
 
 // 예약 생성(POST /bookings) 요청에 실어 보내는 탑승객 정보
+// gender/nationality는 2026-07-22 백엔드 추가 필드 — 이 필드 추가 전 생성된 예약은 조회 시 없거나 null일 수 있음
 export interface PassengerInfo {
   lastName: string;
   firstName: string;
+  gender?: string | null;
   birthDate: string;
+  nationality?: string | null;
   passportNumber: string;
   passportExpiry: string;
 }
@@ -84,6 +87,8 @@ export type BookingSource = "LOUNGE" | "COMPLETION";
 
 export interface CreateBookingRequest {
   accommodationId: number;
+  packageId?: number;
+  courseId?: number;
   flightInfo: FlightInfo | null;
   returnFlightInfo: FlightInfo | null;
   passengerInfo: PassengerInfo;
@@ -98,6 +103,9 @@ export interface CreateBookingRequest {
 export interface BookingDetail {
   bookingId: number;
   accommodationId: number;
+  // 2026-07-22 응답에 추가된 필드 — 패키지 경유 예약이 아니면 둘 다 null일 수 있음
+  packageId: number | null;
+  packageName: string | null;
   userId: number;
   status: string;
   totalPrice: number;
@@ -115,7 +123,7 @@ export interface BookingDetail {
 }
 
 // FULL: 일시불 / DEPOSIT: 예약금 / LECTURE_ONLY: 강의 단독 결제(패키지 예약과는 무관)
-export type PaymentType = "FULL" | "DEPOSIT" | "LECTURE_ONLY";
+export type PaymentType = "FULL" | "DEPOSIT" | "BALANCE" | "LECTURE_ONLY";
 
 export interface CreatePaymentRequest {
   bookingId: number;
@@ -151,7 +159,7 @@ export interface BundlePaymentResponse {
 export interface BundlePaymentPreviewParams {
   bookingId: number;
   courseIds?: number[];
-  paymentType: "DEPOSIT" | "FULL";
+  paymentType: "DEPOSIT" | "BALANCE" | "FULL";
   usedMileage?: number;
   usedCouponId?: number | null;
 }

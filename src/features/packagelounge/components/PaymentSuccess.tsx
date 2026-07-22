@@ -89,6 +89,19 @@ export default function PaymentSuccess({ data }: PaymentSuccessProps) {
               {data.accommodationName}
             </p>
           </div>
+          {data.courseName && (
+            <div className="col-span-2">
+              <p className="text-[#A0AEC0]">강의</p>
+              <p className="mt-0.5 font-bold text-[#0A1628]">
+                {data.courseName}
+                {data.coursePrice !== null && (
+                  <span className="ml-1 font-extrabold text-[#439A97]">
+                    ({data.coursePrice.toLocaleString()}원)
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -193,17 +206,10 @@ export default function PaymentSuccess({ data }: PaymentSuccessProps) {
       </div>
 
       {/* 이동 버튼 */}
-      <Link
-        href="/aischedule"
-        className="mt-6 block w-full rounded-xl bg-[#439A97] py-3 text-center text-sm font-bold text-white transition hover:bg-[#357F7C]"
-      >
-        일정 캘린더 보기
-      </Link>
-
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Link
           href="/mypage/reservations"
-          className="rounded-xl border border-[#E1E8EF] bg-white py-3 text-center text-sm font-bold text-[#0A1628] transition hover:bg-[#F3F8FC]"
+          className="rounded-xl border border-[#E1E8EF] bg-[#439A97] py-3 text-center text-sm font-bold text-white transition hover:bg-[#357F7C]"
         >
           예약 내역
         </Link>

@@ -9,6 +9,9 @@ interface RecommendedCourseListProps {
   otherLevelGroups: OtherLevelCourseGroup[];
   selectedCourseId: number | null;
   isLoading: boolean;
+  // 실제 구매 내역(GET /my/courses)으로 확인된 courseId 집합.
+  // 진단평가 응답의 course.enrolled/course.paid는 검증되지 않은 값이라 신뢰하지 않는다
+  purchasedCourseIds: Set<number>;
   onSingleCourseClick: (course: RecommendedCourse) => void;
   onPackageClick: (course: RecommendedCourse) => void;
 }
@@ -16,6 +19,7 @@ interface RecommendedCourseListProps {
 interface CourseCardProps {
   course: RecommendedCourse;
   selected: boolean;
+  purchased: boolean;
   onSingleCourseClick: (course: RecommendedCourse) => void;
   onPackageClick: (course: RecommendedCourse) => void;
 }
@@ -24,10 +28,10 @@ interface CourseCardProps {
 function CourseCard({
   course,
   selected,
+  purchased,
   onSingleCourseClick,
   onPackageClick,
 }: CourseCardProps) {
-  const purchased = Boolean(course.enrolled || course.paid);
   const courseLevelStyle = getCourseLevelStyle(course.level) ?? LEVEL_STYLES.BEGINNER;
   const levelLabel = course.levelName || courseLevelStyle.label;
   const description =
@@ -123,6 +127,7 @@ export default function RecommendedCourseList({
   otherLevelGroups,
   selectedCourseId,
   isLoading,
+  purchasedCourseIds,
   onSingleCourseClick,
   onPackageClick,
 }: RecommendedCourseListProps) {
@@ -163,6 +168,7 @@ export default function RecommendedCourseList({
               key={course.courseId}
               course={course}
               selected={selectedCourseId === course.courseId}
+              purchased={purchasedCourseIds.has(course.courseId)}
               onSingleCourseClick={onSingleCourseClick}
               onPackageClick={onPackageClick}
             />
@@ -191,6 +197,7 @@ export default function RecommendedCourseList({
                   key={course.courseId}
                   course={course}
                   selected={selectedCourseId === course.courseId}
+                  purchased={purchasedCourseIds.has(course.courseId)}
                   onSingleCourseClick={onSingleCourseClick}
                   onPackageClick={onPackageClick}
                 />
