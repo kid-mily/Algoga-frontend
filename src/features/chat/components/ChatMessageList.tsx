@@ -1,5 +1,5 @@
 ﻿// 메시지 목록 렌더링
-import { Fragment, useLayoutEffect, useRef } from "react";
+import { Fragment, memo, useLayoutEffect, useRef } from "react";
 import type { ChatMessage, ChatRoomType } from "../types";
 
 type ChatMessageListProps = {
@@ -56,7 +56,7 @@ const MessageAvatar = ({
   );
 };
 
-export default function ChatMessageList({
+function ChatMessageList({
   messages,
   roomType,
   currentUserId,
@@ -179,5 +179,9 @@ export default function ChatMessageList({
     </div>
   );
 }
+
+// ChatRoomPanel이 타이핑/연결상태 변경으로 자주 리렌더되어도
+// messages 등 props가 그대로면 메시지 목록 재계산을 건너뛴다.
+export default memo(ChatMessageList);
 
 
