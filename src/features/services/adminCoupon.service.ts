@@ -57,7 +57,8 @@ export const updateAdminCoupon = async (
 `/api/v1/admin/courses/${courseId}/coupon-policies/${couponPolicyId}`,
     {
       couponName: payload.couponName,
-      percent: payload.percent,
+      discountType: "RATE",
+      discountValue: Number(payload.percent),
       validDays: payload.validDays,
       active: payload.active,
     }

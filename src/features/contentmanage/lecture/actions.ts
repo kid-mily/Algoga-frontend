@@ -5,6 +5,7 @@ import {
   getAdminCourses,
   getAdminDeletedCourses,
   getCourseCountries,
+  publishAdminCourse,
   updateAdminCourse,
 } from "@/features/services/adminCourse.service";
 import {
@@ -42,6 +43,10 @@ export const getLectureDetailAction = (lectureId: number) => {
 
 export const createLectureAction = (payload: CreateAdminCoursePayload) => {
   return createAdminCourse(payload);
+};
+
+export const publishLectureAction = (courseId: number) => {
+  return publishAdminCourse(courseId);
 };
 
 export const updateLectureAction = (

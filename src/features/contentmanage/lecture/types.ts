@@ -292,7 +292,7 @@ export interface LectureChapterFormProps {
 export type ChapterErrors = ChapterItemErrors;
 
 export interface LectureFormProps {
-  onNext?: (courseId: number) => void;
+  onNext?: (courseId: number, shouldPublish: boolean) => void;
 }
 
 export interface CourseFormData {
