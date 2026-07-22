@@ -3,6 +3,7 @@ import type {
   ItinerarySummaryResponse,
   PurchasedTripResponse,
   RecommendItineraryRequest,
+  SelectablePackageResponse,
 } from "@/features/aischedule/types";
 import { api, type ApiResult, unwrapData } from "@/lib/api";
 
@@ -32,6 +33,23 @@ export async function getPurchasedTrips(
 ): Promise<PurchasedTripResponse[]> {
   const response = await api.get<ApiResult<PurchasedTripResponse[]>>(
     "/api/v1/itineraries/purchased-trips",
+    {
+      signal,
+      suppressGlobalError: true,
+      cache: "no-store",
+    }
+  );
+
+  return unwrapData(response) ?? [];
+}
+
+// tripType=PACKAGE 선택지 - 항공편 실시간 조회 없이 내려주는 전체 패키지 목록.
+// GET /packages는 패키지마다 항공편을 외부 API로 조회해 느려서(타임아웃) 이 엔드포인트로 교체함
+export async function getSelectablePackages(
+  signal?: AbortSignal
+): Promise<SelectablePackageResponse[]> {
+  const response = await api.get<ApiResult<SelectablePackageResponse[]>>(
+    "/api/v1/itineraries/selectable-packages",
     {
       signal,
       suppressGlobalError: true,

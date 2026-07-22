@@ -145,6 +145,19 @@ export interface ItinerarySummaryResponse {
 // (CANCEL_REQUESTED/REFUNDED는 서버가 이미 제외)
 export type PurchasedTripStatus = "PENDING" | "DEPOSIT_PAID" | "FULL_PAID";
 
+// tripType=PACKAGE 선택지 - GET /itineraries/selectable-packages 응답.
+// 항공편 실시간 조회 없이 내려주는 가벼운 목록이라 GET /packages보다 빠르다
+export interface SelectablePackageResponse {
+  packageId: number;
+  name: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  nights: number;
+  price: number;
+  imageUrl: string;
+}
+
 // GET /itineraries/purchased-trips 응답
 export interface PurchasedTripResponse {
   bookingId: number;

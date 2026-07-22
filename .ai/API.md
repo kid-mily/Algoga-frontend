@@ -499,15 +499,21 @@
 
 ---
 
-### GET /api/v1/packages (전체 카탈로그, 나라 필터 없음)
+### GET /api/v1/itineraries/selectable-packages (전체 패키지, 나라 필터 없음)
 
 #### Used In
 
-- `src/features/services/package.service.ts` (`getAllPackages`, 신규) — `tripType=PACKAGE` 선택 시 `PackagePicker.tsx`
+- `src/features/services/itinerary.service.ts` (`getSelectablePackages`) — `tripType=PACKAGE` 선택 시 `PackagePicker.tsx`
+
+#### Response Fields Used
+
+- `data[]`: `SelectablePackageResponse` — `packageId`, `name`, `destination`, `startDate`, `endDate`, `nights`, `price`, `imageUrl`
 
 #### Notes
 
-- 기존엔 `countryId` 없는 전체 목록 API가 프론트에서 미사용이었는데(2026-07-15 기록 참고), AI 일정 추천의 "전체 패키지" 선택지에서 처음 사용함
+- 2026-07-22 백엔드 요청으로 `GET /api/v1/packages`(전체 카탈로그) 대신 이 엔드포인트로 교체. `GET /packages`는 패키지마다 항공편을 외부 API로 실시간 조회해 느려서(15초+ 타임아웃) 항공편 조회 없이 가볍게 내려주는 이 API로 바꿈. JWT 필요(로그인 유저 전용)
+- 필드명이 `GET /packages`(`PackageApiItem`)와 다름: `countryName→destination`, `checkInDate→startDate`, `checkOutDate→endDate`, `totalPrice→price`. `packageId`/`name`/`nights`/`imageUrl`은 동일
+- `GET /api/v1/packages` 자체는 계속 존재(다른 화면에서 항공편/상세가 필요하면 사용 가능). `package.service.ts`의 `getAllPackages`는 이번에 더는 호출되지 않지만, 백엔드가 이 엔드포인트를 유지한다고 확인해줘서 삭제하지 않고 남겨둠
 
 ---
 
@@ -531,4 +537,5 @@
 - 2026-07-20 — 회원 탈퇴 페이지 신규 구현. `DELETE /api/v1/users/me`가 이번에 이메일 인증 필수로 바뀌어(사용자 제공 명세 기준), 마이페이지 메인의 "회원 탈퇴하기" 버튼 → `/mypage/withdraw` 이동 → 안내/경고 확인 팝업 → 기존 `EmailAuthVerifyModal` 재사용으로 본인확인 → 탈퇴 API 호출 → 성공 시 메인 페이지 이동 순서로 구현. 상세는 위 Used Endpoints 섹션 참고. 백엔드 실제 동작(에러 응답의 `errorCode` 필드명, 탈퇴 후 실제 쿠키 삭제 여부)은 로컬에 로그인 가능한 테스트 계정이 없어 아직 실제 API 호출로는 검증 못 함(lint/타입체크만 확인) / 영향: `src/features/services/mypage.service.ts`(`withdrawMyAccount` 추가), `src/features/mypage/withdraw/WithdrawPageClient.tsx`(신규), `src/app/(user)/mypage/withdraw/page.tsx`(신규), `src/app/(user)/mypage/page.tsx`
 - 2026-07-21 — AI 일정 추천(`/aischedule`) 신규 구현. 기존엔 `"ai 일정 추천"` 텍스트만 있는 빈 페이지였음. 사용자 제공 API 명세(`POST /itineraries/recommend`, `GET /itineraries/purchased-trips`, `GET /itineraries`, `GET /itineraries/{id}`) 기준으로 여행 유형 3-모드(구매한 여행/전체 패키지/자유 여행) 선택 → 취향·목적·동행자·예산·인원 입력 → AI 생성(최대 60초) → 일자별 일정 결과 화면까지 구현. 이력 목록/상세(`/aischedule/history`, `/aischedule/history/{id}`) 페이지도 함께 구현 / 영향: `src/features/aischedule/`(신규 폴더 전체: `types.ts`, `components/*`, `hooks/useItineraryRecommend.ts`), `src/features/services/itinerary.service.ts`(신규), `src/features/services/package.service.ts`(`getAllPackages` 추가), `src/app/(user)/aischedule/page.tsx`, `src/app/(user)/aischedule/history/page.tsx`(신규), `src/app/(user)/aischedule/history/[id]/page.tsx`(신규). 로그인 계정이 없어 401 처리 경로만 브라우저로 확인, 실제 추천 생성/이력 조회는 미검증
 - 2026-07-20 — `POST /api/v1/payments/bundle` 요청을 사용자 제공 "패키지+강의 통합 결제 연동 가이드"에 맞춰 수정. (1) `paymentType`을 `"FULL"` 고정에서 결제 페이지의 일시불/예약금 토글로 선택하도록 변경(`installmentAllowed: false`인 예약은 토글에서 `DEPOSIT` 비활성화). (2) `amount` 계산식을 가이드 공식(`패키지분(depositPrice|totalPrice) + 강의 정가 - 쿠폰할인 - 마일리지`, 쿠폰/마일리지는 패키지분에서만 차감)에 맞게 수정 — 기존엔 쿠폰/마일리지가 패키지+강의 합산 금액 전체에서 차감돼 가이드와 어긋나 있었음. `courseId`가 없는 경우 쓰는 기존 `POST /payments`도 동일한 `paymentType`/`amount` 로직을 공유하도록 함께 수정 / 영향: `src/features/packagelounge/hooks/usePackagePayment.ts`, `src/features/packagelounge/components/PackagePaymentClient.tsx`, `src/features/packagelounge/components/PaymentSummary.tsx`. 실제 로그인 세션으로 결제창까지 눌러보는 E2E 검증은 로컬에 테스트 계정/예약 데이터가 없어 못 함(lint/타입체크만 확인) — **미반영**: 강의 여러 개 선택(`courseIds` 다중, `GET /courses/countries/{countryId}` 연동)은 이번 범위 밖
+- 2026-07-22 — AI 일정 추천 "전체 패키지" 목록 조회를 `GET /api/v1/packages` → `GET /api/v1/itineraries/selectable-packages`로 교체 (백엔드 요청). 실측 결과 기존 `GET /packages`는 패키지마다 항공편을 외부 API로 실시간 조회해 15초 이상 걸려 프론트 기본 타임아웃으로 항상 실패하고 있었음(같은 백엔드의 국가 필터 버전은 7초 정도로 그나마 응답은 왔음) — 새 엔드포인트는 항공편 조회 없이 가벼워 빠르게 응답함(로그인 없이도 401 응답 자체는 즉시 옴, 실제 성공 케이스는 로그인 계정이 없어 미검증). 필드명 변경(`countryName→destination`, `checkInDate→startDate`, `checkOutDate→endDate`, `totalPrice→price`) 반영 / 영향: `src/features/aischedule/types.ts`(`SelectablePackageResponse` 추가), `src/features/services/itinerary.service.ts`(`getSelectablePackages` 추가), `src/features/aischedule/components/PackagePicker.tsx`. `package.service.ts`의 `getAllPackages`/`GET /packages`는 백엔드가 계속 유지한다고 확인해줘서 그대로 남겨둠(더 이상 호출하는 곳은 없음)
 - 2026-07-21 — `POST /api/v1/bookings`에 optional `courseId` 추가. 진단평가 추천에서 이어진 강의가 있으면 예약 생성 payload에 ID를 전달해 해당 강의만 완강 게이트를 검사하고, 강의 없는 일반 패키지 진입은 필드를 생략해 기존 국가 단위 폴백을 유지 / 영향: `src/features/packagelounge/types.ts`, `src/features/packagelounge/components/BookingPrice.tsx`, `src/features/packagelounge/components/ReservationSummary.tsx`
