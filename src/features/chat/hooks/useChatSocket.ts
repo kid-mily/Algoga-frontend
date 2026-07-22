@@ -69,6 +69,22 @@ export const useChatSocket = ({
   const clientRef = useRef<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
+  const onMessageRef = useRef(onMessage);
+  const onReadRef = useRef(onRead);
+  const onTypingRef = useRef(onTyping);
+
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
+
+  useEffect(() => {
+    onReadRef.current = onRead;
+  }, [onRead]);
+
+  useEffect(() => {
+    onTypingRef.current = onTyping;
+  }, [onTyping]);
+
   const sendRead = useCallback(() => {
     const client = clientRef.current;
     if (!roomId || !client?.connected) return;
@@ -132,14 +148,14 @@ export const useChatSocket = ({
           });
           if (!parsedMessage.content) return;
 
-          onMessage?.(parsedMessage);
+          onMessageRef.current?.(parsedMessage);
         });
 
         client.subscribe(`/topic/chat/rooms/${roomId}/read`, (message) => {
           const parsedEvent = parseReadEvent(parseBody(message), roomId);
           if (!parsedEvent) return;
 
-          onRead?.(parsedEvent);
+          onReadRef.current?.(parsedEvent);
         });
 
         if (userId) {
@@ -147,7 +163,7 @@ export const useChatSocket = ({
             const parsedEvent = parseTypingEvent(parseBody(message));
             if (!parsedEvent) return;
 
-            onTyping?.(parsedEvent);
+            onTypingRef.current?.(parsedEvent);
           });
         }
 
@@ -175,7 +191,7 @@ export const useChatSocket = ({
       clientRef.current = null;
       void client.deactivate();
     };
-  }, [onMessage, onRead, onTyping, roomId, userId]);
+  }, [roomId, userId]);
 
   return {
     isConnected,

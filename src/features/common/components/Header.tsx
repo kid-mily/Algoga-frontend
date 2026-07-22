@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { getMe } from "@/features/services/user.service";
-import AuthSessionTimer from "./AuthSessionTimer";
 import Navbar from "./Navbar";
 import Profile from "./Profile";
 
@@ -101,7 +100,6 @@ export default function Header() {
             className="h-[45px] w-[130px] cursor-pointer"
           />
         </Link>
-        {user && <AuthSessionTimer />}
       </div>
       <Navbar />
       <Profile user={user} />
