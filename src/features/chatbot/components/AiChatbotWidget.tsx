@@ -1,11 +1,13 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Bot, ChevronLeft, MessageCircle, Send, X } from "lucide-react";
+import { Bot, ChevronLeft, MessageCircle, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { INQUIRY_CATEGORY_LABEL, InquiryCategory } from "../types";
 import { useChatbot } from "../hooks/useChatbot";
+import ChatInputForm from "./ChatInputForm";
+import MessageBubble from "./MessageBubble";
 
 const hiddenPathPrefixes = [
   "/auth",
@@ -41,8 +43,6 @@ export default function AiChatbotWidget() {
     view,
     bubbles,
     suggestions,
-    input,
-    setInput,
     isSending,
     lockSeconds,
     send,
@@ -65,11 +65,6 @@ export default function AiChatbotWidget() {
 
   const isLocked = lockSeconds > 0;
   const isInputDisabled = isSending || isLocked;
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    void send();
-  };
 
   const handleInquirySubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -142,45 +137,11 @@ export default function AiChatbotWidget() {
                   className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-6"
                 >
                   {bubbles.map((bubble) => (
-                    <div
+                    <MessageBubble
                       key={bubble.key}
-                      className={`flex items-start gap-3 ${
-                        bubble.role === "user" ? "justify-end" : ""
-                      }`}
-                    >
-                      {bubble.role === "assistant" && (
-                        <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#439A97] text-white">
-                          <Bot size={17} />
-                        </div>
-                      )}
-
-                      <div className="flex max-w-[230px] flex-col gap-1.5">
-                        <div
-                          className={`whitespace-pre-wrap rounded-[16px] px-4 py-3 text-sm font-medium leading-6 shadow-[0_3px_10px_rgba(15,23,42,0.12)] ${
-                            bubble.role === "assistant"
-                              ? "rounded-tl-md border border-[#E1E8EF] bg-white text-[#0F172A]"
-                              : "rounded-tr-md bg-[#439A97] text-white"
-                          }`}
-                        >
-                          {bubble.content}
-                        </div>
-
-                        {bubble.isAnswerUnread && bubble.inquiryId && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void confirmInquiryAnswer(
-                                bubble.key,
-                                bubble.inquiryId as number
-                              )
-                            }
-                            className="self-start rounded-full bg-[#E8F5F4] px-3 py-1 text-xs font-bold text-[#2F8F8C] transition hover:bg-[#D6ECEB]"
-                          >
-                            답변 완료 · 확인하기
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                      bubble={bubble}
+                      onConfirmAnswer={confirmInquiryAnswer}
+                    />
                   ))}
 
                   {isSending && (
@@ -230,32 +191,12 @@ export default function AiChatbotWidget() {
                     </p>
                   )}
 
-                  <form
-                    onSubmit={handleSubmit}
-                    className="flex items-center gap-3 border-t border-[#EDF2F7] px-4 py-4"
-                  >
-                    <input
-                      value={input}
-                      onChange={(event) => setInput(event.target.value)}
-                      disabled={isInputDisabled}
-                      maxLength={1000}
-                      placeholder={
-                        isLocked
-                          ? `${lockSeconds}초 후 입력 가능`
-                          : "메시지를 입력하세요..."
-                      }
-                      className="h-12 min-w-0 flex-1 rounded-full bg-[#F2F6FA] px-4 text-sm font-medium text-[#0F172A] outline-none placeholder:text-[#98A2B3] focus:ring-2 focus:ring-[#9AD1CE] disabled:opacity-60"
-                    />
-
-                    <button
-                      type="submit"
-                      aria-label="메시지 보내기"
-                      disabled={isInputDisabled || !input.trim()}
-                      className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#439A97] text-white transition hover:bg-[#2F7F7C] disabled:cursor-not-allowed disabled:bg-[#A7D6D3] disabled:opacity-100"
-                    >
-                      <Send size={20} />
-                    </button>
-                  </form>
+                  <ChatInputForm
+                    onSend={send}
+                    disabled={isInputDisabled}
+                    isLocked={isLocked}
+                    lockSeconds={lockSeconds}
+                  />
                 </div>
               </>
             )}
