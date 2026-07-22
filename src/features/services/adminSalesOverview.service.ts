@@ -1,4 +1,5 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { downloadAdminFile } from "@/lib/downloadFile";
 import {
   SalesOverview,
   SalesOverviewMonthlyStat,
@@ -6,8 +7,6 @@ import {
   SalesTrendPoint,
   SalesTrendUnit,
 } from "@/features/statisticadmin/finances/types";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type RawSalesOverviewMonthlyStat = {
   month: string;
@@ -97,38 +96,8 @@ export const getSalesOverviewTrend = async (
 };
 
 // 월별 매출 상세 CSV (화면 표와 동일 컬럼). 선택된 기간(from/to)으로 내려받습니다.
-export const downloadSalesOverviewCsv = async ({
-  from,
-  to,
-}: SalesOverviewQuery) => {
-  if (!API_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
-  }
-
-  const url = new URL(`${API_BASE_URL}/api/v1/admin/stats/overview/csv`);
-  url.searchParams.set("from", from);
-  url.searchParams.set("to", to);
-
-  const response = await fetch(url.toString(), {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      Accept: "text/csv",
-    },
+export const downloadSalesOverviewCsv = ({ from, to }: SalesOverviewQuery) =>
+  downloadAdminFile("/api/v1/admin/stats/overview/csv", {
+    params: { from, to },
+    filename: "sales-overview.csv",
   });
-
-  if (!response.ok) {
-    throw new Error("CSV 다운로드에 실패했습니다.");
-  }
-
-  const blob = await response.blob();
-  const objectUrl = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = objectUrl;
-  link.download = "sales-overview.csv";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(objectUrl);
-};

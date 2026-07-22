@@ -1,5 +1,6 @@
 ﻿// 채팅방 내부 화면, 메시지 조회/전송/읽음/맴버 관리
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { Plus, X } from "lucide-react";
 import ChatCreateMenu from "./ChatCreateMenu";
 import type { ChatRoom } from "../types";
@@ -36,10 +37,12 @@ const ChatRoomAvatar = ({ room }: { room: ChatRoom }) => {
 
   if (shouldShowProfileImage) {
     return (
-      <img
+      <Image
         src={room.profileImageUrl ?? ""}
         alt=""
         aria-hidden="true"
+        width={48}
+        height={48}
         className="h-12 w-12 shrink-0 rounded-full border border-[#E4E7EC] object-cover"
       />
     );
@@ -100,11 +103,9 @@ export default function ChatListPanel({
   };
 
   const handleLeaveRoom = (room: ChatRoom) => {
-  // console.log("채팅방 나가기 클릭됨", room.roomId);
-  setMenuRoomId(null);
-  onLeaveRoom(room);
-};
-  
+    setMenuRoomId(null);
+    onLeaveRoom(room);
+  };
 
   return (
     <aside className="relative h-[540px] w-[360px] max-w-[calc(100vw-32px)] overflow-visible rounded-3xl bg-white shadow-2xl" aria-label="채팅 목록">

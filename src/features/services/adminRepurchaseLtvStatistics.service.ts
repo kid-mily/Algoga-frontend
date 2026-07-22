@@ -1,12 +1,11 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { downloadAdminFile } from "@/lib/downloadFile";
 import type {
   CohortRow,
   RepurchaseLtvStatistics,
   RepurchaseLtvSummary,
   TopCustomer,
 } from "@/features/statisticadmin/repurchase-ltv/types";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export type RepurchaseLtvQuery = {
   from: string;
@@ -106,37 +105,9 @@ export const getRepurchaseLtvData = async (
   };
 };
 
-export const downloadTopCustomersCsv = async ({ from, to }: RepurchaseLtvQuery) => {
-  if (!API_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL이 설정되어 있지 않습니다.");
-  }
-
-  const params = new URLSearchParams({ from, to });
-
-  const response = await fetch(
-    `${API_BASE_URL}/api/v1/admin/stats/retention/top-customers/csv?${params.toString()}`,
-    {
-      method: "GET",
-      credentials: "include",
-      headers: { Accept: "text/csv" },
-    }
-  );
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(
-      errorData?.message || `CSV 다운로드에 실패했습니다. (status: ${response.status})`
-    );
-  }
-
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = "top-customers.csv";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-};
+export const downloadTopCustomersCsv = ({ from, to }: RepurchaseLtvQuery) =>
+  downloadAdminFile("/api/v1/admin/stats/retention/top-customers/csv", {
+    params: { from, to },
+    filename: "top-customers.csv",
+    errorFromResponse: true,
+  });

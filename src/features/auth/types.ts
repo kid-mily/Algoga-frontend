@@ -7,11 +7,6 @@ export interface LoginResponse {
   requiresPasswordChange?: boolean;
 }
 
-export interface AuthSessionInfo {
-  expiresAt: string;
-  remainingSeconds: number;
-}
-
 export interface SignupRequest {
   username: string;
   email: string;
