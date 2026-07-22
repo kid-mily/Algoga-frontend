@@ -234,6 +234,22 @@ export const createAdminCourse = async (
   }
 };
 
+export const publishAdminCourse = async (
+  courseId: number
+): Promise<AdminCourse> => {
+  try {
+    const response = await adminApi.post<ApiResponse<AdminCourse>>(
+      `/api/v1/admin/courses/${courseId}/publish`,
+      undefined,
+      { suppressGlobalError: true }
+    );
+
+    return response.data;
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, "강의 공개에 실패했습니다."));
+  }
+};
+
 export const getAdminCourse = async (
   courseId: number
 ): Promise<AdminCourse> => {

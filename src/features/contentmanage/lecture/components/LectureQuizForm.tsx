@@ -13,7 +13,7 @@ import {
 type LectureQuizFormProps = {
   courseId: number;
   onPrev: () => void;
-  onSubmit: () => void;
+  onSubmit: () => void | Promise<void>;
 };
 
 const createDraft = (id: number): LectureQuizDraft => ({
@@ -33,6 +33,7 @@ export default function LectureQuizForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [globalError, setGlobalError] = useState("");
   const [quizErrors, setQuizErrors] = useState<Record<number, LectureQuizDraftErrors>>({});
+  const [areQuizzesSaved, setAreQuizzesSaved] = useState(false);
 
   const handleAddQuiz = () => {
     if (quizzes.length >= MAX_QUIZ_COUNT) {
@@ -128,23 +129,26 @@ export default function LectureQuizForm({
   };
 
   const handleSubmit = async () => {
-    if (!validateQuizzes()) return;
+    if (!areQuizzesSaved && !validateQuizzes()) return;
 
     try {
       setIsSubmitting(true);
-      for (const quiz of quizzes) {
-        await createQuizAction({
-          courseId,
-          question: quiz.question.trim(),
-          option1: quiz.options[0].trim(),
-          option2: quiz.options[1].trim(),
-          option3: quiz.options[2].trim(),
-          option4: quiz.options[3].trim(),
-          correctOption: quiz.correctOption,
-          explanation: quiz.explanation.trim(),
-        });
+      if (!areQuizzesSaved) {
+        for (const quiz of quizzes) {
+          await createQuizAction({
+            courseId,
+            question: quiz.question.trim(),
+            option1: quiz.options[0].trim(),
+            option2: quiz.options[1].trim(),
+            option3: quiz.options[2].trim(),
+            option4: quiz.options[3].trim(),
+            correctOption: quiz.correctOption,
+            explanation: quiz.explanation.trim(),
+          });
+        }
+        setAreQuizzesSaved(true);
       }
-      onSubmit();
+      await onSubmit();
     } catch (error: unknown) {
       setGlobalError(error instanceof Error ? error.message : "퀴즈 등록에 실패했습니다.");
     } finally {

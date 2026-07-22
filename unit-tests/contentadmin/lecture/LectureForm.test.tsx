@@ -121,13 +121,13 @@ describe("LectureForm 컴포넌트 테스트", () => {
           mileage: 1000,
           maxRewardMileage: 1000,
           level: "INTERMEDIATE",
-          status: "PUBLISHED",
+          status: "DRAFT",
           thumbnail: expect.any(File),
         })
       );
     });
 
-    expect(onNext).toHaveBeenCalledWith(100);
+    expect(onNext).toHaveBeenCalledWith(100, true);
   });
 
   test("강의 수정 폼은 기존 강의 정보를 초기값으로 표시한다", () => {

@@ -168,7 +168,6 @@ export default function LectureForm({ onNext }: LectureFormProps) {
       setIsSubmitting(true);
       setGlobalError("");
 
-      const targetStatus = formData.isPublic === "true" ? "PUBLISHED" : "DRAFT";
       const maxRewardMileage = toNumberOrZero(formData.mileage);
       const createdCourse = await createLectureAction({
         countryId: Number(formData.countryId),
@@ -178,13 +177,13 @@ export default function LectureForm({ onNext }: LectureFormProps) {
         mileage: maxRewardMileage,
         maxRewardMileage,
         level: formData.level,
-        status: targetStatus,
+        status: "DRAFT",
         thumbnail: thumbnail as File,
         files: attachments.length > 0 ? attachments : undefined,
       });
 
       if (onNext && createdCourse?.courseId) {
-        onNext(createdCourse.courseId);
+        onNext(createdCourse.courseId, formData.isPublic === "true");
       } else {
         setGlobalError("강의는 등록되었지만 강의 ID를 확인하지 못했습니다.");
       }
