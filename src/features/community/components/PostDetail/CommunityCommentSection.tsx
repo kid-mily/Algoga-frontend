@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import CommunityActionModal from "@/features/community/components/common/CommunityActionModal";
 import CommunityCommentForm from "@/features/community/components/PostDetail/CommunityCommentForm";
 import CommunityCommentItem from "@/features/community/components/PostDetail/CommunityCommentItem";
@@ -23,20 +24,17 @@ export default function CommunityCommentSection({
     deleteTargetId,
     reportTargetId,
     replyTargetId,
-    replyContent,
     textDialog,
     isReportCompleteOpen,
     isAlreadyReportedOpen,
     isLoginRequiredOpen,
     closeLoginRequiredModal,
-    isLoading,
     isSubmitting,
     errorMessage,
     commentCount,
     setContent,
     setDeleteTargetId,
     setReportTargetId,
-    setReplyContent,
     setTextDialog,
     setIsReportCompleteOpen,
     setIsAlreadyReportedOpen,
@@ -56,6 +54,14 @@ export default function CommunityCommentSection({
     currentUserId,
     onCommentCountChange,
   });
+
+  // memo된 CommunityCommentItem에 안정적인 참조를 넘기기 위해 useCallback으로 고정.
+  const handleEditComment = useCallback(
+    (commentId: number, currentContent: string) => {
+      setTextDialog({ type: "edit", commentId, value: currentContent });
+    },
+    [setTextDialog]
+  );
 
   return (
     <section className="border-t border-[#CFE0DE] px-7 py-6">
@@ -140,11 +146,7 @@ export default function CommunityCommentSection({
       )}
 
       <div className="space-y-5">
-        {isLoading ? (
-          <p className="py-6 text-center text-sm font-semibold text-[#7A6F66]">
-            댓글을 불러오는 중입니다.
-          </p>
-        ) : comments.length > 0 ? (
+        {comments.length > 0 ? (
           comments.map((comment) => (
             <CommunityCommentItem
               key={comment.commentId}
@@ -153,23 +155,15 @@ export default function CommunityCommentSection({
               reactionByCommentId={reactionByCommentId}
               pendingCommentId={pendingCommentId}
               onReact={handleReaction}
-              onEdit={(commentId, currentContent) =>
-                setTextDialog({
-                  type: "edit",
-                  commentId,
-                  value: currentContent,
-                })
-              }
+              onEdit={handleEditComment}
               onDelete={setDeleteTargetId}
               onReport={handleOpenReport}
               onReply={handleCreateReply}
               activeReplyCommentId={replyTargetId}
-              replyContent={replyContent}
               isReplySubmitting={isSubmitting}
               canReply
               onOpenReply={handleOpenReply}
               onCancelReply={handleCancelReply}
-              onReplyContentChange={setReplyContent}
             />
           ))
         ) : (

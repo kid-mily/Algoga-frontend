@@ -1,8 +1,6 @@
 import CommunityPageClient from "@/features/community/components/main/CommunityPageClient";
-import {
-  COMMUNITY_CATEGORIES,
-  type CommunityFilter,
-} from "@/features/community/types";
+import { type CommunityFilter } from "@/features/community/types";
+import { DEFAULT_COMMUNITY_FILTERS } from "@/features/community/utils/communityDefaults";
 import {
   getCommunityFilters,
   getCommunityPosts,
@@ -13,21 +11,14 @@ export const dynamic = "force-dynamic";
 const isVisibleCategoryFilter = (filter: CommunityFilter) =>
   filter.tagType === "COUNTRY" || Boolean(filter.category);
 
-const DEFAULT_FILTERS: CommunityFilter[] = COMMUNITY_CATEGORIES.map((category) => ({
-  id: category.id,
-  tagType: "CATEGORY",
-  tagName: category.label,
-  category: category.id,
-}));
-
 const loadCommunityFilters = async () => {
   try {
     const filters = await getCommunityFilters();
     const visibleFilters = filters.filter(isVisibleCategoryFilter);
 
-    return visibleFilters.length > 0 ? visibleFilters : DEFAULT_FILTERS;
+    return visibleFilters.length > 0 ? visibleFilters : DEFAULT_COMMUNITY_FILTERS;
   } catch {
-    return DEFAULT_FILTERS;
+    return DEFAULT_COMMUNITY_FILTERS;
   }
 };
 

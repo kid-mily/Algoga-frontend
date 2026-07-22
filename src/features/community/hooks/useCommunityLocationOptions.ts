@@ -14,15 +14,15 @@ export const useCommunityLocationOptions = (
   const [isLoadingCountries, setIsLoadingCountries] = useState(false);
 
   useEffect(() => {
-    if (!continentCode) {
-      setCountries([]);
-      setCountryId("");
-      return;
-    }
-
     const controller = new AbortController();
 
     const loadCountries = async () => {
+      if (!continentCode) {
+        setCountries([]);
+        setCountryId("");
+        return;
+      }
+
       try {
         setIsLoadingCountries(true);
         if (!isEditMode) {

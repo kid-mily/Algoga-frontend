@@ -1,9 +1,10 @@
+import { memo } from "react";
 import { Heart, ThumbsDown } from "lucide-react";
 import { CommunityCommentItemProps } from '../../types'
 import CommentDropdown from "./CommentDropdown";
-import CommunityCommentForm from "./CommunityCommentForm";
+import CommunityReplyForm from "./CommunityReplyForm";
 
-export default function CommunityCommentItem({
+function CommunityCommentItem({
   currentUserId,
   comment,
   reactionByCommentId = {},
@@ -14,10 +15,8 @@ export default function CommunityCommentItem({
   onReport,
   onReply,
   activeReplyCommentId = null,
-  replyContent = "",
   isReplySubmitting = false,
   canReply = true,
-  onReplyContentChange,
   onCancelReply,
   onOpenReply,
 }: CommunityCommentItemProps) {
@@ -92,23 +91,11 @@ export default function CommunityCommentItem({
           </div>
 
           {canReply && activeReplyCommentId === comment.commentId && (
-            <div className="mt-3 rounded-[14px] bg-[#F8FAFC] p-3">
-              <CommunityCommentForm
-                value={replyContent}
-                placeholder="대댓글을 입력하세요..."
-                submitLabel="답글 등록"
-                disabled={isReplySubmitting}
-                onChange={(value) => onReplyContentChange?.(value)}
-                onSubmit={() => onReply(comment.commentId, replyContent)}
-              />
-              <button
-                type="button"
-                onClick={onCancelReply}
-                className="mt-2 cursor-pointer text-xs font-bold text-[#7A6F66] hover:text-[#5F928E]"
-              >
-                취소
-              </button>
-            </div>
+            <CommunityReplyForm
+              disabled={isReplySubmitting}
+              onSubmit={(value) => onReply(comment.commentId, value)}
+              onCancel={() => onCancelReply?.()}
+            />
           )}
         </div>
 
@@ -135,10 +122,8 @@ export default function CommunityCommentItem({
               onReport={onReport}
               onReply={onReply}
               activeReplyCommentId={activeReplyCommentId}
-              replyContent={replyContent}
               isReplySubmitting={isReplySubmitting}
               canReply={false}
-              onReplyContentChange={onReplyContentChange}
               onCancelReply={onCancelReply}
               onOpenReply={onOpenReply}
             />
@@ -148,3 +133,7 @@ export default function CommunityCommentItem({
     </div>
   );
 }
+
+// 댓글 트리는 재귀 렌더라 부모 리렌더(메인/답글 입력 등)가 그대로 전파되면 비싸다.
+// props(콜백 포함)가 안정적이면 재렌더를 건너뛰도록 memo로 감싼다.
+export default memo(CommunityCommentItem);
