@@ -146,9 +146,11 @@ export default function RegisterPageClient() {
         return;
       }
 
-      // 이메일 중복(AUTH_001): 이메일 자체가 문제이므로 인증도 다시 필요하다.
+      // 이메일 중복(AUTH_001) / 탈퇴 후 재가입 제한(AUTH_019):
+      // 서버 안내 문구를 이메일 필드에 그대로 표시한다.
       if (
         errorCode === "AUTH_001" ||
+        errorCode === "AUTH_019" ||
         (!errorCode &&
           (errorMessage.includes("이메일") ||
             errorMessage.includes("사용") ||
