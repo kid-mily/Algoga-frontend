@@ -10,14 +10,20 @@ interface HotelInfoProps {
 export default function HotelInfo({ accommodation }: HotelInfoProps) {
   return (
     <div>
-      <div className="relative h-48 overflow-hidden rounded-xl">
-        <Image
-          src={accommodation.image}
-          alt={accommodation.name}
-          fill
-          sizes="(max-width: 640px) 100vw, 720px"
-          className="object-cover"
-        />
+      <div className="relative h-48 overflow-hidden rounded-xl bg-[#DCEFED]">
+        {accommodation.image ? (
+          <Image
+            src={accommodation.image}
+            alt={accommodation.name}
+            fill
+            sizes="(max-width: 640px) 100vw, 720px"
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-[#5E9F9B]">
+            <span className="text-3xl">✈</span>
+          </div>
+        )}
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-3">
@@ -33,12 +39,7 @@ export default function HotelInfo({ accommodation }: HotelInfoProps) {
         <p className="mt-1 text-xs text-[#718096]">
           {accommodation.address}
         </p>
-        <p className="mt-3 text-sm leading-6 text-[#718096]">
-          {accommodation.description}
-        </p>
       </div>
-
-      
     </div>
   );
 }

@@ -36,13 +36,13 @@ export default async function PackageBookingPage({
 
   let course: CourseItem | null = null;
   if (courseId) {
-    course = await getCourseDetail(detail.packageItem.countryId, courseId);
+    course = await getCourseDetail(detail.countryId, courseId);
   }
 
   return (
     <BookingPageClient
       data={data}
-      packageItem={detail.packageItem}
+      packageItem={detail}
       packageId={packageId}
       course={course}
     />

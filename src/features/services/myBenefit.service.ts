@@ -49,24 +49,21 @@ export const getMyCoupons = async (): Promise<MyCoupon[]> => {
   }
 };
 
-// 특정 강의에서 사용 가능한 쿠폰만 조회
-export const getUsableCouponsByCourse = async (
-  courseId: number
-): Promise<MyCoupon[]> => {
+// 단과(강의 단독) 결제는 웰컴쿠폰만 사용 가능 — 강의 완강 후 지급되는 수료 할인 쿠폰 등
+// 강의 전용 쿠폰은 패키지 구매용이라 여기서는 제외한다.
+// 백엔드 쿠폰 응답(GET /my/coupons)에 종류를 구분하는 필드가 따로 없어서(2026-07-23 스웨거 확인)
+// couponName 문자열로 판별함 — 이름이 바뀌면 같이 바뀌어야 함
+const WELCOME_COUPON_NAME = "웰컴쿠폰";
+
+export const getWelcomeCoupon = async (): Promise<MyCoupon[]> => {
   const coupons = await getMyCoupons();
 
-  return coupons.filter((coupon) => {
-    const isIssued = coupon.status === "ISSUED";
-    const isUsable = coupon.usable === true;
-
-    const isCourseCoupon = coupon.courseId === courseId;
-    const isGlobalCoupon =
-      coupon.courseId === null ||
-      coupon.courseId === undefined ||
-      coupon.courseId === 0;
-
-    return isIssued && isUsable && (isCourseCoupon || isGlobalCoupon);
-  });
+  return coupons.filter(
+    (coupon) =>
+      coupon.status === "ISSUED" &&
+      coupon.usable === true &&
+      coupon.couponName === WELCOME_COUPON_NAME
+  );
 };
 
 // 내 마일리지 조회

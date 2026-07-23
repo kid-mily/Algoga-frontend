@@ -44,7 +44,7 @@ export default async function PackagePaymentPage({
   // 강의는 패키지와 백엔드에서 연결돼 있지 않아, 조회한 패키지의 countryId 기준으로 별도 조회한다
   let course: CourseItem | null = null;
   if (courseId) {
-    course = await getCourseDetail(detail.packageItem.countryId, courseId);
+    course = await getCourseDetail(detail.countryId, courseId);
   }
 
   return (

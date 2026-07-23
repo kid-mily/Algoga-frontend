@@ -100,7 +100,11 @@ export default function ReservationPage() {
     }
   };
 
-  const handlePayBalance = async (reservation: ReservationItem) => {
+  const handlePayBalance = async (
+    reservation: ReservationItem,
+    usedMileage: number,
+    usedCouponId: number | null
+  ) => {
     if (payingBalanceId !== null) return;
 
     setPayingBalanceId(reservation.id);
@@ -108,7 +112,7 @@ export default function ReservationPage() {
     setBalanceSuccessMessage("");
 
     try {
-      await payReservationBalance(reservation.id);
+      await payReservationBalance(reservation.id, usedMileage, usedCouponId);
       setReservations(await loadMyReservations());
       setBalanceSuccessMessage(
         `잔금 ${reservation.remainingAmount.toLocaleString()}원 결제가 완료되었습니다.`
@@ -230,7 +234,9 @@ export default function ReservationPage() {
           dueDate={balanceTarget.balanceDueDate}
           isPaying={payingBalanceId === balanceTarget.id}
           onCancel={() => setBalanceTarget(null)}
-          onConfirm={() => void handlePayBalance(balanceTarget)}
+          onConfirm={(usedMileage, usedCouponId) =>
+            void handlePayBalance(balanceTarget, usedMileage, usedCouponId)
+          }
         />
       )}
     </div>

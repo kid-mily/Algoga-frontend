@@ -12,12 +12,16 @@ export interface FlightInfo {
 export interface PackageApiItem {
   packageId: number;
   countryId: number;
-  countryName: string;
+  countryName: string | null;
   accommodationId: number;
-  accommodationName: string;
+  accommodationName: string | null;
+  // 2026-07-23 백엔드 추가 — 숙소 정보를 별도로 GET /accommodations/{id} 조회할 필요 없이
+  // 패키지 응답 하나로 다 받는다
+  accommodationAddress: string | null;
+  accommodationImageUrl: string | null;
   name: string;
-  description: string;
-  imageUrl: string;
+  description: string | null;
+  imageUrl: string | null;
   price: number;
   checkInDate: string;
   checkOutDate: string;
@@ -42,11 +46,6 @@ export interface AccommodationResponse {
   pricePerNight: number;
   nights: number;
   description: string;
-}
-
-export interface PackageLoungeDetail {
-  packageItem: PackageApiItem;
-  accommodation: AccommodationResponse;
 }
 
 export interface PackageSelection {

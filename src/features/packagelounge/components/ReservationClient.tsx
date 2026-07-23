@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 import type { CourseItem } from "@/features/classroom/components/types";
 import { getCourseDetail } from "@/features/services/lectureDetail.service";
 import { getPackageLoungeDetail } from "@/features/services/package.service";
-import type { PackageLoungeDetail } from "../types";
+import type { PackageApiItem } from "../types";
 import { getPackageSelection } from "../utils/selectionStorage";
 import ReservationSummary from "./ReservationSummary";
 
 interface LoadedReservation {
-  detail: PackageLoungeDetail;
+  detail: PackageApiItem;
   course: CourseItem;
   continentCode: string;
 }
@@ -102,8 +102,7 @@ export default function ReservationClient() {
 
   return (
     <ReservationSummary
-      packageItem={reservation.detail.packageItem}
-      accommodation={reservation.detail.accommodation}
+      packageItem={reservation.detail}
       course={reservation.course}
       continentCode={reservation.continentCode}
     />

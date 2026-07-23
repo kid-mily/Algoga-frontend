@@ -1,23 +1,18 @@
-import type {
-  AccommodationResponse,
-  PackageApiItem,
-  PaymentBreakdown,
-} from "../types";
+import type { PackageApiItem, PaymentBreakdown } from "../types";
 
 interface CalculatePaymentParams {
   lecturePrice: number;
   packageItem: PackageApiItem;
-  accommodation: AccommodationResponse;
 }
 
 export function calculatePayment({
   lecturePrice,
   packageItem,
-  accommodation,
 }: CalculatePaymentParams): PaymentBreakdown {
   const lectureAmount = lecturePrice;
   const flightAmount = packageItem.flightPrice;
-  const accommodationAmount = accommodation.pricePerNight * packageItem.nights;
+  // 패키지 응답에 이미 계산된 값이 있어(accommodationPrice = pricePerNight × nights) 그대로 쓴다
+  const accommodationAmount = packageItem.accommodationPrice;
   const travelAmount = flightAmount + accommodationAmount;
   const depositAmount = Math.trunc((travelAmount * 30) / 100);
   const balanceAmount = travelAmount - depositAmount;

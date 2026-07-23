@@ -31,7 +31,7 @@ export default async function PackagePaymentSuccessPage({
 
   let course: CourseItem | null = null;
   if (courseId) {
-    course = await getCourseDetail(detail.packageItem.countryId, courseId);
+    course = await getCourseDetail(detail.countryId, courseId);
   }
 
   if (!bookingId) {

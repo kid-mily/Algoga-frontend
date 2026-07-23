@@ -6,11 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CourseItem } from "@/features/classroom/components/types";
 import { createBooking } from "@/features/services/package.service";
-import {
-  AccommodationResponse,
-  CreateBookingRequest,
-  PackageApiItem,
-} from "../types";
+import { CreateBookingRequest, PackageApiItem } from "../types";
 import { getPassengerInfo } from "../utils/passengerStorage";
 import { calculatePayment, formatDateTime } from "../utils/payment";
 import PassengerForm from "./PassengerForm";
@@ -18,14 +14,12 @@ import { ApiRequestError } from "@/lib/api";
 
 interface ReservationSummaryProps {
   packageItem: PackageApiItem;
-  accommodation: AccommodationResponse;
   course: CourseItem;
   continentCode: string;
 }
 
 export default function ReservationSummary({
   packageItem,
-  accommodation,
   course,
   continentCode,
 }: ReservationSummaryProps) {
@@ -33,7 +27,6 @@ export default function ReservationSummary({
   const payment = calculatePayment({
     lecturePrice: course.price,
     packageItem,
-    accommodation,
   });
   const flight = packageItem.flightInfo;
   // 항공편 조회에 실패(null)하면 예약 자체를 진행할 수 없다
@@ -161,25 +154,31 @@ export default function ReservationSummary({
           </InformationCard>
 
           <InformationCard title="숙소 정보">
-            {accommodation.imageUrl && (
+            {packageItem.accommodationImageUrl && (
               <div className="relative mb-4 h-44 overflow-hidden rounded-xl">
                 <Image
-                  src={accommodation.imageUrl}
-                  alt={accommodation.name}
+                  src={packageItem.accommodationImageUrl}
+                  alt={packageItem.accommodationName ?? ""}
                   fill
                   sizes="760px"
                   className="object-cover"
                 />
               </div>
             )}
-            <DetailRow label="숙소명" value={accommodation.name} />
-            <DetailRow label="주소" value={accommodation.address} />
+            <DetailRow
+              label="숙소명"
+              value={packageItem.accommodationName ?? ""}
+            />
+            <DetailRow
+              label="주소"
+              value={packageItem.accommodationAddress ?? ""}
+            />
             <DetailRow label="체크인" value={packageItem.checkInDate} />
             <DetailRow label="체크아웃" value={packageItem.checkOutDate} />
             <DetailRow label="숙박" value={`${packageItem.nights}박`} />
             <DetailRow
               label="1박 가격"
-              value={`${accommodation.pricePerNight.toLocaleString()}원`}
+              value={`${packageItem.pricePerNight.toLocaleString()}원`}
             />
             <DetailRow
               label="숙소 총액"

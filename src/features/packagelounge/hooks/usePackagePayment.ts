@@ -110,6 +110,9 @@ export function usePackagePayment({
   // 화면 표시용 상품 금액(패키지분 + 강의). 쿠폰/마일리지 차감 전 금액
   const productAmount = packageAmount + coursePrice;
 
+  // 2026-07-23 정책 확정 — 1차(예약금, DEPOSIT)는 마일리지만 사용 가능, 쿠폰은 일시불(FULL)에서만 사용 가능
+  const isCouponAllowed = paymentType === "FULL";
+
   const selectedCoupon = useMemo(
     () =>
       coupons.find((coupon) => coupon.userCouponId === selectedCouponId) ??
@@ -117,34 +120,34 @@ export function usePackagePayment({
     [coupons, selectedCouponId]
   );
 
-  // 쿠폰/마일리지는 패키지분에서만 차감하고 강의(정가)에는 적용하지 않는다
+  // 쿠폰/마일리지는 이제 패키지분+강의를 합친 전체 금액(productAmount)에 적용한다.
+  // DEPOSIT(1차)는 쿠폰 자체를 못 쓰므로 할인 0
   const couponDiscount = useMemo(
-    () => getCouponDiscount(selectedCoupon, packageAmount),
-    [selectedCoupon, packageAmount]
+    () => (isCouponAllowed ? getCouponDiscount(selectedCoupon, productAmount) : 0),
+    [isCouponAllowed, selectedCoupon, productAmount]
   );
 
   const maxMileage = useMemo(
-    () => Math.min(mileageBalance, Math.max(packageAmount - couponDiscount, 0)),
-    [mileageBalance, packageAmount, couponDiscount]
-  );
-
-  // 강의 없이 패키지분만 결제할 때 쓰는 금액 (통합결제 사전 검증에서 강의가 제외될 때도 재사용)
-  const packageOnlyAmount = useMemo(
-    () => Math.max(packageAmount - couponDiscount - usedMileage, 0),
-    [packageAmount, couponDiscount, usedMileage]
+    () => Math.min(mileageBalance, Math.max(productAmount - couponDiscount, 0)),
+    [mileageBalance, productAmount, couponDiscount]
   );
 
   const finalAmount = useMemo(
-    () => packageOnlyAmount + coursePrice,
-    [packageOnlyAmount, coursePrice]
+    () => Math.max(productAmount - couponDiscount - usedMileage, 0),
+    [productAmount, couponDiscount, usedMileage]
   );
 
-  const handleCouponChange = useCallback((couponId: number | null) => {
-    setSelectedCouponId(couponId);
-    // 쿠폰이 바뀌면 결제 금액이 바뀌므로 적용된 마일리지 초기화
-    setUsedMileage(0);
-    setMileageInputValue("");
-  }, []);
+  const handleCouponChange = useCallback(
+    (couponId: number | null) => {
+      if (!isCouponAllowed) return;
+
+      setSelectedCouponId(couponId);
+      // 쿠폰이 바뀌면 결제 금액이 바뀌므로 적용된 마일리지 초기화
+      setUsedMileage(0);
+      setMileageInputValue("");
+    },
+    [isCouponAllowed]
+  );
 
   const handlePaymentTypeChange = useCallback(
     (nextType: "FULL" | "DEPOSIT") => {
@@ -154,6 +157,10 @@ export function usePackagePayment({
       // 패키지분 금액이 바뀌므로 적용된 마일리지 초기화 (쿠폰 할인은 재계산됨)
       setUsedMileage(0);
       setMileageInputValue("");
+      // DEPOSIT(1차)는 쿠폰을 못 쓰므로 선택돼 있던 쿠폰도 같이 해제
+      if (nextType === "DEPOSIT") {
+        setSelectedCouponId(null);
+      }
     },
     [installmentAllowed]
   );
@@ -317,6 +324,7 @@ export function usePackagePayment({
     errorMessage,
     paymentType,
     productAmount,
+    isCouponAllowed,
     couponDiscount,
     maxMileage,
     finalAmount,

@@ -77,6 +77,7 @@ export default function PackagePaymentClient({
     errorMessage,
     paymentType,
     productAmount,
+    isCouponAllowed,
     couponDiscount,
     maxMileage,
     finalAmount,
@@ -162,6 +163,8 @@ export default function PackagePaymentClient({
               coupons={coupons}
               selectedCouponId={selectedCouponId}
               onChange={handleCouponChange}
+              disabled={!isCouponAllowed}
+              disabledReason="예약금(1차) 결제는 마일리지만 사용할 수 있어요. 쿠폰은 잔금(2차) 결제 시 사용해 주세요."
             />
             <MileageInput
               mileageBalance={mileageBalance}
