@@ -32,6 +32,23 @@ export async function getPackagesByCountry(
   return unwrapData(response) ?? [];
 }
 
+// 나라 필터 없는 전체 패키지 카탈로그. AI 일정 추천의 "전체 패키지" 선택지에서 사용
+export async function getAllPackages(
+  signal?: AbortSignal
+): Promise<PackageApiItem[]> {
+  const response = await api.get<ApiResult<PackageApiItem[]>>(
+    "/api/v1/packages",
+    {
+      signal,
+      skipAuth: true,
+      suppressGlobalError: true,
+      cache: "no-store",
+    }
+  );
+
+  return unwrapData(response) ?? [];
+}
+
 export async function getPackageDetail(
   packageId: string | number,
   signal?: AbortSignal

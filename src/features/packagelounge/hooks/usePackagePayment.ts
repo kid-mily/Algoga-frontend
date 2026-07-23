@@ -38,6 +38,9 @@ const PAYMENT_ERROR_MESSAGE: Record<string, string> = {
   PAY_007: "강의 정보를 찾을 수 없습니다.",
   PAY_015: "이 예약은 일시불(전액) 결제만 가능합니다.",
   PAY_016: "통합 결제는 예약금 또는 일시불만 가능합니다.",
+  // 2026-07-22 백엔드 추가 — 출발일이 지난 예약의 결제(단건/통합 모두) 최종 차단
+  BK_005: "출발일이 지나 예약·결제할 수 없습니다.",
+  BK_006: "출발 7일 전 잔금 결제가 마감되었습니다.",
 };
 
 // 패키지 결제 페이지의 쿠폰/마일리지/결제 요청 상태를 관리하는 훅
@@ -198,7 +201,21 @@ export function usePackagePayment({
             preview.alreadyPaidCourseIds.includes(courseId)
           ) {
             useBundle = false;
-            paymentAmount = packageOnlyAmount;
+            const packagePreview = await getBundlePaymentPreview({
+              bookingId,
+              paymentType,
+              usedMileage,
+              usedCouponId: selectedCouponId,
+            });
+
+            if (!packagePreview.payable) {
+              setErrorMessage(
+                packagePreview.blockMessage || "결제를 진행할 수 없습니다."
+              );
+              return;
+            }
+
+            paymentAmount = packagePreview.expectedTotal;
           } else {
             setErrorMessage(preview.blockMessage || "결제를 진행할 수 없습니다.");
             return;
@@ -242,8 +259,21 @@ export function usePackagePayment({
         });
       }
 
+      // 실제로 결제창에 띄웠던 금액(paymentAmount)과 bookingId를 완료 페이지까지 그대로 넘긴다.
+      // (완료 페이지가 패키지 카탈로그 가격을 다시 조회해서 "강의 빠진 금액"을 보여주던 버그 수정)
+      // courseId는 이번 결제에 실제로 강의가 포함된 경우(useBundle)에만 넘긴다 —
+      // 이미 결제한 강의라 제외되고 패키지만 결제된 경우는 넘기지 않는다
+      const successParams = new URLSearchParams({
+        mode: paymentType === "DEPOSIT" ? "deposit" : "full",
+        bookingId: String(bookingId),
+        amount: String(paymentAmount),
+      });
+      if (useBundle && courseId) {
+        successParams.set("courseId", String(courseId));
+      }
+
       router.push(
-        `/packagelounge/${packageId}/payment/success?mode=${paymentType === "DEPOSIT" ? "deposit" : "full"}`
+        `/packagelounge/${packageId}/payment/success?${successParams.toString()}`
       );
     } catch (error) {
       if (error instanceof ApiRequestError) {
@@ -265,7 +295,6 @@ export function usePackagePayment({
   }, [
     isPaying,
     finalAmount,
-    packageOnlyAmount,
     courseId,
     courseName,
     packageName,

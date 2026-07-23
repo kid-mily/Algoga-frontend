@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
 import type { PackageBookingInfo } from "../packageDetail.types";
 import { buildQueryString } from "../utils/query";
@@ -12,17 +9,14 @@ interface PackageBookingSummaryProps {
   continentCode?: string;
 }
 
-type PaymentMethod = "분할 결제" | "일시불";
-
-// 오른쪽 예약 요약 카드: 가격 정보 + 결제 방식 선택 + 예약하기 버튼
+// 오른쪽 예약 요약 카드: 일정 정보 + 예약하기 버튼.
+// 실제 금액은 강의 포함 여부와 예약 생성 결과에 따라 달라지므로 예약 페이지에서만 보여준다.
 export default function PackageBookingSummary({
   booking,
   packageId,
   courseId,
   continentCode,
 }: PackageBookingSummaryProps) {
-  const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod>("분할 결제");
   // 예약 페이지가 패키지를 다시 조회할 때 자기 countryId를 직접 얻으므로 여기서는 courseId만 이어주면 된다
   const bookingHref = `/packagelounge/${packageId}/booking${buildQueryString({ courseId, continentCode })}`;
 
@@ -34,68 +28,10 @@ export default function PackageBookingSummary({
         {booking.dateRange} · {booking.duration}
       </p>
 
-      <div className="mt-4 space-y-2 border-t border-[#E1E8EF] pt-4">
-        <div className="flex items-center justify-between text-sm text-[#0A1628]">
-          <span>항공권</span>
-          <span className="font-bold">
-            {booking.flightPrice.toLocaleString()}원
-          </span>
-        </div>
-        <div className="flex items-center justify-between text-sm text-[#0A1628]">
-          <span>숙소</span>
-          <span className="font-bold">
-            {booking.stayPrice.toLocaleString()}원
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-4 border-t border-[#E1E8EF] pt-4">
-        <p className="text-xs font-bold text-[#0A1628]">결제 방식</p>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          {(["분할 결제", "일시불"] as const).map((method) => {
-            const isActive = method === paymentMethod;
-
-            return (
-              <button
-                key={method}
-                type="button"
-                onClick={() => setPaymentMethod(method)}
-                className={`rounded-lg py-2 text-sm font-bold transition ${
-                  isActive
-                    ? "bg-[#439A97] text-white"
-                    : "border border-[#E1E8EF] bg-white text-[#0A1628]"
-                }`}
-              >
-                {method}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-xl bg-[#EEF8F7] p-4">
-        {paymentMethod === "분할 결제" ? (
-          <>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#718096]">지금 결제(예약금)</span>
-              <span className="text-lg font-extrabold text-[#439A97]">
-                {booking.depositAmount.toLocaleString()}원
-              </span>
-            </div>
-            <p className="mt-2 text-[11px] text-[#718096]">
-              잔금 {booking.balanceAmount.toLocaleString()}원은 출발 7일
-              전까지 별도 결제
-            </p>
-          </>
-        ) : (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-[#718096]">총 결제 금액</span>
-            <span className="text-lg font-extrabold text-[#439A97]">
-              {booking.totalAmount.toLocaleString()}원
-            </span>
-          </div>
-        )}
-      </div>
+      <p className="mt-4 border-t border-[#E1E8EF] pt-4 text-xs leading-5 text-[#718096]">
+        강의 포함 여부와 결제 방식이 반영된 최종 금액은 예약 페이지에서
+        확인할 수 있습니다.
+      </p>
 
       {booking.canBook ? (
         <Link

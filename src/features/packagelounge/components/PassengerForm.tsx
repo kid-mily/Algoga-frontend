@@ -153,6 +153,11 @@ export default function PassengerForm({
         expiryDate: getExpiryDateError(value, returnDate),
       }));
     }
+
+    // 성별은 토글 선택이라 값이 있으면(=선택했으면) 바로 오류를 지운다
+    if (field === "gender") {
+      setErrors((prev) => ({ ...prev, gender: undefined }));
+    }
   };
 
   const handleBlur = (field: keyof PassengerFormData) => {
@@ -219,15 +224,10 @@ export default function PassengerForm({
         </div>
 
         <div className="mt-4 grid grid-cols-1 items-start gap-4 sm:grid-cols-3">
-          <FormField
-            name="gender"
-            label="성별"
-            required
-            placeholder="예: M / F"
+          <GenderToggleField
             value={form.gender}
             error={errors.gender}
             onChange={(value) => handleChange("gender", value)}
-            onBlur={() => handleBlur("gender")}
           />
           <FormField
             name="birthDate"
@@ -315,6 +315,55 @@ function FormField({
             : "border-[#E1E8EF] focus:border-[#439A97] focus:shadow-[0_1px_0_0_#439A97]"
         }`}
       />
+      {error && <p className="mt-1 text-xs text-[#D9534F]">{error}</p>}
+    </div>
+  );
+}
+
+interface GenderToggleFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+}
+
+// 성별 선택 토글(M/F) — 자유 입력 대신 두 값만 고르게 해서 저장값을 항상 "M"/"F"로 고정한다
+function GenderToggleField({ value, onChange, error }: GenderToggleFieldProps) {
+  const isInvalid = Boolean(error);
+
+  return (
+    <div>
+      <label className="text-xs font-bold text-[#0A1628]">
+        성별<span className="ml-0.5 text-[#D9534F]">*</span>
+      </label>
+      <div
+        className={`mt-1 grid h-11 grid-cols-2 gap-1 rounded-lg border p-1 ${
+          isInvalid ? "border-[#D9534F]" : "border-[#E1E8EF]"
+        }`}
+      >
+        <button
+          type="button"
+          name="gender"
+          onClick={() => onChange("M")}
+          className={`rounded-md text-sm font-bold transition ${
+            value === "M"
+              ? "bg-[#439A97] text-white"
+              : "text-[#8A9BB0] hover:bg-[#F3F8FC]"
+          }`}
+        >
+          남 (M)
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange("F")}
+          className={`rounded-md text-sm font-bold transition ${
+            value === "F"
+              ? "bg-[#439A97] text-white"
+              : "text-[#8A9BB0] hover:bg-[#F3F8FC]"
+          }`}
+        >
+          여 (F)
+        </button>
+      </div>
       {error && <p className="mt-1 text-xs text-[#D9534F]">{error}</p>}
     </div>
   );

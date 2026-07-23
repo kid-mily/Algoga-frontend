@@ -16,6 +16,9 @@ export interface PaymentSuccessData {
   flightNumber: string;
   accommodationName: string;
   heroImage: string;
+  // 강의를 함께 결제했을 때만 채워짐 (패키지 단독 결제면 둘 다 null)
+  courseName: string | null;
+  coursePrice: number | null;
   totalAmount: number;
   paidAmount: number;
   remainingAmount: number;
