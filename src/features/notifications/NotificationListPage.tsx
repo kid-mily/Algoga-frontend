@@ -53,7 +53,9 @@ export default function NotificationListPage() {
         });
 
         setNotifications(data.notifications);
-        setTotalElements(data.totalElements);
+        if (tab === "all") {
+          setTotalElements(data.totalElements);
+        }
         setTotalPages(Math.max(data.totalPages, 1));
       } catch (error) {
         if (
