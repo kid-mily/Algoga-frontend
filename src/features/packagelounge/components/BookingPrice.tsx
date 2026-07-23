@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBooking } from "@/features/services/package.service";
+import { getMyCourses } from "@/features/services/myCourse.service";
 import { CreateBookingRequest, PackageApiItem } from "../types";
 import { PackageDetailData } from "../packageDetail.types";
 import { getPassengerInfo } from "../utils/passengerStorage";
@@ -44,7 +45,46 @@ export default function BookingPrice({
   const [errorMessage, setErrorMessage] = useState("");
   // 완강하지 않은 유저가 패키지 예약을 시도할 때 (BK_004) - 안내 문구 + 강의 이어듣기 링크를 따로 보여준다
   const [isCompletionRequired, setIsCompletionRequired] = useState(false);
-  const coursePrice = course?.price ?? 0;
+
+  // 2026-07-23 백엔드 확인 — 이미 보유(구매)한 강의는 패키지 예약 시 재청구하면 안 됨
+  // (결제 단계의 bundle preview DUPLICATE_PAYMENT와 같은 신호를 여기서도 미리 확인해서
+  // 예약 요약 금액이 실제 결제 금액과 어긋나지 않게 함)
+  const [isCourseOwned, setIsCourseOwned] = useState(false);
+  const [isCheckingOwnership, setIsCheckingOwnership] = useState(
+    Boolean(course)
+  );
+
+  useEffect(() => {
+    // course가 없으면 애초에 isCourseOwned/isCheckingOwnership 초기값(false)이 그대로 맞다.
+    // course가 있으면 isCheckingOwnership 초기값이 이미 true라 여기서 다시 set할 필요 없음
+    if (!course) return;
+
+    let active = true;
+
+    const checkOwnership = async () => {
+      try {
+        const { content } = await getMyCourses(0, 100);
+        if (!active) return;
+        setIsCourseOwned(
+          content.some((myCourse) => myCourse.courseId === course.courseId)
+        );
+      } catch (error) {
+        console.error("[packagelounge] 강의 보유 여부 확인 실패:", error);
+      } finally {
+        if (active) setIsCheckingOwnership(false);
+      }
+    };
+
+    void checkOwnership();
+
+    return () => {
+      active = false;
+    };
+  }, [course]);
+
+  // 강의를 아직 안 샀을 때만 패키지와 함께 청구한다. 이미 보유한 강의는 결제 금액에서 완전히 제외
+  const hasUnpurchasedCourse = Boolean(course) && !isCourseOwned;
+  const coursePrice = hasUnpurchasedCourse ? course!.price : 0;
   const totalWithCourse = booking.totalAmount + coursePrice;
   const firstPaymentAmount = booking.depositAmount + coursePrice;
   const balanceDueDate = formatBalanceDueDate(packageItem.checkInDate);
@@ -85,7 +125,8 @@ export default function BookingPrice({
       const payload: CreateBookingRequest = {
         accommodationId: packageItem.accommodationId,
         packageId: packageItem.packageId,
-        ...(course ? { courseId: course.courseId } : {}),
+        // 이미 보유한 강의는 백엔드가 예약에 강의를 저장하지도 않고 재청구 대상도 아니라 courseId를 안 보냄
+        ...(hasUnpurchasedCourse ? { courseId: course!.courseId } : {}),
         flightInfo: packageItem.flightInfo,
         returnFlightInfo: packageItem.returnFlightInfo,
         passengerInfo: {
@@ -100,13 +141,14 @@ export default function BookingPrice({
         flightPrice: packageItem.flightPrice,
         checkInDate: packageItem.checkInDate,
         checkOutDate: packageItem.checkOutDate,
-        bookingSource: "LOUNGE",
+        // 이미 강의를 완강/보유한 채로 들어온 경로는 COMPLETION(일시불 고정), 그 외엔 LOUNGE(분할 가능)
+        bookingSource: course && isCourseOwned ? "COMPLETION" : "LOUNGE",
       };
 
       const bookingId = await createBooking(payload);
       const query = buildQueryString({
         bookingId,
-        courseId: course?.courseId,
+        courseId: hasUnpurchasedCourse ? course!.courseId : undefined,
       });
       router.push(`/packagelounge/${packageId}/payment${query}`);
     } catch (error) {
@@ -156,18 +198,24 @@ export default function BookingPrice({
             {booking.stayPrice.toLocaleString()}원
           </span>
         </div>
-        {course && (
+        {hasUnpurchasedCourse && (
           <>
             <div className="border-t border-dashed border-[#D6E0E8]" />
             <div className="flex items-center justify-between text-sm text-[#0A1628]">
               <span>강의</span>
               <span className="font-bold">
-                {course.price.toLocaleString()}원
+                {course!.price.toLocaleString()}원
               </span>
             </div>
           </>
         )}
       </div>
+
+      {course && isCourseOwned && (
+        <p className="mt-2 text-xs text-[#357F7C]">
+          이미 보유한 강의라 결제 금액에 포함되지 않습니다.
+        </p>
+      )}
 
       <div className="mt-4 rounded-xl bg-[#EEF8F7] p-4">
         <div className="flex items-center justify-between">
@@ -176,18 +224,23 @@ export default function BookingPrice({
             {totalWithCourse.toLocaleString()}원
           </strong>
         </div>
-        <div className="mt-2 border-t border-dashed border-[#B7DAD7] pt-2 text-xs text-[#56706F]">
-          <div className="flex items-center justify-between">
-            <span>분할 1차</span>
-            <strong className="text-[#0A1628]">
-              {firstPaymentAmount.toLocaleString()}원
-            </strong>
+        {/* 완강 후(보유) 경로는 COMPLETION으로 예약돼 일시불만 가능해서, 헷갈릴 수 있는 분할 예상액은 안 보여준다 */}
+        {!(course && isCourseOwned) && (
+          <div className="mt-2 border-t border-dashed border-[#B7DAD7] pt-2 text-xs text-[#56706F]">
+            <div className="flex items-center justify-between">
+              <span>분할 1차</span>
+              <strong className="text-[#0A1628]">
+                {firstPaymentAmount.toLocaleString()}원
+              </strong>
+            </div>
+            <p className="mt-1">
+              2차 잔금 <strong>{booking.balanceAmount.toLocaleString()}원</strong> · {balanceDueDate}까지
+            </p>
+            {hasUnpurchasedCourse && (
+              <p className="mt-1">강의 금액은 1차에 전액 포함됩니다.</p>
+            )}
           </div>
-          <p className="mt-1">
-            2차 잔금 <strong>{booking.balanceAmount.toLocaleString()}원</strong> · {balanceDueDate}까지
-          </p>
-          {course && <p className="mt-1">강의 금액은 1차에 전액 포함됩니다.</p>}
-        </div>
+        )}
       </div>
 
       <p className="mt-3 text-xs text-[#718096]">
@@ -217,10 +270,14 @@ export default function BookingPrice({
       <button
         type="button"
         onClick={handleClick}
-        disabled={isCreating || isDeparted}
+        disabled={isCreating || isDeparted || isCheckingOwnership}
         className="mt-4 w-full rounded-xl bg-[#439A97] py-3 text-center text-sm font-bold text-white transition hover:bg-[#357F7C] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isCreating ? "예약 생성 중..." : "결제 단계로 이동"}
+        {isCreating
+          ? "예약 생성 중..."
+          : isCheckingOwnership
+            ? "확인 중..."
+            : "결제 단계로 이동"}
       </button>
     </div>
   );

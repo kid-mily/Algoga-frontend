@@ -80,6 +80,7 @@ export default function ReservationDetail({
   };
 
   const handlePayBalance = async (
+    amount: number,
     usedMileage: number,
     usedCouponId: number | null
   ) => {
@@ -90,10 +91,15 @@ export default function ReservationDetail({
     setBalanceSuccessMessage("");
 
     try {
-      await payReservationBalance(reservation.id, usedMileage, usedCouponId);
+      await payReservationBalance(
+        reservation.id,
+        amount,
+        usedMileage,
+        usedCouponId
+      );
       setReservation(await loadMyReservationDetail(reservation.id));
       setBalanceSuccessMessage(
-        `잔금 ${reservation.remainingAmount.toLocaleString()}원 결제가 완료되었습니다.`
+        `잔금 ${amount.toLocaleString()}원 결제가 완료되었습니다.`
       );
       setIsBalanceConfirmOpen(false);
     } catch (error) {
@@ -465,8 +471,8 @@ export default function ReservationDetail({
           dueDate={reservation.balanceDueDate}
           isPaying={isPayingBalance}
           onCancel={() => setIsBalanceConfirmOpen(false)}
-          onConfirm={(usedMileage, usedCouponId) =>
-            void handlePayBalance(usedMileage, usedCouponId)
+          onConfirm={(amount, usedMileage, usedCouponId) =>
+            void handlePayBalance(amount, usedMileage, usedCouponId)
           }
         />
       )}

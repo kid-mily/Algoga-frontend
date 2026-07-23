@@ -11,8 +11,13 @@ interface BalancePaymentConfirmModalProps {
   dueDate?: string;
   isPaying: boolean;
   onCancel: () => void;
-  // 2026-07-23 정책 변경 — 잔금(2차) 결제는 쿠폰·마일리지 둘 다 사용 가능해져서, 선택한 값을 그대로 넘긴다
-  onConfirm: (usedMileage: number, usedCouponId: number | null) => void;
+  // 2026-07-23 정책 변경 — 잔금(2차) 결제는 쿠폰·마일리지 둘 다 사용 가능해져서, 선택한 값을 그대로 넘긴다.
+  // 잔금은 통합결제 preview를 못 쓰는 단건 결제라 여기서 계산한 finalAmount를 실제 결제 금액으로 그대로 씀
+  onConfirm: (
+    finalAmount: number,
+    usedMileage: number,
+    usedCouponId: number | null
+  ) => void;
 }
 
 // 잔금(2차) 결제 확인 모달. 쿠폰/마일리지 선택 후 실제 결제 금액을 계산해 보여준다
@@ -228,7 +233,7 @@ export default function BalancePaymentConfirmModal({
           </button>
           <button
             type="button"
-            onClick={() => onConfirm(usedMileage, selectedCouponId)}
+            onClick={() => onConfirm(finalAmount, usedMileage, selectedCouponId)}
             disabled={isPaying || isLoadingBenefits}
             className="rounded-xl bg-[#439A97] py-3 text-sm font-bold text-white disabled:opacity-50"
           >

@@ -154,11 +154,11 @@ export default function RecommendedCourseList({
       ) : courses.length === 0 ? (
         <div className="rounded-[24px] border border-[#E1EAF0] bg-white px-6 py-12 text-center shadow-sm">
           <p className="text-sm font-bold text-[#0A1628]">
-            현재 추천 가능한 강의가 없습니다.
+            현재 강의 준비 중 입니다.
           </p>
 
           <p className="mt-2 text-xs text-[#8A9BB0]">
-            전체 강의 목록에서 원하는 강의를 선택해보세요.
+            다른 등급의 강의를 선택해주세요.
           </p>
         </div>
       ) : (
