@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   createCommunityComment,
   deleteCommunityComment,
-  getCommunityPost,
   reactToCommunityComment,
   reportCommunityComment,
   updateCommunityComment,
@@ -52,6 +51,25 @@ const removeCommentFromTree = (
       replies: removeCommentFromTree(comment.replies, commentId),
     }));
 
+const appendReplyToTree = (
+  comments: CommunityComment[],
+  parentId: number,
+  reply: CommunityComment
+): CommunityComment[] =>
+  comments.map((comment) => {
+    if (comment.commentId === parentId) {
+      return {
+        ...comment,
+        replies: [...comment.replies, reply],
+      };
+    }
+
+    return {
+      ...comment,
+      replies: appendReplyToTree(comment.replies, parentId, reply),
+    };
+  });
+
 export const useCommunityComments = ({
   postId,
   initialCommentCount,
@@ -78,8 +96,6 @@ export const useCommunityComments = ({
   } = useLoginRequiredModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  // 댓글 작성 후 재요청을 이탈 시 취소하기 위한 컨트롤러.
-  const refetchAbortRef = useRef<AbortController | null>(null);
 
   const commentCount = useMemo(() => {
     const counted = countComments(comments);
@@ -88,31 +104,6 @@ export const useCommunityComments = ({
 
   // 섹션은 게시글 로드 완료 후에만 마운트되고 이후 initialComments 참조가 바뀌지 않으므로
   // useState 초기값으로 충분하다. (다른 게시글로 전환 시엔 부모가 key로 리마운트)
-
-  useEffect(() => () => refetchAbortRef.current?.abort(), []);
-
-  const refreshCommentsFromPost = useCallback(async () => {
-    refetchAbortRef.current?.abort();
-    const controller = new AbortController();
-    refetchAbortRef.current = controller;
-
-    try {
-      const post = await getCommunityPost(postId, controller.signal);
-      if (controller.signal.aborted) return;
-
-      setComments(post.comments);
-      onCommentCountChange?.(
-        post.comments.length > 0 ? countComments(post.comments) : post.commentCount
-      );
-    } catch (error) {
-      if (controller.signal.aborted) return;
-      throw error;
-    } finally {
-      if (refetchAbortRef.current === controller) {
-        refetchAbortRef.current = null;
-      }
-    }
-  }, [postId, onCommentCountChange]);
 
   const handleCreate = async () => {
     const nextContent = content.trim();
@@ -125,13 +116,14 @@ export const useCommunityComments = ({
 
     try {
       setIsSubmitting(true);
-      await createCommunityComment({
+      const createdComment = await createCommunityComment({
         postId,
         parentId: null,
         content: nextContent,
       });
+      setComments((prev) => [...prev, createdComment]);
+      onCommentCountChange?.(commentCount + 1);
       setContent("");
-      await refreshCommentsFromPost();
     } catch (error) {
       setErrorMessage(getRequestErrorMessage(error, "댓글 등록에 실패했습니다."));
     } finally {
@@ -151,20 +143,28 @@ export const useCommunityComments = ({
 
       try {
         setIsSubmitting(true);
-        await createCommunityComment({
+        const createdReply = await createCommunityComment({
           postId,
           parentId,
           content: nextContent,
         });
+        setComments((prev) => appendReplyToTree(prev, parentId, createdReply));
+        onCommentCountChange?.(commentCount + 1);
         setReplyTargetId(null);
-        await refreshCommentsFromPost();
       } catch (error) {
         setErrorMessage(getRequestErrorMessage(error, "대댓글 등록에 실패했습니다."));
       } finally {
         setIsSubmitting(false);
       }
     },
-    [isSubmitting, currentUserId, openLoginRequiredModal, postId, refreshCommentsFromPost]
+    [
+      isSubmitting,
+      currentUserId,
+      openLoginRequiredModal,
+      postId,
+      commentCount,
+      onCommentCountChange,
+    ]
   );
 
   const handleReaction = useCallback(
