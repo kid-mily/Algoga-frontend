@@ -30,7 +30,7 @@ export const sendSignupEmailCode = async (
   const response = await api.post<ApiResult<string>>(
     "/api/v1/auth/email/send-code",
     { email },
-    { skipAuth: true, signal }
+    { skipAuth: true, suppressGlobalError: true, signal }
   );
 
   return unwrapData(response);
@@ -40,7 +40,7 @@ export const verifySignupEmailCode = async (email: string, code: string) => {
   const response = await api.post<ApiResult<string>>(
     "/api/v1/auth/email/verify-code",
     { email, code },
-    { skipAuth: true }
+    { skipAuth: true, suppressGlobalError: true }
   );
 
   return unwrapData(response);

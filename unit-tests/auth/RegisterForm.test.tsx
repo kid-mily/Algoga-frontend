@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import RegisterInfoForm from "@/features/auth/components/RegisterInfoForm";
 import type { RegisterFormData } from "@/features/auth/types";
+import { ApiRequestError } from "@/lib/api";
 import {
   checkPhoneDuplicate,
   checkUsernameDuplicate,
@@ -327,7 +328,14 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
     const user = userEvent.setup();
 
     (sendSignupEmailCode as jest.Mock).mockRejectedValueOnce(
-      new Error("이미 가입된 이메일입니다.")
+      new ApiRequestError({
+        message: "이미 사용 중인 이메일입니다.",
+        status: 409,
+        body: {
+          errorCode: "AUTH_001",
+          message: "이미 사용 중인 이메일입니다.",
+        },
+      })
     );
 
     render(
@@ -340,7 +348,38 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
 
     await user.click(screen.getByRole("button", { name: "인증: 이메일 인증번호 발송" }));
 
-    expect(await screen.findByText("이미 가입된 이메일입니다.")).toBeVisible();
+    expect(await screen.findByText("이미 사용 중인 이메일입니다.")).toBeVisible();
+  });
+
+  test("최근 탈퇴한 이메일이면 서버의 재가입 제한 문구를 그대로 보여준다", async () => {
+    const user = userEvent.setup();
+
+    (sendSignupEmailCode as jest.Mock).mockRejectedValueOnce(
+      new ApiRequestError({
+        message: "최근 탈퇴한 이메일입니다. 탈퇴 후 30일이 지나야 재가입할 수 있습니다.",
+        status: 409,
+        body: {
+          errorCode: "AUTH_019",
+          message: "최근 탈퇴한 이메일입니다. 탈퇴 후 30일이 지나야 재가입할 수 있습니다.",
+        },
+      })
+    );
+
+    render(
+      <RegisterInfoForm
+        formData={createFormData({ email: "withdrawn@example.com" })}
+        onChange={jest.fn()}
+        onNext={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "인증: 이메일 인증번호 발송" }));
+
+    expect(
+      await screen.findByText(
+        "최근 탈퇴한 이메일입니다. 탈퇴 후 30일이 지나야 재가입할 수 있습니다."
+      )
+    ).toBeVisible();
   });
 
   test("이메일 인증번호 발송이 실패하면 실패 메시지가 보인다", async () => {

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { sendSignupEmailCode, verifySignupEmailCode } from "@/features/services/signup.service";
 import { emailRegex } from "../utils/registerValidators";
+import { getErrorCode } from "../utils/authError";
 
 const isAbortError = (error: unknown) =>
   error instanceof DOMException && error.name === "AbortError";
@@ -56,13 +57,16 @@ export const useEmailVerification = () => {
 
       const errorMessage =
         error instanceof Error ? error.message : "이메일 인증번호 발송에 실패했습니다.";
-      const duplicated = /이미|가입|중복|존재|사용/.test(errorMessage);
+      const errorCode = getErrorCode(error);
+      const duplicated =
+        errorCode === "AUTH_001" ||
+        (!errorCode && /이미.*(가입|사용)|중복.*이메일/.test(errorMessage));
 
       setIsCodeSent(false);
       setIsVerified(false);
       setIsDuplicated(duplicated);
       setMessage("");
-      onError(duplicated ? "이미 가입된 이메일입니다." : errorMessage);
+      onError(errorMessage);
     } finally {
       if (!controller.signal.aborted) {
         setIsSending(false);
