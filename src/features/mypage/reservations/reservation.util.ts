@@ -2,7 +2,6 @@ import {
   createPayment,
   getAccommodationDetail,
   getBookingDetail,
-  getBundlePaymentPreview,
   getMyBookings,
   getMyPayments,
 } from "@/features/services/package.service";
@@ -340,8 +339,14 @@ export async function loadMyReservationDetail(
 }
 
 // 2026-07-23 정책 변경 — 잔금(2차) 결제도 쿠폰·마일리지를 쓸 수 있게 됨
+// 2026-07-23 (후속) 백엔드 확인 — bundle preview(GET /payments/bundle/preview)는 통합결제(강의+패키지,
+// DEPOSIT/FULL)용이라 BALANCE를 보내면 INVALID_PAYMENT_TYPE으로 무조건 막힌다. 잔금은 단건 결제
+// (POST /payments, paymentType: BALANCE)라 preview 없이 금액을 프론트에서 직접 계산해서 바로 호출해야 함
+// (서버 검증식과 동일: amount = balancePrice - couponDiscount - usedMileage) — 이 계산은
+// BalancePaymentConfirmModal이 이미 하고 있어서 그 결과(finalAmount)를 그대로 받아 쓴다
 export async function payReservationBalance(
   bookingId: number,
+  amount: number,
   usedMileage = 0,
   usedCouponId: number | null = null,
   signal?: AbortSignal
@@ -362,18 +367,6 @@ export async function payReservationBalance(
     );
   }
 
-  // 쿠폰/마일리지 적용 후 실제 결제할 금액은 사전 검증(preview) 응답의 expectedTotal을
-  // 그대로 써야 한다 — 프론트에서 직접 계산하면 1원 오차 등으로 서버가 거부할 수 있음
-  const preview = await getBundlePaymentPreview(
-    { bookingId, paymentType: "BALANCE", usedMileage, usedCouponId },
-    signal
-  );
-
-  if (!preview.payable) {
-    throw new Error(preview.blockMessage || "잔금을 결제할 수 없습니다.");
-  }
-
-  const amount = preview.expectedTotal;
   if (!Number.isFinite(amount) || amount < 0) {
     throw new Error("결제할 잔금이 없습니다.");
   }
