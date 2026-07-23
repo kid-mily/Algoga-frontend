@@ -48,15 +48,30 @@ export default function FriendManagement({
         setIsLoading(true);
         setErrorMessage("");
 
-        const [friendResult, requestResult, blockedResult] = await Promise.all([
-          getFriends(controller.signal),
-          getReceivedFriendRequests(controller.signal),
-          getBlockedUsers(controller.signal),
-        ]);
+        const [friendResult, requestResult, blockedResult] =
+          await Promise.allSettled([
+            getFriends(controller.signal),
+            getReceivedFriendRequests(controller.signal),
+            getBlockedUsers(controller.signal),
+          ]);
 
-        setFriends(friendResult);
-        setRequests(requestResult);
-        setBlockedUsers(blockedResult);
+        if (
+          friendResult.status === "rejected" &&
+          requestResult.status === "rejected" &&
+          blockedResult.status === "rejected"
+        ) {
+          throw friendResult.reason;
+        }
+
+        setFriends(
+          friendResult.status === "fulfilled" ? friendResult.value : []
+        );
+        setRequests(
+          requestResult.status === "fulfilled" ? requestResult.value : []
+        );
+        setBlockedUsers(
+          blockedResult.status === "fulfilled" ? blockedResult.value : []
+        );
       } catch (error) {
         if (controller.signal.aborted) return;
 
