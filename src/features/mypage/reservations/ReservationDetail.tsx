@@ -2,9 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { loadMyReservationDetail, submitRefundRequest } from "./reservation.util";
+import {
+  loadMyReservationDetail,
+  payReservationBalance,
+  submitRefundRequest,
+} from "./reservation.util";
 import { PAYMENT_TYPE_LABEL, RESERVATION_STATUS_BADGE_CLASS, RESERVATION_STATUS_LABEL, ReservationItem } from "./reservation.types";
 import RefundRequestModal from "./RefundRequestModal";
+import BalancePaymentConfirmModal from "./BalancePaymentConfirmModal";
 
 interface ReservationDetailProps {
   reservationId: number;
@@ -45,6 +50,10 @@ export default function ReservationDetail({
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [isSubmittingRefund, setIsSubmittingRefund] = useState(false);
   const [refundErrorMessage, setRefundErrorMessage] = useState("");
+  const [isPayingBalance, setIsPayingBalance] = useState(false);
+  const [balanceErrorMessage, setBalanceErrorMessage] = useState("");
+  const [isBalanceConfirmOpen, setIsBalanceConfirmOpen] = useState(false);
+  const [balanceSuccessMessage, setBalanceSuccessMessage] = useState("");
 
   const handleConfirmRefund = async (reason: string) => {
     if (!reservation) return;
@@ -70,6 +79,29 @@ export default function ReservationDetail({
     }
   };
 
+  const handlePayBalance = async () => {
+    if (!reservation || isPayingBalance) return;
+
+    setIsPayingBalance(true);
+    setBalanceErrorMessage("");
+    setBalanceSuccessMessage("");
+
+    try {
+      await payReservationBalance(reservation.id);
+      setReservation(await loadMyReservationDetail(reservation.id));
+      setBalanceSuccessMessage(
+        `잔금 ${reservation.remainingAmount.toLocaleString()}원 결제가 완료되었습니다.`
+      );
+      setIsBalanceConfirmOpen(false);
+    } catch (error) {
+      setBalanceErrorMessage(
+        error instanceof Error ? error.message : "잔금 결제에 실패했습니다."
+      );
+    } finally {
+      setIsPayingBalance(false);
+    }
+  };
+
   if (reservation === undefined) {
     return (
       <p className="rounded-2xl border border-[#E5EDF5] bg-white p-8 text-center text-sm text-[#8A9BB0] shadow-sm">
@@ -87,11 +119,20 @@ export default function ReservationDetail({
   }
 
   const isReserved = reservation.status === "reserved";
+  const hasReturnFlight = Boolean(
+    reservation.returnAirline || reservation.returnFlightNumber
+  );
 
   const canPayBalance =
     reservation.paymentType === "installment" &&
     reservation.remainingAmount > 0 &&
-    isReserved;
+    isReserved &&
+    !reservation.balanceDeadlinePassed;
+  const isBalanceDeadlinePassed =
+    reservation.paymentType === "installment" &&
+    reservation.remainingAmount > 0 &&
+    isReserved &&
+    reservation.balanceDeadlinePassed === true;
 
   return (
     <div className="space-y-3">
@@ -127,24 +168,58 @@ export default function ReservationDetail({
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <section className="rounded-2xl border border-[#E5EDF5] bg-white p-4 shadow-sm">
           <p className="text-xs font-bold text-[#439A97]">항공권</p>
-          <p className="mt-1.5 text-sm font-bold text-[#0A1628]">
-            {reservation.airline} {reservation.flightNumber}
-          </p>
-          {reservation.departureAirport && reservation.arrivalAirport && (
-            <p className="mt-1 text-xs text-[#0A1628]">
-              {reservation.departureAirport} → {reservation.arrivalAirport}
-            </p>
-          )}
-          {reservation.departureTime && (
-            <p className="mt-1 text-xs text-[#8A9BB0]">
-              출발 {reservation.startDate} {reservation.departureTime}
-            </p>
-          )}
-          {reservation.arrivalTime && (
-            <p className="text-xs text-[#8A9BB0]">
-              도착 {reservation.startDate} {reservation.arrivalTime} 
-            </p>
-          )}
+
+          <div
+            className={`mt-2 grid gap-3 ${hasReturnFlight ? "grid-cols-2" : "grid-cols-1"}`}
+          >
+            <div>
+              <p className="text-[11px] font-bold text-[#8A9BB0]">가는 편</p>
+              <p className="mt-1 text-sm font-bold text-[#0A1628]">
+                {reservation.airline} {reservation.flightNumber}
+              </p>
+              {reservation.departureAirport && reservation.arrivalAirport && (
+                <p className="mt-1 text-xs text-[#0A1628]">
+                  {reservation.departureAirport} → {reservation.arrivalAirport}
+                </p>
+              )}
+              {reservation.departureTime && (
+                <p className="mt-1 text-xs text-[#8A9BB0]">
+                  출발 {reservation.departureTime}
+                </p>
+              )}
+              {reservation.arrivalTime && (
+                <p className="text-xs text-[#8A9BB0]">
+                  도착 {reservation.arrivalTime}
+                </p>
+              )}
+            </div>
+
+            {hasReturnFlight && (
+              <div className="border-l border-dashed border-[#D6E0E8] pl-3">
+                <p className="text-[11px] font-bold text-[#8A9BB0]">오는 편</p>
+                <p className="mt-1 text-sm font-bold text-[#0A1628]">
+                  {reservation.returnAirline} {reservation.returnFlightNumber}
+                </p>
+                {reservation.returnDepartureAirport &&
+                  reservation.returnArrivalAirport && (
+                    <p className="mt-1 text-xs text-[#0A1628]">
+                      {reservation.returnDepartureAirport} →{" "}
+                      {reservation.returnArrivalAirport}
+                    </p>
+                  )}
+                {reservation.returnDepartureTime && (
+                  <p className="mt-1 text-xs text-[#8A9BB0]">
+                    출발 {reservation.returnDepartureTime}
+                  </p>
+                )}
+                {reservation.returnArrivalTime && (
+                  <p className="text-xs text-[#8A9BB0]">
+                    도착 {reservation.returnArrivalTime}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="rounded-2xl border border-[#E5EDF5] bg-white p-4 shadow-sm">
@@ -246,17 +321,26 @@ export default function ReservationDetail({
             </p>
             <button
               type="button"
-              onClick={() =>
-                console.log(
-                  "잔금 결제하기(디자인 전용):",
-                  reservation.reservationNumber
-                )
-              }
+              onClick={() => setIsBalanceConfirmOpen(true)}
+              disabled={isPayingBalance}
               className="rounded-xl bg-[#439A97] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#357F7C]"
             >
-              잔금 결제하기
+              {isPayingBalance ? "결제 처리 중..." : "잔금 결제하기"}
             </button>
           </div>
+        )}
+        {isBalanceDeadlinePassed && (
+          <p className="mt-3 rounded-xl border border-[#F3D2D2] bg-[#FDECEC] px-3 py-2 text-xs text-[#B54747]">
+            잔금 결제 기한(출발 7일 전)이 지나 결제할 수 없습니다. 고객센터로 문의해 주세요.
+          </p>
+        )}
+        {balanceErrorMessage && (
+          <p className="mt-3 text-xs text-[#B54747]">{balanceErrorMessage}</p>
+        )}
+        {balanceSuccessMessage && (
+          <p className="mt-3 text-xs font-bold text-[#287A76]">
+            {balanceSuccessMessage}
+          </p>
         )}
       </section>
 
@@ -368,6 +452,15 @@ export default function ReservationDetail({
           onConfirm={handleConfirmRefund}
           isSubmitting={isSubmittingRefund}
           errorMessage={refundErrorMessage}
+        />
+      )}
+      {isBalanceConfirmOpen && (
+        <BalancePaymentConfirmModal
+          amount={reservation.remainingAmount}
+          dueDate={reservation.balanceDueDate}
+          isPaying={isPayingBalance}
+          onCancel={() => setIsBalanceConfirmOpen(false)}
+          onConfirm={() => void handlePayBalance()}
         />
       )}
     </div>

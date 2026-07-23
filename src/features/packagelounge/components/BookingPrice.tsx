@@ -10,6 +10,7 @@ import { getPassengerInfo } from "../utils/passengerStorage";
 import { buildQueryString } from "../utils/query";
 import { CourseItem } from "@/features/classroom/components/types";
 import { ApiRequestError } from "@/lib/api";
+import { formatBalanceDueDate } from "../utils/payment";
 
 interface BookingPriceProps {
   data: PackageDetailData;
@@ -43,9 +44,21 @@ export default function BookingPrice({
   const [errorMessage, setErrorMessage] = useState("");
   // 완강하지 않은 유저가 패키지 예약을 시도할 때 (BK_004) - 안내 문구 + 강의 이어듣기 링크를 따로 보여준다
   const [isCompletionRequired, setIsCompletionRequired] = useState(false);
-  const totalWithCourse = booking.totalAmount + (course?.price ?? 0);
+  const coursePrice = course?.price ?? 0;
+  const totalWithCourse = booking.totalAmount + coursePrice;
+  const firstPaymentAmount = booking.depositAmount + coursePrice;
+  const balanceDueDate = formatBalanceDueDate(packageItem.checkInDate);
+  // 2026-07-22 백엔드 확인 — 출발일이 지난 패키지는 예약 생성 자체가 서버에서 거절됨(BK_005).
+  // 굳이 눌러서 에러를 받게 하지 않도록 프론트에서 미리 막는다(최종 검증은 서버가 함)
+  const isDeparted = (() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(packageItem.checkInDate) < today;
+  })();
 
   const handleClick = async () => {
+    if (isDeparted) return;
+
     if (!isPassengerValid) {
       onInvalidAttempt();
       return;
@@ -71,12 +84,16 @@ export default function BookingPrice({
     try {
       const payload: CreateBookingRequest = {
         accommodationId: packageItem.accommodationId,
+        packageId: packageItem.packageId,
+        ...(course ? { courseId: course.courseId } : {}),
         flightInfo: packageItem.flightInfo,
         returnFlightInfo: packageItem.returnFlightInfo,
         passengerInfo: {
           lastName: passenger.lastName,
           firstName: passenger.firstName,
+          gender: passenger.gender,
           birthDate: passenger.birthDate,
+          nationality: passenger.nationality,
           passportNumber: passenger.passportNumber,
           passportExpiry: passenger.expiryDate,
         },
@@ -102,6 +119,8 @@ export default function BookingPrice({
 
       if (errorCode === "BK_004") {
         setIsCompletionRequired(true);
+      } else if (errorCode === "BK_005") {
+        setErrorMessage("출발일이 지나 예약할 수 없습니다.");
       } else {
         setErrorMessage("예약 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.");
       }
@@ -150,18 +169,36 @@ export default function BookingPrice({
         )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-xl bg-[#EEF8F7] p-4">
-        <span className="text-sm font-bold text-[#0A1628]">총 결제 금액</span>
-        <span className="text-lg font-extrabold text-[#439A97]">
-          {totalWithCourse.toLocaleString()}원
-        </span>
+      <div className="mt-4 rounded-xl bg-[#EEF8F7] p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-[#56706F]">일시불</span>
+          <strong className="text-base text-[#439A97]">
+            {totalWithCourse.toLocaleString()}원
+          </strong>
+        </div>
+        <div className="mt-2 border-t border-dashed border-[#B7DAD7] pt-2 text-xs text-[#56706F]">
+          <div className="flex items-center justify-between">
+            <span>분할 1차</span>
+            <strong className="text-[#0A1628]">
+              {firstPaymentAmount.toLocaleString()}원
+            </strong>
+          </div>
+          <p className="mt-1">
+            2차 잔금 <strong>{booking.balanceAmount.toLocaleString()}원</strong> · {balanceDueDate}까지
+          </p>
+          {course && <p className="mt-1">강의 금액은 1차에 전액 포함됩니다.</p>}
+        </div>
       </div>
 
       <p className="mt-3 text-xs text-[#718096]">
-        쿠폰과 마일리지는 다음 단계에서 적용할 수 있습니다.
+        결제 방식 선택과 쿠폰·마일리지 적용은 다음 단계에서 진행합니다.
       </p>
 
-      {isCompletionRequired ? (
+      {isDeparted ? (
+        <p className="mt-3 text-xs text-[#D9534F]">
+          출발일이 지나 예약할 수 없습니다.
+        </p>
+      ) : isCompletionRequired ? (
         <div className="mt-3 rounded-xl border border-[#F3D2D2] bg-[#FDECEC] px-4 py-3 text-xs text-[#B54747]">
           <p>강의를 완강하셔야 패키지 예약이 가능합니다.</p>
           <Link
@@ -180,7 +217,7 @@ export default function BookingPrice({
       <button
         type="button"
         onClick={handleClick}
-        disabled={isCreating}
+        disabled={isCreating || isDeparted}
         className="mt-4 w-full rounded-xl bg-[#439A97] py-3 text-center text-sm font-bold text-white transition hover:bg-[#357F7C] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isCreating ? "예약 생성 중..." : "결제 단계로 이동"}

@@ -1,15 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import CancellationPolicyModal from "@/features/payment/CancellationPolicyModal";
 import type { PackageDetailData } from "../packageDetail.types";
 import type { CourseItem } from "@/features/classroom/components/types";
+import { formatBalanceDueDate } from "../utils/payment";
 
 interface PaymentSummaryProps {
   data: PackageDetailData;
   course: CourseItem | null;
-  packageId: string;
   paymentType: "FULL" | "DEPOSIT";
   installmentAllowed: boolean;
   onPaymentTypeChange: (nextType: "FULL" | "DEPOSIT") => void;
@@ -17,6 +16,7 @@ interface PaymentSummaryProps {
   couponDiscount: number;
   usedMileage: number;
   finalAmount: number;
+  balanceAmount: number;
   isPaying: boolean;
   onPay: () => void;
 }
@@ -25,7 +25,6 @@ interface PaymentSummaryProps {
 export default function PaymentSummary({
   data,
   course,
-  packageId,
   paymentType,
   installmentAllowed,
   onPaymentTypeChange,
@@ -33,12 +32,14 @@ export default function PaymentSummary({
   couponDiscount,
   usedMileage,
   finalAmount,
+  balanceAmount,
   isPaying,
   onPay,
 }: PaymentSummaryProps) {
   const outboundFlight = data.flights[0];
   const canPay = !isPaying && Number.isFinite(finalAmount) && finalAmount >= 0;
   const [isPolicyOpen, setIsPolicyOpen] = useState(false);
+  const balanceDueDate = formatBalanceDueDate(data.startDate);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-[#E1E8EF] bg-white shadow-[0_8px_24px_rgba(55,88,110,0.08)]">
@@ -144,13 +145,23 @@ export default function PaymentSummary({
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between rounded-xl bg-[#EEF8F7] p-4">
-          <span className="text-sm font-bold text-[#0A1628]">
-            총 결제 금액
-          </span>
-          <span className="font-mono text-lg font-extrabold text-[#439A97]">
-            {finalAmount.toLocaleString()}원
-          </span>
+        <div className="mt-4 rounded-xl bg-[#EEF8F7] p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold text-[#0A1628]">
+              {paymentType === "DEPOSIT" ? "1차 결제 금액" : "총 결제 금액"}
+            </span>
+            <span className="font-mono text-lg font-extrabold text-[#439A97]">
+              {finalAmount.toLocaleString()}원
+            </span>
+          </div>
+          {paymentType === "DEPOSIT" && (
+            <div className="mt-2 border-t border-dashed border-[#B7DAD7] pt-2 text-[11px] leading-5 text-[#56706F]">
+              <p>
+                2차 잔금 <strong>{balanceAmount.toLocaleString()}원</strong> · {balanceDueDate}까지
+              </p>
+              {course && <p>강의 금액은 1차 결제에 전액 포함됩니다.</p>}
+            </div>
+          )}
         </div>
 
         <button
@@ -176,15 +187,6 @@ export default function PaymentSummary({
       {isPolicyOpen && (
         <CancellationPolicyModal onClose={() => setIsPolicyOpen(false)} />
       )}
-    </div>
-  );
-}
-
-function SummaryField({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[11px] text-[#718096]">{label}</p>
-      <p className="mt-0.5 text-sm font-bold text-[#0A1628]">{value}</p>
     </div>
   );
 }

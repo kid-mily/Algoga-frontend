@@ -46,3 +46,14 @@ export function formatDateTime(value: string) {
     minute: "2-digit",
   }).format(date);
 }
+
+export function formatBalanceDueDate(startDate: string): string {
+  const [year, month, day] = startDate.slice(0, 10).split("-").map(Number);
+
+  if (!year || !month || !day) return "출발일 7일 전";
+
+  const dueDate = new Date(Date.UTC(year, month - 1, day));
+  dueDate.setUTCDate(dueDate.getUTCDate() - 7);
+
+  return `${dueDate.getUTCFullYear()}년 ${dueDate.getUTCMonth() + 1}월 ${dueDate.getUTCDate()}일`;
+}

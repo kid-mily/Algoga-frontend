@@ -58,6 +58,13 @@ export interface ReservationItem {
   arrivalAirport?: string;
   departureTime?: string;
   arrivalTime?: string;
+  // 오는 편(returnFlightInfo) — 왕복이 아니거나 정보가 없으면 전부 undefined
+  returnAirline?: string;
+  returnFlightNumber?: string;
+  returnDepartureAirport?: string;
+  returnArrivalAirport?: string;
+  returnDepartureTime?: string;
+  returnArrivalTime?: string;
   accommodationName: string;
   roomType: string;
 
@@ -67,6 +74,9 @@ export interface ReservationItem {
   remainingAmount: number;
   depositPaidAt?: string;
   balanceDueDate?: string;
+  // 잔금 결제 기한(출발 7일 전)이 이미 지났는지 — 지났으면 백엔드가 결제를 막으므로
+  // "잔금 결제하기" 버튼 자체를 노출하지 않는다
+  balanceDeadlinePassed?: boolean;
 
   status: ReservationStatus;
   reservedAt: string;

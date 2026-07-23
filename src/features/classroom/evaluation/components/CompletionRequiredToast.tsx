@@ -5,6 +5,8 @@ import Link from "next/link";
 
 interface CompletionRequiredToastProps {
   onClose: () => void;
+  // 어떤 강의 때문에 막혔는지 알 수 있으면 이름을 보여준다 (없으면 일반 문구)
+  courseName?: string | null;
 }
 
 const AUTO_CLOSE_MS = 5000;
@@ -12,6 +14,7 @@ const AUTO_CLOSE_MS = 5000;
 // 스크롤을 내려도 보이도록 화면 하단에 고정으로 띄우는 완강 안내 토스트
 export default function CompletionRequiredToast({
   onClose,
+  courseName,
 }: CompletionRequiredToastProps) {
   useEffect(() => {
     const timer = window.setTimeout(onClose, AUTO_CLOSE_MS);
@@ -25,7 +28,9 @@ export default function CompletionRequiredToast({
 
         <div className="flex-1 text-sm">
           <p className="font-bold text-[#B54747]">
-            이미 구매한 강의를 완강하셔야 패키지 예약이 가능합니다.
+            {courseName
+              ? `"${courseName}" 강의를 완강하셔야 패키지 예약이 가능합니다.`
+              : "이미 구매한 강의를 완강하셔야 패키지 예약이 가능합니다."}
           </p>
           <Link
             href="/mypage/coursedetails"

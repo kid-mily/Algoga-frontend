@@ -14,6 +14,7 @@ import {
 import { getPassengerInfo } from "../utils/passengerStorage";
 import { calculatePayment, formatDateTime } from "../utils/payment";
 import PassengerForm from "./PassengerForm";
+import { ApiRequestError } from "@/lib/api";
 
 interface ReservationSummaryProps {
   packageItem: PackageApiItem;
@@ -46,9 +47,15 @@ export default function ReservationSummary({
   const [validateSignal, setValidateSignal] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  // 2026-07-22 백엔드 확인 — 출발일이 지난 패키지는 예약 생성 자체가 서버에서 거절됨(BK_005)
+  const isDeparted = (() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(packageItem.checkInDate) < today;
+  })();
 
   const handleSubmit = async () => {
-    if (!canBook || isSubmitting) return;
+    if (!canBook || isSubmitting || isDeparted) return;
 
     if (!isPassengerValid) {
       setValidateSignal((prev) => prev + 1);
@@ -67,12 +74,16 @@ export default function ReservationSummary({
     try {
       const payload: CreateBookingRequest = {
         accommodationId: packageItem.accommodationId,
+        packageId: packageItem.packageId,
+        courseId: course.courseId,
         flightInfo: packageItem.flightInfo,
         returnFlightInfo: packageItem.returnFlightInfo,
         passengerInfo: {
           lastName: passenger.lastName,
           firstName: passenger.firstName,
+          gender: passenger.gender,
           birthDate: passenger.birthDate,
+          nationality: passenger.nationality,
           passportNumber: passenger.passportNumber,
           passportExpiry: passenger.expiryDate,
         },
@@ -86,7 +97,17 @@ export default function ReservationSummary({
       router.push(`/packagelounge/booking/${bookingId}`);
     } catch (error) {
       console.error("[packagelounge] 예약 생성 실패:", error);
-      setSubmitError("예약 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+
+      const errorCode =
+        error instanceof ApiRequestError
+          ? (error.body as { errorCode?: string } | null)?.errorCode
+          : undefined;
+
+      setSubmitError(
+        errorCode === "BK_005"
+          ? "출발일이 지나 예약할 수 없습니다."
+          : "예약 생성에 실패했습니다. 잠시 후 다시 시도해 주세요."
+      );
       setIsSubmitting(false);
     }
   };
@@ -211,6 +232,12 @@ export default function ReservationSummary({
           </p>
         )}
 
+        {isDeparted && (
+          <p className="mt-4 text-center text-xs text-[#D9534F]">
+            출발일이 지나 예약할 수 없습니다.
+          </p>
+        )}
+
         {submitError && (
           <p className="mt-4 text-center text-xs text-[#D9534F]">
             {submitError}
@@ -227,7 +254,7 @@ export default function ReservationSummary({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!canBook || isSubmitting}
+            disabled={!canBook || isSubmitting || isDeparted}
             className="rounded-xl bg-[#67A19E] py-3 text-xs font-bold text-white transition disabled:cursor-not-allowed disabled:bg-[#B8C8C7]"
           >
             {isSubmitting ? "예약 처리 중..." : "예약하기"}
