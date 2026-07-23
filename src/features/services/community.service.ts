@@ -8,6 +8,7 @@ import {
   getRecord,
   normalizeContinent,
   normalizeCountry,
+  normalizeComment,
   normalizeFilter,
   normalizePost,
   normalizeReactionResult,
@@ -15,6 +16,7 @@ import {
 
 import type {
   CommunityContinent,
+  CommunityComment,
   CommunityCountry,
   CommunityFilter,
   CommunityPost,
@@ -209,8 +211,8 @@ export const createCommunityComment = async ({
   postId,
   parentId = null,
   content,
-}: CreateCommunityCommentPayload) => {
-  return api.post<ApiResult<unknown>>(
+}: CreateCommunityCommentPayload): Promise<CommunityComment> => {
+  const response = await api.post<ApiResult<unknown>>(
     `/api/v1/posts/${postId}/comments`,
     {
       parentId,
@@ -220,6 +222,13 @@ export const createCommunityComment = async ({
       suppressGlobalError: true,
     }
   );
+
+  const comment = normalizeComment(unwrapData(response));
+  if (!comment) {
+    throw new Error("등록된 댓글 정보를 확인하지 못했습니다.");
+  }
+
+  return comment;
 };
 
 export const updateCommunityComment = async ({
