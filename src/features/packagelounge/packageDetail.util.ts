@@ -1,7 +1,7 @@
-// 실제 패키지 상세 API 응답(PackageLoungeDetail)을 상세 페이지 UI 타입(PackageDetailData)으로 변환한다
+// 실제 패키지 상세 API 응답(PackageApiItem)을 상세 페이지 UI 타입(PackageDetailData)으로 변환한다
 import { PACKAGE_NOTICES } from "./packageDetail.data";
 import type { FlightSegment, PackageDetailData } from "./packageDetail.types";
-import type { FlightInfo, PackageLoungeDetail } from "./types";
+import type { FlightInfo, PackageApiItem } from "./types";
 
 // "2h 30m" 형태의 API 응답을 "2시간 30분"으로 표시한다
 function formatFlightDuration(duration: string) {
@@ -23,9 +23,8 @@ function toFlightSegment(direction: string, info: FlightInfo): FlightSegment {
 }
 
 export function toPackageDetailData(
-  detail: PackageLoungeDetail
+  packageItem: PackageApiItem
 ): PackageDetailData {
-  const { packageItem, accommodation } = detail;
   const duration = `${packageItem.nights}박 ${packageItem.nights + 1}일`;
 
   const flights: FlightSegment[] = [];
@@ -39,13 +38,13 @@ export function toPackageDetailData(
   return {
     id: packageItem.packageId,
     title: packageItem.name,
-    destination: packageItem.countryName,
+    destination: packageItem.countryName ?? "",
     duration,
     startDate: packageItem.checkInDate,
     endDate: packageItem.checkOutDate,
     maxPeople: "1인",
     airline: packageItem.flightInfo?.airline ?? "",
-    heroImage: packageItem.imageUrl,
+    heroImage: packageItem.imageUrl ?? "",
     priceRows: [
       {
         label: packageItem.flightInfo
@@ -54,16 +53,15 @@ export function toPackageDetailData(
         price: packageItem.flightPrice,
       },
       {
-        label: `${packageItem.accommodationName} · ${packageItem.nights}박`,
+        label: `${packageItem.accommodationName ?? "숙소"} · ${packageItem.nights}박`,
         price: packageItem.accommodationPrice,
       },
     ],
     flights,
     accommodation: {
-      name: packageItem.accommodationName,
-      address: accommodation.address,
-      description: accommodation.description,
-      image: accommodation.imageUrl,
+      name: packageItem.accommodationName ?? "",
+      address: packageItem.accommodationAddress ?? "",
+      image: packageItem.accommodationImageUrl ?? "",
       checkIn: packageItem.checkInDate,
       checkOut: packageItem.checkOutDate,
       nights: `${packageItem.nights}박`,

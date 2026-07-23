@@ -36,7 +36,7 @@ export default async function PackageDetailPage({
 
   const data = toPackageDetailData(detail);
   const backHref = `/packagelounge${buildQueryString({
-    countryId: detail.packageItem.countryId,
+    countryId: detail.countryId,
     courseId,
     continentCode,
   })}`;

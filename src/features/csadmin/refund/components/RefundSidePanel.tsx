@@ -76,10 +76,13 @@ export default function RefundSidePanel({ refund }: { refund: CsRefund }) {
 
       <section className="rounded-[16px] border border-[#BBF7D0] bg-gradient-to-r from-[#DDF5DE] to-[#F3FBFB] p-5">
         <h2 className="mb-4 text-[16px] font-bold text-[#111827]">환불 정책</h2>
+        <p className="mb-3 text-[12px] font-semibold text-[#B54747]">
+          예약금(계약금)과 강의는 환불되지 않습니다. 잔금만 아래 기준으로 환불됩니다.
+        </p>
         <div className="space-y-2 text-[13px] font-semibold text-[#344054]">
-          <p>· 출발 14일 전: 100% 환불</p>
-          <p>· 출발 7~13일 전: 50% 환불</p>
-          <p>· 출발 6일 이내: 환불 불가</p>
+          <p>· 출발 14일 전까지: 잔금 100% 환불</p>
+          <p>· 출발 7~13일 전: 잔금 50% 환불</p>
+          <p>· 출발 7일 미만: 환불 불가</p>
         </div>
         <div className="my-4 border-t border-[#9ACBC7]" />
         <p className="text-[13px] text-[#439A97]">

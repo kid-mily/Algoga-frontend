@@ -195,7 +195,9 @@ export default function ReservationCard({
           </button>
         )}
 
-        {isReserved && (
+        {/* 2026-07-23 정책 변경 — 예약금만 낸(잔금 미결제) 예약은 환불 자체가 안 되므로(REF_007)
+            완납(잔금 0원) 예약에만 환불 요청 버튼을 보여준다. 잔금 남은 예약은 "잔금 결제하기"만 노출 */}
+        {isReserved && reservation.remainingAmount === 0 && (
           <button
             type="button"
             onClick={() => onRefundRequest(reservation)}

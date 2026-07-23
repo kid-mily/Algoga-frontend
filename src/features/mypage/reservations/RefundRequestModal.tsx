@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   REFUND_REASON_MAX_LENGTH,
-  getRefundRate,
   getRefundReasonError,
 } from "./reservation.data";
 import { PAYMENT_TYPE_LABEL, type ReservationItem } from "./reservation.types";
@@ -38,10 +37,6 @@ export default function RefundRequestModal({
 
   const reasonError = getRefundReasonError(reason);
   const canSubmit = !reasonError && agreed && !isSubmitting;
-
-  const refundRate = getRefundRate(reservation.daysUntilDeparture);
-  const estimatedAmount =
-    refundRate === null ? null : Math.round((reservation.paidAmount * refundRate) / 100);
 
   const handleConfirm = () => {
     if (!canSubmit) return;
@@ -87,18 +82,15 @@ export default function RefundRequestModal({
 
           {/* B. 환불 예상 정보 */}
           <section className="mt-3 rounded-2xl border border-[#E5EDF5] p-3">
-            <p className="text-xs font-bold text-[#439A97]">💰 환불 예상 정보</p>
-            <p className="mt-1 text-sm text-[#0A1628]">
-              예상 환불 금액{" "}
-              <span className="font-bold text-[#439A97]">
-                {estimatedAmount === null
-                  ? "관리자 검토 후 안내"
-                  : `${estimatedAmount.toLocaleString()}원 (${refundRate}%)`}
-              </span>
+            <p className="text-xs font-bold text-[#439A97]">💰 환불 안내</p>
+            <p className="mt-1 text-xs leading-5 text-[#344054]">
+              예약금(계약금)과 강의는 환불되지 않습니다. 잔금만 출발일 기준으로
+              환불되며(14일 전까지 100% · 7~13일 전 50% · 7일 미만 환불 불가),
+              정확한 환불 금액은 요청 접수 후 확인할 수 있습니다.
             </p>
             <p className="mt-1 text-xs leading-5 text-[#8A9BB0]">
-              실제 환불 금액은 관리자 검토 후 달라질 수 있습니다. 결제 수단에
-              따라 환불 완료까지 영업일 기준 3~5일이 소요될 수 있습니다.
+              결제 수단에 따라 환불 완료까지 영업일 기준 3~5일이 소요될 수
+              있습니다.
             </p>
           </section>
 

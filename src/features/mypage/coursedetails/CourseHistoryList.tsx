@@ -187,10 +187,6 @@ export default function CourseHistoryList() {
                                   <span>
                                     평점 {Number(course.averageRating ?? 0).toFixed(1)}
                                   </span>
-
-                                  <span>
-                                    수강생 {Number(course.studentCount ?? 0).toLocaleString()}명
-                                  </span>
                                 </div>
                               </div>
 

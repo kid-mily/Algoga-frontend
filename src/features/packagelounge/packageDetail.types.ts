@@ -20,7 +20,6 @@ export interface PackagePriceRow {
 export interface PackageAccommodation {
   name: string;
   address: string;
-  description: string;
   image: string;
   checkIn: string;
   checkOut: string;

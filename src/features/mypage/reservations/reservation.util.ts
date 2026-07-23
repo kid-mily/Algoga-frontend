@@ -2,6 +2,7 @@ import {
   createPayment,
   getAccommodationDetail,
   getBookingDetail,
+  getBundlePaymentPreview,
   getMyBookings,
   getMyPayments,
 } from "@/features/services/package.service";
@@ -338,8 +339,11 @@ export async function loadMyReservationDetail(
   return toReservationItem(booking, accommodation, payments);
 }
 
+// 2026-07-23 정책 변경 — 잔금(2차) 결제도 쿠폰·마일리지를 쓸 수 있게 됨
 export async function payReservationBalance(
   bookingId: number,
+  usedMileage = 0,
+  usedCouponId: number | null = null,
   signal?: AbortSignal
 ): Promise<void> {
   const booking = await getBookingDetail(bookingId, signal);
@@ -358,16 +362,29 @@ export async function payReservationBalance(
     );
   }
 
-  const amount = booking.balancePrice;
-  if (!Number.isFinite(amount) || amount <= 0) {
+  // 쿠폰/마일리지 적용 후 실제 결제할 금액은 사전 검증(preview) 응답의 expectedTotal을
+  // 그대로 써야 한다 — 프론트에서 직접 계산하면 1원 오차 등으로 서버가 거부할 수 있음
+  const preview = await getBundlePaymentPreview(
+    { bookingId, paymentType: "BALANCE", usedMileage, usedCouponId },
+    signal
+  );
+
+  if (!preview.payable) {
+    throw new Error(preview.blockMessage || "잔금을 결제할 수 없습니다.");
+  }
+
+  const amount = preview.expectedTotal;
+  if (!Number.isFinite(amount) || amount < 0) {
     throw new Error("결제할 잔금이 없습니다.");
   }
 
   const portonePaymentId =
-    await requestTossPayment({
-      orderName: `예약 ${bookingId} 잔금`,
-      totalAmount: amount,
-    });
+    amount > 0
+      ? await requestTossPayment({
+          orderName: `예약 ${bookingId} 잔금`,
+          totalAmount: amount,
+        })
+      : "";
 
   try {
     await createPayment(
@@ -375,8 +392,8 @@ export async function payReservationBalance(
         bookingId,
         paymentType: "BALANCE",
         amount,
-        usedMileage: 0,
-        usedCouponId: null,
+        usedMileage,
+        usedCouponId,
         portonePaymentId,
       },
       signal
@@ -404,6 +421,9 @@ const REFUND_ERROR_MESSAGE: Record<string, string> = {
   REF_002: "예약 정보를 찾을 수 없습니다.",
   REF_004: "이미 환불 요청된 예약입니다.",
   REF_006: "취소된 예약만 환불 요청이 가능합니다.",
+  // 2026-07-23 정책 변경 — 예약금만 낸(잔금 미결제) 예약은 환불 요청 자체가 거부됨
+  REF_007:
+    "예약금(계약금)과 강의는 환불되지 않습니다. 잔금까지 결제된 예약만 환불할 수 있습니다.",
 };
 
 function toRefundErrorMessage(error: unknown): string {

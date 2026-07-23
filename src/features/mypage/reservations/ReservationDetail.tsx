@@ -79,7 +79,10 @@ export default function ReservationDetail({
     }
   };
 
-  const handlePayBalance = async () => {
+  const handlePayBalance = async (
+    usedMileage: number,
+    usedCouponId: number | null
+  ) => {
     if (!reservation || isPayingBalance) return;
 
     setIsPayingBalance(true);
@@ -87,7 +90,7 @@ export default function ReservationDetail({
     setBalanceSuccessMessage("");
 
     try {
-      await payReservationBalance(reservation.id);
+      await payReservationBalance(reservation.id, usedMileage, usedCouponId);
       setReservation(await loadMyReservationDetail(reservation.id));
       setBalanceSuccessMessage(
         `잔금 ${reservation.remainingAmount.toLocaleString()}원 결제가 완료되었습니다.`
@@ -427,7 +430,9 @@ export default function ReservationDetail({
           예약 내역으로 돌아가기
         </Link>
 
-        {isReserved && (
+        {/* 2026-07-23 정책 변경 — 예약금만 낸(잔금 미결제) 예약은 환불 자체가 안 되므로(REF_007)
+            완납(잔금 0원) 예약에만 환불 요청 버튼을 보여준다. 잔금 남은 예약은 "잔금 결제하기"만 노출 */}
+        {isReserved && reservation.remainingAmount === 0 && (
           <button
             type="button"
             onClick={() => {
@@ -460,7 +465,9 @@ export default function ReservationDetail({
           dueDate={reservation.balanceDueDate}
           isPaying={isPayingBalance}
           onCancel={() => setIsBalanceConfirmOpen(false)}
-          onConfirm={() => void handlePayBalance()}
+          onConfirm={(usedMileage, usedCouponId) =>
+            void handlePayBalance(usedMileage, usedCouponId)
+          }
         />
       )}
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { REFUND_POLICY } from "../booking.data";
+import { REFUND_POLICY, REFUND_POLICY_NOTICE } from "../booking.data";
 
 const TONE_CLASS: Record<string, string> = {
   good: "bg-[#EEF8F7] text-[#357F7C]",
@@ -61,6 +61,10 @@ export default function BookingPolicy({
             전체 정책 보기
           </button>
         </div>
+
+        <p className="mt-2 text-xs leading-5 text-[#B54747]">
+          {REFUND_POLICY_NOTICE}
+        </p>
 
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {REFUND_POLICY.map((policy) => (

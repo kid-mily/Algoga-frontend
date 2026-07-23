@@ -9,7 +9,6 @@ import type {
   CreatePaymentRequest,
   FlightInfo,
   PackageApiItem,
-  PackageLoungeDetail,
   PassengerInfo,
   PaymentDetail,
 } from "@/features/packagelounge/types";
@@ -83,17 +82,13 @@ export async function getAccommodationDetail(
   return unwrapData(response);
 }
 
+// 2026-07-23 백엔드가 패키지 응답에 숙소 필드(accommodationAddress/accommodationImageUrl 등)를
+// 다 포함시켜줘서, 숙소를 따로 조회할 필요 없이 패키지 응답 하나만 그대로 돌려주면 된다
 export async function getPackageLoungeDetail(
   packageId: string | number,
   signal?: AbortSignal
-): Promise<PackageLoungeDetail> {
-  const packageItem = await getPackageDetail(packageId, signal);
-  const accommodation = await getAccommodationDetail(
-    packageItem.accommodationId,
-    signal
-  );
-
-  return { packageItem, accommodation };
+): Promise<PackageApiItem> {
+  return getPackageDetail(packageId, signal);
 }
 
 // POST /bookings 응답의 data는 생성된 예약의 bookingId 하나뿐이다
