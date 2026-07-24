@@ -13,6 +13,8 @@ type Props = {
     nickname: string;
     profileImageUrl?: string | null;
   } | null;
+  mobile?: boolean;
+  onNavigate?: () => void;
 };
 
 const clearUserAuthClientState = () => {
@@ -30,7 +32,11 @@ const getProfileImageSrc = (profileImageUrl?: string | null) => {
   return profileImageUrl;
 };
 
-export default function Profile({ user }: Props) {
+export default function Profile({
+  user,
+  mobile = false,
+  onNavigate,
+}: Props) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
@@ -76,6 +82,7 @@ export default function Profile({ user }: Props) {
     } finally {
       clearUserAuthClientState();
       setIsOpen(false);
+      onNavigate?.();
 
       window.dispatchEvent(
         new CustomEvent("auth-state-changed", {
@@ -90,7 +97,13 @@ export default function Profile({ user }: Props) {
   };
 
   return (
-    <div className="flex gap-6 items-center pr-5">
+    <div
+      className={
+        mobile
+          ? "flex items-center gap-3 py-2 sm:gap-4 lg:gap-5"
+          : "flex items-center gap-5 pr-1 xl:gap-6 xl:pr-5"
+      }
+    >
       <button
         type="button"
         onClick={() => window.dispatchEvent(new Event("friend-panel-toggle"))}
@@ -145,7 +158,9 @@ export default function Profile({ user }: Props) {
               className="h-8 w-8 rounded-full object-cover"
             />
 
-            <p className="mx-3">{user.nickname}님</p>
+            <p className={mobile ? "ml-2 hidden sm:block" : "mx-3"}>
+              {user.nickname}님
+            </p>
           </div>
 
           {isOpen && (
@@ -153,7 +168,10 @@ export default function Profile({ user }: Props) {
               <Link
                 href="/mypage"
                 className="cursor-pointer hover:text-[#286E6B]"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  onNavigate?.();
+                }}
               >
                 마이페이지
               </Link>
@@ -171,7 +189,7 @@ export default function Profile({ user }: Props) {
           )}
         </div>
       ) : (
-        <Link href="/auth/login">
+        <Link href="/auth/login" onClick={onNavigate}>
           <p className="cursor-pointer font-medium text-[#4A5568] hover:underline">
             로그인
           </p>

@@ -38,6 +38,18 @@ export default function AiChatbotWidget() {
     () => hiddenPathPrefixes.some((prefix) => pathname.startsWith(prefix)),
     [pathname]
   );
+  const openInquiryFromEvent = chatbot.openInquiry;
+
+  useEffect(() => {
+    const handleOpenInquiry = () => {
+      setIsOpen(true);
+      void openInquiryFromEvent();
+    };
+
+    window.addEventListener("algoga-open-inquiry", handleOpenInquiry);
+    return () =>
+      window.removeEventListener("algoga-open-inquiry", handleOpenInquiry);
+  }, [openInquiryFromEvent]);
 
   // 새 메시지가 추가되면 맨 아래로 스크롤
   useEffect(() => {

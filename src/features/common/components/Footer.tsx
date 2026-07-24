@@ -1,62 +1,115 @@
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { useState } from "react";
+import LegalPolicyModal, {
+  type LegalPolicyType,
+} from "@/features/common/components/LegalPolicyModal";
+
+const serviceLinks = [
+  { label: "여행 강의", href: "/classroom" },
+  { label: "AI 일정 추천", href: "/aischedule" },
+  { label: "커뮤니티", href: "/community" },
+];
+
 export default function Footer() {
-    return (
-        <footer className="bg-[#286E6B] text-gray-300">
-            <div className="mx-auto max-w-[1440px] px-16 py-6">
-                <div className="flex items-start gap-24">
-                    {/* 로고 */}
-                    <div className="flex flex-col gap-2">
-                        <img
-                        src="/images/algoga-logo.png"
-                        alt="로고"
-                        className="h-[36px] w-[105px]"
-                        />
-                        <p className="text-sm leading-relaxed">
-                        AI 기반 여행 학습 및 <br /> 맞춤 여행 플랫폼
-                        </p>
-                    </div>
+  const [openPolicy, setOpenPolicy] = useState<LegalPolicyType | null>(null);
+  const openInquiry = () => {
+    window.dispatchEvent(new CustomEvent("algoga-open-inquiry"));
+  };
 
-                    {/* 서비스 */}
-                    <div className="flex flex-col gap-2 text-sm">
-                        <p className="font-bold text-base text-white">서비스</p>
-                        <p>여행 강의</p>
-                        <p>AI 일정 추천</p>
-                        <p>여행 예약</p>
-                        <p>커뮤니티</p>
-                    </div>
-
-                    {/* 고객지원 */}
-                    <div className="flex flex-col gap-2 text-sm">
-                        <p className="font-bold text-base text-white">고객지원</p>
-                        <p>공지사항</p>
-                        <p>1:1 문의</p>
-                    </div>
-
-                    {/* 문의 */}
-                    <div className="flex flex-col gap-2 text-sm">
-                        <p className="font-bold text-base text-white">문의</p>
-                        <p>support@algoag.com</p>
-                        <p>02-1234-5678</p>
-                    </div>
-                </div>
-
-                <hr className="my-5 border-white/40" />
-
-                <div className="flex gap-5 text-xs">
-                    <p>회사소개</p>
-                    <p>이용약관</p>
-                    <p>개인정보처리방침</p>
-                    <p>사업자정보확인</p>
-                </div>
-
-                <div className="mt-3 flex flex-col gap-1 text-xs leading-relaxed">
-                    <p>(주)알고가 | 대표이사: 김진도 | 사업자등록번호: 123-45-67890</p>
-                    <p>
-                        경기도 성남시 수정구 산성대로 553 박애관 6층 |
-                        통신판매업신고: 2026-경기성남-12345
-                    </p>
-                    <p className="mt-2">© 2026 Algoga. All rights reserved.</p>
-                </div>
+  return (
+    <>
+      <footer className="bg-[#286E6B] text-gray-200">
+        <div className="mx-auto max-w-[1440px] px-5 py-10 sm:px-8 lg:px-16">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[220px_140px_140px_minmax(0,1fr)] lg:gap-10 xl:gap-14">
+            <div className="flex flex-col items-start gap-3">
+              <Link href="/" aria-label="알고가 홈으로 이동">
+                <Image
+                  src="/images/algoga-logo.png"
+                  alt="알고가"
+                  width={105}
+                  height={36}
+                  className="h-[36px] w-[105px]"
+                />
+              </Link>
+              <p className="text-sm leading-6 text-white/75">
+                AI 기반 여행 학습 및
+                <br />
+                맞춤 여행 플랫폼
+              </p>
             </div>
-        </footer>
-    );
+
+            <nav aria-label="푸터 서비스 메뉴" className="flex flex-col gap-3 text-sm">
+              <h2 className="text-base font-bold text-white">서비스</h2>
+              {serviceLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="w-fit transition hover:text-white hover:underline"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+
+            <nav aria-label="푸터 고객지원 메뉴" className="flex flex-col gap-3 text-sm">
+              <h2 className="text-base font-bold text-white">고객지원</h2>
+              <Link
+                href="/notice"
+                className="w-fit transition hover:text-white hover:underline"
+              >
+                공지사항
+              </Link>
+              <button
+                type="button"
+                onClick={openInquiry}
+                className="w-fit cursor-pointer text-left transition hover:text-white hover:underline"
+              >
+                1:1 문의
+              </button>
+            </nav>
+
+            <div className="flex flex-col gap-3 text-sm">
+              <h2 className="text-base font-bold text-white">문의</h2>
+              <a>
+                algoga.official@gmail.com
+              </a>
+              <p className="text-white/70">평일 09:00~18:00</p>
+            </div>
+          </div>
+
+          <hr className="my-8 border-white/25" />
+
+          <div className="flex flex-wrap gap-x-5 gap-y-3 text-xs">
+            <button
+              type="button"
+              onClick={() => setOpenPolicy("terms")}
+              className="cursor-pointer transition hover:text-white hover:underline"
+            >
+              이용약관
+            </button>
+            <button
+              type="button"
+              onClick={() => setOpenPolicy("privacy")}
+              className="cursor-pointer font-semibold text-white transition hover:underline"
+            >
+              개인정보처리방침
+            </button>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-1 text-xs leading-5 text-white/70">
+            <p>(주)알고가 | 대표이사: 김진도 </p>
+            <p className="mt-2">© 2026 Algoga. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+
+      <LegalPolicyModal
+        type={openPolicy}
+        onClose={() => setOpenPolicy(null)}
+      />
+    </>
+  );
 }
