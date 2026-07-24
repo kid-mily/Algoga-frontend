@@ -15,6 +15,10 @@ import {
   getRequestErrorMessage,
   isAlreadyReportedError,
 } from "@/features/community/utils/communityErrors";
+import {
+  getStoredPostReaction,
+  setStoredPostReaction,
+} from "@/features/community/utils/communityReactionStorage";
 import type {
   CommunityPost,
   CommunityReportReasonType,
@@ -68,10 +72,13 @@ export const useCommunityPostDetail = (postId: number) => {
           getMe(controller.signal),
         ]);
 
+        const userId = user?.userId ?? null;
+
         setPost(data);
         setCurrentImageIndex(0);
-        setCurrentUserId(user?.userId ?? null);
+        setCurrentUserId(userId);
         setCurrentUserProfileImageUrl(user?.profileImageUrl ?? null);
+        setReaction(userId ? getStoredPostReaction(userId, postId) : null);
       } catch (error) {
         if (controller.signal.aborted) return;
 
@@ -120,7 +127,10 @@ export const useCommunityPostDetail = (postId: number) => {
             }
           : prev
       );
-      setReaction(result.status === "REMOVED" ? null : isLike);
+      const nextReaction = result.status === "REMOVED" ? null : isLike;
+
+      setReaction(nextReaction);
+      setStoredPostReaction(currentUserId, post.postId, nextReaction);
     } catch (error) {
       console.error("[community] reaction failed", error);
 

@@ -153,6 +153,8 @@ export const getCommunityPost = async (
 ): Promise<CommunityPost> => {
   const response = await api.get<ApiResult<unknown>>(`/api/v1/posts/${postId}`, {
     signal,
+    cache: "no-store",
+    params: { t: Date.now() },
   });
 
   const post = normalizePost(unwrapData(response));

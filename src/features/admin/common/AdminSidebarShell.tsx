@@ -47,6 +47,13 @@ export default function AdminSidebarShell({
   titleClassName = DEFAULT_TITLE_CLASSNAME,
 }: AdminSidebarShellProps) {
   const pathname = usePathname();
+  const activeHref = sections
+    .flatMap((section) => section.items)
+    .map((menu) => menu.href)
+    .filter(
+      (href) => pathname === href || pathname.startsWith(`${href}/`)
+    )
+    .sort((first, second) => second.length - first.length)[0];
 
   const handleLogout = async () => {
     try {
@@ -83,8 +90,7 @@ export default function AdminSidebarShell({
 
             <ul className="space-y-2">
               {section.items.map((menu) => {
-                const isActive =
-                  pathname === menu.href || pathname.startsWith(`${menu.href}/`);
+                const isActive = menu.href === activeHref;
 
                 return (
                   <li key={menu.href}>

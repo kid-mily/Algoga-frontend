@@ -13,6 +13,10 @@ import {
   getRequestErrorMessage,
   isAlreadyReportedError,
 } from "@/features/community/utils/communityErrors";
+import {
+  getStoredCommentReactions,
+  setStoredCommentReaction,
+} from "@/features/community/utils/communityReactionStorage";
 import type {
   CommunityComment,
   CommunityCommentSectionProps,
@@ -81,7 +85,7 @@ export const useCommunityComments = ({
   const [content, setContent] = useState("");
   const [reactionByCommentId, setReactionByCommentId] = useState<
     Record<number, ReactionState>
-  >({});
+  >(() => (currentUserId ? getStoredCommentReactions(currentUserId) : {}));
   const [pendingCommentId, setPendingCommentId] = useState<number | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [reportTargetId, setReportTargetId] = useState<number | null>(null);
@@ -187,10 +191,13 @@ export const useCommunityComments = ({
             dislikeCount: result.dislikeCount,
           }))
         );
+        const nextReaction = result.status === "REMOVED" ? null : isLike;
+
         setReactionByCommentId((prev) => ({
           ...prev,
-          [commentId]: result.status === "REMOVED" ? null : isLike,
+          [commentId]: nextReaction,
         }));
+        setStoredCommentReaction(currentUserId, commentId, nextReaction);
       } catch (error) {
         setErrorMessage(getRequestErrorMessage(error, "댓글 반응 처리에 실패했습니다."));
       } finally {
