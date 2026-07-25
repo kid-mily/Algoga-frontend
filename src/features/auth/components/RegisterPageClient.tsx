@@ -26,6 +26,15 @@ const getSocialType = (value: string | null): SocialType | null => {
   return null;
 };
 
+const getValidationFieldMessage = (message: string, field: string) => {
+  const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = message.match(
+    new RegExp(`(?:^|,\\s*)${escapedField}:\\s*([^,]+)`)
+  );
+
+  return match?.[1]?.trim() ?? "";
+};
+
 export default function RegisterPageClient() {
   const searchParams = useSearchParams();
   const socialType = getSocialType(
@@ -119,9 +128,23 @@ export default function RegisterPageClient() {
       // 다른 필드 문제로 실패했을 때 굳이 재인증·재확인시키지 않는다.
 
       // 아이디 중복(AUTH_002): 아이디 입력값만 초기화, 이메일 인증·전화 확인 등은 유지.
-      if (errorCode === "AUTH_002" || (!errorCode && errorMessage.includes("아이디"))) {
-        setFormData((prev) => ({ ...prev, username: "" }));
-        setServerError({ field: "username", message: errorMessage });
+      const usernameValidationMessage =
+        errorCode === "GLOBAL_002"
+          ? getValidationFieldMessage(errorMessage, "username")
+          : "";
+
+      if (
+        errorCode === "AUTH_002" ||
+        usernameValidationMessage ||
+        (!errorCode && errorMessage.includes("아이디"))
+      ) {
+        if (errorCode === "AUTH_002") {
+          setFormData((prev) => ({ ...prev, username: "" }));
+        }
+        setServerError({
+          field: "username",
+          message: usernameValidationMessage || errorMessage,
+        });
         setStep(1);
         return;
       }

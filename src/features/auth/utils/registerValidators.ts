@@ -2,7 +2,8 @@ import type { RegisterFormData } from "@/features/auth/types";
 import {ValidateRegisterInfoOptions} from "../types"
 
 export const REGISTER_REQUIRED_NAME_MESSAGE = "이름은 필수입니다.";
-export const REGISTER_REQUIRED_USERNAME_MESSAGE ="아이디는 4자 이상 20자 이하로 입력해주세요.";
+export const REGISTER_REQUIRED_USERNAME_MESSAGE =
+  "아이디는 영문과 숫자만 사용하여 4자 이상 20자 이하로 입력해주세요.";
 export const REGISTER_REQUIRED_PASSWORD_MESSAGE ="비밀번호는 영문, 숫자 조합 8자 이상이어야 합니다.";
 export const REGISTER_INVALID_EMAIL_MESSAGE = "올바른 이메일 형식을 입력해주세요.";
 export const REGISTER_REQUIRED_EMAIL_MESSAGE = REGISTER_INVALID_EMAIL_MESSAGE;
@@ -17,6 +18,7 @@ export const REGISTER_REQUIRED_GENDER_MESSAGE = "성별은 필수입니다.";
 
 export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+export const usernameRegex = /^[A-Za-z0-9]{4,20}$/;
 const phoneRegex = /^\d{2,3}-\d{3,4}-\d{4}$/;
 
 export const validateRegisterName = (name: string) => {
@@ -24,7 +26,7 @@ export const validateRegisterName = (name: string) => {
 };
 
 export const validateRegisterUsername = (username: string) => {
-  return username.length >= 4 && username.length <= 20
+  return usernameRegex.test(username)
     ? ""
     : REGISTER_REQUIRED_USERNAME_MESSAGE;
 };

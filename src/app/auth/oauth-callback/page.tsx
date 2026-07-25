@@ -4,11 +4,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { markUserSessionActive } from "@/features/auth/services/userSession";
 
 export default function OAuthCallbackPage() {
   const router = useRouter();
 
   useEffect(() => {
+    markUserSessionActive();
     window.dispatchEvent(new Event("auth-state-changed")); //로그인 상태가 바뀌었다고 앱 전체에 알리려고 필요
     router.replace("/");
   }, [router]); 

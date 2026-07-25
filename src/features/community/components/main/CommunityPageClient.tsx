@@ -55,7 +55,12 @@ export default function CommunityPageClient({
       { id: ALL_CATEGORY_ID, label: "전체", tagType: "ALL" },
       ...initialFilters.map((filter) => ({
         id: filter.id,
-        label: filter.tagName,
+        label:
+          filter.tagName === "동행 구해요"
+            ? "동행"
+            : filter.tagName === "팁&정보"
+              ? "팁·정보"
+              : filter.tagName,
         tagType: filter.tagType,
       })),
     ],
@@ -73,7 +78,9 @@ export default function CommunityPageClient({
     () => [
       ...selectedCategoryIds,
       ...(selectedCountryId ? [selectedCountryId] : []),
-      ...(selectedCategoryIds.length === 0 && !selectedCountryId ? [ALL_CATEGORY_ID] : []),
+      ...(selectedCategoryIds.length === 0 && !selectedCountryId
+        ? [ALL_CATEGORY_ID]
+        : []),
     ],
     [selectedCategoryIds, selectedCountryId]
   );
@@ -218,11 +225,7 @@ export default function CommunityPageClient({
       return;
     }
 
-    setSelectedCategoryIds((prev) =>
-      prev.includes(filterId)
-        ? prev.filter((categoryId) => categoryId !== filterId)
-        : [...prev, filterId]
-    );
+    setSelectedCategoryIds([filterId]);
   };
 
   const handleToggleMyPostsOnly = async () => {

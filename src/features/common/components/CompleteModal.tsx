@@ -20,10 +20,18 @@ export default function CompleteModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex min-h-dvh items-center justify-center overflow-y-auto bg-black/50 px-4 py-8">
+    <div
+      className="fixed inset-0 z-[9999] flex min-h-dvh items-center justify-center overflow-y-auto bg-black/50 px-4 py-8"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="complete-modal-title"
+    >
       <div className="w-full max-w-[360px] overflow-hidden rounded-[16px] bg-white shadow-xl">
         <div className="border-b border-[#D9DEE5] px-5 py-3">
-          <h2 className="text-[22px] font-bold text-[#2F3640]">
+          <h2
+            id="complete-modal-title"
+            className="text-[22px] font-bold text-[#2F3640]"
+          >
             {title}
           </h2>
         </div>

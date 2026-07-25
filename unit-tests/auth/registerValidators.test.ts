@@ -72,6 +72,15 @@ describe("회원가입 유효성 검사 단위 테스트", () => {
     expect(result).toBe("");
   });
 
+  test.each(["한글아이디", "test_user", "test user", "test🙂"])(
+    "아이디에 영문과 숫자 외 문자가 포함되면 형식 오류를 반환한다: %s",
+    (username) => {
+      expect(validateRegisterUsername(username)).toBe(
+        REGISTER_REQUIRED_USERNAME_MESSAGE
+      );
+    }
+  );
+
   test("비밀번호가 비어 있으면 비밀번호 필수 메시지를 반환한다", () => {
     const result = validateRegisterPassword("");
 

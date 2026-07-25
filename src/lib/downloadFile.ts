@@ -1,3 +1,5 @@
+import { notifySessionExpired } from "@/lib/sessionExpiration";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type DownloadFileOptions = {
@@ -42,6 +44,10 @@ export const downloadAdminFile = async (
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      notifySessionExpired("/auth/adminlogin");
+    }
+
     if (errorFromResponse) {
       const errorData = await response.json().catch(() => null);
       throw new Error(

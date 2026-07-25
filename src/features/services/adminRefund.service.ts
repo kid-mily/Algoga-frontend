@@ -5,6 +5,7 @@ import {
   refundStatusLabel,
 } from "@/features/csadmin/refund/types";
 import type { ApiRequestOptions } from "@/lib/api";
+import { notifySessionExpired } from "@/lib/sessionExpiration";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -204,6 +205,10 @@ export const downloadRefundExcel = async (signal?: AbortSignal) => {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        notifySessionExpired("/auth/adminlogin");
+      }
+
       const errorData = await response.json().catch(() => null);
       throw new Error(errorData?.message || "환불 내역 엑셀 다운로드에 실패했습니다.");
     }

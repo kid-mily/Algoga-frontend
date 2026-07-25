@@ -29,6 +29,7 @@ export type CommunityCategoryTabsProps = {
   categories: CommunityCategoryOption[];
   onCategoryChange: (category: string) => void;
   disabled?: boolean;
+  variant?: "category" | "country";
 };
 
 export type CommunityFilter = {

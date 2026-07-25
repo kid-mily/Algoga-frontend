@@ -74,7 +74,7 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
     );
 
     expect(screen.getByPlaceholderText("홍길동")).toBeVisible();
-    expect(screen.getByPlaceholderText("4자 이상 20자 이하")).toBeVisible();
+    expect(screen.getByPlaceholderText("영문·숫자 4~20자")).toBeVisible();
     expect(screen.getByPlaceholderText("8자 이상 영문, 숫자 조합")).toBeVisible();
     expect(screen.getByPlaceholderText("example@algoga.com")).toBeVisible();
     expect(screen.getByRole("button", { name: "다음 단계로 이동" })).toBeVisible();
@@ -94,7 +94,11 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
     await user.click(screen.getByRole("button", { name: "다음 단계로 이동" }));
 
     expect(screen.getByText("이름은 필수입니다.")).toBeVisible();
-    expect(screen.getByText("아이디는 4자 이상 20자 이하로 입력해주세요.")).toBeVisible();
+    expect(
+      screen.getByText(
+        "아이디는 영문과 숫자만 사용하여 4자 이상 20자 이하로 입력해주세요."
+      )
+    ).toBeVisible();
     expect(screen.getByText("비밀번호는 영문, 숫자 조합 8자 이상이어야 합니다.")).toBeVisible();
     expect(screen.getByText("올바른 이메일 형식을 입력해주세요.")).toBeVisible();
     expect(screen.getByText("올바른 전화번호 형식을 입력해주세요. (예: 010-1234-5678)")).toBeVisible();
@@ -228,7 +232,11 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
 
     await user.click(screen.getByRole("button", { name: "중복 확인: 사용자 이름 검사" }));
 
-    expect(screen.getByText("아이디는 4자 이상 20자 이하로 입력해주세요.")).toBeVisible();
+    expect(
+      screen.getByText(
+        "아이디는 영문과 숫자만 사용하여 4자 이상 20자 이하로 입력해주세요."
+      )
+    ).toBeVisible();
     expect(checkUsernameDuplicate).not.toHaveBeenCalled();
   });
 
@@ -247,7 +255,7 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
       />
     );
 
-    await user.type(screen.getByPlaceholderText("4자 이상 20자 이하"), "a");
+    await user.type(screen.getByPlaceholderText("영문·숫자 4~20자"), "a");
 
     expect(onChange).toHaveBeenCalledWith("username", "a");
     expect(setServerError).toHaveBeenCalledWith({ field: "", message: "" });
