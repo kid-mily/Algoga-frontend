@@ -55,15 +55,6 @@ export type PopularCountryCourseRank = {
   completionStatus: CompletionStatus;
 };
 
-export type CountryCourseInterestData = {
-  summary: InterestSummary;
-  countries: CountryInterestItem[];
-  courses: CourseInterestItem[];
-  countryDetails: CountryDetailStat[];
-  courseCompletions: CourseCompletionStat[];
-  popularCourseRanks: PopularCountryCourseRank[];
-};
-
 export type CountryCourseInterestSummaryCardsProps = {
   summary: InterestSummary;
 };

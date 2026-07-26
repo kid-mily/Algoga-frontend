@@ -16,7 +16,6 @@ import {
   markInquiryAnswerRead,
 } from "@/features/services/inquiry.service";
 import type {
-  ChatbotMode,
   InquiryCategory,
   InquiryCategoryOption,
   SuggestedQuestion,
@@ -27,7 +26,6 @@ export type ChatBubble = {
   key: string;
   role: "assistant" | "user";
   content: string;
-  mode?: ChatbotMode; // assistant 응답 모드 (스타일 분기용)
   inquiryId?: number; // 답변 미확인 문의일 때만
   isAnswerUnread?: boolean; // "답변 완료" 뱃지 표시 여부
 };
@@ -194,15 +192,12 @@ export const useChatbot = (isOpen: boolean) => {
     setCategories(list);
   }, [categories.length]);
 
-  const appendAssistant = useCallback(
-    (content: string, mode?: ChatbotMode) => {
-      setBubbles((prev) => [
-        ...prev,
-        { key: nextKey(), role: "assistant", content, mode },
-      ]);
-    },
-    []
-  );
+  const appendAssistant = useCallback((content: string) => {
+    setBubbles((prev) => [
+      ...prev,
+      { key: nextKey(), role: "assistant", content },
+    ]);
+  }, []);
 
   // 2-4. 직접 질문. 입력값은 입력 폼(ChatInputForm)에서 인자로 받는다
   // (input을 클로저로 잡지 않아 타이핑마다 send가 재생성되지 않음).
@@ -232,7 +227,7 @@ export const useChatbot = (isOpen: boolean) => {
         const result = await askChatbot(question, controller.signal);
         if (controller.signal.aborted) return;
 
-        appendAssistant(result.answer, result.mode);
+        appendAssistant(result.answer);
 
         if (result.mode === "RATE_LIMITED") {
           setLockSeconds(
@@ -253,7 +248,7 @@ export const useChatbot = (isOpen: boolean) => {
           error instanceof ChatbotApiError || error instanceof Error
             ? error.message
             : "챗봇 답변에 실패했습니다.";
-        appendAssistant(message, "REJECTED");
+        appendAssistant(message);
       } finally {
         // 더 새로운 전송이 시작됐다면 그쪽이 상태를 소유하므로 건드리지 않는다.
         if (sendAbortRef.current === controller) {
@@ -287,7 +282,7 @@ export const useChatbot = (isOpen: boolean) => {
         );
         if (controller.signal.aborted) return;
 
-        appendAssistant(result.answer, result.mode);
+        appendAssistant(result.answer);
       } catch (error) {
         if (controller.signal.aborted) return;
 
@@ -295,7 +290,7 @@ export const useChatbot = (isOpen: boolean) => {
           error instanceof Error
             ? error.message
             : "답변을 불러오지 못했습니다.";
-        appendAssistant(message, "REJECTED");
+        appendAssistant(message);
       } finally {
         if (sendAbortRef.current === controller) {
           sendAbortRef.current = null;

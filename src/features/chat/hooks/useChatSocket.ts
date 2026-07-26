@@ -128,7 +128,9 @@ export const useChatSocket = ({
   );
 
   useEffect(() => {
-    if (!roomId) return;
+    // userId가 getMe로 늦게 채워지면 deps가 바뀌어 재연결되므로,
+    // userId가 확정된 뒤에 한 번만 연결한다(진입당 불필요한 재연결 제거).
+    if (!roomId || !userId) return;
 
     const client = new Client({
       brokerURL: getWebSocketUrl(),
