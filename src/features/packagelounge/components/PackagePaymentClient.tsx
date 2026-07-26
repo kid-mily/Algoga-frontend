@@ -73,6 +73,7 @@ export default function PackagePaymentClient({
     mileageInputValue,
     usedMileage,
     isLoadingBenefits,
+    isLoadingPreview,
     isPaying,
     errorMessage,
     paymentType,
@@ -191,7 +192,7 @@ export default function PackagePaymentClient({
                 usedMileage={usedMileage}
                 finalAmount={finalAmount}
                 balanceAmount={booking.balancePrice}
-                isPaying={isPaying || isLoadingBenefits}
+                isPaying={isPaying || isLoadingBenefits || isLoadingPreview}
                 onPay={handlePay}
               />
             </div>

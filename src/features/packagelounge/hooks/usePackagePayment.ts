@@ -120,22 +120,94 @@ export function usePackagePayment({
     [coupons, selectedCouponId]
   );
 
-  // 쿠폰/마일리지는 이제 패키지분+강의를 합친 전체 금액(productAmount)에 적용한다.
-  // DEPOSIT(1차)는 쿠폰 자체를 못 쓰므로 할인 0
+  // 2026-07-24 백엔드 확인 — 쿠폰·마일리지는 패키지분(packageAmount, 항공+숙소)에만 적용되고
+  // 강의(coursePrice)는 할인 없이 항상 정가로 합산된다. DEPOSIT(1차)는 쿠폰 자체를 못 쓰므로 할인 0
   const couponDiscount = useMemo(
-    () => (isCouponAllowed ? getCouponDiscount(selectedCoupon, productAmount) : 0),
-    [isCouponAllowed, selectedCoupon, productAmount]
+    () => (isCouponAllowed ? getCouponDiscount(selectedCoupon, packageAmount) : 0),
+    [isCouponAllowed, selectedCoupon, packageAmount]
   );
 
   const maxMileage = useMemo(
-    () => Math.min(mileageBalance, Math.max(productAmount - couponDiscount, 0)),
-    [mileageBalance, productAmount, couponDiscount]
+    () => Math.min(mileageBalance, Math.max(packageAmount - couponDiscount, 0)),
+    [mileageBalance, packageAmount, couponDiscount]
   );
 
-  const finalAmount = useMemo(
-    () => Math.max(productAmount - couponDiscount - usedMileage, 0),
-    [productAmount, couponDiscount, usedMileage]
+  // 강의가 없을 때(또는 강의 preview가 아직 안 왔을 때) 쓰는 로컬 계산 — courseId가 있으면
+  // 아래 previewAmount로 덮어쓰지만, 이 공식 자체도 이제 백엔드 계산식과 동일함
+  const localFinalAmount = useMemo(
+    () => Math.max(packageAmount - couponDiscount - usedMileage, 0) + coursePrice,
+    [packageAmount, couponDiscount, usedMileage, coursePrice]
   );
+
+  // 2026-07-23 확인 — 강의가 딸린 결제는 실제 청구액이 결국 GET /payments/bundle/preview의
+  // expectedTotal로 결정되는데(handlePay 참고), 화면에는 로컬 계산(couponDiscount 등)을 보여주고
+  // 있어서 백엔드 계산 공식과 어긋나면 "화면 금액 ≠ 실제 결제 금액"이 발생했다.
+  // 그래서 강의가 있을 때는 화면에도 이 preview 결과를 그대로 보여줘서 항상 일치시킨다
+  const [previewAmount, setPreviewAmount] = useState<number | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+
+  useEffect(() => {
+    // courseId가 없으면 애초에 previewAmount/isLoadingPreview 초기값(null/false)이 그대로 맞다
+    if (!courseId) return;
+
+    let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsLoadingPreview(true);
+
+    const loadPreview = async () => {
+      try {
+        const preview = await getBundlePaymentPreview({
+          bookingId,
+          courseIds: [courseId],
+          paymentType,
+          usedMileage,
+          usedCouponId: selectedCouponId,
+        });
+
+        if (!active) return;
+
+        if (preview.payable) {
+          setPreviewAmount(preview.expectedTotal);
+          return;
+        }
+
+        // 이미 결제한 강의라 패키지만 청구되는 경우(handlePay와 동일한 분기) 화면에도 그 금액을 보여준다
+        if (
+          preview.blockReason === "DUPLICATE_PAYMENT" &&
+          preview.alreadyPaidCourseIds.includes(courseId)
+        ) {
+          const packagePreview = await getBundlePaymentPreview({
+            bookingId,
+            paymentType,
+            usedMileage,
+            usedCouponId: selectedCouponId,
+          });
+
+          if (!active) return;
+          setPreviewAmount(packagePreview.payable ? packagePreview.expectedTotal : null);
+          return;
+        }
+
+        setPreviewAmount(null);
+      } catch (error) {
+        if (!active) return;
+        console.error("[packagelounge] 결제 금액 사전 확인 실패:", error);
+        setPreviewAmount(null);
+      } finally {
+        if (active) setIsLoadingPreview(false);
+      }
+    };
+
+    void loadPreview();
+
+    return () => {
+      active = false;
+    };
+  }, [courseId, bookingId, paymentType, usedMileage, selectedCouponId]);
+
+  // 강의가 있으면 preview 결과를, 없으면(또는 preview 실패 시) 로컬 계산을 화면에 보여준다
+  const finalAmount =
+    courseId && previewAmount !== null ? previewAmount : localFinalAmount;
 
   const handleCouponChange = useCallback(
     (couponId: number | null) => {
@@ -320,6 +392,7 @@ export function usePackagePayment({
     mileageInputValue,
     usedMileage,
     isLoadingBenefits,
+    isLoadingPreview,
     isPaying,
     errorMessage,
     paymentType,

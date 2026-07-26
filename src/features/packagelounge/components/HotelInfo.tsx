@@ -39,6 +39,11 @@ export default function HotelInfo({ accommodation }: HotelInfoProps) {
         <p className="mt-1 text-xs text-[#718096]">
           {accommodation.address}
         </p>
+        {accommodation.description && (
+          <p className="mt-3 text-sm leading-6 text-[#718096]">
+            {accommodation.description}
+          </p>
+        )}
       </div>
     </div>
   );

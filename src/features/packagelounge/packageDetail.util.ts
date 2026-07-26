@@ -45,6 +45,7 @@ export function toPackageDetailData(
     maxPeople: "1인",
     airline: packageItem.flightInfo?.airline ?? "",
     heroImage: packageItem.imageUrl ?? "",
+    description: packageItem.description ?? "",
     priceRows: [
       {
         label: packageItem.flightInfo
@@ -61,6 +62,7 @@ export function toPackageDetailData(
     accommodation: {
       name: packageItem.accommodationName ?? "",
       address: packageItem.accommodationAddress ?? "",
+      description: packageItem.accommodationDescription ?? "",
       image: packageItem.accommodationImageUrl ?? "",
       checkIn: packageItem.checkInDate,
       checkOut: packageItem.checkOutDate,
