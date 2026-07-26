@@ -37,11 +37,13 @@ const normalizeUserProfile = (profile: UserProfileResponse | null): UserProfileR
 };
 
 export const getMe = async (
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  headers?: HeadersInit
 ): Promise<UserProfileResponse | null> => {
   try {
     const response = await api.get<UserMeResponse>("/api/v1/users/me", {
       signal,
+      headers,
       suppressGlobalError: true,
     });
 

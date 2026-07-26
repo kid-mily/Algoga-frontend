@@ -2,15 +2,17 @@
 
 import { createContext, useContext } from "react";
 import { useMyPage } from "./hooks/userMyPage";
+import type { MyPageData } from "./types";
 
 type MyPageDataContextValue = ReturnType<typeof useMyPage>;
 
 const MyPageDataContext = createContext<MyPageDataContextValue | null>(null);
 
-export function MyPageDataProvider({ children }: {
+export function MyPageDataProvider({ children, initialData }: {
     children: React.ReactNode;
+    initialData: MyPageData;
 }) {
-    const value = useMyPage();
+    const value = useMyPage(initialData);
 
     return (
         <MyPageDataContext.Provider value={value}>

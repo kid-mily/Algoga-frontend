@@ -158,12 +158,14 @@ export async function getBookingDetail(
 // 로그인 유저의 전체 예약 목록. countryId를 넘기면 해당 나라 예약만 필터링된다
 export async function getMyBookings(
   countryId?: string | number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  headers?: HeadersInit
 ): Promise<BookingDetail[]> {
   const response = await api.get<ApiResult<RawBookingDetail[]>>(
     "/api/v1/bookings/me",
     {
       signal,
+      headers,
       params: countryId !== undefined ? { countryId } : undefined,
       suppressGlobalError: true,
       cache: "no-store",
