@@ -1,6 +1,7 @@
 import {
   isSessionActiveForLoginPath,
   notifySessionExpired,
+  type SessionExpirationReason,
 } from "@/lib/sessionExpiration";
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const USER_LOGIN_PATH = "/auth/login";
@@ -110,7 +111,25 @@ const getLoginPath = (refreshPath: string) => {
   return refreshPath.includes("/admin/") ? ADMIN_LOGIN_PATH : USER_LOGIN_PATH;
 };
 
-const cleanupAuthSession = async (logoutPath: string, loginPath: string) => {
+const getErrorCode = (result: unknown) => {
+  if (!result || typeof result !== "object") return undefined;
+
+  const errorResult = result as { code?: unknown; errorCode?: unknown };
+  const code = errorResult.errorCode ?? errorResult.code;
+
+  return typeof code === "string" ? code : undefined;
+};
+
+const getSessionExpirationReason = (
+  errorCode?: string
+): SessionExpirationReason =>
+  errorCode === "AUTH_017" ? "CONCURRENT_LOGIN" : "INACTIVITY";
+
+const cleanupAuthSession = async (
+  logoutPath: string,
+  loginPath: string,
+  reason: SessionExpirationReason
+) => {
   if (typeof window === "undefined") return;
   if (!isSessionActiveForLoginPath(loginPath)) return;
 
@@ -129,7 +148,7 @@ const cleanupAuthSession = async (logoutPath: string, loginPath: string) => {
       .catch(() => undefined)
       .then(() => {
         expiredSessions.add(promiseKey);
-        notifySessionExpired(loginPath);
+        notifySessionExpired(loginPath, reason);
       })
       .finally(() => {
         logoutPromises.delete(promiseKey);
@@ -226,6 +245,7 @@ async function request<T>(
   const result = await response.json().catch(() => null);
 
   if (!response.ok) {
+    const errorCode = getErrorCode(result);
     const logoutPath = getLogoutPath(refreshPath);
     const shouldCleanupAuth =
       typeof window !== "undefined" &&
@@ -235,7 +255,11 @@ async function request<T>(
       path !== logoutPath;
 
     if (shouldCleanupAuth) {
-      await cleanupAuthSession(logoutPath, getLoginPath(refreshPath));
+      await cleanupAuthSession(
+        logoutPath,
+        getLoginPath(refreshPath),
+        getSessionExpirationReason(errorCode)
+      );
     } else if (!suppressGlobalError && typeof window !== "undefined") {
       sessionStorage.setItem("errorData", JSON.stringify(result));
 
@@ -249,7 +273,7 @@ async function request<T>(
     throw new ApiRequestError({
       message: result?.message || "API 요청 실패",
       status: response.status,
-      code: result?.code,
+      code: errorCode,
       url: requestUrl,
       body: result,
     });

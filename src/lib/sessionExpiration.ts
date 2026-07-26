@@ -9,6 +9,8 @@ import {
 
 const notifiedLoginPaths = new Set<string>();
 
+export type SessionExpirationReason = "CONCURRENT_LOGIN" | "INACTIVITY";
+
 export const isSessionActiveForLoginPath = (loginPath: string) => {
   if (loginPath === "/auth/adminlogin") {
     return (
@@ -21,7 +23,10 @@ export const isSessionActiveForLoginPath = (loginPath: string) => {
   return isUserSessionActive();
 };
 
-export const notifySessionExpired = (loginPath: string) => {
+export const notifySessionExpired = (
+  loginPath: string,
+  reason: SessionExpirationReason = "INACTIVITY"
+) => {
   if (
     typeof window === "undefined" ||
     notifiedLoginPaths.has(loginPath) ||
@@ -45,7 +50,7 @@ export const notifySessionExpired = (loginPath: string) => {
   window.dispatchEvent(new Event("auth-state-changed"));
   window.dispatchEvent(
     new CustomEvent("session-expired", {
-      detail: { loginPath },
+      detail: { loginPath, reason },
     })
   );
 };
