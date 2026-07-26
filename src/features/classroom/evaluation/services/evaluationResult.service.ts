@@ -12,14 +12,15 @@ interface FindLatestDiagnosisResultParams {
 }
 
 // 현재 로그인한 사용자의 나라별 최신 진단평가 결과 목록 조회
-export const getMyLatestDiagnosisResults = async (): Promise<
-  DiagnosisResult[]
-> => {
+export const getMyLatestDiagnosisResults = async (
+  headers?: HeadersInit
+): Promise<DiagnosisResult[]> => {
   try {
     const response = await api.get<ApiResult<DiagnosisResult[]>>(
       "/api/v1/diagnosis/me/latest",
       {
         cache: "no-store",
+        headers,
         suppressGlobalError: true,
       }
     );
@@ -36,14 +37,14 @@ export const getMyLatestDiagnosisResults = async (): Promise<
 };
 
 // 결과 페이지에서 보여줄 진단평가 결과 선택
-export const findLatestDiagnosisResult = async ({
-  countryId,
-  resultId,
-}: FindLatestDiagnosisResultParams): Promise<DiagnosisResult | null> => {
+export const findLatestDiagnosisResult = async (
+  { countryId, resultId }: FindLatestDiagnosisResultParams,
+  headers?: HeadersInit
+): Promise<DiagnosisResult | null> => {
   const numericCountryId = Number(countryId);
   const numericResultId = resultId ? Number(resultId) : null;
 
-  const results = await getMyLatestDiagnosisResults();
+  const results = await getMyLatestDiagnosisResults(headers);
 
   // 제출 직후 이동한 경우 resultId가 있으므로 해당 결과를 우선 사용
   if (numericResultId && Number.isInteger(numericResultId)) {

@@ -38,13 +38,15 @@ export interface ChapterProgress {
 
 export const getCourseStudyDetail = async (
   courseId: string | number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  headers?: HeadersInit
 ): Promise<CourseStudyDetail> => {
   const response = await api.get<ApiResult<CourseStudyDetail>>(
     `/api/v1/my/courses/${courseId}`,
     {
       cache: "no-store",
       signal,
+      headers,
       suppressGlobalError: true,
     }
   );

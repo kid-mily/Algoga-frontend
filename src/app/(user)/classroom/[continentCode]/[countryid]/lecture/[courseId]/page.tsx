@@ -4,8 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import SubHeader from "@/features/common/components/SubHeader";
-import LectureActionCard from "@/features/classroom/components/LectureActionCard";
-import LectureAttachments from "@/features/classroom/components/LectureAttachments";
+import LectureAccessSection from "@/features/classroom/components/LectureAccessSection";
 import LectureReviews from "@/features/classroom/components/LectureReviews";
 import { createCourseJsonLd, serializeJsonLd } from "@/features/seo/schema";
 import { getSiteUrl } from "@/features/seo/site";
@@ -320,14 +319,10 @@ export default async function LectureDetailPage({
             </div>
           </section>
 
-          <LectureActionCard
+          <LectureAccessSection
             course={course}
             continentCode={pathContinentCode}
             countryId={countryid}
-            courseId={courseId}
-          />
-
-          <LectureAttachments
             courseId={courseId}
             fileUrls={course.fileUrls ?? []}
             files={course.files ?? []}

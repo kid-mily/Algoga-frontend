@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ApiRequestError } from "@/lib/api";
 import {
   isChapterCompleted,
   loadLectureStudy,
@@ -24,27 +22,39 @@ const wait = (ms: number) =>
     window.setTimeout(resolve, ms);
   });
 
-export function useLectureStudy(courseId: string) {
-  const router = useRouter();
+interface LectureStudyInitialData {
+  course: CourseStudyDetail;
+  firstChapter: CourseStudyChapter | null;
+}
 
+// 초기 데이터는 서버 컴포넌트(study/page.tsx)에서 미리 조회해 내려준다.
+// 클라이언트에서 별도로 재조회하지 않으므로 항상 유효한 값이 전달되어야 한다.
+export function useLectureStudy(
+  courseId: string,
+  initialData: LectureStudyInitialData
+) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const lastReportedSecondsRef = useRef(0);
-  const latestWatchedSecondsRef = useRef(0);
-  const selectedChapterRef = useRef<CourseStudyChapter | null>(null);
+  const lastReportedSecondsRef = useRef(
+    initialData.firstChapter?.watchedSeconds ?? 0
+  );
+  const latestWatchedSecondsRef = useRef(
+    initialData.firstChapter?.watchedSeconds ?? 0
+  );
+  const selectedChapterRef = useRef<CourseStudyChapter | null>(
+    initialData.firstChapter
+  );
 
-  const [course, setCourse] = useState<CourseStudyDetail | null>(null);
+  const [course, setCourse] = useState<CourseStudyDetail>(initialData.course);
   const [selectedChapter, setSelectedChapter] =
-    useState<CourseStudyChapter | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+    useState<CourseStudyChapter | null>(initialData.firstChapter);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   const chapters = useMemo(() => {
-    return sortChapters(course?.chapters ?? []);
+    return sortChapters(course.chapters);
   }, [course]);
 
   const totalProgress = useMemo(() => {
-    if (typeof course?.courseProgressRate === "number") {
+    if (typeof course.courseProgressRate === "number") {
       return Math.min(Math.max(Math.round(course.courseProgressRate), 0), 100);
     }
 
@@ -56,7 +66,7 @@ export function useLectureStudy(courseId: string) {
     );
 
     return Math.round(sum / chapters.length);
-  }, [chapters, course?.courseProgressRate]);
+  }, [chapters, course.courseProgressRate]);
 
   const canOpenChapter = (chapterIndex: number) => {
     if (chapterIndex === 0) return true;
@@ -184,57 +194,6 @@ export function useLectureStudy(courseId: string) {
     },
     [chapters, refreshCourse, selectChapter]
   );
-
-  useEffect(() => {
-    if (!courseId) return;
-
-    const controller = new AbortController();
-
-    const fetchCourse = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-
-        const { course: fetchedCourse, firstChapter } = await loadLectureStudy(
-          courseId,
-          controller.signal
-        );
-
-        if (controller.signal.aborted) return;
-
-        setCourse(fetchedCourse);
-        setSelectedChapter(firstChapter);
-        selectedChapterRef.current = firstChapter;
-        lastReportedSecondsRef.current = firstChapter?.watchedSeconds ?? 0;
-        latestWatchedSecondsRef.current = firstChapter?.watchedSeconds ?? 0;
-      } catch (error) {
-        if (controller.signal.aborted) return;
-
-        console.error("[study] 강의 학습 정보 조회 실패:", error);
-
-        if (error instanceof ApiRequestError && error.status === 401) {
-          router.replace("/auth/login");
-          return;
-        }
-
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "강의 정보를 불러오지 못했습니다."
-        );
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void fetchCourse();
-
-    return () => {
-      controller.abort();
-    };
-  }, [courseId, router]);
 
   const reportProgress = useCallback(
     async (watchedSeconds: number, force = false) => {
@@ -368,9 +327,7 @@ export function useLectureStudy(courseId: string) {
     course,
     chapters,
     selectedChapter,
-    isLoading,
     isPlaying,
-    errorMessage,
     totalProgress,
     canOpenChapter,
     setIsPlaying,
