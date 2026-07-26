@@ -28,7 +28,10 @@ describe("notifySessionExpired", () => {
     expect(listener).toHaveBeenCalledTimes(1);
     expect(listener.mock.calls[0][0]).toEqual(
       expect.objectContaining({
-        detail: { loginPath: "/auth/login" },
+        detail: {
+          loginPath: "/auth/login",
+          reason: "INACTIVITY",
+        },
       })
     );
     expect(sessionStorage.getItem("algoga-user-session-active")).toBeNull();

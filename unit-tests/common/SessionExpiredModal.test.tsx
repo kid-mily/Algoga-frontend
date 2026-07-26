@@ -14,13 +14,16 @@ describe("SessionExpiredModal", () => {
     replace.mockClear();
   });
 
-  test("세션 만료 이벤트를 받으면 안내를 보여준다", () => {
+  test("장시간 미활동 이벤트를 받으면 세션 만료 안내를 보여준다", () => {
     render(<SessionExpiredModal />);
 
     act(() => {
       window.dispatchEvent(
         new CustomEvent("session-expired", {
-          detail: { loginPath: "/auth/adminlogin" },
+          detail: {
+            loginPath: "/auth/adminlogin",
+            reason: "INACTIVITY",
+          },
         })
       );
     });
@@ -29,7 +32,31 @@ describe("SessionExpiredModal", () => {
       screen.getByRole("dialog", { name: "세션이 만료되었습니다" })
     ).toBeVisible();
     expect(
-      screen.getByText(/로그인 후 30분이 지나 자동으로 로그아웃되었습니다/)
+      screen.getByText(/30분간 활동이 없어 자동으로 로그아웃되었습니다/)
+    ).toBeVisible();
+  });
+
+  test("다른 기기 로그인 이벤트를 받으면 동시 로그인 안내를 보여준다", () => {
+    render(<SessionExpiredModal />);
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent("session-expired", {
+          detail: {
+            loginPath: "/auth/login",
+            reason: "CONCURRENT_LOGIN",
+          },
+        })
+      );
+    });
+
+    expect(
+      screen.getByRole("dialog", {
+        name: "다른 기기에서 로그인되었습니다",
+      })
+    ).toBeVisible();
+    expect(
+      screen.getByText(/다른 기기에서 동일한 계정으로 로그인하여/)
     ).toBeVisible();
   });
 
@@ -40,7 +67,10 @@ describe("SessionExpiredModal", () => {
     act(() => {
       window.dispatchEvent(
         new CustomEvent("session-expired", {
-          detail: { loginPath: "/auth/adminlogin" },
+          detail: {
+            loginPath: "/auth/adminlogin",
+            reason: "INACTIVITY",
+          },
         })
       );
     });
