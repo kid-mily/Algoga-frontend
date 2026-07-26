@@ -1,4 +1,5 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { readPageMeta } from "@/lib/pagination";
 import { getCourseCountries } from "@/features/services/adminCourse.service";
 import { getAdminUserDetail } from "@/features/services/adminUserActivity.service";
 import {
@@ -6,6 +7,7 @@ import {
   EvalutionQuestion,
   EvalutionQuestionFormData,
   EvalutionResult,
+  EvalutionResultPage,
 } from "@/features/contentmanage/evalution/types";
 
 type UnknownRecord = Record<string, unknown>;
@@ -174,26 +176,37 @@ export const getEvalutionQuestion = async (
 };
 
 export const getEvalutionResults = async (
+  params: { page: number; size: number },
   signal?: AbortSignal
-): Promise<EvalutionResult[]> => {
+): Promise<EvalutionResultPage> => {
   const response = await adminApi.get<ApiResult<unknown>>(
     "/api/v1/admin/diagnosis/results",
     {
+      params: { page: params.page, size: params.size },
       suppressGlobalError: true,
       signal,
     }
   );
   const data = unwrapData(response);
-  const results = getItems(data).map((item, index) =>
+  const items = getItems(data);
+  const meta = readPageMeta(data, items.length);
+  const results = items.map((item, index) =>
     normalizeEvalutionResult(item, index + 1)
   );
+
+  const toPage = (rows: EvalutionResult[]): EvalutionResultPage => ({
+    results: rows,
+    page: meta.page,
+    totalPages: meta.totalPages,
+    totalElements: meta.totalElements,
+  });
 
   const missingUserIds = results
     .filter((result) => result.userName === "-" && result.userId !== "-")
     .map((result) => Number(result.userId.replace(/^U/, "")))
     .filter((userId) => Number.isSafeInteger(userId) && userId > 0);
 
-  if (missingUserIds.length === 0) return results;
+  if (missingUserIds.length === 0) return toPage(results);
 
   try {
     const users = await Promise.all(
@@ -206,14 +219,16 @@ export const getEvalutionResults = async (
     );
     const userNameMap = new Map(users);
 
-    return results.map((result) => {
-      const userId = Number(result.userId.replace(/^U/, ""));
-      const userName = userNameMap.get(userId);
+    return toPage(
+      results.map((result) => {
+        const userId = Number(result.userId.replace(/^U/, ""));
+        const userName = userNameMap.get(userId);
 
-      return userName && userName !== "-" ? { ...result, userName } : result;
-    });
+        return userName && userName !== "-" ? { ...result, userName } : result;
+      })
+    );
   } catch {
-    return results;
+    return toPage(results);
   }
 };
 

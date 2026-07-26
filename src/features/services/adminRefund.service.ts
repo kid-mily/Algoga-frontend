@@ -71,37 +71,6 @@ export const normalizeRefund = (
   };
 };
 
-type RawBookingDetail = { createdAt?: string };
-type RawPaymentDetail = { createdAt?: string };
-
-// 예약/결제 상세는 소유자 전용 엔드포인트일 수 있어 admin 호출이 거절될 수 있습니다.
-// 실패하면 조용히 null을 돌려주고, normalizeRefund가 환불 요청 생성 시각으로 대체합니다.
-const getBookingDetail = async (bookingId: number, signal?: AbortSignal) => {
-  try {
-    const response = await adminApi.get<ApiResult<RawBookingDetail>>(
-      `/api/v1/bookings/${bookingId}`,
-      { suppressGlobalError: true, signal }
-    );
-
-    return unwrapData(response);
-  } catch {
-    return null;
-  }
-};
-
-const getPaymentDetail = async (paymentId: number, signal?: AbortSignal) => {
-  try {
-    const response = await adminApi.get<ApiResult<RawPaymentDetail>>(
-      `/api/v1/payments/${paymentId}`,
-      { suppressGlobalError: true, signal }
-    );
-
-    return unwrapData(response);
-  } catch {
-    return null;
-  }
-};
-
 export const getAdminRefunds = async (
   options: Pick<ApiRequestOptions, "headers" | "signal"> = {}
 ): Promise<CsRefund[]> => {
@@ -132,15 +101,7 @@ export const getAdminRefundById = async (
 
   if (!data) return null;
 
-  const [booking, payment] = await Promise.all([
-    getBookingDetail(data.bookingId, signal),
-    getPaymentDetail(data.paymentId, signal),
-  ]);
-
-  return normalizeRefund(data, {
-    bookingCreatedAt: booking?.createdAt,
-    paymentCreatedAt: payment?.createdAt,
-  });
+  return normalizeRefund(data);
 };
 
 export const requestRefundReview = async (refundId: number): Promise<void> => {

@@ -98,7 +98,7 @@ const normalizeCancellationStages = (
   return stages.map((stage, index) => ({
     label: stage.label,
     count: stage.count,
-    rate: totalCount > 0 ? (stage.count / totalCount) * 100 : 0,
+    rate: totalCount > 0 ? Math.round((stage.count / totalCount) * 10000) / 100 : 0,
     color: cancelStageColors[index % cancelStageColors.length],
   }));
 };

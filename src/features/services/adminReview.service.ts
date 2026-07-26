@@ -101,6 +101,10 @@ export const normalizeAdminReview = (
   };
 };
 
+// 관리자 후기 화면은 전체 강의의 후기를 합쳐 보여준다. 백엔드가 페이징 기본값(size=10)을
+// 넣으면서 강의별로 10개만 내려오면 합친 목록이 잘리므로, 강의당 전체를 받기 위해 size를 크게 명시한다.
+const REVIEW_AGGREGATE_PAGE_SIZE = 1000;
+
 export const getAdminCourseReviews = async (
   course: AdminCourse,
   signal?: AbortSignal
@@ -110,6 +114,7 @@ export const getAdminCourseReviews = async (
     {
       suppressGlobalError: true,
       signal,
+      params: { size: REVIEW_AGGREGATE_PAGE_SIZE },
     }
   );
   const data = unwrapData(response);

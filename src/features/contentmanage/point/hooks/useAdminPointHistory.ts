@@ -5,8 +5,12 @@ import { getPointHistory } from "@/features/services/adminPoint.service";
 import { PointHistory } from "../types";
 import { getErrorMessage, isAbortError } from "../utils/errorUtils";
 
+const DEFAULT_PAGE_SIZE = 10;
+
 export const useAdminPointHistory = (studentId: number) => {
   const [logs, setLogs] = useState<PointHistory[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -17,9 +21,14 @@ export const useAdminPointHistory = (studentId: number) => {
       try {
         setIsLoading(true);
         setError("");
-        const data = await getPointHistory(studentId, abortController.signal);
+        const data = await getPointHistory(
+          studentId,
+          { page: Math.max(currentPage - 1, 0), size: DEFAULT_PAGE_SIZE },
+          abortController.signal
+        );
         if (abortController.signal.aborted) return;
-        setLogs(data);
+        setLogs(data.histories);
+        setTotalPages(Math.max(data.totalPages, 1));
         setIsLoading(false);
       } catch (fetchError: unknown) {
         if (isAbortError(fetchError) || abortController.signal.aborted) return;
@@ -45,11 +54,14 @@ export const useAdminPointHistory = (studentId: number) => {
     return () => {
       abortController.abort();
     };
-  }, [studentId]);
+  }, [studentId, currentPage]);
 
   return {
     logs,
+    currentPage,
+    totalPages,
     isLoading,
     error,
+    setCurrentPage,
   };
 };

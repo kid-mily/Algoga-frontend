@@ -46,3 +46,17 @@ export type MileageUsersResponse =
 export type PointHistoryResponse = {
   content: PointHistory[];
 };
+
+export type StudentPointPage = {
+  students: StudentPointInfo[];
+  page: number;
+  totalPages: number;
+  totalElements: number;
+};
+
+export type PointHistoryPage = {
+  histories: PointHistory[];
+  page: number;
+  totalPages: number;
+  totalElements: number;
+};

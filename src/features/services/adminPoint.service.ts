@@ -1,28 +1,32 @@
 import { adminApi, ApiResponse } from "@/lib/api";
+import { readPage } from "@/lib/pagination";
 import {
-  MileageUsersResponse,
   PointHistory,
-  PointHistoryResponse,
+  PointHistoryPage,
   PointPayload,
-  StudentPointInfo,
+  StudentPointPage,
   StudentPointRecord,
 } from "@/features/contentmanage/point/types";
 
 export const getStudentsPoints = async (
+  params: { page: number; size: number },
   signal?: AbortSignal
-): Promise<StudentPointInfo[]> => {
-  const response = await adminApi.get<
-    ApiResponse<MileageUsersResponse | StudentPointRecord[]>
-  >("/api/v1/admin/mileages", { signal });
+): Promise<StudentPointPage> => {
+  const response = await adminApi.get<ApiResponse<unknown>>(
+    "/api/v1/admin/mileages",
+    { params: { page: params.page, size: params.size }, signal }
+  );
 
   const data = response.data;
-  const users = Array.isArray(data)
-    ? data
-    : "users" in data
-      ? data.users
-      : data.content;
+  // 응답의 "users" 필드가 페이지 객체(신버전) 또는 배열(구버전)이 될 수 있고,
+  // totalUserCount/totalMileage 등 나머지 필드는 전체 기준 값으로 같은 레벨에 온다.
+  const usersSource =
+    data && typeof data === "object" && !Array.isArray(data) && "users" in data
+      ? (data as { users: unknown }).users
+      : data;
+  const { content, meta } = readPage<StudentPointRecord>(usersSource);
 
-  return users.map((item) => {
+  const students = content.map((item) => {
     const userName =
       item.userName?.trim() ||
       item.name?.trim() ||
@@ -36,6 +40,13 @@ export const getStudentsPoints = async (
       totalPoint: item.totalMileage ?? item.mileage ?? 0,
     };
   });
+
+  return {
+    students,
+    page: meta.page,
+    totalPages: meta.totalPages,
+    totalElements: meta.totalElements,
+  };
 };
 
 export const givePoints = async (
@@ -70,20 +81,23 @@ export const recallPoints = async (
 
 export const getPointHistory = async (
   userId: number,
+  params: { page: number; size: number },
   signal?: AbortSignal
-): Promise<PointHistory[]> => {
-  const response = await adminApi.get<
-    ApiResponse<PointHistory[] | PointHistoryResponse>
-  >(`/api/v1/admin/mileages/users/${userId}/histories`, {
-    params: { t: Date.now() },
-    signal,
-  });
+): Promise<PointHistoryPage> => {
+  const response = await adminApi.get<ApiResponse<unknown>>(
+    `/api/v1/admin/mileages/users/${userId}/histories`,
+    {
+      params: { page: params.page, size: params.size, t: Date.now() },
+      signal,
+    }
+  );
 
-  const data = response.data;
+  const { content, meta } = readPage<PointHistory>(response.data);
 
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data.content)) return data.content;
-
-  console.warn("예상하지 못한 마일리지 내역 응답:", data);
-  return [];
+  return {
+    histories: content,
+    page: meta.page,
+    totalPages: meta.totalPages,
+    totalElements: meta.totalElements,
+  };
 };
