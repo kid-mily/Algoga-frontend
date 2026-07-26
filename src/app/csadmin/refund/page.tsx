@@ -1,6 +1,5 @@
 ﻿import type { Metadata } from "next";
 import CsRefundManageClient from "@/features/csadmin/refund/components/CsRefundManageClient";
-import { mockCsRefunds } from "@/features/csadmin/refund/types";
 
 export const metadata: Metadata = {
   title: "환불 요청 관리 | 알고가 CS 관리자",
@@ -8,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function RefundPage() {
-  return <CsRefundManageClient initialRefunds={mockCsRefunds} />;
+  return <CsRefundManageClient initialRefunds={[]} />;
 }

@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
@@ -14,34 +14,26 @@ import CouponTable from "./CouponTable";
 import CouponPagination from "./CouponPagination";
 import { deleteCouponAction } from "../actions";
 import { CouponStatusFilter, CouponWithLecture } from "../types";
-import { filterCoupons, getCouponCourseId, getCouponId } from "../utils/couponFormatters";
+import { getCouponCourseId, getCouponId } from "../utils/couponFormatters";
 import { useAdminCouponList } from "../hooks/useAdminCouponList";
-
-const ITEMS_PER_PAGE = 10;
 
 export default function CouponManageClient() {
   const router = useRouter();
-  const { coupons, isLoading, errorMessage, refetch } = useAdminCouponList();
-  
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<CouponStatusFilter>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const {
+    coupons,
+    totalPages,
+    totalElements,
+    isLoading,
+    errorMessage,
+    refetch,
+  } = useAdminCouponList(currentPage, searchTerm, statusFilter);
   const [selectedCoupon, setSelectedCoupon] = useState<CouponWithLecture | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [actionError, setActionError] = useState("");
-
-  //쿠폰 목록이 바뀌거나, 검색어가 바뀌거나, 상태 필터가 바뀔 때만 다시 필터링
-  const filteredCoupons = useMemo(
-    () => filterCoupons(coupons, searchTerm, statusFilter),
-    [coupons, searchTerm, statusFilter]
-  );
-
-  const totalPages = Math.max(1, Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE));
-  const currentCoupons = filteredCoupons.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
 
   const resetPage = () => setCurrentPage(1);
 
@@ -69,10 +61,6 @@ export default function CouponManageClient() {
       );
     }
   };
-
-  if (isLoading) {
-    return <AdminLoadingState text="쿠폰 목록을 불러오는 중입니다." />;
-  }
 
   return (
     <main className="min-h-screen bg-[#F8F8F8] px-8 py-8" aria-labelledby="coupon-management-title">
@@ -102,25 +90,29 @@ export default function CouponManageClient() {
 
       <section aria-labelledby="coupon-list-title">
         <h2 id="coupon-list-title" className="sr-only">쿠폰 목록</h2>
-        <CouponTable
-          coupons={currentCoupons}
-          totalCount={filteredCoupons.length}
-          onEdit={(coupon) =>
-            router.push(
-              `/contentadmin/coupon/${getCouponId(coupon)}/edit?courseId=${getCouponCourseId(coupon)}`
-            )
-          }
-          onDelete={(coupon) => {
-            setSelectedCoupon(coupon);
-            setDeleteModalOpen(true);
-          }}
-        >
-          <CouponPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        </CouponTable>
+        {isLoading ? (
+          <AdminLoadingState text="쿠폰 목록을 불러오는 중입니다." />
+        ) : (
+          <CouponTable
+            coupons={coupons}
+            totalCount={totalElements}
+            onEdit={(coupon) =>
+              router.push(
+                `/contentadmin/coupon/${getCouponId(coupon)}/edit?courseId=${getCouponCourseId(coupon)}`
+              )
+            }
+            onDelete={(coupon) => {
+              setSelectedCoupon(coupon);
+              setDeleteModalOpen(true);
+            }}
+          >
+            <CouponPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </CouponTable>
+        )}
       </section>
 
       <Modal

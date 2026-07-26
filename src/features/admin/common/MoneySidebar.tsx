@@ -37,6 +37,7 @@ export default function MoneySidebar() {
       sections={[{ items: menus }]}
       adminName={adminInfo.name}
       adminEmail={adminInfo.email}
+      adminRole={adminInfo.role}
     />
   );
 }

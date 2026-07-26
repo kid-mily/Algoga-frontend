@@ -13,6 +13,9 @@ export default function ReviewManageClient() {
     selectedCourseId,
     selectedScore,
     filteredReviews,
+    currentPage,
+    totalPages,
+    totalElements,
     deleteTarget,
     deleteCompleteOpen,
     visibilityTarget,
@@ -22,6 +25,7 @@ export default function ReviewManageClient() {
     error,
     setSelectedCourseId,
     setSelectedScore,
+    setCurrentPage,
     setDeleteTarget,
     setDeleteCompleteOpen,
     setVisibilityTarget,
@@ -57,11 +61,16 @@ export default function ReviewManageClient() {
 
       <ReviewList
         reviews={filteredReviews}
+        totalElements={totalElements}
         isLoading={isLoading}
         onVisibilityChange={setVisibilityTarget}
         onDelete={setDeleteTarget}
       />
-      <ReviewPagination />
+      <ReviewPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       <ReviewDeleteModals
         deleteTarget={deleteTarget}

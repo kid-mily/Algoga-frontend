@@ -55,6 +55,7 @@ export default function SuperAdminSidebar() {
       sections={[{ items: menus }]}
       adminName={adminInfo.name}
       adminEmail={adminInfo.email}
+      adminRole={adminInfo.role}
     />
   );
 }

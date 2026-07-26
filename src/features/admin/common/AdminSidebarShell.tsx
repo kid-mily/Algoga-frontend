@@ -25,6 +25,7 @@ type AdminSidebarShellProps = {
   sections: AdminSidebarMenuSection[];
   adminName: string;
   adminEmail: string;
+  adminRole?: string;
   asideClassName?: string;
   headerClassName?: string;
   titleClassName?: string;
@@ -42,6 +43,7 @@ export default function AdminSidebarShell({
   sections,
   adminName,
   adminEmail,
+  adminRole,
   asideClassName = DEFAULT_ASIDE_CLASSNAME,
   headerClassName = DEFAULT_HEADER_CLASSNAME,
   titleClassName = DEFAULT_TITLE_CLASSNAME,
@@ -120,6 +122,15 @@ export default function AdminSidebarShell({
       </nav>
 
       <footer className="border-t border-[#E4E7EC] p-4">
+        {adminRole === "SUPER_ADMIN" && !pathname.startsWith("/superadmin") ? (
+          <Link
+            href="/superadmin/manage"
+            className="mb-2 flex w-full items-center rounded-[12px] bg-[#E7F4EC] px-4 py-3 text-[15px] font-semibold text-[#439A97] transition hover:bg-[#DCEFE4]"
+          >
+            슈퍼어드민으로 돌아가기
+          </Link>
+        ) : null}
+
         <button
           type="button"
           onClick={() => void handleLogout()}

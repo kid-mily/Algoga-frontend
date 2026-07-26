@@ -1,6 +1,7 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import type { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { AdminReview, ReviewLevel } from "@/features/contentmanage/review/types";
+import type { AdminPage, AdminPageParams } from "./adminPage.types";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -122,6 +123,24 @@ export const getAdminCourseReviews = async (
   return getItems(data)
     .filter((item) => getNumber(getRecord(item), ["reviewId", "id"]) > 0)
     .map((item) => normalizeAdminReview(item, course));
+};
+
+export const getAdminCourseReviewPage = async (
+  params: AdminPageParams & { rating?: number; hidden?: boolean } = {},
+  signal?: AbortSignal
+): Promise<AdminPage<AdminReview>> => {
+  const response = await adminApi.get<ApiResult<AdminPage<unknown>>>(
+    "/api/v1/admin/course-reviews",
+    { params, signal, suppressGlobalError: true }
+  );
+  const page = unwrapData(response);
+
+  return {
+    ...page,
+    content: (page.content ?? [])
+      .map((item, index) => normalizeAdminReview(item, undefined, index + 1))
+      .filter((review) => review.id > 0),
+  };
 };
 
 export const deleteAdminCourseReview = async (

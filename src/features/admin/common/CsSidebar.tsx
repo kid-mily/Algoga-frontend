@@ -67,6 +67,7 @@ export default function CsSidebar() {
       sections={[{ items: menus }]}
       adminName={adminInfo.name}
       adminEmail={adminInfo.email}
+      adminRole={adminInfo.role}
     />
   );
 }

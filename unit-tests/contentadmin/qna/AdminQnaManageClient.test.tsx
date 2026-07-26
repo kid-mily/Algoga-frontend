@@ -84,7 +84,7 @@ describe("AdminQnaManageClient 컴포넌트 테스트", () => {
 
     render(<AdminQnaManageClient />);
 
-    await user.type(screen.getByPlaceholderText("질문 내용, 강의, 작성자 검색..."), "환전");
+    await user.type(screen.getByPlaceholderText("제목 또는 질문 내용 검색..."), "환전");
     await user.selectOptions(screen.getByRole("combobox"), "waiting");
 
     expect(baseHookValue.setSearchKeyword).toHaveBeenCalled();

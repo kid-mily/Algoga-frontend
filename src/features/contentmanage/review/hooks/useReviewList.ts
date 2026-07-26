@@ -1,19 +1,24 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { getAdminCourses } from "@/features/services/adminCourse.service";
 import {
   deleteAdminCourseReview,
-  getAdminCourseReviews,
+  getAdminCourseReviewPage,
   updateAdminCourseReviewVisibility,
 } from "@/features/services/adminReview.service";
 import { getErrorMessage } from "@/features/services/error.service";
 import { AdminReview } from "../types";
 
+const PAGE_SIZE = 10;
+
 export const useReviewList = () => {
   const [courses, setCourses] = useState<AdminCourse[]>([]);
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+  const [selectedCourseId, setSelectedCourseIdState] = useState<number | null>(null);
   const [reviews, setReviews] = useState<AdminReview[]>([]);
-  const [selectedScore, setSelectedScore] = useState("전체");
+  const [selectedScore, setSelectedScoreState] = useState("전체");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<AdminReview | null>(null);
   const [deleteCompleteOpen, setDeleteCompleteOpen] = useState(false);
   const [visibilityTarget, setVisibilityTarget] = useState<AdminReview | null>(null);
@@ -23,93 +28,46 @@ export const useReviewList = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    const loadCourses = async () => {
-      try {
-        setError("");
-        const data = await getAdminCourses(controller.signal);
-
-        if (controller.signal.aborted) return;
-        setCourses(data);
-        if (data.length === 0) {
-          setIsLoading(false);
-        }
-      } catch (loadError: unknown) {
-        if (controller.signal.aborted) return;
-        setError(getErrorMessage(loadError, "강의 목록을 불러오지 못했습니다."));
-        setIsLoading(false);
-      }
-    };
-
-    void loadCourses();
-
-    return () => {
-      controller.abort();
-    };
+    void getAdminCourses().then(setCourses).catch(() => setCourses([]));
   }, []);
 
-  const selectedCourse = useMemo(
-    () => courses.find((course) => course.courseId === selectedCourseId) ?? null,
-    [courses, selectedCourseId]
-  );
+  const loadReviews = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+      const score =
+        selectedScore === "전체" ? undefined : Number(selectedScore[0]);
+      const data = await getAdminCourseReviewPage({
+        page: currentPage - 1,
+        size: PAGE_SIZE,
+        courseId: selectedCourseId ?? undefined,
+        rating: score,
+      });
+      setReviews(data.content);
+      setTotalPages(Math.max(data.totalPages, 1));
+      setTotalElements(data.totalElements);
+    } catch (loadError: unknown) {
+      setError(getErrorMessage(loadError, "후기 목록을 불러오지 못했습니다."));
+      setReviews([]);
+      setTotalElements(0);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, selectedCourseId, selectedScore]);
 
   useEffect(() => {
-    if (courses.length === 0) return;
-
-    const controller = new AbortController();
-
-    const loadReviews = async () => {
-      try {
-        setIsLoading(true);
-        setError("");
-
-        const data = selectedCourse
-          ? await getAdminCourseReviews(selectedCourse, controller.signal)
-          : (await Promise.all(
-              courses.map((course) => getAdminCourseReviews(course, controller.signal))
-            )).flat();
-
-        if (controller.signal.aborted) return;
-        setReviews(data);
-      } catch (loadError: unknown) {
-        if (controller.signal.aborted) return;
-        setError(getErrorMessage(loadError, "후기 목록을 불러오지 못했습니다."));
-        setReviews([]);
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadReviews();
-
-    return () => {
-      controller.abort();
-    };
-  }, [courses, selectedCourse]);
-
-  const filteredReviews = useMemo(() => {
-    const score = selectedScore === "전체" ? null : Number(selectedScore[0]);
-
-    return reviews.filter((review) => {
-      return score === null || Math.floor(review.rating) === score;
-    });
-  }, [reviews, selectedScore]);
+    queueMicrotask(() => void loadReviews());
+  }, [loadReviews]);
 
   const deleteReview = async () => {
     if (!deleteTarget || isProcessing) return;
-
     try {
       setIsProcessing(true);
       setError("");
       await deleteAdminCourseReview(deleteTarget.courseId, deleteTarget.id);
-      setReviews((prev) =>
-        prev.filter((review) => review.id !== deleteTarget.id)
-      );
       setDeleteTarget(null);
       setDeleteCompleteOpen(true);
+      await loadReviews();
     } catch (deleteError: unknown) {
       setError(getErrorMessage(deleteError, "후기 삭제에 실패했습니다."));
     } finally {
@@ -119,7 +77,6 @@ export const useReviewList = () => {
 
   const updateVisibility = async () => {
     if (!visibilityTarget || isProcessing) return;
-
     try {
       setIsProcessing(true);
       setError("");
@@ -128,15 +85,9 @@ export const useReviewList = () => {
         visibilityTarget.id,
         !visibilityTarget.hidden
       );
-      setReviews((prev) =>
-        prev.map((review) =>
-          review.id === visibilityTarget.id
-            ? { ...review, hidden: !review.hidden }
-            : review
-        )
-      );
       setVisibilityTarget(null);
       setVisibilityCompleteOpen(true);
+      await loadReviews();
     } catch (visibilityError: unknown) {
       setError(getErrorMessage(visibilityError, "후기 숨김 상태 변경에 실패했습니다."));
     } finally {
@@ -144,11 +95,23 @@ export const useReviewList = () => {
     }
   };
 
+  const setSelectedCourseId = (value: number | null) => {
+    setSelectedCourseIdState(value);
+    setCurrentPage(1);
+  };
+  const setSelectedScore = (value: string) => {
+    setSelectedScoreState(value);
+    setCurrentPage(1);
+  };
+
   return {
     courses,
     selectedCourseId,
     selectedScore,
-    filteredReviews,
+    filteredReviews: reviews,
+    currentPage,
+    totalPages,
+    totalElements,
     deleteTarget,
     deleteCompleteOpen,
     visibilityTarget,
@@ -156,6 +119,7 @@ export const useReviewList = () => {
     isLoading,
     isProcessing,
     error,
+    setCurrentPage,
     setSelectedCourseId,
     setSelectedScore,
     setDeleteTarget,

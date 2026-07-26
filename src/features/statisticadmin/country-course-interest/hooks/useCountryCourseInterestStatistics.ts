@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getCountryProfitList,
   getInterestCountries,
@@ -53,6 +53,9 @@ export const useCountryCourseInterestStatistics = () => {
   const [isCountryLoading, setIsCountryLoading] = useState(false);
   const [isCourseLoading, setIsCourseLoading] = useState(false);
   const [error, setError] = useState("");
+  const initialLecturesRef = useRef<PopularCountryCourseRank[] | null>(null);
+  const courseKeywordRef = useRef(courseKeyword);
+  const rankKeywordRef = useRef(rankKeyword);
 
   const query = useMemo(() => getInterestDateRange(period), [period]);
 
@@ -65,15 +68,24 @@ export const useCountryCourseInterestStatistics = () => {
         setIsLoading(true);
         setError("");
 
-        const [summaryData, countriesData] = await Promise.all([
+        const [summaryData, countriesData, lectures] = await Promise.all([
           getInterestSummary(controller.signal),
           getInterestCountries(controller.signal),
+          getInterestLectures("", controller.signal),
         ]);
 
         if (controller.signal.aborted) return;
 
         setSummary(summaryData);
         setCountries(countriesData);
+        initialLecturesRef.current = lectures;
+
+        if (!courseKeywordRef.current.trim()) {
+          setCourseCompletions(lectures.map(toCompletionStat));
+        }
+        if (!rankKeywordRef.current.trim()) {
+          setPopularCourseRanks(lectures);
+        }
       } catch (loadError: unknown) {
         if (controller.signal.aborted) return;
 
@@ -140,6 +152,9 @@ export const useCountryCourseInterestStatistics = () => {
 
   // 강의별 수강 현황: interest/lectures?search= (강의명·나라 부분 일치)
   useEffect(() => {
+    const trimmedKeyword = courseKeyword.trim();
+    if (!trimmedKeyword) return;
+
     const controller = new AbortController();
 
     const load = async () => {
@@ -148,7 +163,7 @@ export const useCountryCourseInterestStatistics = () => {
         setError("");
 
         const lectures = await getInterestLectures(
-          courseKeyword,
+          trimmedKeyword,
           controller.signal
         );
 
@@ -182,6 +197,9 @@ export const useCountryCourseInterestStatistics = () => {
 
   // 인기 국가 강의 순위: interest/lectures?search= (검색 없으면 상위 10개, 검색 시 전체 매칭)
   useEffect(() => {
+    const trimmedKeyword = rankKeyword.trim();
+    if (!trimmedKeyword) return;
+
     const controller = new AbortController();
 
     const load = async () => {
@@ -189,7 +207,7 @@ export const useCountryCourseInterestStatistics = () => {
         setError("");
 
         const lectures = await getInterestLectures(
-          rankKeyword,
+          trimmedKeyword,
           controller.signal
         );
 
@@ -229,6 +247,24 @@ export const useCountryCourseInterestStatistics = () => {
     }));
   }, [popularCourseRanks, rankKeyword]);
 
+  const changeCourseKeyword = (value: string) => {
+    courseKeywordRef.current = value;
+    setCourseKeyword(value);
+
+    if (!value.trim() && initialLecturesRef.current) {
+      setCourseCompletions(initialLecturesRef.current.map(toCompletionStat));
+    }
+  };
+
+  const changeRankKeyword = (value: string) => {
+    rankKeywordRef.current = value;
+    setRankKeyword(value);
+
+    if (!value.trim() && initialLecturesRef.current) {
+      setPopularCourseRanks(initialLecturesRef.current);
+    }
+  };
+
   return {
     period,
     setPeriod,
@@ -242,9 +278,9 @@ export const useCountryCourseInterestStatistics = () => {
     countrySearch,
     setCountrySearch,
     courseKeyword,
-    setCourseKeyword,
+    setCourseKeyword: changeCourseKeyword,
     rankKeyword,
-    setRankKeyword,
+    setRankKeyword: changeRankKeyword,
     isLoading,
     isCountryLoading,
     isCourseLoading,

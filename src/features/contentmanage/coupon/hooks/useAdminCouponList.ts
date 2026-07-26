@@ -1,73 +1,62 @@
-﻿"use client";
+"use client";
 
-import { useEffect, useState } from "react";
-import { getLectureListAction } from "@/features/contentmanage/lecture/actions";
-import { AdminCourseRecord } from "@/features/contentmanage/lecture/types";
-import { getCouponListAction } from "../actions";
-import { CouponWithLecture } from "../types";
-import { getCouponId } from "../utils/couponFormatters";
+import { useCallback, useEffect, useState } from "react";
+import { getAdminCouponPolicyPage } from "@/features/services/adminCoupon.service";
+import { CouponStatusFilter, CouponWithLecture } from "../types";
 
-export function useAdminCouponList() {
+const PAGE_SIZE = 10;
+
+export function useAdminCouponList(
+  currentPage: number,
+  searchTerm: string,
+  statusFilter: CouponStatusFilter
+) {
   const [coupons, setCoupons] = useState<CouponWithLecture[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const fetchCoupons = async () => {
+  const fetchCoupons = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage("");
-
-      const courses = await getLectureListAction();
-      const couponGroups = await Promise.all(
-        courses.map(async (course) => {
-          const courseRecord = course as AdminCourseRecord;
-          const courseId =
-            courseRecord.courseId || courseRecord.course_id || courseRecord.id || 0;
-
-          if (!courseId) return [];
-
-          try {
-            const courseCoupons = await getCouponListAction(courseId);
-            const mappedCoupons = courseCoupons.map((coupon) => ({
-              ...coupon,
-              courseId: coupon.courseId || courseId,
-              lectureName: course.title || "강의명 없음",
-            }));
-
-            return mappedCoupons;
-          } catch {
-            return [];
-          }
-        })
+      const data = await getAdminCouponPolicyPage({
+        page: currentPage - 1,
+        size: PAGE_SIZE,
+        keyword: searchTerm.trim() || undefined,
+        active:
+          statusFilter === "all" ? undefined : statusFilter === "active",
+      });
+      setCoupons(
+        data.content.map((coupon) => ({
+          ...coupon,
+          lectureName: coupon.courseTitle ?? "강의명 없음",
+        }))
       );
-
-      const nextCoupons = couponGroups
-        .flat()
-        .sort((a, b) => getCouponId(b) - getCouponId(a));
-
-      setCoupons(nextCoupons);
+      setTotalPages(Math.max(data.totalPages, 1));
+      setTotalElements(data.totalElements);
     } catch (error: unknown) {
       setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "쿠폰 목록을 불러오지 못했습니다."
+        error instanceof Error ? error.message : "쿠폰 목록을 불러오지 못했습니다."
       );
+      setCoupons([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, statusFilter]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchCoupons();
-  }, []);
+    const timer = window.setTimeout(() => void fetchCoupons(), 250);
+    return () => window.clearTimeout(timer);
+  }, [fetchCoupons]);
 
   return {
     coupons,
+    totalPages,
+    totalElements,
     isLoading,
     errorMessage,
     refetch: fetchCoupons,
-    setCoupons,
   };
 }
-

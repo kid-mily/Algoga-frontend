@@ -114,28 +114,10 @@ describe("adminQuiz.service 단위 테스트", () => {
     );
   });
 
-  test("deleteAdminQuiz는 마지막 퀴즈 삭제를 막는다", async () => {
-    (adminApi.get as jest.Mock).mockResolvedValueOnce({
-      data: [{ quizId: 1, question: "마지막 퀴즈" }],
-    });
-
-    await expect(deleteAdminQuiz(100, 1)).rejects.toThrow(
-      "강의에는 퀴즈가 최소 1개 이상 필요합니다. 마지막 퀴즈는 삭제할 수 없습니다."
-    );
-
-    expect(adminApi.delete).not.toHaveBeenCalled();
-  });
-
-  test("deleteAdminQuiz는 퀴즈가 2개 이상이면 삭제 API를 호출한다", async () => {
-    (adminApi.get as jest.Mock).mockResolvedValueOnce({
-      data: [
-        { quizId: 1, question: "퀴즈 1" },
-        { quizId: 2, question: "퀴즈 2" },
-      ],
-    });
-
+  test("deleteAdminQuiz는 사전 목록 조회 없이 삭제 API를 호출한다", async () => {
     await deleteAdminQuiz(100, 1);
 
+    expect(adminApi.get).not.toHaveBeenCalled();
     expect(adminApi.delete).toHaveBeenCalledWith(
       "/api/v1/admin/courses/100/quizzes/1"
     );

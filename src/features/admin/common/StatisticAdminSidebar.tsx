@@ -92,6 +92,7 @@ export default function StatisticAdminSidebar() {
       sections={menuSections}
       adminName={adminInfo.name}
       adminEmail={adminInfo.email}
+      adminRole={adminInfo.role}
       asideClassName="flex w-[240px] shrink-0 flex-col border-r border-[#E4E7EC] bg-white"
       headerClassName="flex h-[77px] items-center gap-3 border-b border-[#E4E7EC] px-6"
       titleClassName="whitespace-nowrap text-[18px] font-semibold text-[#111827]"
