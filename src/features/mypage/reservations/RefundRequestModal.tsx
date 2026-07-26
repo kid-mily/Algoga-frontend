@@ -84,9 +84,10 @@ export default function RefundRequestModal({
           <section className="mt-3 rounded-2xl border border-[#E5EDF5] p-3">
             <p className="text-xs font-bold text-[#439A97]">💰 환불 안내</p>
             <p className="mt-1 text-xs leading-5 text-[#344054]">
-              예약금(계약금)과 강의는 환불되지 않습니다. 잔금만 출발일 기준으로
-              환불되며(14일 전까지 100% · 7~13일 전 50% · 7일 미만 환불 불가),
-              정확한 환불 금액은 요청 접수 후 확인할 수 있습니다.
+              강의 비용은 환불되지 않습니다. 일시불 결제는 패키지 전액을, 분할
+              결제는 예약금을 제외한 잔금만 출발일 기준으로 환불되며(14일
+              전까지 100% · 7~13일 전 50% · 7일 미만 환불 불가), 정확한 환불
+              금액은 요청 접수 후 확인할 수 있습니다.
             </p>
             <p className="mt-1 text-xs leading-5 text-[#8A9BB0]">
               결제 수단에 따라 환불 완료까지 영업일 기준 3~5일이 소요될 수

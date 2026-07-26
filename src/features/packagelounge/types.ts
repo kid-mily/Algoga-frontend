@@ -19,6 +19,8 @@ export interface PackageApiItem {
   // 패키지 응답 하나로 다 받는다
   accommodationAddress: string | null;
   accommodationImageUrl: string | null;
+  // 2026-07-24 백엔드 추가 완료 확인(GET /packages, /countries/{id}/packages, /packages/{id} 전부) — 관리자가 입력한 숙소 설명
+  accommodationDescription?: string | null;
   name: string;
   description: string | null;
   imageUrl: string | null;

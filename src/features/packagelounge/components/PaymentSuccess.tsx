@@ -206,10 +206,17 @@ export default function PaymentSuccess({ data }: PaymentSuccessProps) {
       </div>
 
       {/* 이동 버튼 */}
+      <Link
+        href="/aischedule"
+        className="mt-6 block w-full rounded-xl bg-[#439A97] py-3 text-center text-sm font-bold text-white transition hover:bg-[#357F7C]"
+      >
+        AI 일정 추천받기
+      </Link>
+
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Link
           href="/mypage/reservations"
-          className="rounded-xl border border-[#E1E8EF] bg-[#439A97] py-3 text-center text-sm font-bold text-white transition hover:bg-[#357F7C]"
+          className="rounded-xl border border-[#E1E8EF] bg-white py-3 text-center text-sm font-bold text-[#0A1628] transition hover:bg-[#F3F8FC]"
         >
           예약 내역
         </Link>

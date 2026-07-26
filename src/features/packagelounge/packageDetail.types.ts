@@ -20,6 +20,8 @@ export interface PackagePriceRow {
 export interface PackageAccommodation {
   name: string;
   address: string;
+  // 2026-07-24 백엔드 accommodationDescription 배포 완료 — 값 없으면(null) 빈 문자열로 내려옴
+  description: string;
   image: string;
   checkIn: string;
   checkOut: string;
@@ -54,6 +56,8 @@ export interface PackageDetailData {
   maxPeople: string;
   airline: string;
   heroImage: string;
+  // 패키지(여행 상품) 자체 설명 — 값 없으면(null) 빈 문자열로 내려옴. 숙소 설명(accommodation.description)과는 다른 필드
+  description: string;
   priceRows: PackagePriceRow[];
   flights: FlightSegment[];
   accommodation: PackageAccommodation;
