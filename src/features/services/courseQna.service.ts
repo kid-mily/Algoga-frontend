@@ -2,7 +2,9 @@ import { adminApi, api, ApiResponse } from "@/lib/api";
 import type {
   AdminQnaBase,
   AdminQnaComment,
+  AdminQnaItem,
 } from "@/features/contentmanage/qna/types";
+import type { AdminPage, AdminPageParams } from "./adminPage.types";
 
 type CourseQnaApiResponse<T> = ApiResponse<T> | T;
 
@@ -225,4 +227,27 @@ export const createAdminCourseQnaAnswer = async (
   );
 
   return unwrapData(response);
+};
+
+export const getAdminCourseQnaPage = async (
+  params: AdminPageParams & { answered?: boolean } = {}
+): Promise<AdminPage<AdminQnaItem>> => {
+  const response = await adminApi.get<ApiResponse<AdminPage<unknown>>>(
+    "/api/v1/admin/course-qnas",
+    { params, suppressGlobalError: true }
+  );
+  const page = response.data;
+
+  return {
+    ...page,
+    content: (page.content ?? []).map((item, index) => {
+      const record = isRecord(item) ? item : {};
+
+      return {
+        ...normalizeQna(item, index + 1),
+        courseId: numberOf(record, ["courseId", "course_id"]),
+        lecture: stringOf(record, ["courseTitle", "courseName"], "강의명 없음"),
+      };
+    }),
+  };
 };

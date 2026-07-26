@@ -34,6 +34,9 @@ export const useAdminRagSourceStats = () => {
         if (signal?.aborted) return;
 
         setData(result);
+        if (page === 0) {
+          setTopStats(result.content.slice(0, TOP_COUNT));
+        }
       } catch (fetchError: unknown) {
         if (signal?.aborted) return;
 
@@ -63,36 +66,6 @@ export const useAdminRagSourceStats = () => {
 
     return () => controller.abort();
   }, [fetchStats]);
-
-  // TOP 10 차트: 표 페이징과 무관하게 항상 첫 페이지(count 내림차순 상위)를 조회한다.
-  const fetchTop = useCallback(
-    async (signal?: AbortSignal) => {
-      try {
-        const result = await getAdminRagSourceStats({ from, to, page: 0 }, signal);
-
-        if (signal?.aborted) return;
-
-        setTopStats(result.content.slice(0, TOP_COUNT));
-      } catch {
-        if (signal?.aborted) return;
-
-        setTopStats([]);
-      }
-    },
-    [from, to]
-  );
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    void Promise.resolve().then(() => {
-      if (!controller.signal.aborted) {
-        void fetchTop(controller.signal);
-      }
-    });
-
-    return () => controller.abort();
-  }, [fetchTop]);
 
   const applySearch = (next: { from: string; to: string }) => {
     setFrom(next.from);

@@ -1,5 +1,21 @@
 ﻿import { adminApi, ApiResponse } from "@/lib/api";
 import { AdminCoupon, AdminCouponPayload } from "../contentmanage/coupon/types";
+import type { AdminPage, AdminPageParams } from "./adminPage.types";
+
+type AdminCouponPageItem = AdminCoupon & {
+  courseTitle?: string;
+};
+
+export const getAdminCouponPolicyPage = async (
+  params: AdminPageParams & { active?: boolean } = {}
+): Promise<AdminPage<AdminCouponPageItem>> => {
+  const response = await adminApi.get<ApiResponse<AdminPage<AdminCouponPageItem>>>(
+    "/api/v1/admin/coupon-policies",
+    { params }
+  );
+
+  return response.data;
+};
 
 export const getAdminCoupons = async (
   courseId: number

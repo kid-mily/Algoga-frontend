@@ -190,8 +190,11 @@ describe("QuizForm 컴포넌트 테스트", () => {
     expect(createQuizAction).not.toHaveBeenCalled();
   });
 
-  test("퀴즈가 1개만 남은 경우 삭제를 막는다", async () => {
+  test("마지막 퀴즈 삭제 시 서버 오류 메시지를 표시한다", async () => {
     const user = userEvent.setup();
+    (deleteQuizAction as jest.Mock).mockRejectedValueOnce(
+      new Error("강의에는 퀴즈가 최소 1개 이상 필요합니다.")
+    );
 
     render(
       <QuizList
@@ -209,18 +212,16 @@ describe("QuizForm 컴포넌트 테스트", () => {
             explanation: "간사이 공항과 난바를 연결합니다.",
           },
         ]}
-        quizCountByCourse={{ 100: 1 }}
       />
     );
 
     await user.click(screen.getByRole("button", { name: "퀴즈 삭제" }));
+    await user.click(screen.getByRole("button", { name: "삭제" }));
 
     expect(
       await screen.findByText(/강의에는 퀴즈가 최소 1개 이상 필요합니다/)
     ).toBeVisible();
-
-    expect(screen.getByRole("button", { name: "삭제" })).toBeDisabled();
-    expect(deleteQuizAction).not.toHaveBeenCalled();
+    expect(deleteQuizAction).toHaveBeenCalledWith(100, 1);
   });
 
   test("퀴즈 목록이 비어 있으면 빈 목록 문구가 보인다", () => {
@@ -290,7 +291,6 @@ describe("QuizForm 컴포넌트 테스트", () => {
             explanation: "난바 근처에 있습니다.",
           },
         ]}
-        quizCountByCourse={{ 100: 2 }}
         onDeleted={onDeleted}
       />
     );
@@ -344,7 +344,6 @@ describe("QuizForm 컴포넌트 테스트", () => {
             explanation: "난바 근처에 있습니다.",
           },
         ]}
-        quizCountByCourse={{ 100: 2 }}
       />
     );
 

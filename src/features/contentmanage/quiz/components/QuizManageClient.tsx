@@ -7,6 +7,7 @@ import QuizToolbar from "./QuizToolbar";
 import { useAdminQuizList } from "../hooks/useAdminQuizList";
 import { QuizManageClientProps } from "../types";
 import SubHeader from "@/features/common/components/SubHeader";
+import CouponPagination from "@/features/contentmanage/coupon/components/CouponPagination";
 
 export default function QuizManageClient({
   initialCourseId = "all",
@@ -18,7 +19,10 @@ export default function QuizManageClient({
     setSearchKeyword,
     courses,
     filteredQuizzes,
-    quizCountByCourse,
+    currentPage,
+    totalPages,
+    totalElements,
+    setCurrentPage,
     isLoading,
     errorMessage,
     refetch,
@@ -29,7 +33,7 @@ export default function QuizManageClient({
       : `/contentadmin/quiz/new?courseId=${selectedLecture}`;
   const selectedCourseQuizCount =
     selectedLecture !== "all"
-      ? quizCountByCourse[Number(selectedLecture)] ?? 0
+      ? totalElements
       : undefined;
 
   return (
@@ -69,9 +73,17 @@ export default function QuizManageClient({
       {!isLoading && !errorMessage && (
         <QuizList
           quizzes={filteredQuizzes}
-          quizCountByCourse={quizCountByCourse}
           onDeleted={refetch}
         />
+      )}
+      {!isLoading && !errorMessage && totalPages > 1 && (
+        <div className="mt-4 rounded-[16px] border border-[#E4E7EC] bg-white">
+          <CouponPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       )}
     </main>
   );
