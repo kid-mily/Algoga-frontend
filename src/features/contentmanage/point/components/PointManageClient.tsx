@@ -9,14 +9,18 @@ import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
 import { useAdminPointList } from "../hooks/useAdminPointList";
 import { PointAdjustMode, SelectedPointStudent, StudentPointInfo } from "../types";
 import PointAdjustModal from "./PointAdjustModal";
+import PointPagination from "./PointPagination";
 import PointTable from "./PointTable";
 
 export default function PointManageClient() {
   const router = useRouter();
   const {
     students,
+    currentPage,
+    totalPages,
     isLoading,
     error,
+    setCurrentPage,
     giveStudentPoints,
     recallStudentPoints,
   } = useAdminPointList();
@@ -128,6 +132,17 @@ export default function PointManageClient() {
         onGive={(student) => openAdjustModal("give", student)}
         onRecall={(student) => openAdjustModal("recall", student)}
       />
+
+      {/* 검색 중에는 현재 페이지 안에서만 필터링되므로, 검색어가 없을 때만 서버 페이지네이션을 노출한다. */}
+      {!searchKeyword.trim() && totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <PointPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
 
       <PointAdjustModal
         open={isAdjustOpen}

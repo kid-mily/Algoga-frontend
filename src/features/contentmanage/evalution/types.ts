@@ -20,6 +20,13 @@ export type EvalutionResult = {
   submittedAt: string;
 };
 
+export type EvalutionResultPage = {
+  results: EvalutionResult[];
+  page: number;
+  totalPages: number;
+  totalElements: number;
+};
+
 export type EvalutionQuestionSet = {
   id: number;
   countryId: number;

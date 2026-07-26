@@ -4,6 +4,7 @@ import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import { useRouter } from "next/navigation";
 import EvalutionDeleteModals from "./EvalutionDeleteModals";
 import EvalutionFilterBar from "./EvalutionFilterBar";
+import EvalutionPagination from "./EvalutionPagination";
 import EvalutionQuestionList from "./EvalutionQuestionList";
 import EvalutionResultTable from "./EvalutionResultTable";
 import { useEvalutionQuestionList } from "../hooks/useEvalutionQuestionList";
@@ -13,6 +14,9 @@ export default function EvalutionManageClient() {
   const {
     activeTab,
     results,
+    currentResultPage,
+    resultTotalPages,
+    setCurrentResultPage,
     countries,
     selectedCountryId,
     expandedId,
@@ -126,6 +130,16 @@ export default function EvalutionManageClient() {
               results={results}
               isLoading={isLoadingResults}
             />
+
+            {!isLoadingResults && resultTotalPages > 1 && (
+              <div className="mt-6 flex justify-center">
+                <EvalutionPagination
+                  currentPage={currentResultPage}
+                  totalPages={resultTotalPages}
+                  onPageChange={setCurrentResultPage}
+                />
+              </div>
+            )}
           </div>
         )}
       </section>

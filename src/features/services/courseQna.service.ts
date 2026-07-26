@@ -170,6 +170,11 @@ const normalizeQna = (
   };
 };
 
+// 관리자 QnA 화면은 전체 강의의 QnA를 합쳐 보여주고 클라이언트에서 페이징한다.
+// 백엔드가 페이징 기본값(size=10)을 넣으면서 강의별로 10개만 내려오면 합친 목록이
+// 잘리므로, 강의당 전체를 받기 위해 size를 크게 명시한다.
+const QNA_AGGREGATE_PAGE_SIZE = 1000;
+
 export const getCourseQnas = async (
   courseId: string | number
 ): Promise<AdminQnaBase[]> => {
@@ -178,6 +183,7 @@ export const getCourseQnas = async (
     {
       cache: "no-store",
       suppressGlobalError: true,
+      params: { size: QNA_AGGREGATE_PAGE_SIZE },
     }
   );
 

@@ -13,9 +13,13 @@ import {
   EvalutionResult,
 } from "../types";
 
+const DEFAULT_PAGE_SIZE = 10;
+
 export const useEvalutionQuestionList = () => {
   const [questions, setQuestions] = useState<EvalutionQuestion[]>([]);
   const [results, setResults] = useState<EvalutionResult[]>([]);
+  const [currentResultPage, setCurrentResultPage] = useState(1);
+  const [resultTotalPages, setResultTotalPages] = useState(1);
   const [countries, setCountries] = useState<CourseCountry[]>([]);
   const [activeTab, setActiveTab] = useState<"questions" | "results">("questions");
   const [selectedCountry, setSelectedCountry] = useState("전체");
@@ -103,10 +107,14 @@ export const useEvalutionQuestionList = () => {
     const fetchResults = async () => {
       try {
         setIsLoadingResults(true);
-        const data = await getEvalutionResults(controller.signal);
+        const data = await getEvalutionResults(
+          { page: Math.max(currentResultPage - 1, 0), size: DEFAULT_PAGE_SIZE },
+          controller.signal
+        );
 
         if (controller.signal.aborted) return;
-        setResults(data);
+        setResults(data.results);
+        setResultTotalPages(Math.max(data.totalPages, 1));
       } catch (fetchError: unknown) {
         if (controller.signal.aborted) return;
         setError(getErrorMessage(fetchError, "진단평가 결과를 불러오지 못했습니다."));
@@ -122,7 +130,7 @@ export const useEvalutionQuestionList = () => {
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [currentResultPage]);
 
   const questionSets = useMemo<EvalutionQuestionSet[]>(() => {
     const grouped = questions.reduce<Record<string, EvalutionQuestion[]>>(
@@ -203,6 +211,9 @@ export const useEvalutionQuestionList = () => {
   return {
     activeTab,
     results,
+    currentResultPage,
+    resultTotalPages,
+    setCurrentResultPage,
     countries,
     selectedCountry,
     selectedCountryId,
