@@ -3,37 +3,17 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import type {
-  MyPageData,
-  MyPageSummary,
-  MyPageUser,
-} from "@/features/mypage/types";
-import {
-  getMyPageData,
-  MyPageApiError,
-} from "@/features/services/mypage.service";
+import type { MyPageData } from "@/features/mypage/types";
+import { getMyPageData } from "@/features/services/mypage.service";
 
-const initialSummary: MyPageSummary = {
-  courseCount: 0,
-  reservationCount: 0,
-  couponCount: 0,
-};
-
-export function useMyPage() {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const [user, setUser] =
-    useState<MyPageUser | null>(null);
-  const [summary, setSummary] =
-    useState(initialSummary);
-  const [isLoading, setIsLoading] =
-    useState(true);
-  const [errorMessage, setErrorMessage] =
-    useState("");
+export function useMyPage(initialData: MyPageData) {
+  const [user, setUser] = useState(initialData.user);
+  const [summary, setSummary] = useState(initialData.summary);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const fetchMyPage = useCallback(async () => {
     try {
@@ -42,22 +22,13 @@ export function useMyPage() {
 
       const data: MyPageData =
         await getMyPageData({
-          includeReservationCount: pathname === "/mypage",
+          includeReservationCount: true,
         });
 
       setUser(data.user);
       setSummary(data.summary);
     } catch (error) {
       console.error("마이페이지 조회 실패:", error);
-
-      if (
-        error instanceof MyPageApiError &&
-        (error.status === 401 ||
-          error.status === 403)
-      ) {
-        router.replace("/auth/login");
-        return;
-      }
 
       setErrorMessage(
         error instanceof Error
@@ -67,11 +38,7 @@ export function useMyPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [router, pathname]);
-
-  useEffect(() => {
-    void fetchMyPage();
-  }, [fetchMyPage]);
+  }, []);
 
   useEffect(() => {
     const handleProfileUpdated = (event: Event) => {
@@ -100,11 +67,14 @@ export function useMyPage() {
     };
   }, []);
 
-  return {
-    user,
-    summary,
-    isLoading,
-    errorMessage,
-    refetch: fetchMyPage,
-  };
+  return useMemo(
+    () => ({
+      user,
+      summary,
+      isLoading,
+      errorMessage,
+      refetch: fetchMyPage,
+    }),
+    [user, summary, isLoading, errorMessage, fetchMyPage]
+  );
 }

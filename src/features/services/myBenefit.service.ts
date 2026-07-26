@@ -26,12 +26,15 @@ const unwrapBenefitData = <T>(response: ApiResponse<T>): T => {
 };
 
 // 내 쿠폰 전체 조회
-export const getMyCoupons = async (): Promise<MyCoupon[]> => {
+export const getMyCoupons = async (
+  headers?: HeadersInit
+): Promise<MyCoupon[]> => {
   try {
     const response = await api.get<ApiResponse<MyCoupon[]>>(
       "/api/v1/my/coupons",
       {
         cache: "no-store",
+        headers,
         suppressGlobalError: true,
       }
     );

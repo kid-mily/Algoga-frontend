@@ -1,21 +1,12 @@
 "use client";
 
-import LoadingSpinner from "@/features/common/components/LoadingSpinner";
 import MyPageSidebar from "./MyPageSidebar";
 import { useMyPageData } from "./MyPageDataProvider";
 
 export default function MyPageShell({ children }: {
     children: React.ReactNode;
 }) {
-    const { user, isLoading, errorMessage } = useMyPageData();
-
-    if (isLoading) {
-        return (
-        <main className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-[#F5F7FA]">
-            <LoadingSpinner />
-        </main>
-        );
-    }
+    const { user, errorMessage } = useMyPageData();
 
     if (errorMessage || !user) {
         return (
