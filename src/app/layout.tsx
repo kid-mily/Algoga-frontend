@@ -2,6 +2,7 @@
 import ChatWidget from "@/features/chat/components/ChatWidget";
 import FriendPanel from "@/features/friends/components/FriendPanel";
 import AiChatbotWidget from "@/features/chatbot/components/AiChatbotWidget";
+import SessionExpiredModal from "@/features/common/components/SessionExpiredModal";
 import { getSiteUrl } from "@/features/seo/site";
 import "./globals.css";
 
@@ -64,6 +65,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
+        <SessionExpiredModal />
         <ChatWidget />
         <FriendPanel />
         <AiChatbotWidget />

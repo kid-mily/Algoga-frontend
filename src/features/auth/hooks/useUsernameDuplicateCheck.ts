@@ -1,5 +1,9 @@
 import { useRef, useState } from "react";
 import { checkUsernameDuplicate } from "@/features/services/signup.service";
+import {
+  REGISTER_REQUIRED_USERNAME_MESSAGE,
+  validateRegisterUsername,
+} from "@/features/auth/utils/registerValidators";
 
 const isAbortError = (error: unknown) =>
   error instanceof DOMException && error.name === "AbortError";
@@ -20,8 +24,8 @@ export const useUsernameDuplicateCheck = () => {
   const check = async (username: string, onError: (message: string) => void) => {
     const trimmedUsername = username.trim();
 
-    if (trimmedUsername.length < 4 || trimmedUsername.length > 20) {
-      onError("아이디는 4자 이상 20자 이하로 입력해주세요.");
+    if (validateRegisterUsername(trimmedUsername)) {
+      onError(REGISTER_REQUIRED_USERNAME_MESSAGE);
       return;
     }
 

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { logout } from "@/features/services/auth.service";
 import { deleteCookie } from "@/lib/cookie";
 import HeaderNotificationBell from "@/features/notifications/HeaderNotificationBell";
+import { clearUserSessionActive } from "@/features/auth/services/userSession";
 
 type Props = {
   user: {
@@ -18,6 +19,7 @@ type Props = {
 };
 
 const clearUserAuthClientState = () => {
+  clearUserSessionActive();
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
 

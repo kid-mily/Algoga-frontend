@@ -5,10 +5,26 @@ export default function CommunityCategoryTabs({
   categories,
   onCategoryChange,
   disabled = false,
+  variant = "category",
 }: CommunityCategoryTabsProps) {
+  const isCountry = variant === "country";
+
   return (
-    <nav aria-label="커뮤니티 카테고리">
-      <ul className="flex flex-wrap items-center gap-2">
+    <nav
+      aria-label={isCountry ? "인기 국가 필터" : "커뮤니티 카테고리"}
+      className={
+        isCountry
+          ? "min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          : "w-full overflow-x-auto border-b border-[#DDE5EA] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      }
+    >
+      <ul
+        className={
+          isCountry
+            ? "flex min-w-max items-center gap-2"
+            : "flex min-w-max items-center gap-7"
+        }
+      >
         {categories.map((category) => {
           const isActive = selectedCategories.includes(category.id);
 
@@ -18,15 +34,24 @@ export default function CommunityCategoryTabs({
                 type="button"
                 disabled={disabled}
                 onClick={() => onCategoryChange(category.id)}
-                className={`h-[38px] rounded-[8px] border px-5 text-[14px] font-bold transition ${
-                  disabled
-                    ? "cursor-not-allowed border-[#DDE8EF] bg-[#F3F4F6] text-[#B7BEC9]"
-                    : isActive
-                      ? "cursor-pointer border-[#6BA19D] bg-[#6BA19D] text-white shadow-[0_8px_18px_rgba(107,161,157,0.18)]"
-                      : "cursor-pointer border-[#DDE8EF] bg-white text-[#7A6F66] hover:border-[#6BA19D]/60 hover:bg-[#EEF4F4] hover:text-[#5F928E]"
-                }`}
+                aria-pressed={isActive}
+                className={
+                  isCountry
+                    ? `h-8 whitespace-nowrap rounded-full px-3 text-[13px] font-semibold transition ${
+                        disabled
+                          ? "cursor-not-allowed bg-[#ECEFF1] text-[#B7BEC9]"
+                          : isActive
+                            ? "cursor-pointer bg-[#DDF1EF] text-[#357A78]"
+                            : "cursor-pointer bg-[#E9EDF0] text-[#667085] hover:bg-[#DDE5E8] hover:text-[#344054]"
+                      }`
+                    : `-mb-px h-11 whitespace-nowrap border-b-2 px-0.5 text-[14px] font-semibold transition ${
+                        isActive
+                          ? "cursor-pointer border-[#439A97] text-[#439A97]"
+                          : "cursor-pointer border-transparent text-[#667085] hover:text-[#344054]"
+                      }`
+                }
               >
-                {category.label}
+                {isCountry ? `#${category.label}` : category.label}
               </button>
             </li>
           );

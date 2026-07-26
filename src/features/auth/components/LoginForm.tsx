@@ -9,6 +9,7 @@ import { useLoginLockTimer } from "../hooks/useLoginLockTimer";
 import { useSocialUrls } from "../hooks/useSocialUrls";
 import { getErrorCode, getErrorNumber } from "../utils/authError";
 import { formatCountdown } from "../utils/formatCountdown";
+import { markUserSessionActive } from "../services/userSession";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -59,6 +60,7 @@ export default function LoginForm() {
         password,
       });
 
+      markUserSessionActive();
       window.dispatchEvent(new Event("auth-state-changed"));
       // 로그인 상태 변경되었으니 정보 다시 조회
 

@@ -1,4 +1,5 @@
 import { api, ApiRequestError, ApiResponse } from "@/lib/api";
+import { markUserSessionActive } from "@/features/auth/services/userSession";
 
 export interface UserProfileResponse {
   userId: number;
@@ -44,7 +45,13 @@ export const getMe = async (
       suppressGlobalError: true,
     });
 
-    return normalizeUserProfile(unwrapData(response));
+    const profile = normalizeUserProfile(unwrapData(response));
+
+    if (profile) {
+      markUserSessionActive();
+    }
+
+    return profile;
   } catch (error) {
     if (error instanceof ApiRequestError && error.status === 401) {
       return null;

@@ -7,6 +7,7 @@ import { ApiRequestError } from "@/lib/api";
 import EmailAuthVerifyModal from "@/features/mypage/EmailAuthVerifyModal";
 import { withdrawMyAccount } from "@/features/services/mypage.service";
 import type { MyPageSummary, MyPageUser } from "@/features/mypage/types";
+import { clearUserSessionActive } from "@/features/auth/services/userSession";
 
 interface WithdrawPageClientProps {
   user: MyPageUser;
@@ -48,6 +49,7 @@ const getWithdrawErrorMessage = (error: unknown): string => {
 
 // accessToken/refreshToken 쿠키는 서버가 응답 헤더로 자동 삭제 - 프론트는 로그인 상태(localStorage)만 초기화
 const clearClientAuthState = () => {
+  clearUserSessionActive();
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
 };

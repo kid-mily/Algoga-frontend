@@ -5,7 +5,11 @@ import { useEffect, useState } from "react";
 import FormLabel from "@/features/common/components/FormLabel";
 
 import {  RegisterInfoFormProps  } from "../types";
-import { emailRegex, validateRegisterInfoForm } from "../utils/registerValidators";
+import {
+  emailRegex,
+  validateRegisterInfoForm,
+  validateRegisterUsername,
+} from "../utils/registerValidators";
 import { useEmailVerification } from "../hooks/useEmailVerification";
 import { useUsernameDuplicateCheck } from "../hooks/useUsernameDuplicateCheck";
 import { usePhoneDuplicateCheck } from "../hooks/usePhoneDuplicateCheck";
@@ -85,6 +89,7 @@ export default function RegisterInfoForm({
   const handleUsernameChange = (value: string) => {
     usernameCheck.reset();
     onChange("username", value);
+    setFieldError("username")(value ? validateRegisterUsername(value) : "");
 
     if (serverError?.field === "username" && setServerError) {
       setServerError({ field: "", message: "" });
@@ -165,14 +170,20 @@ export default function RegisterInfoForm({
               type="text"
               value={formData.username}
               onChange={(e) => handleUsernameChange(e.target.value)}
-              placeholder="4자 이상 20자 이하"
+              placeholder="영문·숫자 4~20자"
+              maxLength={20}
+              autoCapitalize="none"
               className="h-[35px] min-w-0 flex-1 rounded-[16px] border border-[#D0D5DD] bg-[#F9FAFB] px-5 text-[15px] outline-none"
               disabled={isLoading}
             />
             <button
               type="button"
               onClick={handleUsernameCheck}
-              disabled={isLoading || usernameCheck.isChecking || !formData.username.trim()}
+              disabled={
+                isLoading ||
+                usernameCheck.isChecking ||
+                !formData.username.trim()
+              }
               aria-label={
                 usernameCheck.isChecking
                   ? "중복 확인: 사용자 이름 검사 중"
