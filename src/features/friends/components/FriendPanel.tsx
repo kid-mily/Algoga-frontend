@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiRequestError } from "@/lib/api";
 import { getFriends, toggleFriendFavorite } from "../friend.service";
+import { filterFriendsByKeyword } from "../friend.util";
 import type { Friend, FriendFilter } from "../friend.types";
 import FriendItem from "./FriendItem";
 import FriendSearch from "./FriendSearch";
@@ -144,24 +145,12 @@ export default function FriendPanel() {
   };
 
   const filteredFriends = useMemo(() => {
-    const keyword = searchValue.trim().toLowerCase();
+    const byFilter =
+      activeFilter === "favorite"
+        ? friends.filter((friend) => friend.isFavorite)
+        : friends;
 
-    return friends
-      .filter((friend) => {
-        if (activeFilter === "favorite") {
-          return friend.isFavorite;
-        }
-
-        return true;
-      })
-      .filter((friend) => {
-        if (!keyword) return true;
-
-        return (
-          friend.nickname.toLowerCase().includes(keyword) ||
-          friend.personalCode.toLowerCase().includes(keyword)
-        );
-      });
+    return filterFriendsByKeyword(byFilter, searchValue);
   }, [friends, searchValue, activeFilter]);
 
   if (!isOpen) return null;

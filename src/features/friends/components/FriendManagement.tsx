@@ -106,7 +106,7 @@ export default function FriendManagement({
     setFriends((previous) =>
       previous.filter((item) => item.relationId !== friend.relationId)
     );
-    setBlockedUsers(await getBlockedUsers());
+    setBlockedUsers((previous) => [...previous, friend]);
   };
 
   const handleAcceptRequest = async (requestId: number) => {
@@ -116,10 +116,15 @@ export default function FriendManagement({
       setProcessingRequestId(requestId);
       setErrorMessage("");
       await acceptFriendRequest(requestId);
+      const acceptedFriend = requests.find(
+        (request) => request.relationId === requestId
+      );
       setRequests((previous) =>
         previous.filter((request) => request.relationId !== requestId)
       );
-      setFriends(await getFriends());
+      if (acceptedFriend) {
+        setFriends((previous) => [...previous, acceptedFriend]);
+      }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "친구 요청을 수락하지 못했습니다.");
     } finally {
@@ -154,7 +159,6 @@ export default function FriendManagement({
       setBlockedUsers((previous) =>
         previous.filter((friend) => friend.personalCode !== personalCode)
       );
-      setFriends(await getFriends());
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "차단을 해제하지 못했습니다.");
     } finally {

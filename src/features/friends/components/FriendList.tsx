@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import Modal from "@/features/common/components/Modal";
+import { filterFriendsByKeyword } from "../friend.util";
 import type { Friend } from "../friend.types";
 import { EmptyState } from "./FriendPanel";
 import FriendSearch from "./FriendSearch";
@@ -68,23 +69,10 @@ export default function FriendList({
     };
   }, []);
 
-  const filteredFriends = useMemo(() => {
-    const keyword = searchValue
-      .trim()
-      .toLowerCase();
-
-    if (!keyword) return friends;
-
-    return friends.filter(
-      (friend) =>
-        friend.nickname
-          .toLowerCase()
-          .includes(keyword) ||
-        friend.personalCode
-          .toLowerCase()
-          .includes(keyword)
-    );
-  }, [friends, searchValue]);
+  const filteredFriends = useMemo(
+    () => filterFriendsByKeyword(friends, searchValue),
+    [friends, searchValue]
+  );
 
   const handleConfirm = async () => {
     if (!confirmTarget) return;
