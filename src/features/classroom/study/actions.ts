@@ -30,9 +30,10 @@ export const getFirstOpenChapter = (chapters: CourseStudyChapter[]) => {
 
 export const loadLectureStudy = async (
   courseId: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  headers?: HeadersInit
 ) => {
-  const course = await getCourseStudyDetail(courseId, signal);
+  const course = await getCourseStudyDetail(courseId, signal, headers);
   const chapters = sortChapters(course.chapters ?? []);
 
   return {

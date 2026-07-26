@@ -1,135 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiRequestError } from "@/lib/api";
-import {
-  CourseStudyChapter,
-  getCourseStudyDetail,
-} from "@/features/services/courseStudy.service";
-import {
-  getCourseQuizzes,
-  submitCourseQuiz,
-} from "@/features/services/courseQuiz.service";
-import { areAllChaptersCompleted } from "../../learning/actions";
-import { createQuizAnswers } from "../actions";
+import { CourseStudyChapter } from "@/features/services/courseStudy.service";
+import { submitCourseQuiz } from "@/features/services/courseQuiz.service";
+import { createQuizAnswers, type CourseQuizLoadResult } from "../actions";
 import type { CourseQuiz, CourseQuizSubmitResult } from "../types";
 
+// 초기 데이터는 서버 컴포넌트(quiz/page.tsx)에서 미리 조회해 내려준다.
 export function useCourseQuiz(
   courseId: string,
   completeHref: string,
-  initialCourseTitle: string
+  initialData: CourseQuizLoadResult
 ) {
   const router = useRouter();
 
-  const [courseTitle, setCourseTitle] = useState(initialCourseTitle);
-  const [chapters, setChapters] = useState<CourseStudyChapter[]>([]);
-  const [quizzes, setQuizzes] = useState<CourseQuiz[]>([]);
+  const [courseTitle] = useState(initialData.courseTitle);
+  const [chapters] = useState<CourseStudyChapter[]>(initialData.chapters);
+  const [quizzes] = useState<CourseQuiz[]>(initialData.quizzes);
   const [submitResult, setSubmitResult] =
     useState<CourseQuizSubmitResult | null>(null);
-  const [canTakeQuiz, setCanTakeQuiz] = useState(false);
+  const [canTakeQuiz] = useState(initialData.canTakeQuiz);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>(
     {}
   );
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    if (!courseId) {
-      queueMicrotask(() => {
-        setErrorMessage("강의 번호가 올바르지 않습니다.");
-        setIsLoading(false);
-      });
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const loadQuizData = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-        setCanTakeQuiz(false);
-
-        const course = await getCourseStudyDetail(courseId, controller.signal);
-
-        if (controller.signal.aborted) return;
-
-        const orderedChapters = [...course.chapters].sort(
-          (a, b) => a.chapterOrder - b.chapterOrder
-        );
-
-        setCourseTitle(course.title);
-        setChapters(orderedChapters);
-
-        const serverCanTakeQuiz =
-          areAllChaptersCompleted(orderedChapters) ||
-          course.quizAvailable === true;
-
-        setCanTakeQuiz(serverCanTakeQuiz);
-
-        if (!serverCanTakeQuiz) {
-          setErrorMessage("모든 챕터를 완료해야 퀴즈를 풀 수 있습니다.");
-          return;
-        }
-
-        const quizList = await getCourseQuizzes(courseId);
-
-        if (controller.signal.aborted) return;
-
-        if (quizList.length === 0) {
-          setErrorMessage("등록된 퀴즈가 없습니다.");
-          return;
-        }
-
-        setQuizzes(quizList);
-      } catch (error) {
-        if (controller.signal.aborted) return;
-
-        console.error("[quiz] 퀴즈 조회 실패:", error);
-
-        if (error instanceof ApiRequestError) {
-          if (error.status === 401) {
-            router.replace("/auth/login");
-            return;
-          }
-
-          if (error.status === 400) {
-            setErrorMessage("모든 챕터를 완료해야 퀴즈를 풀 수 있습니다.");
-            return;
-          }
-
-          if (error.status === 403) {
-            setErrorMessage("수강 등록된 강의가 아닙니다.");
-            return;
-          }
-
-          if (error.status === 404) {
-            setErrorMessage("등록된 퀴즈가 없거나 강의를 찾을 수 없습니다.");
-            return;
-          }
-
-          setErrorMessage(error.message);
-          return;
-        }
-
-        setErrorMessage("퀴즈를 불러오지 못했습니다.");
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadQuizData();
-
-    return () => {
-      controller.abort();
-    };
-  }, [courseId, router]);
+  const [errorMessage, setErrorMessage] = useState(initialData.errorMessage);
 
   const currentQuiz = quizzes[currentIndex] ?? null;
   const isReviewing = submitResult !== null;
@@ -230,7 +129,6 @@ export function useCourseQuiz(
     currentWrongAnswer,
     correctOption,
     isReviewing,
-    isLoading,
     isSubmitting,
     errorMessage,
     canTakeQuiz,

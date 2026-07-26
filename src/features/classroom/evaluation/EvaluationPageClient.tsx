@@ -1,31 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "@/features/common/components/Modal";
-import { ApiRequestError } from "@/lib/api";
 import EvaluationForm from "./EvaluationForm";
-import { getDiagnosisQuestions } from "@/features/services/evaluation.service";
 import { EvaluationFormQuestion } from "./types";
 
 interface EvaluationPageClientProps {
   continentCode: string;
   countryId: string;
+  questions: EvaluationFormQuestion[];
+  // 서버(evaluation/page.tsx)에서 이미 판단한 결과 — 클라이언트는 여기서 다시 조회하지 않는다.
+  errorMessage: string;
+  requiresLogin: boolean;
 }
 
 export default function EvaluationPageClient({
   continentCode,
   countryId,
+  questions,
+  errorMessage,
+  requiresLogin,
 }: EvaluationPageClientProps) {
   const router = useRouter();
-
-  const [questions, setQuestions] = useState<EvaluationFormQuestion[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  // 다시 시도 버튼을 눌렀을 때 useEffect를 다시 실행시키기 위한 값
-  const [retryCount, setRetryCount] = useState(0);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   // URL에 들어가는 대륙 코드는 소문자로 통일
   const pathContinentCode = continentCode.trim().toLowerCase();
@@ -40,103 +36,34 @@ export default function EvaluationPageClient({
     evaluationHref
   )}`;
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const loadQuestions = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-        setQuestions([]);
-
-        // 국가 ID 기준으로 진단평가 문제를 조회
-        const result = await getDiagnosisQuestions(
-          countryId,
-          controller.signal
-        );
-
-        if (controller.signal.aborted) return;
-
-        setQuestions(result);
-
-        // API는 성공했지만 등록된 문제가 없는 경우
-        if (result.length === 0) {
-          setErrorMessage(
-            "아직 이 국가의 진단평가 문제가 준비되지 않았습니다."
-          );
-        }
-      } catch (error) {
-        if (controller.signal.aborted) return;
-
-        console.error("[diagnosis] 진단평가 문제 조회 실패:", error);
-
-        if (error instanceof ApiRequestError) {
-          if (error.status === 401) {
-            setIsLoginModalOpen(true);
-            return;
-          }
-
-          // 해당 국가의 진단평가 문제가 없는 경우
-          if (error.status === 404) {
-            setErrorMessage(
-              "아직 이 국가의 진단평가 문제가 준비되지 않았습니다."
-            );
-            return;
-          }
-
-          if (error.status && error.status >= 500) {
-            setErrorMessage(
-              "잠시 후 다시 시도해 주세요. 진단평가 정보를 불러오지 못했습니다."
-            );
-            return;
-          }
-
-          setErrorMessage(
-            error.message || "진단평가 정보를 불러오지 못했습니다."
-          );
-          return;
-        }
-
-        // 네트워크 오류 등 ApiRequestError가 아닌 예외 처리
-        setErrorMessage("네트워크 상태를 확인한 뒤 다시 시도해 주세요.");
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadQuestions();
-
-    return () => {
-      controller.abort();
-    };
-  }, [countryId, retryCount]);
-
-  // 다시 시도 버튼 클릭 시 API 재요청
+  // 다시 시도 버튼 클릭 시 서버 컴포넌트를 다시 실행시켜 재조회한다
   const handleRetry = () => {
-    setRetryCount((current) => current + 1);
+    router.refresh();
   };
 
   // 로그인 안내 모달에서 확인 클릭
   const handleLoginConfirm = () => {
-    setIsLoginModalOpen(false);
     router.push(loginHref);
   };
 
   // 로그인 안내 모달에서 취소 클릭
   const handleLoginCancel = () => {
-    setIsLoginModalOpen(false);
     router.push(courseListHref);
   };
 
-  if (isLoading) {
+  if (requiresLogin) {
     return (
-      <main className="flex min-h-[calc(100dvh-64px)] items-center justify-center bg-[#F5F7FA]">
-        <p className="text-sm font-medium text-[#8A9BB0]">
-          진단평가 문제를 불러오는 중입니다.
-        </p>
-      </main>
+      <Modal
+        open
+        title="로그인이 필요합니다"
+        description={
+          "진단평가를 응시한 뒤 결과에 맞는 강의와 패키지 라운지를 이용할 수 있어요.\n로그인 후 진단평가를 계속 진행해 주세요."
+        }
+        confirmText="로그인하기"
+        cancelText="돌아가기"
+        onConfirm={handleLoginConfirm}
+        onCancel={handleLoginCancel}
+      />
     );
   }
 
@@ -175,24 +102,10 @@ export default function EvaluationPageClient({
   }
 
   return (
-    <>
-      <EvaluationForm
-        continentCode={pathContinentCode}
-        countryId={countryId}
-        questions={questions}
-      />
-
-      <Modal
-        open={isLoginModalOpen}
-        title="로그인이 필요합니다"
-        description={
-          "진단평가를 응시한 뒤 결과에 맞는 강의와 패키지 라운지를 이용할 수 있어요.\n로그인 후 진단평가를 계속 진행해 주세요."
-        }
-        confirmText="로그인하기"
-        cancelText="돌아가기"
-        onConfirm={handleLoginConfirm}
-        onCancel={handleLoginCancel}
-      />
-    </>
+    <EvaluationForm
+      continentCode={pathContinentCode}
+      countryId={countryId}
+      questions={questions}
+    />
   );
 }

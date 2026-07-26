@@ -2,12 +2,12 @@
 
 import { useParams, useRouter } from "next/navigation";
 import CourseLearningSidebar from "@/features/classroom/learning/components/CourseLearningSidebar";
-import { getQuizOptions } from "@/features/classroom/quiz/actions";
+import { getQuizOptions, type CourseQuizLoadResult } from "@/features/classroom/quiz/actions";
 import { useCourseQuiz } from "@/features/classroom/quiz/hooks/useCourseQuiz";
 
 interface QuizClientProps {
-  initialCourseTitle: string;
   description: string;
+  initialData: CourseQuizLoadResult;
 }
 
 const OPTION_LABELS = ["A", "B", "C", "D"] as const;
@@ -18,8 +18,8 @@ const getParam = (value: string | string[] | undefined) => {
 };
 
 export default function QuizClient({
-  initialCourseTitle,
   description,
+  initialData,
 }: QuizClientProps) {
   const params = useParams();
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function QuizClient({
   const qnaHref = `${lectureHref}/qna`;
   const certificateHref = `/mypage/coursedetails/${courseId}/certificate`;
 
-  const quiz = useCourseQuiz(courseId, completeHref, initialCourseTitle);
+  const quiz = useCourseQuiz(courseId, completeHref, initialData);
   const currentQuiz = quiz.currentQuiz;
 
   const selectedOption = currentQuiz
@@ -75,15 +75,7 @@ export default function QuizClient({
             </p>
           </header>
 
-          {quiz.isLoading ? (
-            <section className="mt-4 flex h-[420px] items-center justify-center rounded-2xl border border-[#E1E8EF] bg-white shadow-[0_8px_24px_rgba(55,88,110,0.07)]">
-              <p className="text-sm text-[#8A94A6]">
-                퀴즈를 불러오는 중입니다.
-              </p>
-            </section>
-          ) : null}
-
-          {!quiz.isLoading && !currentQuiz ? (
+          {!currentQuiz ? (
             <section className="mt-4 flex h-[420px] flex-col items-center justify-center rounded-2xl border border-[#E1E8EF] bg-white px-8 text-center shadow-[0_8px_24px_rgba(55,88,110,0.07)]">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#FFF4E8] text-lg font-bold text-[#A87512]">
                 !
@@ -107,7 +99,7 @@ export default function QuizClient({
             </section>
           ) : null}
 
-          {!quiz.isLoading && currentQuiz ? (
+          {currentQuiz ? (
             <section className="mt-4 rounded-2xl border border-[#E1E8EF] bg-white px-7 py-6 shadow-[0_8px_24px_rgba(55,88,110,0.07)]">
               <div className="flex justify-between text-xs">
                 <strong className="text-[#439A97]">
