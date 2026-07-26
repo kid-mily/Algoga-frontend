@@ -10,7 +10,6 @@ export const useSocialUrls = () => {
     : null;
 
   return {
-    hasSocialLoginConfig,
     socialLoginUrls,
   };
 };
