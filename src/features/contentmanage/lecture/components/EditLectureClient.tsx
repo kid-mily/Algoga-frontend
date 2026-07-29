@@ -8,13 +8,13 @@ import { getErrorMessage } from "@/features/common/utils/getErrorMessage";
 import { toNumberOrZero } from "@/features/common/utils/number";
 import { updateLectureAction } from "../actions";
 import { useAdminLectureDetail } from "../hooks/useAdminLectureDetail";
-import { getIsPublic } from "../utils/lectureFormatters";
+import { getIsPublic, getLectureCountryId } from "../utils/lectureFormatters";
 import { EditLectureClientProps, EditLecturePayload } from "../types";
 
 export default function EditLectureClient({
   lectureId,
 }: EditLectureClientProps) {
-  const { lecture, isLoading, error } = useAdminLectureDetail(lectureId);
+  const { lecture, countries, isLoading, error } = useAdminLectureDetail(lectureId);
 
   const handleEdit = async (
     data: EditLecturePayload,
@@ -29,13 +29,13 @@ export default function EditLectureClient({
       const maxRewardMileage = toNumberOrZero(data.mileage);
 
       await updateLectureAction(lectureId, {
-        countryId: lecture.countryId,
+        countryId: getLectureCountryId(lecture),
         title: data.title,
         description: data.description,
         price: Number(data.price),
         mileage: maxRewardMileage,
         maxRewardMileage,
-        level: lecture.level || "BEGINNER",
+        level: data.level || lecture.level || "BEGINNER",
         status: targetStatus,
         thumbnail: thumbnailFile,
         files: attachments,
@@ -58,6 +58,13 @@ export default function EditLectureClient({
     );
   }
 
+  const countryId = getLectureCountryId(lecture);
+  const countryName =
+    lecture.countryName ||
+    lecture.country_name ||
+    countries.find((country) => country.countryId === countryId)?.countryName ||
+    "";
+
   return (
     <main className="p-6" aria-labelledby="edit-lecture-title">
       <section aria-labelledby="edit-lecture-title">
@@ -70,12 +77,15 @@ export default function EditLectureClient({
       <section className="mt-6" aria-label="강의 수정 폼">
         <LectureUpdateForm
           initialData={{
-            country: lecture.countryName || String(lecture.countryId || ""),
+            country: countryName,
             title: lecture.title || "",
             description: lecture.description || "",
             price: String(lecture.price || ""),
-            mileage: String(lecture.maxRewardMileage ?? lecture.mileage ?? ""),
+            mileage: String(lecture.maxRewardMileage ?? ""),
+            level: lecture.level || "BEGINNER",
             isPublic: getIsPublic(lecture) ? "true" : "false",
+            thumbnailUrl: lecture.thumbnailUrl || lecture.thumbnail_url || null,
+            files: lecture.files ?? [],
           }}
           onSubmit={handleEdit}
         />

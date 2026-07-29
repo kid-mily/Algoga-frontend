@@ -5,12 +5,12 @@ import {
   getAdminCourses,
   getAdminDeletedCourses,
   getCourseCountries,
+  publishAdminCourse,
   updateAdminCourse,
 } from "@/features/services/adminCourse.service";
 import {
   createAdminChapter,
   deleteAdminChapter,
-  getAdminChapter,
   getAdminChapters,
   updateAdminChapter,
 } from "@/features/services/adminChapter.service";
@@ -45,6 +45,10 @@ export const createLectureAction = (payload: CreateAdminCoursePayload) => {
   return createAdminCourse(payload);
 };
 
+export const publishLectureAction = (courseId: number) => {
+  return publishAdminCourse(courseId);
+};
+
 export const updateLectureAction = (
   lectureId: number,
   payload: UpdateLecturePayload
@@ -58,13 +62,6 @@ export const deleteLectureAction = (lectureId: number) => {
 
 export const getChapterListAction = (lectureId: number) => {
   return getAdminChapters(lectureId);
-};
-
-export const getChapterDetailAction = (
-  lectureId: number,
-  chapterId: number
-) => {
-  return getAdminChapter(lectureId, chapterId);
 };
 
 export const createChapterAction = (payload: CreateAdminChapterPayload) => {

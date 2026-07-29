@@ -12,6 +12,11 @@ export default function ChatInput({ disabled, onSend, onTypingChange }: ChatInpu
   const [message, setMessage] = useState("");
   const isTypingRef = useRef(false);
 
+  const onTypingChangeRef = useRef(onTypingChange);
+  useEffect(() => {
+    onTypingChangeRef.current = onTypingChange;
+  }, [onTypingChange]);
+
   const setTypingState = (isTyping: boolean) => {
     if (isTypingRef.current === isTyping) return;
 
@@ -19,11 +24,12 @@ export default function ChatInput({ disabled, onSend, onTypingChange }: ChatInpu
     onTypingChange?.(isTyping);
   };
 
+  // 언마운트 시에만 "입력 중 해제"를 보내도록 ref로 캡처(부모가 불안정한 콜백을 넘겨도 안전).
   useEffect(() => {
     return () => {
-      onTypingChange?.(false);
+      onTypingChangeRef.current?.(false);
     };
-  }, [onTypingChange]);
+  }, []);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import CourseLearningSidebar from "@/features/classroom/learning/components/CourseLearningSidebar";
 import QuizResultContent from "@/features/classroom/quiz/components/QuizResultContent";
 import ReviewModal from "@/features/classroom/review/ReviewModal";
-import type { CourseQuizAttempt } from "@/features/classroom/quiz/types";
-import type { CourseStudyChapter } from "@/features/services/courseStudy.service";
-import { getCourseStudyDetail } from "@/features/services/courseStudy.service";
-import { getCourseQuizResult } from "@/features/services/courseQuiz.service";
-import { getMyCourses } from "@/features/services/myCourse.service";
+import type { QuizCompleteLoadResult } from "@/features/classroom/quiz/actions";
 import { useCourseCompletionStatus } from "@/features/classroom/completion/hooks/useCourseCompletionStatus";
 
 const getParam = (value: string | string[] | undefined) => {
@@ -17,14 +13,22 @@ const getParam = (value: string | string[] | undefined) => {
   return decodeURIComponent(Array.isArray(value) ? value[0] : value);
 };
 
-export default function QuizCompleteClient() {
+interface QuizCompleteClientProps {
+  // 서버(quiz/complete/page.tsx)에서 조회한 결과 — 저장된 결과가 없거나 조회에
+  // 실패하면 null (클라이언트에서 재조회하지 않고 "결과 없음" 화면을 바로 보여준다)
+  initialData: QuizCompleteLoadResult | null;
+}
+
+export default function QuizCompleteClient({
+  initialData,
+}: QuizCompleteClientProps) {
   const params = useParams();
   const router = useRouter();
 
   const continentCode = getParam(params.continentCode).toLowerCase();
   const countryId = getParam(params.countryid);
   const courseId = getParam(params.courseId);
- 
+
   const lectureHref = `/classroom/${continentCode}/${countryId}/lecture/${courseId}`;
   const studyHref = `${lectureHref}/study`;
   const quizHref = `${lectureHref}/quiz`;
@@ -35,114 +39,13 @@ export default function QuizCompleteClient() {
 
   const completion = useCourseCompletionStatus(courseId);
 
-  const [courseTitle, setCourseTitle] = useState("");
-  const [chapters, setChapters] = useState<CourseStudyChapter[]>([]);
-  const [attempt, setAttempt] = useState<CourseQuizAttempt | null>(null);
-  const [reviewWritten, setReviewWritten] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const courseTitle = initialData?.courseTitle ?? "";
+  const chapters = initialData?.chapters ?? [];
+  const attempt = initialData?.attempt ?? null;
+
+  const [reviewWrittenOverride, setReviewWrittenOverride] = useState(false);
+  const reviewWritten = completion.reviewWritten || reviewWrittenOverride;
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (!courseId) return;
-
-    let active = true;
-
-    const loadPage = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-        setAttempt(null);
-
-        const [course, savedResult, myCourses] = await Promise.all([
-          getCourseStudyDetail(courseId),
-          getCourseQuizResult(courseId),
-          getMyCourses(0, 100).catch(() => null),
-        ]);
-
-        if (!active) return;
-
-        const orderedChapters = [...course.chapters].sort(
-          (a, b) => a.chapterOrder - b.chapterOrder
-        );
-
-        const resultAnswers = savedResult.answers ?? [];
-
-        const quizzes = resultAnswers.map((answer) => ({
-          quizId: answer.quizId,
-          courseId: savedResult.courseId,
-          question: answer.question,
-          option1: answer.option1,
-          option2: answer.option2,
-          option3: answer.option3,
-          option4: answer.option4,
-        }));
-
-        const selectedAnswers = Object.fromEntries(
-          resultAnswers.map((answer) => [answer.quizId, answer.selectedOption])
-        );
-
-        const currentCourse = myCourses?.content.find(
-          (course) => String(course.courseId) === String(courseId)
-        );
-
-        setCourseTitle(course.title);
-        setChapters(orderedChapters);
-        setReviewWritten(currentCourse?.reviewWritten === true);
-
-        setAttempt({
-          result: {
-            ...savedResult,
-            answers: resultAnswers,
-          },
-          quizzes,
-          selectedAnswers,
-        });
-      } catch (error) {
-        if (!active) return;
-
-        console.error("[quiz-complete] 퀴즈 결과 조회 실패:", error);
-
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "퀴즈 결과를 불러오지 못했습니다."
-        );
-
-        setAttempt(null);
-      } finally {
-        if (active) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadPage();
-
-    return () => {
-      active = false;
-    };
-  }, [courseId]);
-
-  if (!courseId) {
-    return (
-      <main className="flex h-[calc(100dvh-64px)] items-center justify-center bg-[#F3F8FC]">
-        <p className="text-sm text-red-500">
-          강의 번호가 올바르지 않습니다.
-        </p>
-      </main>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <main className="flex h-[calc(100dvh-64px)] items-center justify-center overflow-hidden bg-[#F3F8FC]">
-        <p className="text-sm text-[#8A94A6]">
-          퀴즈 결과를 불러오는 중입니다.
-        </p>
-      </main>
-    );
-  }
 
   return (
     <>
@@ -191,7 +94,7 @@ export default function QuizCompleteClient() {
                     </h2>
 
                     <p className="mt-2 text-sm text-[#8A94A6]">
-                    {errorMessage || "퀴즈를 제출한 뒤 결과를 확인해 주세요."}
+                    퀴즈를 제출한 뒤 결과를 확인해 주세요.
                     </p>
 
                     <div className="mt-5 flex justify-center gap-2">
@@ -234,7 +137,7 @@ export default function QuizCompleteClient() {
         onClose={() => setIsReviewModalOpen(false)}
         onSuccess={(review) => {
             setIsReviewModalOpen(false);
-            setReviewWritten(true);
+            setReviewWrittenOverride(true);
 
             window.dispatchEvent(
             new CustomEvent("course-review-created", {

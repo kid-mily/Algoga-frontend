@@ -1,17 +1,4 @@
-﻿export interface User {
-  id: number;
-  username: string;
-  email: string;
-  name: string;
-  nickname: string;
-  role: "USER" | "ADMIN";
-
-  phone?: string;
-  birthDate?: string;
-  gender?: "MALE" | "FEMALE" | "OTHER";
-}
-
-export interface LoginRequest {
+﻿export interface LoginRequest {
   username: string;
   password: string;
 }
@@ -36,7 +23,7 @@ export interface SignupRequest {
   termsMarketingAgreed: boolean;
 }
 
-export type SocialType = "GOOGLE" | "KAKAO" | "NAVER";
+export type SocialType = "GOOGLE" | "KAKAO";
 
 export interface SocialSignupRequest {
   email: string;
@@ -51,11 +38,6 @@ export interface SocialSignupRequest {
   termsServiceAgreed: boolean;
   termsPrivacyAgreed: boolean;
   termsMarketingAgreed: boolean;
-}
-
-export interface SignupResponse {
-  message?: string;
-  user?: User;
 }
 
 export interface FindPasswordRequest {
@@ -73,23 +55,6 @@ export interface FindIdResponse {
 }
 
 export interface ResetPasswordRequest {
-  newPassword: string;
-}
-
-export interface UserProfileResponse {
-  username: string;
-  name: string;
-  nickname: string;
-  email: string;
-  profileImageUrl?: string;
-  phone: string;
-  gender: string;
-  birthDate: string;
-  personalCode: string;
-}
-
-export interface UpdatePasswordRequest {
-  currentPassword: string;
   newPassword: string;
 }
 
@@ -114,4 +79,58 @@ export type RegisterFormData = {
 export type ServerError = {
   field: string;
   message: string;
+};
+
+export type RegisterCompleteFormProps = {
+  formData?: Pick<RegisterFormData, "name" | "nickname">;
+};
+
+export interface LoginSidebarProps {
+  title: {
+    normal: string;
+    accent: string;
+  };
+  description: string;
+}
+
+export interface AuthPageHeaderProps {
+  title: string;
+  description: string;
+  backText?: string;
+}
+
+export interface FindIdCompleteProps {
+  userId: string;
+}
+
+export interface RegisterStepHeaderProps {
+  currentStep: number;
+}
+
+export interface RegisterAgreeFormProps {
+  formData: Pick<
+    RegisterFormData,
+    "termsServiceAgreed" | "termsPrivacyAgreed" | "termsMarketingAgreed"
+  >;
+  onChange: (field: string, value: boolean) => void;
+  onPrev: () => void;
+  onNext: () => void;
+}
+
+export interface RegisterInfoFormProps {
+  formData: RegisterFormData;
+  onChange: (field: string, value: string) => void;
+  onNext: () => void;
+  isLoading?: boolean;
+  serverError?: { field: string; message: string }; // 객체 형태로 변경
+  setServerError?: (err: { field: string; message: string }) => void; // 객체 형태로 변경
+  isSocialSignup?: boolean;
+}
+
+
+export type ValidateRegisterInfoOptions = {
+  isSocialSignup?: boolean;
+  isUsernameChecked?: boolean;
+  isEmailVerified?: boolean;
+  isPhoneChecked?: boolean;
 };

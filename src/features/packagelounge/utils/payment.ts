@@ -1,24 +1,18 @@
-import type {
-  AccommodationResponse,
-  PackageApiItem,
-  PaymentBreakdown,
-} from "../types";
+import type { PackageApiItem, PaymentBreakdown } from "../types";
 
 interface CalculatePaymentParams {
   lecturePrice: number;
   packageItem: PackageApiItem;
-  accommodation: AccommodationResponse;
 }
 
 export function calculatePayment({
   lecturePrice,
   packageItem,
-  accommodation,
 }: CalculatePaymentParams): PaymentBreakdown {
   const lectureAmount = lecturePrice;
   const flightAmount = packageItem.flightPrice;
-  const accommodationAmount =
-    accommodation.pricePerNight * accommodation.nights;
+  // 패키지 응답에 이미 계산된 값이 있어(accommodationPrice = pricePerNight × nights) 그대로 쓴다
+  const accommodationAmount = packageItem.accommodationPrice;
   const travelAmount = flightAmount + accommodationAmount;
   const depositAmount = Math.trunc((travelAmount * 30) / 100);
   const balanceAmount = travelAmount - depositAmount;
@@ -35,10 +29,6 @@ export function calculatePayment({
   };
 }
 
-export function formatPackageSchedule(item: PackageApiItem) {
-  return `${item.checkInDate} ~ ${item.checkOutDate}`;
-}
-
 export function formatDateTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -50,4 +40,15 @@ export function formatDateTime(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+}
+
+export function formatBalanceDueDate(startDate: string): string {
+  const [year, month, day] = startDate.slice(0, 10).split("-").map(Number);
+
+  if (!year || !month || !day) return "출발일 7일 전";
+
+  const dueDate = new Date(Date.UTC(year, month - 1, day));
+  dueDate.setUTCDate(dueDate.getUTCDate() - 7);
+
+  return `${dueDate.getUTCFullYear()}년 ${dueDate.getUTCMonth() + 1}월 ${dueDate.getUTCDate()}일`;
 }

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import CourseLearningSidebar from "@/features/classroom/learning/components/CourseLearningSidebar";
 import { useCourseCompletionStatus } from "@/features/classroom/completion/hooks/useCourseCompletionStatus";
 import { useLectureStudy } from "../hooks/useLectureStudy";
+import type { CourseStudyChapter, CourseStudyDetail } from "../types";
 import StudyVideoPlayer from "./StudyVideoPlayer";
 import StudyChapterInfo from "./StudyChapterInfo";
 
@@ -18,14 +19,23 @@ const getParam = (
   );
 };
 
-export default function LectureStudyClient() {
+interface LectureStudyClientProps {
+  initialData: {
+    course: CourseStudyDetail;
+    firstChapter: CourseStudyChapter | null;
+  };
+}
+
+export default function LectureStudyClient({
+  initialData,
+}: LectureStudyClientProps) {
   const params = useParams();
 
   const continentCode = getParam(params.continentCode).toLowerCase();
   const countryId = getParam(params.countryid);
   const courseId = getParam(params.courseId);
 
-  const study = useLectureStudy(courseId);
+  const study = useLectureStudy(courseId, initialData);
 
   const completion = useCourseCompletionStatus(courseId);
 
@@ -35,39 +45,6 @@ export default function LectureStudyClient() {
   const quizResultHref = `${quizHref}/complete`;
   const qnaHref = `${lectureHref}/qna`;
   const certificateHref = `/mypage/coursedetails/${courseId}/certificate`;
-
-  if (study.isLoading) {
-    return (
-      <main className="flex h-[calc(100dvh-64px)] items-center justify-center bg-[#F5F7FB]">
-        <p className="text-sm text-[#8A9BB0]">
-          강의 정보를 불러오는 중입니다.
-        </p>
-      </main>
-    );
-  }
-
-  if (study.errorMessage || !study.course) {
-    return (
-      <main className="flex h-[calc(100dvh-64px)] items-center justify-center bg-[#F5F7FB]">
-        <section className="rounded-[20px] bg-white p-6 text-center shadow-sm">
-          <h1 className="font-bold text-[#0A1628]">
-            강의를 불러올 수 없습니다
-          </h1>
-
-          <p className="mt-2 text-sm text-red-500">
-            {study.errorMessage}
-          </p>
-
-          <Link
-            href={lectureHref}
-            className="mt-4 inline-flex rounded-[14px] bg-[#5E9F9B] px-4 py-2.5 text-sm font-bold text-white"
-          >
-            강의 상세로 돌아가기
-          </Link>
-        </section>
-      </main>
-    );
-  }
 
   return (
     <main className="flex min-h-[calc(100dvh-64px)] items-start bg-[#F5F7FB]">

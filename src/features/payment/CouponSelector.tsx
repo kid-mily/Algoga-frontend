@@ -4,12 +4,17 @@ interface Props {
   coupons: MyCoupon[];
   selectedCouponId: number | null;
   onChange: (couponId: number | null) => void;
+  // 예: 분할결제 1차(예약금)는 쿠폰을 못 쓰고 마일리지만 가능 — 이럴 때 선택창을 잠그고 이유를 보여준다
+  disabled?: boolean;
+  disabledReason?: string;
 }
 
 export default function CouponSelector({
   coupons,
   selectedCouponId,
   onChange,
+  disabled = false,
+  disabledReason,
 }: Props) {
   return (
     <section className="rounded-2xl border border-[#E1E8EF] bg-white p-6 shadow-[0_8px_24px_rgba(55,88,110,0.06)]">
@@ -28,10 +33,11 @@ export default function CouponSelector({
 
       <select
         value={selectedCouponId ?? ""}
+        disabled={disabled}
         onChange={(event) =>
           onChange(event.target.value ? Number(event.target.value) : null)
         }
-        className="mt-5 h-14 w-full rounded-2xl border border-[#E1E8EF] bg-[#FAFCFE] px-4 text-sm font-medium text-[#0A1628] outline-none transition focus:border-[#439A97] focus:bg-white"
+        className="mt-5 h-14 w-full rounded-2xl border border-[#E1E8EF] bg-[#FAFCFE] px-4 text-sm font-medium text-[#0A1628] outline-none transition focus:border-[#439A97] focus:bg-white disabled:cursor-not-allowed disabled:bg-[#F3F8FC] disabled:text-[#A0AEC0]"
       >
         <option value="">쿠폰 선택 안 함</option>
 
@@ -41,6 +47,10 @@ export default function CouponSelector({
           </option>
         ))}
       </select>
+
+      {disabled && disabledReason && (
+        <p className="mt-2 text-xs text-[#8A9BB0]">{disabledReason}</p>
+      )}
     </section>
   );
 }

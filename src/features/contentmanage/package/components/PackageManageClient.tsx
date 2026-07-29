@@ -47,14 +47,14 @@ export default function PackageManageClient() {
           <Link
             href="/contentadmin/accommodations"
             style={{ width: 134, minWidth: 134, height: 46, boxSizing: "border-box" }}
-            className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[14px] border border-[#E4E7EC] bg-white text-[15px] font-semibold text-[#344054]"
+            className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[14px] border border-[#C9D2DD] bg-white text-[15px] font-bold text-[#344054] shadow-[0_4px_12px_rgba(16,24,40,0.08)]"
           >
             숙소 관리
           </Link>
           <Link
             href="/contentadmin/package/new"
             style={{ width: 134, minWidth: 134, height: 46, boxSizing: "border-box" }}
-            className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[14px] bg-[#439A97] text-[15px] font-semibold text-white transition hover:opacity-90"
+            className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[14px] border border-[#327C79] bg-[#439A97] text-[15px] font-bold text-white shadow-[0_4px_12px_rgba(67,154,151,0.24)]"
           >
             패키지 등록
           </Link>

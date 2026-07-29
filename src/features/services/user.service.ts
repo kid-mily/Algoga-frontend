@@ -1,4 +1,5 @@
 import { api, ApiRequestError, ApiResponse } from "@/lib/api";
+import { markUserSessionActive } from "@/features/auth/services/userSession";
 
 export interface UserProfileResponse {
   userId: number;
@@ -36,15 +37,23 @@ const normalizeUserProfile = (profile: UserProfileResponse | null): UserProfileR
 };
 
 export const getMe = async (
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  headers?: HeadersInit
 ): Promise<UserProfileResponse | null> => {
   try {
     const response = await api.get<UserMeResponse>("/api/v1/users/me", {
       signal,
+      headers,
       suppressGlobalError: true,
     });
 
-    return normalizeUserProfile(unwrapData(response));
+    const profile = normalizeUserProfile(unwrapData(response));
+
+    if (profile) {
+      markUserSessionActive();
+    }
+
+    return profile;
   } catch (error) {
     if (error instanceof ApiRequestError && error.status === 401) {
       return null;

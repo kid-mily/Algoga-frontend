@@ -11,11 +11,11 @@ export default function StatisticAdminLayout({
 }) {
   return (
     <AdminAuthGuard>
-      <div className="flex h-screen bg-[#F8F8F8]">
+      <div className="flex min-h-screen bg-[#F8FAFC]">
         <StatisticAdminSidebar />
         <div className="flex flex-1 flex-col">
           <ContentHeader />
-          <main className="flex-1 overflow-y-auto p-8">{children}</main>
+          <main className="flex-1 bg-[#F8FAFC] p-8">{children}</main>
         </div>
       </div>
     </AdminAuthGuard>

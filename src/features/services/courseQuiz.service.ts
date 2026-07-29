@@ -7,12 +7,16 @@ import type {
 } from "@/features/classroom/quiz/types";
 
 export const getCourseQuizzes = async (
-  courseId: string | number
+  courseId: string | number,
+  signal?: AbortSignal,
+  headers?: HeadersInit
 ): Promise<CourseQuiz[]> => {
   const response = await api.get<ApiResponse<CourseQuiz[]>>(
     `/api/v1/courses/${courseId}/quiz`,
     {
       cache: "no-store",
+      signal,
+      headers,
       suppressGlobalError: true,
     }
   );
@@ -39,12 +43,16 @@ export const submitCourseQuiz = async (
 };
 
 export const getCourseQuizResult = async (
-  courseId: string | number
+  courseId: string | number,
+  signal?: AbortSignal,
+  headers?: HeadersInit
 ): Promise<CourseQuizSavedResult> => {
   const response = await api.get<ApiResponse<CourseQuizSavedResult>>(
     `/api/v1/courses/${courseId}/quiz/result`,
     {
       cache: "no-store",
+      signal,
+      headers,
       suppressGlobalError: true,
     }
   );

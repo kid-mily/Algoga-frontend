@@ -1,0 +1,192 @@
+"use client";
+
+import { useState } from "react";
+import CancellationPolicyModal from "@/features/payment/CancellationPolicyModal";
+import type { PackageDetailData } from "../packageDetail.types";
+import type { CourseItem } from "@/features/classroom/components/types";
+import { formatBalanceDueDate } from "../utils/payment";
+
+interface PaymentSummaryProps {
+  data: PackageDetailData;
+  course: CourseItem | null;
+  paymentType: "FULL" | "DEPOSIT";
+  installmentAllowed: boolean;
+  onPaymentTypeChange: (nextType: "FULL" | "DEPOSIT") => void;
+  productAmount: number;
+  couponDiscount: number;
+  usedMileage: number;
+  finalAmount: number;
+  balanceAmount: number;
+  isPaying: boolean;
+  onPay: () => void;
+}
+
+// 결제 페이지 오른쪽 카드: 예약 정보 + 요금 상세 + 결제 버튼
+export default function PaymentSummary({
+  data,
+  course,
+  paymentType,
+  installmentAllowed,
+  onPaymentTypeChange,
+  productAmount,
+  couponDiscount,
+  usedMileage,
+  finalAmount,
+  balanceAmount,
+  isPaying,
+  onPay,
+}: PaymentSummaryProps) {
+  const outboundFlight = data.flights[0];
+  const canPay = !isPaying && Number.isFinite(finalAmount) && finalAmount >= 0;
+  const [isPolicyOpen, setIsPolicyOpen] = useState(false);
+  const balanceDueDate = formatBalanceDueDate(data.startDate);
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#E1E8EF] bg-white shadow-[0_8px_24px_rgba(55,88,110,0.08)]">
+      <div className="p-10 sm:p-6">
+        <h2 className="mt-1 text-base font-extrabold text-[#0A1628] pt-2 py-2">
+          {data.title}
+        </h2>
+
+        <div className="mt-3 space-y-1 border-t border-dashed border-[#D6E0E8] pt-3 text-xs text-[#718096]">
+          {outboundFlight && (
+            <p>
+              {data.airline} {outboundFlight.flightNumber} ·{" "}
+              {outboundFlight.departureAirport} →{" "}
+              {outboundFlight.arrivalAirport}
+            </p>
+          )}
+          <p>{data.accommodation.name}</p>
+        </div>
+      </div>
+
+      {/* 절취선 */}
+      <div className="relative">
+        <div className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#F3F8FC]" />
+        <div className="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#F3F8FC]" />
+        <div className="border-t-2 border-dashed border-[#D6E0E8]" />
+      </div>
+
+      {/* 하단: 요금 상세 + 결제 */}
+      <div className="p-5 sm:p-6">
+        <div className="mb-4">
+          <p className="mb-2 text-xs font-bold text-[#0A1628]">결제 방식</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onPaymentTypeChange("FULL")}
+              className={`rounded-xl border py-2 text-sm font-bold transition ${
+                paymentType === "FULL"
+                  ? "border-[#439A97] bg-[#EEF8F7] text-[#439A97]"
+                  : "border-[#E1E8EF] text-[#718096] hover:bg-[#F3F8FC]"
+              }`}
+            >
+              일시불
+            </button>
+            <button
+              type="button"
+              onClick={() => onPaymentTypeChange("DEPOSIT")}
+              disabled={!installmentAllowed}
+              className={`rounded-xl border py-2 text-sm font-bold transition ${
+                paymentType === "DEPOSIT"
+                  ? "border-[#439A97] bg-[#EEF8F7] text-[#439A97]"
+                  : "border-[#E1E8EF] text-[#718096] hover:bg-[#F3F8FC]"
+              } disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`}
+            >
+              예약금(분할)
+            </button>
+          </div>
+          {!installmentAllowed && (
+            <p className="mt-1.5 text-xs text-[#A0AEC0]">
+              이 예약은 일시불 결제만 가능합니다.
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2 font-mono text-sm text-[#0A1628]">
+          <div className="flex items-center justify-between">
+            <span className="font-sans">항공권</span>
+            <span className="font-bold">
+              {data.booking.flightPrice.toLocaleString()}원
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-sans">숙소</span>
+            <span className="font-bold">
+              {data.booking.stayPrice.toLocaleString()}원
+            </span>
+          </div>
+          {course && (
+            <div className="flex items-center justify-between">
+              <span className="font-sans">강의</span>
+              <span className="font-bold">
+                {course.price.toLocaleString()}원
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between border-t border-dashed border-[#D6E0E8] pt-2">
+            <span className="font-sans">상품 금액</span>
+            <span className="font-bold">
+              {productAmount.toLocaleString()}원
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-sans">쿠폰 할인</span>
+            <span className="font-bold text-[#B54747]">
+              -{couponDiscount.toLocaleString()}원
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-sans">마일리지 사용</span>
+            <span className="font-bold text-[#B54747]">
+              -{usedMileage.toLocaleString()}원
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-xl bg-[#EEF8F7] p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold text-[#0A1628]">
+              {paymentType === "DEPOSIT" ? "1차 결제 금액" : "총 결제 금액"}
+            </span>
+            <span className="font-mono text-lg font-extrabold text-[#439A97]">
+              {finalAmount.toLocaleString()}원
+            </span>
+          </div>
+          {paymentType === "DEPOSIT" && (
+            <div className="mt-2 border-t border-dashed border-[#B7DAD7] pt-2 text-[11px] leading-5 text-[#56706F]">
+              <p>
+                2차 잔금 <strong>{balanceAmount.toLocaleString()}원</strong> · {balanceDueDate}까지
+              </p>
+              {course && <p>강의 금액은 1차 결제에 전액 포함됩니다.</p>}
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={onPay}
+          disabled={!canPay}
+          className="mt-4 w-full rounded-xl bg-[#439A97] py-3 text-sm font-bold text-white transition hover:bg-[#357F7C] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isPaying
+            ? "결제 요청 중..."
+            : `토스페이로 ${finalAmount.toLocaleString()}원 결제하기`}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsPolicyOpen(true)}
+          className="mt-3 w-full text-center text-xs font-medium text-[#8A9BB0] transition hover:text-[#718096]"
+        >
+          환불 정책 확인하기
+        </button>
+      </div>
+
+      {isPolicyOpen && (
+        <CancellationPolicyModal onClose={() => setIsPolicyOpen(false)} />
+      )}
+    </div>
+  );
+}

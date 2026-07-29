@@ -1,4 +1,4 @@
-import { DiagnosisRecommendedCourse, EvaluationFormQuestion } from "./types";
+import { DiagnosisRecommendedCourse } from "./types";
 
 export interface RecommendedCourseFile {
     fileUrl: string;
@@ -10,8 +10,3 @@ export type RecommendedCourse = DiagnosisRecommendedCourse & {
     fileUrls?: string[];
     files?: RecommendedCourseFile[];
 };
-
-export interface StoredDiagnosisAttempt {
-    result: import("./types").DiagnosisResult;
-    questions: EvaluationFormQuestion[];
-}

@@ -11,6 +11,7 @@ export interface AdminCourse {
   maxRewardMileage?: number;
   thumbnailUrl?: string | null;
   fileUrls?: string[];
+  files?: CourseFile[];
   level?: string;
   levelName?: string;
   status?: string;
@@ -255,7 +256,7 @@ export interface LectureCardProps {
 }
 
 export type LectureCreateStepIndicatorProps = {
-  step: 1 | 2;
+  step: 1 | 2 | 3;
 };
 
 export type EditLectureClientProps = {
@@ -268,6 +269,7 @@ export type EditLecturePayload = {
   price: string;
   mileage?: string;
   maxRewardMileage?: string;
+  level: string;
   isPublic: string;
   status?: string;
 };
@@ -290,7 +292,7 @@ export interface LectureChapterFormProps {
 export type ChapterErrors = ChapterItemErrors;
 
 export interface LectureFormProps {
-  onNext?: (courseId: number) => void;
+  onNext?: (courseId: number, shouldPublish: boolean) => void;
 }
 
 export interface CourseFormData {
@@ -339,7 +341,10 @@ export interface LectureUpdateFormProps {
     description: string;
     price: string;
     mileage: string;
+    level: string;
     isPublic?: string;
+    thumbnailUrl?: string | null;
+    files?: CourseFile[];
   };
   onSubmit?: (
     data: EditLecturePayload,

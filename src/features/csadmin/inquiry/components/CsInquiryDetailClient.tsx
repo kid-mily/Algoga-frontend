@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import SubHeader from "@/features/common/components/SubHeader";
 import CompleteModal from "@/features/common/components/CompleteModal";
@@ -18,6 +19,7 @@ type CsInquiryDetailClientProps = {
 export default function CsInquiryDetailClient({
   inquiryId,
 }: CsInquiryDetailClientProps) {
+  const router = useRouter();
   const [inquiry, setInquiry] = useState<CsInquiry | null>(null);
   const [answer, setAnswer] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -132,6 +134,14 @@ export default function CsInquiryDetailClient({
             </h2>
 
             <dl className="grid grid-cols-[120px_1fr] gap-x-4 gap-y-4 text-[14px]">
+              <dt className="font-semibold text-[#344054]">작성자</dt>
+              <dd className="text-[#111827]">
+                {inquiry.writer}
+                <span className="ml-1 text-[13px] text-[#98A2B3]">
+                  (회원 #{inquiry.userId})
+                </span>
+              </dd>
+
               <dt className="font-semibold text-[#344054]">문의 유형</dt>
               <dd className="text-[#111827]">{inquiry.type}</dd>
 
@@ -204,7 +214,10 @@ export default function CsInquiryDetailClient({
         title="답변 완료"
         description="문의 답변이 등록되었습니다."
         buttonText="확인"
-        onConfirm={() => setCompleteOpen(false)}
+        onConfirm={() => {
+          setCompleteOpen(false);
+          router.push("/csadmin/inquiry");
+        }}
       />
     </main>
   );

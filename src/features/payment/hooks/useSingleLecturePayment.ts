@@ -78,7 +78,7 @@ export function useSingleLecturePayment({
           }
         }
 
-        const benefits = await loadSinglePaymentBenefits(courseId);
+        const benefits = await loadSinglePaymentBenefits();
 
         if (!isActive) return;
 

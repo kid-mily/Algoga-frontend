@@ -1,5 +1,21 @@
 ﻿import { adminApi, ApiResponse } from "@/lib/api";
 import { AdminCoupon, AdminCouponPayload } from "../contentmanage/coupon/types";
+import type { AdminPage, AdminPageParams } from "./adminPage.types";
+
+type AdminCouponPageItem = AdminCoupon & {
+  courseTitle?: string;
+};
+
+export const getAdminCouponPolicyPage = async (
+  params: AdminPageParams & { active?: boolean } = {}
+): Promise<AdminPage<AdminCouponPageItem>> => {
+  const response = await adminApi.get<ApiResponse<AdminPage<AdminCouponPageItem>>>(
+    "/api/v1/admin/coupon-policies",
+    { params }
+  );
+
+  return response.data;
+};
 
 export const getAdminCoupons = async (
   courseId: number
@@ -33,9 +49,16 @@ export const getAdminCoupon = async (
 export const createAdminCoupon = async (
   payload: AdminCouponPayload
 ): Promise<AdminCoupon> => {
+  // 백엔드 등록 DTO는 body에서 couponName/discountType/discountValue만 받는다.
+  // courseId는 URL path로, percent는 discountValue(RATE=퍼센트 할인)로 전달한다.
+  // validDays/active는 등록 시 받지 않고, 유효기간은 백엔드 기본값(30일)으로 처리된다.
   const response = await adminApi.post<ApiResponse<AdminCoupon>>(
     `/api/v1/admin/courses/${payload.courseId}/coupon-policies`,
-    payload
+    {
+      couponName: payload.couponName,
+      discountType: "RATE",
+      discountValue: Number(payload.percent),
+    }
   );
 
   return response.data;
@@ -50,8 +73,8 @@ export const updateAdminCoupon = async (
 `/api/v1/admin/courses/${courseId}/coupon-policies/${couponPolicyId}`,
     {
       couponName: payload.couponName,
-      discountType: payload.discountType,
-      discountValue: payload.discountValue,
+      discountType: "RATE",
+      discountValue: Number(payload.percent),
       validDays: payload.validDays,
       active: payload.active,
     }

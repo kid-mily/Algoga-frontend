@@ -1,7 +1,8 @@
 ﻿// 특정 채팅방 웹소켓 연결 담당
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Client, type IMessage } from "@stomp/stompjs";
+import { Client } from "@stomp/stompjs";
 import { normalizeChatMessage } from "../../services/chat.service";
+import { getWebSocketUrl, parseBody } from "../socket";
 import type { ChatMessage, ReadEvent, TypingEvent } from "../types";
 
 type UseChatSocketOptions = {
@@ -21,24 +22,6 @@ const getNumber = (record: RawRecord, keys: string[], fallback = 0) => {
   const numberValue = typeof value === "number" ? value : Number(value);
 
   return Number.isFinite(numberValue) ? numberValue : fallback;
-};
-
-const getWebSocketUrl = () => {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
-  const url = new URL(apiUrl);
-  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-  url.pathname = "/ws/chat";
-  url.search = "";
-
-  return url.toString();
-};
-
-const parseBody = (message: IMessage): unknown => {
-  try {
-    return JSON.parse(message.body) as unknown;
-  } catch {
-    return null;
-  }
 };
 
 // 채팅 읽었는지 확인
@@ -61,6 +44,7 @@ const parseTypingEvent = (body: unknown): TypingEvent | null => {
   if (!body || typeof body !== "object") return null;
 
   const record = body as RawRecord;
+  const roomId = getNumber(record, ["roomId"]);
   const userId = getNumber(record, ["userId"]);
   const nicknameValue = record.nickname;
   const isTypingValue = record.isTyping;
@@ -68,6 +52,7 @@ const parseTypingEvent = (body: unknown): TypingEvent | null => {
   if (userId <= 0 || typeof nicknameValue !== "string") return null;
 
   return {
+    roomId,
     userId,
     nickname: nicknameValue,
     isTyping: Boolean(isTypingValue),
@@ -83,6 +68,22 @@ export const useChatSocket = ({
 }: UseChatSocketOptions) => {
   const clientRef = useRef<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+
+  const onMessageRef = useRef(onMessage);
+  const onReadRef = useRef(onRead);
+  const onTypingRef = useRef(onTyping);
+
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
+
+  useEffect(() => {
+    onReadRef.current = onRead;
+  }, [onRead]);
+
+  useEffect(() => {
+    onTypingRef.current = onTyping;
+  }, [onTyping]);
 
   const sendRead = useCallback(() => {
     const client = clientRef.current;
@@ -127,7 +128,9 @@ export const useChatSocket = ({
   );
 
   useEffect(() => {
-    if (!roomId) return;
+    // userId가 getMe로 늦게 채워지면 deps가 바뀌어 재연결되므로,
+    // userId가 확정된 뒤에 한 번만 연결한다(진입당 불필요한 재연결 제거).
+    if (!roomId || !userId) return;
 
     const client = new Client({
       brokerURL: getWebSocketUrl(),
@@ -147,14 +150,14 @@ export const useChatSocket = ({
           });
           if (!parsedMessage.content) return;
 
-          onMessage?.(parsedMessage);
+          onMessageRef.current?.(parsedMessage);
         });
 
         client.subscribe(`/topic/chat/rooms/${roomId}/read`, (message) => {
           const parsedEvent = parseReadEvent(parseBody(message), roomId);
           if (!parsedEvent) return;
 
-          onRead?.(parsedEvent);
+          onReadRef.current?.(parsedEvent);
         });
 
         if (userId) {
@@ -162,7 +165,7 @@ export const useChatSocket = ({
             const parsedEvent = parseTypingEvent(parseBody(message));
             if (!parsedEvent) return;
 
-            onTyping?.(parsedEvent);
+            onTypingRef.current?.(parsedEvent);
           });
         }
 
@@ -190,7 +193,7 @@ export const useChatSocket = ({
       clientRef.current = null;
       void client.deactivate();
     };
-  }, [onMessage, onRead, onTyping, roomId, userId]);
+  }, [roomId, userId]);
 
   return {
     isConnected,

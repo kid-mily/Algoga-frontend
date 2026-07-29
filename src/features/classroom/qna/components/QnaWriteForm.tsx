@@ -3,6 +3,10 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCourseQna } from "@/features/services/userQna.service";
+import CharCounter from "@/features/common/components/CharCounter";
+
+const QNA_TITLE_MAX_LENGTH = 100;
+const QNA_QUESTION_MAX_LENGTH = 2000;
 
 interface QnaWriteFormProps {
     continentCode: string;
@@ -74,6 +78,9 @@ export default function QnaWriteForm({
             <p className="text-xs text-slate-400">
                 강의, 여행 준비, 자료 내용에 대해 질문할 수 있습니다.
             </p>
+            <p className="mt-1 text-xs font-semibold text-[#B54747]">
+                등록한 질문은 이후 수정·삭제가 불가능합니다.
+            </p>
             </div>
         </div>
 
@@ -86,8 +93,12 @@ export default function QnaWriteForm({
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="질문 제목을 입력해 주세요."
-                className="h-14 w-full rounded-2xl border border-transparent bg-[#F5F6FA] px-4 text-sm outline-none focus:border-[#6FA7A1]"
+                maxLength={QNA_TITLE_MAX_LENGTH}
+                className="h-14 w-full rounded-2xl border border-[#DDE8EF] bg-[#F5F6FA] px-4 text-sm outline-none focus:border-[#6FA7A1]"
             />
+            <div className="mt-1 flex justify-end">
+                <CharCounter length={title.length} maxLength={QNA_TITLE_MAX_LENGTH} />
+            </div>
             </label>
 
             <label className="block">
@@ -98,8 +109,12 @@ export default function QnaWriteForm({
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
                 placeholder="궁금한 내용을 자세하게 작성해 주세요."
-                className="h-40 w-full resize-none rounded-2xl border border-transparent bg-[#F5F6FA] px-4 py-4 text-sm outline-none focus:border-[#6FA7A1]"
+                maxLength={QNA_QUESTION_MAX_LENGTH}
+                className="h-40 w-full resize-none rounded-2xl border border-[#DDE8EF] bg-[#F5F6FA] px-4 py-4 text-sm outline-none focus:border-[#6FA7A1]"
             />
+            <div className="mt-1 flex justify-end">
+                <CharCounter length={question.length} maxLength={QNA_QUESTION_MAX_LENGTH} />
+            </div>
             </label>
         </div>
 

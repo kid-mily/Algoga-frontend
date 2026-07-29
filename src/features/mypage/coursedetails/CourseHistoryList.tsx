@@ -6,6 +6,7 @@ import ReviewModal from "@/features/classroom/review/ReviewModal";
 import LatestDiagnosisBanner from "./LatestDiagnosisBanner";
 import { useMyCourses } from "./useMyCourses";
 import { MyCourse } from "./types";
+import { buildQueryString } from "@/features/packagelounge/utils/query";
 
 const formatDuration = (totalSeconds: number) => {
   const seconds = Number(totalSeconds ?? 0);
@@ -35,6 +36,13 @@ const getStudyHref = (course: MyCourse) => {
 
   return `/classroom/${continentCode}/${course.countryId}/lecture/${course.courseId}/study`;
 };
+
+const getPackageHref = (course: MyCourse) =>
+  `/packagelounge${buildQueryString({
+    countryId: course.countryId,
+    courseId: course.courseId,
+    continentCode: course.continentCode,
+  })}`;
 
 export default function CourseHistoryList() {
   const {
@@ -118,6 +126,7 @@ export default function CourseHistoryList() {
 
                   const completed = course.learningStatus === "COMPLETED";
                   const studyHref = getStudyHref(course);
+                  const packageHref = getPackageHref(course);
 
                   return (
                     <li key={course.courseId}>
@@ -178,10 +187,6 @@ export default function CourseHistoryList() {
                                   <span>
                                     평점 {Number(course.averageRating ?? 0).toFixed(1)}
                                   </span>
-
-                                  <span>
-                                    수강생 {Number(course.studentCount ?? 0).toLocaleString()}명
-                                  </span>
                                 </div>
                               </div>
 
@@ -190,12 +195,22 @@ export default function CourseHistoryList() {
                                   {progress}%
                                 </strong>
 
-                                <Link
-                                  href={studyHref}
-                                  className="flex h-8 items-center rounded-lg bg-[#439A97] px-3 text-[11px] font-bold text-white"
-                                >
-                                  {completed ? "복습하기" : "이어 듣기"}
-                                </Link>
+                                <div className="flex items-center gap-2">
+                                  <Link
+                                    href={studyHref}
+                                    className="flex h-8 items-center rounded-lg bg-[#439A97] px-3 text-[11px] font-bold text-white"
+                                  >
+                                    {completed ? "복습하기" : "이어 듣기"}
+                                  </Link>
+                                  {completed && (
+                                    <Link
+                                      href={packageHref}
+                                      className="flex h-8 items-center rounded-lg border border-[#439A97] bg-white px-3 text-[11px] font-bold text-[#439A97]"
+                                    >
+                                      패키지 예약하기
+                                    </Link>
+                                  )}
+                                </div>
                               </div>
                             </div>
 

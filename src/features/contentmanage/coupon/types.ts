@@ -1,13 +1,14 @@
 import type { AdminCourse } from "@/features/contentmanage/lecture/types";
-export type CouponDiscountType = "RATE" | "AMOUNT";
 
 export interface AdminCoupon {
   couponPolicyId: number;
   courseId: number;
   managerId: number;
   couponName: string;
-  discountType: CouponDiscountType;
-  discountValue: number;
+  // 신 응답: discountType("RATE"|"AMOUNT") + discountValue. percent는 구 응답 호환용 폴백.
+  discountType?: string;
+  discountValue?: number;
+  percent?: number;
   validDays: number;
   active: boolean;
   createdAt: string;
@@ -17,8 +18,7 @@ export interface AdminCoupon {
 export interface AdminCouponPayload {
   courseId: number;
   couponName: string;
-  discountType: CouponDiscountType;
-  discountValue: number;
+  percent: number;
   validDays: number;
   active: boolean;
 }
@@ -32,8 +32,7 @@ export type CouponStatusFilter = "all" | "active" | "inactive";
 export type CouponFormData = {
   courseId: string;
   couponName: string;
-  discountType: CouponDiscountType;
-  discountValue: string;
+  percent: string;
   active: string;
 };
 
@@ -69,10 +68,6 @@ export type CouponFormProps = {
   initialData?: CouponFormData;
   isEdit?: boolean;
   onSubmit: (data: AdminCouponPayload) => Promise<boolean> | boolean;
-};
-
-export type CreateCouponClientProps = {
-  courses?: AdminCourse[];
 };
 
 export type EditCouponClientProps = {

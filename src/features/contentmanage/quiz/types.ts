@@ -77,6 +77,7 @@ export type QuizToolbarProps = {
   selectedLecture: string;
   courses: import("../lecture/types").AdminCourse[];
   createHref?: string;
+  selectedCourseQuizCount?: number;
   onSearchKeywordChange: (value: string) => void;
   onSelectedLectureChange: (value: string) => void;
 };
@@ -92,4 +93,20 @@ export type QuizManageClientProps = {
 
 export type CreateQuizClientProps = {
   defaultCourseId?: number;
+};
+
+export const MAX_QUIZ_COUNT = 5;
+
+export type LectureQuizDraft = {
+  id: number;
+  question: string;
+  options: string[];
+  correctOption: number;
+  explanation: string;
+};
+
+export type LectureQuizDraftErrors = {
+  question?: string;
+  options?: string[];
+  correctOption?: string;
 };

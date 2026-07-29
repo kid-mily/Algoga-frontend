@@ -3,29 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { clearAdminSessionActive, getAdminSessionRole, isAdminSessionActive } from "@/features/admin/auth/services/adminSession";
-
-const PATH_ROLE_RULES = [
-  {
-    path: "/contentadmin",
-    roles: ["CONTENT_MANAGER", "SUPER_ADMIN"],
-  },
-  {
-    path: "/csadmin",
-    roles: ["CS_MANAGER", "SUPER_ADMIN"],
-  },
-  {
-    path: "/moneyadmin",
-    roles: ["SETTLEMENT_MANAGER", "SUPER_ADMIN"],
-  },
-  {
-    path: "/statisticadmin",
-    roles: ["STATISTICS_MANAGER", "SUPER_ADMIN"],
-  },
-  {
-    path: "/superadmin",
-    roles: ["SUPER_ADMIN"],
-  },
-] as const;
+import { ADMIN_PATH_ROLE_RULES } from "@/features/admin/auth/config/adminPaths";
 
 const isPathMatch = (pathname: string, path: string) => {
   return pathname === path || pathname.startsWith(`${path}/`);
@@ -35,7 +13,7 @@ const canAccessPath = (pathname: string, role: string | null) => {
   if (!role) return false;
 
   const normalizedRole = role.toUpperCase();
-  const matchedRule = PATH_ROLE_RULES.find((rule) =>
+  const matchedRule = ADMIN_PATH_ROLE_RULES.find((rule) =>
     isPathMatch(pathname, rule.path)
   );
 

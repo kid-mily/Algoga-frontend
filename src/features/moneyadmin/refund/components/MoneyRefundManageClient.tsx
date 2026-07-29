@@ -55,6 +55,7 @@ export default function MoneyRefundManageClient({
     action: MoneyRefundAction;
   } | null>(null);
   const [completeMessage, setCompleteMessage] = useState("");
+  const [rejectReason, setRejectReason] = useState("");
   const totalPages = Math.max(1, Math.ceil(filteredRefunds.length / PAGE_SIZE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
 
@@ -81,27 +82,43 @@ export default function MoneyRefundManageClient({
   const handleAction = useCallback((refund: MoneyRefund, action: MoneyRefundAction) => {
     if (confirmTarget) return;
 
+    setRejectReason("");
     setConfirmTarget({ refund, action });
   }, [confirmTarget]);
+
+  const handleCancelAction = useCallback(() => {
+    setConfirmTarget(null);
+    setRejectReason("");
+  }, []);
 
   const handleConfirmAction = async () => {
     if (!confirmTarget || processingId) return;
 
     const { refund, action } = confirmTarget;
-    const actionMap: Record<MoneyRefundAction, (refundId: number) => Promise<void>> = {
-      approve: approveRefund,
-      reject: rejectRefund,
-      complete: completeRefund,
-    };
+    const trimmedReason = rejectReason.trim();
+
+    if (action === "reject" && !trimmedReason) return;
 
     try {
       setProcessingId(refund.refundId);
       setError("");
-      await actionMap[action](refund.refundId);
+
+      if (action === "approve") {
+        await approveRefund(refund.refundId);
+      } else if (action === "reject") {
+        await rejectRefund(refund.refundId, trimmedReason);
+      } else {
+        await completeRefund(refund.refundId);
+      }
+
       await loadRefunds();
       setConfirmTarget(null);
+      setRejectReason("");
       setCompleteMessage(`${moneyRefundActionLabel[action]} 처리가 완료되었습니다.`);
     } catch (actionError: unknown) {
+      // 에러 시에도 확인 모달을 닫아 상단 에러 배너(원인 메시지)가 보이도록 합니다.
+      setConfirmTarget(null);
+      setRejectReason("");
       setError(formatRefundError(actionError, "환불 요청 처리에 실패했습니다."));
     } finally {
       setProcessingId(null);
@@ -150,10 +167,31 @@ export default function MoneyRefundManageClient({
         }
         confirmText={processingId ? "처리 중..." : "확인"}
         cancelText="취소"
-        confirmDisabled={Boolean(processingId)}
+        confirmDisabled={
+          Boolean(processingId) ||
+          (confirmTarget?.action === "reject" && !rejectReason.trim())
+        }
         onConfirm={handleConfirmAction}
-        onCancel={() => setConfirmTarget(null)}
-      />
+        onCancel={handleCancelAction}
+      >
+        {confirmTarget?.action === "reject" && (
+          <div className="text-left">
+            <label
+              htmlFor="money-reject-reason"
+              className="mb-2 block text-[14px] font-semibold text-[#344054]"
+            >
+              반려 사유
+            </label>
+            <textarea
+              id="money-reject-reason"
+              value={rejectReason}
+              onChange={(event) => setRejectReason(event.target.value)}
+              placeholder="반려 사유를 입력해주세요."
+              className="h-[100px] w-full resize-none rounded-[10px] border border-[#E4E7EC] px-4 py-3 text-[14px] outline-none focus:border-[#639E9B]"
+            />
+          </div>
+        )}
+      </Modal>
 
       <CompleteModal
         open={Boolean(completeMessage)}

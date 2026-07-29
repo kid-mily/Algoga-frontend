@@ -6,15 +6,20 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "@/features/services/auth.service";
 import { deleteCookie } from "@/lib/cookie";
+import HeaderNotificationBell from "@/features/notifications/HeaderNotificationBell";
+import { clearUserSessionActive } from "@/features/auth/services/userSession";
 
 type Props = {
   user: {
     nickname: string;
     profileImageUrl?: string | null;
   } | null;
+  mobile?: boolean;
+  onNavigate?: () => void;
 };
 
 const clearUserAuthClientState = () => {
+  clearUserSessionActive();
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
 
@@ -29,7 +34,11 @@ const getProfileImageSrc = (profileImageUrl?: string | null) => {
   return profileImageUrl;
 };
 
-export default function Profile({ user }: Props) {
+export default function Profile({
+  user,
+  mobile = false,
+  onNavigate,
+}: Props) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
@@ -75,6 +84,7 @@ export default function Profile({ user }: Props) {
     } finally {
       clearUserAuthClientState();
       setIsOpen(false);
+      onNavigate?.();
 
       window.dispatchEvent(
         new CustomEvent("auth-state-changed", {
@@ -89,14 +99,28 @@ export default function Profile({ user }: Props) {
   };
 
   return (
-    <div className="flex gap-6 items-center pr-5">
-      <Image
-        src="/images/FriendIcon.svg"
-        alt="친구"
-        width={24}
-        height={24}
-        className="cursor-pointer"
-      />
+    <div
+      className={
+        mobile
+          ? "flex items-center gap-3 py-2 sm:gap-4 lg:gap-5"
+          : "flex items-center gap-5 pr-1 xl:gap-6 xl:pr-5"
+      }
+    >
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new Event("friend-panel-toggle"))}
+        aria-label="친구 목록 열기"
+        className="flex h-6 w-6 items-center justify-center"
+      >
+        <Image
+          src="/images/FriendIcon.svg"
+          alt=""
+          width={24}
+          height={24}
+          aria-hidden="true"
+          className="cursor-pointer"
+        />
+      </button>
 
       <button
         type="button"
@@ -120,13 +144,7 @@ export default function Profile({ user }: Props) {
         )}
       </button>
 
-      <Image
-        src="/images/NoticeIcon.svg"
-        alt="알림"
-        width={24}
-        height={24}
-        className="cursor-pointer"
-      />
+      <HeaderNotificationBell isLoggedIn={Boolean(user)} />
 
       {user ? (
         <div ref={menuRef} className="relative">
@@ -142,7 +160,9 @@ export default function Profile({ user }: Props) {
               className="h-8 w-8 rounded-full object-cover"
             />
 
-            <p className="mx-3">{user.nickname}님</p>
+            <p className={mobile ? "ml-2 hidden sm:block" : "mx-3"}>
+              {user.nickname}님
+            </p>
           </div>
 
           {isOpen && (
@@ -150,7 +170,10 @@ export default function Profile({ user }: Props) {
               <Link
                 href="/mypage"
                 className="cursor-pointer hover:text-[#286E6B]"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  onNavigate?.();
+                }}
               >
                 마이페이지
               </Link>
@@ -168,7 +191,7 @@ export default function Profile({ user }: Props) {
           )}
         </div>
       ) : (
-        <Link href="/auth/login">
+        <Link href="/auth/login" onClick={onNavigate}>
           <p className="cursor-pointer font-medium text-[#4A5568] hover:underline">
             로그인
           </p>

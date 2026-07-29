@@ -48,8 +48,9 @@ export interface UpdateProfileResponse {
   profileImageUrl?: string | null;
 }
 
-export interface VerifyPasswordRequest {
-  password: string;
+export interface VerifyEmailCodeRequest {
+  email: string;
+  code: string;
 }
 
 export interface ChangePasswordRequest {
@@ -66,16 +67,3 @@ export interface CertificatePdfData extends CertificatePdfFile {
   url: string;
 }
 
-export interface MyPageEditFormProps {
-  user: MyPageUser;
-  initial: string;
-}
-
-export interface SubmitMyPageEditPayload {
-  nickname: string;
-  email: string;
-  phone: string;
-  profileImage: File | null;
-  currentPassword: string;
-  newPassword: string;
-}

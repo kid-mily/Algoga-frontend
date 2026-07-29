@@ -1,97 +1,66 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { DiagnosisResult, EvaluationFormQuestion } from "../types";
-import type { RecommendedCourse } from "../evaluationResult.types";
-import { getRecommendedCoursesFromResult } from "../services/evaluationResult.service";
-import { loadStoredDiagnosisAttempt } from "../utils/evaluationResult.storage";
+import { useMemo, useState } from "react";
+import { DiagnosisLevel, DiagnosisResult } from "../types";
+import { RecommendedCourse } from "../evaluationResult.types";
 import { toContinentPathCode } from "../utils/evaluationResult.util";
 
+// 상세 화면에 등급 섹션을 나열할 때 쓰는 고정 순서 (초급 -> 중급 -> 고급)
+const LEVEL_ORDER: DiagnosisLevel[] = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
+
+export interface OtherLevelCourseGroup {
+  level: DiagnosisLevel;
+  courses: RecommendedCourse[];
+}
+
 interface UseEvaluationResultParams {
-    continentCode: string;
-    countryId: string;
+  continentCode: string;
+  countryId: string;
+  // 서버(evaluation/result/page.tsx)에서 이미 조회한 결과. null이면 "결과 없음".
+  initialResult: DiagnosisResult | null;
 }
 
 export function useEvaluationResult({
-    continentCode,
-    countryId,
+  continentCode,
+  countryId,
+  initialResult,
 }: UseEvaluationResultParams) {
-    const pathContinentCode = toContinentPathCode(continentCode);
+  const pathContinentCode = toContinentPathCode(continentCode);
 
-    const [result, setResult] = useState<DiagnosisResult | null>(null);
-    const [questions, setQuestions] = useState<EvaluationFormQuestion[]>([]);
-    const [recommendedCourses, setRecommendedCourses] = useState<
-        RecommendedCourse[]
-    >([]);
-    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
 
-    useEffect(() => {
-        let active = true;
+  const result = initialResult;
+  const errorMessage = result
+    ? ""
+    : "진단평가 결과를 찾을 수 없습니다. 먼저 진단평가를 완료해 주세요.";
 
-        const loadResult = async () => {
-        try {
-            const stored = loadStoredDiagnosisAttempt();
+  // recommendedCourses는 이미 내 등급으로 필터링되어 내려온다 (백엔드 응답 기준)
+  const levelMatchedCourses = useMemo<RecommendedCourse[]>(() => {
+    return result?.recommendedCourses ?? [];
+  }, [result]);
 
-            if (!stored) {
-            setErrorMessage("저장된 진단평가 결과가 없습니다.");
-            return;
-            }
+  // otherLevelCourses(내 등급 제외 나머지 등급 단일 목록)를 등급 순서대로 묶어서 아래에 펼쳐 보여준다
+  const otherLevelGroups = useMemo<OtherLevelCourseGroup[]>(() => {
+    if (!result) return [];
 
-            if (!active) return;
+    const otherCourses = result.otherLevelCourses ?? [];
 
-            setResult(stored.result);
-            setQuestions(stored.questions);
-            setIsRecommendationLoading(true);
+    return LEVEL_ORDER.map((level) => ({
+      level,
+      courses: otherCourses.filter((course) => course.level === level),
+    })).filter((group) => group.courses.length > 0);
+  }, [result]);
 
-            const courses = await getRecommendedCoursesFromResult(
-            countryId,
-            stored.result
-            );
+  const courseListHref = `/classroom/${pathContinentCode}/${countryId}`;
 
-            if (!active) return;
-
-            setRecommendedCourses(courses);
-        } catch (error) {
-            if (!active) return;
-
-            console.error("[diagnosis-result] 결과 로딩 실패:", error);
-            setErrorMessage("진단평가 결과를 불러오지 못했습니다.");
-        } finally {
-            if (active) {
-            setIsLoading(false);
-            setIsRecommendationLoading(false);
-            }
-        }
-        };
-
-        void loadResult();
-
-        return () => {
-        active = false;
-        };
-    }, [countryId]);
-
-    const levelMatchedCourses = useMemo(() => {
-        if (!result) return [];
-
-        return recommendedCourses.filter((course) => course.level === result.level);
-    }, [recommendedCourses, result]);
-
-    const courseListHref = `/classroom/${pathContinentCode}/${countryId}`;
-
-    return {
-        pathContinentCode,
-        result,
-        questions,
-        levelMatchedCourses,
-        selectedCourseId,
-        setSelectedCourseId,
-        isLoading,
-        isRecommendationLoading,
-        errorMessage,
-        courseListHref,
-    };
+  return {
+    pathContinentCode,
+    result,
+    levelMatchedCourses,
+    otherLevelGroups,
+    selectedCourseId,
+    setSelectedCourseId,
+    errorMessage,
+    courseListHref,
+  };
 }

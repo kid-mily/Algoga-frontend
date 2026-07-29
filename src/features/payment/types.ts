@@ -69,10 +69,3 @@ export interface MyCourse {
     certificateDownloadUrl?: string;
     completedAt?: string;
 }
-
-// 포트원 결제 요청
-export interface TossPaymentRequest {
-    orderName: string;
-    totalAmount: number;
-    customerName?: string;
-}

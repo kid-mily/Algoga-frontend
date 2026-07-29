@@ -4,10 +4,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import SubHeader from "@/features/common/components/SubHeader";
-import LectureActionCard from "@/features/classroom/components/LectureActionCard";
-import LectureAttachments from "@/features/classroom/components/LectureAttachments";
+import LectureAccessSection from "@/features/classroom/components/LectureAccessSection";
 import LectureReviews from "@/features/classroom/components/LectureReviews";
-import { createCourseJsonLd } from "@/features/seo/schema";
+import { createCourseJsonLd, serializeJsonLd } from "@/features/seo/schema";
 import { getSiteUrl } from "@/features/seo/site";
 import {
   getCourseDetail,
@@ -115,7 +114,8 @@ export async function generateMetadata({
 }: LectureDetailPageProps): Promise<Metadata> {
   const { continentCode, countryid, courseId } = await params;
   const pathContinentCode = continentCode.trim().toLowerCase();
-  const canonicalUrl = `${SITE_URL}/classroom/${pathContinentCode}/${countryid}/lecture/${courseId}`;
+  const pagePath = `/classroom/${pathContinentCode}/${countryid}/lecture/${courseId}`;
+  const canonicalUrl = SITE_URL ? `${SITE_URL}${pagePath}` : pagePath;
 
   try {
     const course = await getCourseDetail(countryid, courseId);
@@ -234,7 +234,9 @@ export default async function LectureDetailPage({
   const jsonLd = createCourseJsonLd({
     title: course.title,
     description: normalizeDescription(course.description),
-    url: `${SITE_URL}/classroom/${pathContinentCode.toLowerCase()}/${countryid}/lecture/${courseId}`,
+    url: SITE_URL
+      ? `${SITE_URL}/classroom/${pathContinentCode}/${countryid}/lecture/${courseId}`
+      : "",
     price: course.price,
     averageRating: safeReviewSummary.averageRating,
     reviewCount: safeReviewSummary.totalReviewCount,
@@ -242,12 +244,14 @@ export default async function LectureDetailPage({
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd),
-        }}
-      />
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: serializeJsonLd(jsonLd),
+          }}
+        />
+      )}
 
       <main className="min-h-screen w-full bg-[#F3F8FC] px-4 pb-14 pt-6 sm:px-6 lg:px-10">
         <section className="mx-auto w-full max-w-5xl space-y-6">
@@ -315,16 +319,13 @@ export default async function LectureDetailPage({
             </div>
           </section>
 
-          <LectureActionCard
+          <LectureAccessSection
             course={course}
             continentCode={pathContinentCode}
             countryId={countryid}
             courseId={courseId}
-          />
-
-          <LectureAttachments
-            courseId={courseId}
             fileUrls={course.fileUrls ?? []}
+            files={course.files ?? []}
           />
 
           <LectureReviews

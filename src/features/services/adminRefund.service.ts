@@ -5,6 +5,7 @@ import {
   refundStatusLabel,
 } from "@/features/csadmin/refund/types";
 import type { ApiRequestOptions } from "@/lib/api";
+import { notifySessionExpired } from "@/lib/sessionExpiration";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -32,8 +33,17 @@ const formatDate = (value: string | undefined) => {
   return value.includes("T") ? formatDateTime(value).slice(0, 10) : value;
 };
 
-export const normalizeRefund = (item: RefundRequestApiRecord): CsRefund => {
-  const status = refundStatusLabel[item.status] ?? "취소 요청";
+type RefundExtraDetail = {
+  bookingCreatedAt?: string;
+  paymentCreatedAt?: string;
+};
+
+export const normalizeRefund = (
+  item: RefundRequestApiRecord,
+  extra?: RefundExtraDetail
+): CsRefund => {
+  const statusCode = String(item.status ?? "").trim().toUpperCase();
+  const status = refundStatusLabel[statusCode] ?? "취소 요청";
 
   return {
     refundId: item.refundId,
@@ -50,15 +60,14 @@ export const normalizeRefund = (item: RefundRequestApiRecord): CsRefund => {
     reason: item.reason || "-",
     rejectReason: item.rejectReason ?? "",
     status,
-    statusCode: item.status,
+    statusCode,
     paymentAmount: item.paidAmount ?? 0,
     refundAmount: item.amount ?? 0,
     paymentMethod: item.paymentMethod || "-",
-    bookedAt: formatDateTime(item.createdAt),
+    bookingCreatedAt: formatDateTime(extra?.bookingCreatedAt ?? item.createdAt),
+    paymentCreatedAt: formatDateTime(extra?.paymentCreatedAt ?? item.createdAt),
     useDate: item.checkInDate || "-",
     adminMemo: item.rejectReason ?? "",
-    historyCount: item.updatedAt && item.updatedAt !== item.createdAt ? 1 : 0,
-    totalBookings: 0,
   };
 };
 
@@ -74,7 +83,7 @@ export const getAdminRefunds = async (
   );
   const data = unwrapData(response);
 
-  return Array.isArray(data) ? data.map(normalizeRefund) : [];
+  return Array.isArray(data) ? data.map((item) => normalizeRefund(item)) : [];
 };
 
 export const getAdminRefundById = async (
@@ -90,11 +99,13 @@ export const getAdminRefundById = async (
   );
   const data = unwrapData(response);
 
-  return data ? normalizeRefund(data) : null;
+  if (!data) return null;
+
+  return normalizeRefund(data);
 };
 
 export const requestRefundReview = async (refundId: number): Promise<void> => {
-  await adminApi.post<ApiResult<string>>(
+  await adminApi.put<ApiResult<string>>(
     `/api/v1/admin/refund-requests/${refundId}/review`,
     undefined,
     { suppressGlobalError: true }
@@ -102,23 +113,26 @@ export const requestRefundReview = async (refundId: number): Promise<void> => {
 };
 
 export const approveRefund = async (refundId: number): Promise<void> => {
-  await adminApi.post<ApiResult<string>>(
+  await adminApi.put<ApiResult<string>>(
     `/api/v1/admin/refund-requests/${refundId}/approve`,
     undefined,
     { suppressGlobalError: true }
   );
 };
 
-export const rejectRefund = async (refundId: number): Promise<void> => {
-  await adminApi.post<ApiResult<string>>(
+export const rejectRefund = async (
+  refundId: number,
+  rejectReason: string
+): Promise<void> => {
+  await adminApi.put<ApiResult<string>>(
     `/api/v1/admin/refund-requests/${refundId}/reject`,
     undefined,
-    { suppressGlobalError: true }
+    { params: { rejectReason }, suppressGlobalError: true }
   );
 };
 
 export const completeRefund = async (refundId: number): Promise<void> => {
-  await adminApi.post<ApiResult<string>>(
+  await adminApi.put<ApiResult<string>>(
     `/api/v1/admin/refund-requests/${refundId}/complete`,
     undefined,
     { suppressGlobalError: true }
@@ -152,6 +166,10 @@ export const downloadRefundExcel = async (signal?: AbortSignal) => {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        notifySessionExpired("/auth/adminlogin");
+      }
+
       const errorData = await response.json().catch(() => null);
       throw new Error(errorData?.message || "환불 내역 엑셀 다운로드에 실패했습니다.");
     }

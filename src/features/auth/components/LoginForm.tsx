@@ -3,16 +3,24 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import CompleteModal from "@/features/common/components/CompleteModal";
 import { login } from "@/features/services/auth.service";
+import { useLoginLockTimer } from "../hooks/useLoginLockTimer";
+import { useSocialUrls } from "../hooks/useSocialUrls";
+import { getErrorCode, getErrorNumber } from "../utils/authError";
+import { formatCountdown } from "../utils/formatCountdown";
+import { markUserSessionActive } from "../services/userSession";
+
 export default function LoginForm() {
   const router = useRouter();
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
-
+  const { lockRemainingSeconds, setLockRemainingSeconds, clearLockTimer } = useLoginLockTimer();
+  const { socialLoginUrls } = useSocialUrls();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [blacklistModalMessage, setBlacklistModalMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const validateUsername = (value: string) => {
@@ -31,12 +39,6 @@ export default function LoginForm() {
       setPasswordError("");
     }
   };
-
-  const isValid =
-    username.trim() !== "" &&
-    password.trim() !== "" &&
-    !usernameError &&
-    !passwordError;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +60,7 @@ export default function LoginForm() {
         password,
       });
 
+      markUserSessionActive();
       window.dispatchEvent(new Event("auth-state-changed"));
       // 로그인 상태 변경되었으니 정보 다시 조회
 
@@ -67,15 +70,60 @@ export default function LoginForm() {
       );
       const shouldChangePassword =
         data?.requiresPasswordChange ||
-        pendingPasswordResetUsername === normalizedUsername;
+        pendingPasswordResetUsername?.trim().toLowerCase() ===
+          normalizedUsername.toLowerCase();
 
       if (shouldChangePassword) {
         router.push("/auth/login/newpw");
         return;
       }
       router.push("/");
-      
-    } catch {
+    } catch (error) {
+      const errorCode = getErrorCode(error);
+
+      if (errorCode === "USER_006") {
+        const failCount = getErrorNumber(error, "failCount");
+        const maxAttempts = getErrorNumber(error, "maxAttempts", 5);
+        const message =
+          failCount > 0
+            ? `아이디 또는 비밀번호가 틀렸습니다. (${failCount}/${maxAttempts}회 오류)`
+            : "아이디 또는 비밀번호가 틀렸습니다.";
+
+        setUsernameError("");
+        setPasswordError(message);
+        return;
+      }
+
+      if (errorCode === "USER_008") {
+        const remainingSeconds = getErrorNumber(error, "remainingSeconds");
+
+        setLockRemainingSeconds(remainingSeconds);
+        setUsernameError("");
+        setPasswordError("비밀번호 오류 횟수 초과로 계정이 잠겼습니다.");
+        return;
+      }
+
+      if (errorCode === "USER_001") {
+        setUsernameError("존재하지 않는 아이디입니다.");
+        setPasswordError("");
+        return;
+      }
+
+      if (errorCode === "USER_007") {
+        setUsernameError("탈퇴한 계정입니다.");
+        setPasswordError("");
+        return;
+      }
+
+      if (errorCode === "AUTH_015") {
+        setUsernameError("");
+        setPasswordError("");
+        setBlacklistModalMessage(
+          "블랙리스트에 등록되어 제한된 계정입니다. 고객센터(algoga.official@gmail.com)에 문의하세요."
+        );
+        return;
+      }
+
       setUsernameError("아이디 또는 비밀번호가 틀렸습니다.");
       setPasswordError("아이디 또는 비밀번호가 틀렸습니다.");
     } finally {
@@ -83,16 +131,43 @@ export default function LoginForm() {
     }
   };
 
-  const hasSocialLoginConfig = Boolean(apiBaseUrl);
-  const socialLoginUrls = hasSocialLoginConfig
-    ? {
-        kakao: `${apiBaseUrl}/oauth2/authorization/kakao`,
-        google: `${apiBaseUrl}/oauth2/authorization/google`,
-      }
-    : null;
-
   return (
     <>
+      <CompleteModal
+        open={Boolean(blacklistModalMessage)}
+        title="로그인 제한"
+        description={blacklistModalMessage}
+        buttonText="확인"
+        onConfirm={() => setBlacklistModalMessage("")}
+      />
+
+      {lockRemainingSeconds > 0 && (
+        <div className="fixed inset-0 z-[5000] flex items-center justify-center bg-black/35 px-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="w-full max-w-sm rounded-[18px] border border-[#DDE8EF] bg-white p-7 text-center shadow-[0_18px_42px_rgba(15,23,42,0.18)]"
+          >
+            <h2 className="text-[22px] font-bold text-[#111827]">
+              계정이 잠겼습니다
+            </h2>
+            <p className="mt-3 text-[14px] leading-6 text-[#667085]">
+              비밀번호 오류 횟수 초과로 5분간 로그인이 제한됩니다.
+            </p>
+            <p className="mt-5 rounded-[14px] bg-[#F3F8FC] px-4 py-3 text-[18px] font-bold text-[#439A97]">
+              {formatCountdown(lockRemainingSeconds)} 후 다시 시도해주세요
+            </p>
+            <button
+              type="button"
+              onClick={clearLockTimer}
+              className="mt-6 h-11 w-full cursor-pointer rounded-[12px] bg-[#439A97] text-[15px] font-bold text-white transition hover:bg-[#367c79]"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
     {/* 로그인폼 */}
       <div className="w-[400px]">
         <h1 className="text-[32px] font-bold text-[#111827]">로그인</h1>
@@ -164,22 +239,20 @@ export default function LoginForm() {
           <button
               type="submit"
               disabled={isLoading}
-              className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition ${
+              className={`mt-6 h-[56px] w-full rounded-[16px] text-[18px] font-semibold text-white transition-all duration-200 ${
                 isLoading
                   ? "cursor-not-allowed bg-[#D0D5DD]"
-                  : "bg-[#439A97] hover:bg-[#367c79]"
+                  : "cursor-pointer bg-[#439A97] hover:bg-[#367c79] hover:shadow-lg hover:shadow-[#439A97]/30 active:bg-[#2f6f6d]"
               }`}
             >
               {isLoading ? "로그인 중..." : "로그인"}
           </button>
 
-          <Link
-            href="/"
-            className="mt-4 block w-full text-center text-[14px] text-[#98A2B3]"
-          >
-            메인으로 돌아가기
-          </Link>
-          
+          <div className="mt-4 text-center text-[14px] text-[#98A2B3]">
+            계정이 없으신가요?{" "}
+            <Link href="/auth/register" className="font-semibold text-[#6D9D9B]">회원가입</Link>
+          </div>
+
           {/* 소셜 로그인 */}
           <div className="mt-5 flex items-center gap-3">
             <div className="h-px flex-1 bg-[#E4E7EC]" />
@@ -208,10 +281,12 @@ export default function LoginForm() {
             </p>
           )}
 
-          <div className="mt-8 text-center text-[14px] text-[#98A2B3]">
-            계정이 없으신가요?{" "}
-            <Link href="/auth/register" className="font-semibold text-[#6D9D9B]">회원가입</Link>
-          </div>
+          <Link
+            href="/"
+            className="mt-4 block w-full text-center text-[14px] text-[#98A2B3]"
+          >
+            메인으로 돌아가기
+          </Link>
         </form>
       </div>
     </>

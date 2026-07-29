@@ -4,16 +4,18 @@ import {
   CreateAdminQuizPayload,
   UpdateAdminQuizPayload,
 } from "../contentmanage/quiz/types";
+import type { AdminPage, AdminPageParams } from "./adminPage.types";
 
 type AdminQuizRecord = AdminQuiz & {
   id?: number;
   answer?: number;
+  courseTitle?: string;
 };
 
 const normalizeQuiz = (quiz: AdminQuizRecord, courseId: number): AdminQuiz => ({
   quizId: quiz.quizId ?? quiz.id ?? 0,
   courseId: quiz.courseId ?? courseId,
-  lectureTitle: quiz.lectureTitle,
+  lectureTitle: quiz.lectureTitle ?? quiz.courseTitle,
   question: quiz.question ?? "",
   option1: quiz.option1 ?? "",
   option2: quiz.option2 ?? "",
@@ -22,6 +24,23 @@ const normalizeQuiz = (quiz: AdminQuizRecord, courseId: number): AdminQuiz => ({
   correctOption: quiz.correctOption ?? quiz.answer ?? 1,
   explanation: quiz.explanation ?? "",
 });
+
+export const getAdminQuizPage = async (
+  params: AdminPageParams = {}
+): Promise<AdminPage<AdminQuiz>> => {
+  const response = await adminApi.get<ApiResponse<AdminPage<AdminQuizRecord>>>(
+    "/api/v1/admin/quizzes",
+    { params }
+  );
+  const page = response.data;
+
+  return {
+    ...page,
+    content: (page.content ?? []).map((quiz) =>
+      normalizeQuiz(quiz, quiz.courseId ?? 0)
+    ),
+  };
+};
 
 export const getAdminQuizzes = async (
   courseId: number

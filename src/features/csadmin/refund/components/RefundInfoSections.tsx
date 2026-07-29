@@ -43,11 +43,11 @@ export function RefundReservationSection({ refund }: { refund: CsRefund }) {
         <Info label="예약번호" value={refund.bookingId} teal />
         <Info label="상품명" value={refund.product} />
         <Info label="예약자명" value={refund.user} />
-        <Info label="예약일" value={refund.bookedAt.substring(0, 10)} />
+        <Info label="예약일" value={refund.bookingCreatedAt.substring(0, 10)} />
         <Info label="이용 예정일" value={refund.useDate} />
         <Info label="결제 금액" value={formatWon(refund.paymentAmount)} big />
         <Info label="결제 수단" value={refund.paymentMethod} />
-        <Info label="결제 일시" value={refund.bookedAt} />
+        <Info label="결제 일시" value={refund.paymentCreatedAt} />
       </dl>
     </section>
   );

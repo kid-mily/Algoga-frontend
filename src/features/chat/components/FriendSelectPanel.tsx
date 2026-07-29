@@ -1,6 +1,7 @@
 ﻿// 1:1 채팅 시작할 친구를 선택
 import { ArrowLeft } from "lucide-react";
 import type { Friend } from "../types";
+import FriendAvatar from "./FriendAvatar";
 
 type FriendSelectPanelProps = {
   friends: Friend[];
@@ -8,26 +9,6 @@ type FriendSelectPanelProps = {
   errorMessage?: string;
   onBack: () => void;
   onSelectFriend: (friend: Friend) => void;
-};
-
-const FriendAvatar = ({ friend }: { friend: Friend }) => {
-  if (friend.profileImageUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={friend.profileImageUrl}
-        alt=""
-        aria-hidden="true"
-        className="h-11 w-11 shrink-0 rounded-full border border-[#E4E7EC] object-cover"
-      />
-    );
-  }
-
-  return (
-    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E7F4F3] text-[15px] font-bold text-[#287875]">
-      {friend.nickname.slice(0, 1)}
-    </span>
-  );
 };
 
 export default function FriendSelectPanel({

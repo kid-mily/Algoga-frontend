@@ -1,0 +1,103 @@
+"use client";
+
+import dynamic from "next/dynamic";
+
+import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
+import LoadingSpinner from "@/features/common/components/LoadingSpinner";
+import SimpleSubHeader from "@/features/common/components/SimpleSubHeader";
+import ChartSkeleton from "@/features/statisticadmin/common/components/ChartSkeleton";
+import { downloadCountryProfitCsv } from "@/features/services/adminInterestStatistics.service";
+import CountryCourseInterestSummaryCards from "./CountryCourseInterestSummaryCards";
+import CountryDetailStatsTable from "./CountryDetailStatsTable";
+import CourseCompletionAnalysisTable from "./CourseCompletionAnalysisTable";
+import PopularCountryCourseRankingTable from "./PopularCountryCourseRankingTable";
+import { useCountryCourseInterestStatistics } from "../hooks/useCountryCourseInterestStatistics";
+
+const CountryInterestBarChart = dynamic(
+  () => import("./CountryInterestBarChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={360} /> },
+);
+const CourseInterestBarChart = dynamic(
+  () => import("./CourseInterestBarChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={360} /> },
+);
+
+export default function CountryCourseInterestManageClient() {
+  const {
+    query,
+    summary,
+    countries,
+    courses,
+    countryDetails,
+    courseCompletions,
+    popularCourseRanks,
+    countrySearch,
+    setCountrySearch,
+    courseKeyword,
+    setCourseKeyword,
+    rankKeyword,
+    setRankKeyword,
+    isLoading,
+    isCountryLoading,
+    isCourseLoading,
+    error,
+  } = useCountryCourseInterestStatistics();
+
+  const handleDownloadCsv = () =>
+    downloadCountryProfitCsv({ ...query, search: countrySearch });
+
+  return (
+    <main className="min-h-screen bg-[#F8FAFC]">
+      <section className="flex items-start justify-between gap-4">
+        <SimpleSubHeader
+          title="나라·강의 관심도 분석"
+          description="어떤 나라·강의에 관심을 보이는가"
+        />
+      </section>
+
+      <AdminErrorBanner message={error} className="mt-6" />
+
+      {isLoading ? (
+        <LoadingSpinner text="나라·강의 관심도 통계를 불러오는 중입니다..." />
+      ) : (
+        <>
+          <CountryCourseInterestSummaryCards summary={summary} />
+
+          <section className="mt-8">
+            <h2 className="flex items-center gap-2 text-[20px] font-bold text-[#111827]">
+              <span className="h-6 w-1 rounded-full bg-[#2FAE9B]" />
+              국가별 분석
+            </h2>
+
+            <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+              <CountryInterestBarChart data={countries} />
+              <CourseInterestBarChart data={courses} />
+            </section>
+          </section>
+
+          <section className="mt-10">
+            <CountryDetailStatsTable
+              data={countryDetails}
+              search={countrySearch}
+              onSearchChange={setCountrySearch}
+              isLoading={isCountryLoading}
+              onDownloadCsv={handleDownloadCsv}
+            />
+          </section>
+
+          <CourseCompletionAnalysisTable
+            data={courseCompletions}
+            keyword={courseKeyword}
+            isLoading={isCourseLoading}
+            onKeywordChange={setCourseKeyword}
+          />
+          <PopularCountryCourseRankingTable
+            data={popularCourseRanks}
+            keyword={rankKeyword}
+            onKeywordChange={setRankKeyword}
+          />
+        </>
+      )}
+    </main>
+  );
+}

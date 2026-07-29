@@ -1,7 +1,5 @@
 // CompleteModal.tsx
 
-import React from "react";
-
 interface CompleteModalProps {
   open: boolean;
   title?: string;
@@ -22,29 +20,32 @@ export default function CompleteModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 " >
-      <div className="w-[450px] overflow-hidden rounded-[20px] bg-white shadow-xl">
-        {/* Header */}
-        <div className="border-b border-[#D9DEE5] px-6 py-4">
-          <h2 className="text-[30px] font-bold text-[#2F3640]">
+    <div
+      className="fixed inset-0 z-[9999] flex min-h-dvh items-center justify-center overflow-y-auto bg-black/50 px-4 py-8"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="complete-modal-title"
+    >
+      <div className="w-full max-w-[360px] overflow-hidden rounded-[16px] bg-white shadow-xl">
+        <div className="border-b border-[#D9DEE5] px-5 py-3">
+          <h2
+            id="complete-modal-title"
+            className="text-[22px] font-bold text-[#2F3640]"
+          >
             {title}
           </h2>
         </div>
 
-       {/* Content */}
-        <div className="flex flex-col items-center justify-center px-6 py-10">
-
-          <p className="text-[25px] text-[#6B7280]">
+        <div className="flex flex-col items-center justify-center px-5 py-6">
+          <p className="whitespace-pre-line text-center text-[16px] leading-7 text-[#6B7280]">
             {description}
           </p>
 
-          {/* Button */}
-          <div className="mt-12">
-
+          <div className="mt-8 flex w-full">
             <button
               type="button"
               onClick={onConfirm}
-              className="h-[48px] w-[180px] rounded-[16px] bg-[#439A97] text-[18px] font-semibold text-white transition-colors duration-200 hover:bg-[#367c79]"
+              className="h-[42px] w-full rounded-[12px] bg-[#439A97] text-[15px] font-semibold text-white transition hover:bg-[#367c79]"
             >
               {buttonText}
             </button>

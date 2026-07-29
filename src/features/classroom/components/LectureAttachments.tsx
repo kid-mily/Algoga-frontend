@@ -2,14 +2,13 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
-import { ApiRequestError } from "@/lib/api";
-import { getCourseStudyDetail } from "@/features/services/courseStudy.service";
-import { getMe } from "@/features/services/user.service";
+import type { CourseFile } from "./types";
 
 interface LectureAttachmentsProps {
-  courseId: string;
   fileUrls: string[];
+  files?: CourseFile[];
+  isCheckingAccess: boolean;
+  canViewAttachments: boolean;
 }
 
 const getFileName = (url: string, index: number) => {
@@ -27,66 +26,23 @@ const getFileName = (url: string, index: number) => {
 };
 
 export default function LectureAttachments({
-  courseId,
   fileUrls,
+  files,
+  isCheckingAccess,
+  canViewAttachments,
 }: LectureAttachmentsProps) {
-  const [canViewAttachments, setCanViewAttachments] = useState(false);
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  // files(원본 파일명 포함)가 있으면 우선 사용하고, 없으면 URL 목록으로 대체합니다.
+  const attachments =
+    files && files.length > 0
+      ? [...files]
+          .sort((a, b) => a.fileOrder - b.fileOrder)
+          .map((file, index) => ({
+            url: file.fileUrl,
+            name: file.originalFileName || getFileName(file.fileUrl, index),
+          }))
+      : fileUrls.map((url, index) => ({ url, name: getFileName(url, index) }));
 
-  useEffect(() => {
-    let isActive = true;
-
-    const checkAttachmentAccess = async () => {
-      if (!courseId || !fileUrls || fileUrls.length === 0) {
-        setCanViewAttachments(false);
-        setIsCheckingAccess(false);
-        return;
-      }
-
-      try {
-        setIsCheckingAccess(true);
-
-        const user = await getMe();
-
-        if (!isActive) return;
-
-        if (!user) {
-          setCanViewAttachments(false);
-          return;
-        }
-
-        await getCourseStudyDetail(courseId);
-
-        if (!isActive) return;
-
-        setCanViewAttachments(true);
-      } catch (error) {
-        if (!isActive) return;
-
-        if (error instanceof ApiRequestError) {
-          if (error.status === 401 || error.status === 403 || error.status === 404) {
-            setCanViewAttachments(false);
-            return;
-          }
-        }
-
-        console.error("[lecture-attachments] 첨부자료 권한 확인 실패:", error);
-        setCanViewAttachments(false);
-      } finally {
-        if (isActive) {
-          setIsCheckingAccess(false);
-        }
-      }
-    };
-
-    void checkAttachmentAccess();
-
-    return () => {
-      isActive = false;
-    };
-  }, [courseId, fileUrls]);
-
-  if (!fileUrls || fileUrls.length === 0) {
+  if (attachments.length === 0) {
     return null;
   }
 
@@ -108,16 +64,14 @@ export default function LectureAttachments({
       </div>
 
       <div>
-        {fileUrls.map((url, index) => {
-          const fileName = getFileName(url, index);
-
+        {attachments.map(({ url, name }, index) => {
           return (
             <div
               key={`${url}-${index}`}
               className="mb-3 flex items-center justify-between rounded-xl border border-gray-100 bg-[#F5F7FA] p-4"
             >
               <span className="min-w-0 truncate text-sm font-medium text-[#0A1628]">
-                {fileName}
+                {name}
               </span>
 
               <a

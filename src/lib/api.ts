@@ -1,4 +1,8 @@
-import { clearAdminSessionActive } from "@/features/admin/auth/services/adminSession";
+import {
+  isSessionActiveForLoginPath,
+  notifySessionExpired,
+  type SessionExpirationReason,
+} from "@/lib/sessionExpiration";
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const USER_LOGIN_PATH = "/auth/login";
 const ADMIN_LOGIN_PATH = "/auth/adminlogin";
@@ -30,6 +34,7 @@ export type ApiRequestOptions = RequestInit & {
 
 const refreshPromises = new Map<string, Promise<boolean>>();
 const logoutPromises = new Map<string, Promise<void>>();
+const expiredSessions = new Set<string>();
 
 export class ApiRequestError extends Error {
   status?: number;
@@ -102,22 +107,35 @@ const getLogoutPath = (refreshPath: string) => {
     : "/api/v1/auth/logout";
 };
 
-const clearLegacyClientTokens = () => {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("adminAccessToken");
-  localStorage.removeItem("adminRefreshToken");
-  clearAdminSessionActive();
-};
-
 const getLoginPath = (refreshPath: string) => {
   return refreshPath.includes("/admin/") ? ADMIN_LOGIN_PATH : USER_LOGIN_PATH;
 };
 
-const cleanupAuthSession = async (logoutPath: string, loginPath: string) => {
+const getErrorCode = (result: unknown) => {
+  if (!result || typeof result !== "object") return undefined;
+
+  const errorResult = result as { code?: unknown; errorCode?: unknown };
+  const code = errorResult.errorCode ?? errorResult.code;
+
+  return typeof code === "string" ? code : undefined;
+};
+
+const getSessionExpirationReason = (
+  errorCode?: string
+): SessionExpirationReason =>
+  errorCode === "AUTH_017" ? "CONCURRENT_LOGIN" : "INACTIVITY";
+
+const cleanupAuthSession = async (
+  logoutPath: string,
+  loginPath: string,
+  reason: SessionExpirationReason
+) => {
   if (typeof window === "undefined") return;
+  if (!isSessionActiveForLoginPath(loginPath)) return;
 
   const promiseKey = `${logoutPath}:${loginPath}`;
+
+  if (expiredSessions.has(promiseKey)) return;
 
   if (!logoutPromises.has(promiseKey)) {
     const logoutPromise = fetch(buildUrl(logoutPath), {
@@ -129,9 +147,8 @@ const cleanupAuthSession = async (logoutPath: string, loginPath: string) => {
     })
       .catch(() => undefined)
       .then(() => {
-        clearLegacyClientTokens();
-        window.dispatchEvent(new Event("auth-state-changed"));
-        window.location.replace(loginPath);
+        expiredSessions.add(promiseKey);
+        notifySessionExpired(loginPath, reason);
       })
       .finally(() => {
         logoutPromises.delete(promiseKey);
@@ -228,17 +245,21 @@ async function request<T>(
   const result = await response.json().catch(() => null);
 
   if (!response.ok) {
+    const errorCode = getErrorCode(result);
     const logoutPath = getLogoutPath(refreshPath);
     const shouldCleanupAuth =
       typeof window !== "undefined" &&
       !skipAuth &&
-      !suppressGlobalError &&
       response.status === 401 &&
       path !== refreshPath &&
       path !== logoutPath;
 
     if (shouldCleanupAuth) {
-      await cleanupAuthSession(logoutPath, getLoginPath(refreshPath));
+      await cleanupAuthSession(
+        logoutPath,
+        getLoginPath(refreshPath),
+        getSessionExpirationReason(errorCode)
+      );
     } else if (!suppressGlobalError && typeof window !== "undefined") {
       sessionStorage.setItem("errorData", JSON.stringify(result));
 
@@ -252,7 +273,7 @@ async function request<T>(
     throw new ApiRequestError({
       message: result?.message || "API 요청 실패",
       status: response.status,
-      code: result?.code,
+      code: errorCode,
       url: requestUrl,
       body: result,
     });

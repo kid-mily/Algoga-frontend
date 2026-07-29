@@ -1,14 +1,20 @@
-name: Deploy Next.js to Ubuntu Server
+name: Deploy Next.js to Ubuntu Server and AWS ECS
 
-# Vercel preview를 사용하므로 develop push 시 자동 SSH 배포는 비활성화합니다.
-# 필요한 경우 GitHub Actions 화면에서 수동으로 실행합니다.
+# develop 머지(push) → SSH로 EC2 직접 배포
+# main 머지(push)    → Docker 빌드 후 AWS ECR & ECS 배포
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - develop
+      - main
 
 jobs:
-  deploy:
+  # ---------------------------------------------------------
+  # 1. develop 배포: SSH를 통한 EC2 직접 배포
+  # ---------------------------------------------------------
+  deploy-ssh:
+    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
-
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
@@ -21,17 +27,83 @@ jobs:
             # 1. 프론트엔드 프로젝트 폴더로 이동하여 최신 코드 Pull
             cd /home/ubuntu/algoga
             git pull origin develop
-            
+
             # 기존 algoga 세션 강제 종료 (포트 충돌 방지)
             tmux kill-session -t algoga 2>/dev/null || true
-            
+
             # 2. 패키지 설치 (타입스크립트 에러 때문에 빌드는 임시 생략)
             npm install
-            
+
             # 3. 'algoga' 라는 이름의 tmux 세션을 백그라운드로 생성
             tmux new-session -d -s algoga
-            
+
             # 4. tmux 세션 내부에서 정확한 프론트엔드 경로로 이동 후 개발 서버 실행
             tmux send-keys -t algoga "cd /home/ubuntu/algoga" C-m
             echo "Next.js 애플리케이션을 algoga tmux 세션의 17000 포트에서 개발 모드로 실행합니다."
             tmux send-keys -t algoga "PORT=17000 npm run dev" C-m
+
+  # ---------------------------------------------------------
+  # 2. develop & main 배포: Next.js Docker 빌드 후 AWS ECR & ECS 배포
+  # ---------------------------------------------------------
+  deploy-ecs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # AWS 자격 증명 설정
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      # ECR 로그인
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Docker 이미지 빌드 및 ECR(team02/nextjs-web)로 업로드
+      # (멀티스테이지 Dockerfile 내부에서 npm ci && next build 를 수행)
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: team02/nextjs-web
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
+            --build-arg NEXT_PUBLIC_SITE_URL="${{ secrets.NEXT_PUBLIC_SITE_URL }}" \
+            --build-arg NEXT_PUBLIC_PORTONE_STORE_ID="${{ secrets.NEXT_PUBLIC_PORTONE_STORE_ID }}" \
+            --build-arg NEXT_PUBLIC_PORTONE_CHANNEL_KEY="${{ secrets.NEXT_PUBLIC_PORTONE_CHANNEL_KEY }}" \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      # AWS에서 최신 작업 정의(Task Definition) 파일 실시간 다운로드
+      # describe 결과에는 register 시 사용할 수 없는 읽기전용/최신 필드(enableFaultInjection 등)가 포함되어 있어 jq로 제거한다.
+      - name: Download latest task definition
+        run: |
+          aws ecs describe-task-definition --task-definition team02-01-frontend-task --query taskDefinition \
+            | jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy, .enableFaultInjection)' \
+            > task-definition.json
+
+      # 다운받은 작업 정의 파일에 방금 올린 새 ECR 이미지 주소 덮어쓰기
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: team02-01-frontend-container
+          image: ${{ steps.build-image.outputs.image }}
+
+      # 수정된 작업 정의로 ECS 서비스 업데이트(배포)
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: team02-01-frontend-task-service
+          cluster: team02-01-cluster
+          wait-for-service-stability: true

@@ -7,6 +7,7 @@ import QuizToolbar from "./QuizToolbar";
 import { useAdminQuizList } from "../hooks/useAdminQuizList";
 import { QuizManageClientProps } from "../types";
 import SubHeader from "@/features/common/components/SubHeader";
+import CouponPagination from "@/features/contentmanage/coupon/components/CouponPagination";
 
 export default function QuizManageClient({
   initialCourseId = "all",
@@ -18,6 +19,10 @@ export default function QuizManageClient({
     setSearchKeyword,
     courses,
     filteredQuizzes,
+    currentPage,
+    totalPages,
+    totalElements,
+    setCurrentPage,
     isLoading,
     errorMessage,
     refetch,
@@ -26,6 +31,10 @@ export default function QuizManageClient({
     selectedLecture === "all"
       ? "/contentadmin/quiz/new"
       : `/contentadmin/quiz/new?courseId=${selectedLecture}`;
+  const selectedCourseQuizCount =
+    selectedLecture !== "all"
+      ? totalElements
+      : undefined;
 
   return (
     <main className="min-h-screen bg-[#F8F8F8] px-8 py-8" aria-labelledby="quiz-management-title">
@@ -44,6 +53,7 @@ export default function QuizManageClient({
           selectedLecture={selectedLecture}
           courses={courses}
           createHref={createHref}
+          selectedCourseQuizCount={selectedCourseQuizCount}
           onSearchKeywordChange={setSearchKeyword}
           onSelectedLectureChange={setSelectedLecture}
         />
@@ -61,7 +71,19 @@ export default function QuizManageClient({
       {!isLoading && <AdminErrorBanner message={errorMessage} className="mt-6" />}
 
       {!isLoading && !errorMessage && (
-        <QuizList quizzes={filteredQuizzes} onDeleted={refetch} />
+        <QuizList
+          quizzes={filteredQuizzes}
+          onDeleted={refetch}
+        />
+      )}
+      {!isLoading && !errorMessage && totalPages > 1 && (
+        <div className="mt-4 rounded-[16px] border border-[#E4E7EC] bg-white">
+          <CouponPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       )}
     </main>
   );

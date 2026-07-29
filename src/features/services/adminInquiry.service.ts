@@ -1,4 +1,4 @@
-import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { adminApi, ApiRequestError, ApiResult, unwrapData } from "@/lib/api";
 import {
   CsInquiry,
   CsInquiryCategoryCode,
@@ -40,11 +40,16 @@ const formatDateTime = (value: string | null | undefined) => {
   return `${year}.${month}.${day} ${hour}:${minute}`;
 };
 
+const getInquiryWriter = (item: InquiryAdminResponse) =>
+  item.userNickname ?? item.userName ?? "(알 수 없음)";
+
 const normalizeInquiry = (item: InquiryAdminResponse): CsInquiry => ({
   id: `INQ${String(item.inquiryId).padStart(3, "0")}`,
   inquiryId: item.inquiryId,
   userId: item.userId,
-  writer: `회원 #${item.userId}`,
+  userName: item.userName,
+  userNickname: item.userNickname,
+  writer: getInquiryWriter(item),
   category: item.category,
   type: categoryLabel[item.category] ?? "기타",
   title: item.title,
@@ -112,21 +117,22 @@ export const getAdminInquiryById = async (
   inquiryId: number,
   signal?: AbortSignal
 ): Promise<CsInquiry | null> => {
-  let page = 0;
-  let totalPages = 1;
+  try {
+    const response = await adminApi.get<ApiResult<InquiryAdminResponse>>(
+      `/api/v1/admin/inquiries/${inquiryId}`,
+      {
+        suppressGlobalError: true,
+        signal,
+      }
+    );
 
-  while (page < totalPages) {
-    const data = await getAdminInquiries({ page, signal });
-    const inquiry = data.inquiries.find((item) => item.inquiryId === inquiryId);
-
-    if (inquiry) {
-      return inquiry;
+    return normalizeInquiry(unwrapData(response));
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.status === 404) {
+      return null;
     }
 
-    totalPages = data.totalPages;
-    page += 1;
+    throw error;
   }
-
-  return null;
 };
 

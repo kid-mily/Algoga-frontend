@@ -1,31 +1,49 @@
-import { useEffect, useMemo, useState } from "react";
-import { getSignupPathStatistics } from "@/features/services/adminUserStatistics.service";
-import { SignupPathStatistic } from "../types";
+import { useEffect, useState } from "react";
+import {
+  getInflowChannelRevenue,
+  getInflowSummary,
+} from "@/features/services/adminUserStatistics.service";
+import { SignupPathChannelRevenue, SignupPathSummary } from "../types";
 import {
   formatSignupPathError,
-  getSignupPathSummary,
+  getSignupPathDateRange,
+  SignupPathPeriod,
 } from "../utils";
 
+const emptySummary: SignupPathSummary = {
+  totalSignupCount: 0,
+  totalNetSales: 0,
+  bestEfficiencyPathLabel: "-",
+  bestEfficiencyPathArpu: 0,
+};
+
 export const useSignupPathStatistics = () => {
-  const [statistics, setStatistics] = useState<SignupPathStatistic[]>([]);
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedPath, setSelectedPath] = useState("all");
+  const [selectedPeriod, setSelectedPeriod] = useState<SignupPathPeriod>("all");
+  const [channelRevenue, setChannelRevenue] = useState<
+    SignupPathChannelRevenue[]
+  >([]);
+  const [summary, setSummary] = useState<SignupPathSummary>(emptySummary);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
+    const query = getSignupPathDateRange(selectedPeriod);
 
     const load = async () => {
       try {
         setIsLoading(true);
         setError("");
 
-        const data = await getSignupPathStatistics(controller.signal);
+        const [summaryData, channels] = await Promise.all([
+          getInflowSummary(query, controller.signal),
+          getInflowChannelRevenue(query, controller.signal),
+        ]);
 
         if (controller.signal.aborted) return;
 
-        setStatistics(data);
+        setSummary(summaryData);
+        setChannelRevenue(channels);
       } catch (loadError: unknown) {
         if (controller.signal.aborted) return;
 
@@ -47,53 +65,14 @@ export const useSignupPathStatistics = () => {
     return () => {
       controller.abort();
     };
-  }, []);
-
-  const pathOptions = useMemo(
-    () => [
-      { value: "all", label: "전체" },
-      ...statistics.map((statistic) => ({
-        value: statistic.signupPath || statistic.label,
-        label: statistic.label,
-      })),
-    ],
-    [statistics]
-  );
-
-  const filteredStatistics = useMemo(() => {
-    const keyword = searchKeyword.trim().toLowerCase();
-
-    return statistics.filter((statistic) => {
-      const matchesPath =
-        selectedPath === "all" ||
-        statistic.signupPath === selectedPath ||
-        statistic.label === selectedPath;
-      const matchesKeyword =
-        !keyword ||
-        [statistic.signupPath, statistic.label]
-          .join(" ")
-          .toLowerCase()
-          .includes(keyword);
-
-      return matchesPath && matchesKeyword;
-    });
-  }, [searchKeyword, selectedPath, statistics]);
-
-  const summary = useMemo(
-    () => getSignupPathSummary(statistics),
-    [statistics]
-  );
+  }, [selectedPeriod]);
 
   return {
-    statistics,
-    filteredStatistics,
-    pathOptions,
+    selectedPeriod,
+    setSelectedPeriod,
+    channelRevenue,
     summary,
-    searchKeyword,
-    selectedPath,
     isLoading,
     error,
-    setSearchKeyword,
-    setSelectedPath,
   };
 };

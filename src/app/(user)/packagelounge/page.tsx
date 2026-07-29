@@ -1,81 +1,55 @@
-import PackageCard from "@/features/packagelounge/components/PackageCard";
-import SubHeader from "@/features/common/components/SubHeader";
-import { getCountryPackages } from "@/features/services/package.service";
+import PackageLoungeListClient from "@/features/packagelounge/components/PackageLoungeListClient";
+import type { PackageApiItem } from "@/features/packagelounge/types";
+import { getPackagesByCountry } from "@/features/services/package.service";
 
 interface PackageLoungePageProps {
   searchParams: Promise<{
-    courseId?: string;
     countryId?: string;
+    courseId?: string;
     continentCode?: string;
   }>;
 }
 
+// 패키지 라운지 목록 페이지
 export default async function PackageLoungePage({
   searchParams,
 }: PackageLoungePageProps) {
-  const params = await searchParams;
-  const courseId = Number(params.courseId);
-  const countryId = Number(params.countryId);
-  const continentCode = params.continentCode ?? "";
+  const { countryId, courseId, continentCode } = await searchParams;
 
-  const hasValidSelection =
-    Number.isInteger(courseId) &&
-    courseId > 0 &&
-    Number.isInteger(countryId) &&
-    countryId > 0 &&
-    Boolean(continentCode);
+  let packages: PackageApiItem[] = [];
 
-  const backHref =
-    continentCode && countryId
-      ? `/classroom/${continentCode}/${countryId}`
-      : "/classroom";
-
-  if (!hasValidSelection) {
-    return (
-      <main className="min-h-screen bg-[#F6F8FB] px-4 py-10">
-        <div className="mx-auto max-w-[860px]">
-          <SubHeader
-            backHref={backHref}
-            backText="강의 다시 선택"
-            title="패키지 목록"
-            description="진단평가 추천 강의를 먼저 선택해주세요."
-          />
-          <p className="mt-10 text-center text-sm text-[#8796AA]">
-            패키지는 추천 강의를 선택한 후 이용할 수 있습니다.
-          </p>
-        </div>
-      </main>
-    );
+  if (countryId) {
+    try {
+      packages = await getPackagesByCountry(countryId);
+    } catch (error) {
+      console.error("[packagelounge] 패키지 목록 조회 실패:", error);
+      packages = [];
+    }
   }
 
-  const packages = await getCountryPackages(countryId);
-
   return (
-    <main className="min-h-screen bg-[#F6F8FB] px-4 py-10">
-      <div className="mx-auto max-w-[860px]">
-        <SubHeader
-          backHref={backHref}
-          backText="강의 다시 선택"
-          title="패키지 목록"
-          description="선택한 추천 강의와 함께 이용할 여행 패키지를 골라보세요."
-        />
+    <main className="min-h-screen bg-[#F3F8FC] px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-6xl">
+        {/* 페이지 상단 타이틀 영역 */}
+        <section className="px-6 py-8">
+          <span className="text-xs font-bold tracking-[0.16em] text-[#439A97]">
+            PACKAGE LOUNGE
+          </span>
 
-        {packages.length > 0 ? (
-          <section className="mt-7 grid gap-5 md:grid-cols-2">
-            {packages.map((item) => (
-              <PackageCard
-                key={item.packageId}
-                item={item}
-                courseId={courseId}
-                continentCode={continentCode}
-              />
-            ))}
-          </section>
-        ) : (
-          <p className="mt-10 text-center text-sm text-[#8796AA]">
-            등록된 패키지가 없습니다.
+          <h1 className="mt-2 text-2xl font-extrabold text-[#0A1628] sm:text-3xl">
+            패키지 라운지
+          </h1>
+
+          <p className="mt-2 text-sm text-[#8A9BB0]">
+            항공권과 숙소가 하나로 묶인 여행 패키지를 탐색하세요
           </p>
-        )}
+
+          <PackageLoungeListClient
+            packages={packages}
+            courseId={courseId}
+            continentCode={continentCode}
+          />
+        </section>
       </div>
     </main>
   );

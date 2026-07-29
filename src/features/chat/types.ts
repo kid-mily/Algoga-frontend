@@ -9,7 +9,6 @@ export interface ChatRoom {
   lastMessageAt: string | null;
   unreadCount?: number;
   memberCount?: number;
-  isMine?: boolean;
 }
 
 export interface ChatMessage {
@@ -43,6 +42,7 @@ export interface ReadEvent {
 }
 
 export interface TypingEvent {
+  roomId: number;
   userId: number;
   nickname: string;
   isTyping: boolean;

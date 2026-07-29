@@ -1,13 +1,12 @@
-import { SignupPathStatistic } from "../types";
-import { formatNumber, formatPercent } from "../utils";
+import { SignupPathChannelRevenue } from "../types";
+import { formatNumber, formatPercent, formatWon } from "../utils";
 
 type SignupPathTableProps = {
-  statistics: SignupPathStatistic[];
+  channelRevenue: SignupPathChannelRevenue[];
   isLoading: boolean;
-  compact?: boolean;
 };
 
-const COLUMN_COUNT = 4;
+const COLUMN_COUNT = 5;
 
 function EmptyRow({ message }: { message: string }) {
   return (
@@ -25,36 +24,36 @@ function EmptyRow({ message }: { message: string }) {
 }
 
 export default function SignupPathTable({
-  statistics,
+  channelRevenue,
   isLoading,
-  compact = false,
 }: SignupPathTableProps) {
   return (
     <section className="rounded-[16px] border border-[#E4E7EC] bg-white">
       <header className="border-b border-[#EEF0F3] px-6 py-4">
         <h2 className="text-[18px] font-bold text-[#111827]">
-          {compact ? "상위 유입 경로" : "유입 경로별 상세 통계"}
+          유저 경로별 상세통계
         </h2>
       </header>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[520px] text-left text-[14px]">
+        <table className="w-full min-w-[640px] text-left text-[14px]">
           <thead className="bg-[#F9FAFB] text-[13px] text-[#667085]">
             <tr>
               <th className="px-5 py-3 font-semibold">유입 경로</th>
-              <th className="px-5 py-3 font-semibold">가입 수</th>
-              <th className="px-5 py-3 font-semibold">비율</th>
-              <th className="px-5 py-3 font-semibold">그래프</th>
+              <th className="px-5 py-3 font-semibold">회원가입 수</th>
+              <th className="px-5 py-3 font-semibold">순매출</th>
+              <th className="px-5 py-3 font-semibold">예약 수</th>
+              <th className="px-5 py-3 font-semibold">예약 전환율</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#EEF0F3] text-[#344054]">
             {isLoading ? (
               <EmptyRow message="유입 경로 통계를 불러오는 중입니다..." />
-            ) : statistics.length === 0 ? (
+            ) : channelRevenue.length === 0 ? (
               <EmptyRow message="유입 경로 통계 데이터가 없습니다." />
             ) : (
-              statistics.slice(0, compact ? 5 : statistics.length).map((statistic) => (
-                <tr key={`${statistic.signupPath}-${statistic.label}`}>
+              channelRevenue.map((statistic) => (
+                <tr key={statistic.signupPath}>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <span
@@ -69,21 +68,12 @@ export default function SignupPathTable({
                   <td className="px-5 py-4">
                     {formatNumber(statistic.signupCount)}명
                   </td>
-                  <td className="px-5 py-4 font-semibold text-[#439A97]">
-                    {formatPercent(statistic.ratio)}
+                  <td className="px-5 py-4">{formatWon(statistic.netSales)}</td>
+                  <td className="px-5 py-4">
+                    {formatNumber(statistic.bookingCount)}건
                   </td>
                   <td className="px-5 py-4">
-                    <div className="h-[8px] w-full min-w-[120px] overflow-hidden rounded-full bg-[#F2F4F7]">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: statistic.ratio
-                            ? `${Math.max(2, Math.min(100, statistic.ratio))}%`
-                            : "0%",
-                          backgroundColor: statistic.color,
-                        }}
-                      />
-                    </div>
+                    {formatPercent(statistic.bookingConversionRate)}
                   </td>
                 </tr>
               ))

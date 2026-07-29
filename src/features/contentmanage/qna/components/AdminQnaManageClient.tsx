@@ -53,7 +53,7 @@ export default function AdminQnaManageClient() {
               type="text"
               value={searchKeyword}
               onChange={(event) => setSearchKeyword(event.target.value)}
-              placeholder="질문 내용, 강의, 작성자 검색..."
+              placeholder="제목 또는 질문 내용 검색..."
               className="ml-3 flex-1 bg-transparent text-[14px] outline-none placeholder:text-[#98A2B3]"
             />
           </label>

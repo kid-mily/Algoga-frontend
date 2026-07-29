@@ -1,4 +1,4 @@
-﻿import { adminApi, api, ApiResult, unwrapData } from "@/lib/api";
+﻿import { adminApi, ApiResult, unwrapData } from "@/lib/api";
 import {
   AdminBanner,
   AdminBannerApiRecord,
@@ -143,19 +143,6 @@ export const modifyAdminBanner = async (
 
 export const deleteAdminBanner = async (bannerId: number): Promise<void> => {
   await adminApi.delete<ApiResult<null>>(`/api/v1/banner/admin/delete/${bannerId}`);
-};
-
-export const getMainBanners = async (): Promise<AdminBanner[]> => {
-  const response = await api.get<ApiResult<unknown>>("/api/v1/banner", {
-    // next: { revalidate: 1800 },
-  });
-  const data = unwrapData(response);
-
-  return unwrapList(data).flatMap((item) => {
-    const banner = normalizeBanner(item);
-
-    return banner ? [banner] : [];
-  });
 };
 
 

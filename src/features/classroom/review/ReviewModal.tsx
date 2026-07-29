@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { ApiRequestError } from "@/lib/api";
+import CharCounter from "@/features/common/components/CharCounter";
 import {
   createCourseReview,
   CourseReview,
 } from "@/features/services/courseReview.service";
+
+const REVIEW_CONTENT_MAX_LENGTH = 1000;
 
 interface ReviewModalProps {
   open: boolean;
@@ -136,6 +139,10 @@ export default function ReviewModal({
               수료한 강의에 대한 후기를 남겨주세요. 후기 작성은 선택
               사항입니다.
             </p>
+
+            <p className="mt-1 text-xs font-semibold text-[#B54747]">
+              등록한 후기는 이후 수정·삭제가 불가능합니다.
+            </p>
           </div>
 
           <button
@@ -192,8 +199,12 @@ export default function ReviewModal({
               setErrorMessage("");
             }}
             placeholder="강의에 대한 솔직한 후기를 작성해 주세요."
+            maxLength={REVIEW_CONTENT_MAX_LENGTH}
             className="mt-2 min-h-36 w-full resize-y rounded-2xl border border-[#DCE5F0] px-4 py-3 text-sm text-[#243247] outline-none focus:border-[#439A97]"
           />
+          <div className="mt-1 flex justify-end">
+            <CharCounter length={content.length} maxLength={REVIEW_CONTENT_MAX_LENGTH} />
+          </div>
         </div>
 
         {errorMessage ? (

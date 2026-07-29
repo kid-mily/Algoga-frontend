@@ -5,19 +5,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { resetPassword } from "@/features/services/auth.service";
 import CompleteModal from "@/features/common/components/CompleteModal";
+import { passwordRegex } from "../utils/registerValidators";
 
 export default function NewPwForm() {
   const router = useRouter();
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
-
   const [isLoading, setIsLoading] = useState(false);
 
   // 모달 상태 관리 
@@ -29,8 +26,6 @@ export default function NewPwForm() {
   });
 
   const getPasswordError = (value: string) => {
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-
     if (!value.trim()) {
       return "비밀번호를 입력해주세요.";
     }

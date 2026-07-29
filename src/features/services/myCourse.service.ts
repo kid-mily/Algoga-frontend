@@ -17,7 +17,8 @@ const emptyPage = <T>(page: number, size: number): PageResponse<T> => ({
 
 export async function getMyCourses(
   page = 0,
-  size = 10
+  size = 10,
+  headers?: HeadersInit
 ): Promise<PageResponse<MyCourse>> {
   const response = await api.get<ApiResult<PageResponse<MyCourse>>>(
     "/api/v1/my/courses",
@@ -27,6 +28,7 @@ export async function getMyCourses(
         size,
       },
       cache: "no-store",
+      headers,
       suppressGlobalError: true,
     }
   );

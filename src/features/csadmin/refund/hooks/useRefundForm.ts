@@ -2,25 +2,28 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  approveRefund,
-  completeRefund,
   getAdminRefundById,
   rejectRefund,
   requestRefundReview,
 } from "@/features/services/adminRefund.service";
-import { CsRefund, CsRefundFormData, toRefundFormData } from "../types";
-
-type RefundFormMode = "create" | "edit";
+import {
+  CsRefund,
+  CsRefundFormData,
+  CsRefundStatus,
+  RefundApiStatus,
+  getCsNextStatusOptions,
+  toRefundFormData,
+} from "../types";
 
 const emptyForm: CsRefundFormData = {
   reason: "",
   refundAmount: "0",
   adminMemo: "",
-  status: "정산 검토중",
+  status: "",
   rejectReason: "",
 };
 
-export const useRefundForm = (refundId: number, mode: RefundFormMode) => {
+export const useRefundForm = (refundId: number) => {
   const [refund, setRefund] = useState<CsRefund | null>(null);
   const [formData, setFormData] = useState<CsRefundFormData>(emptyForm);
   const [error, setError] = useState("");
@@ -45,7 +48,8 @@ export const useRefundForm = (refundId: number, mode: RefundFormMode) => {
       }
 
       setRefund(data);
-      setFormData(toRefundFormData(data));
+      // 처리 상태는 현재 상태가 아니라 "아직 선택 안 함"으로 시작해야 select와 실제로 어긋나지 않습니다.
+      setFormData({ ...toRefundFormData(data), status: "" });
     } catch (fetchError: unknown) {
       if (signal?.aborted) return;
 
@@ -73,11 +77,19 @@ export const useRefundForm = (refundId: number, mode: RefundFormMode) => {
     };
   }, [fetchRefund]);
 
+  // CS매니저 화면은 REQUESTED(취소 요청) 단계에서만 액션이 있습니다 — 승인/완료는 정산매니저 담당입니다.
+  const nextStatusOptions = refund ? getCsNextStatusOptions(refund.statusCode) : [];
+
   const updateField = <K extends keyof CsRefundFormData>(
     key: K,
     value: CsRefundFormData[K]
   ) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const applyStatus = (status: CsRefundStatus, statusCode: RefundApiStatus) => {
+    setRefund((prev) => (prev ? { ...prev, status, statusCode } : prev));
+    setFormData((prev) => ({ ...prev, status }));
   };
 
   const saveRefund = async () => {
@@ -87,14 +99,17 @@ export const useRefundForm = (refundId: number, mode: RefundFormMode) => {
       setIsSubmitting(true);
       setError("");
 
-      if (mode === "create") {
+      if (formData.status === "정산 검토중") {
         await requestRefundReview(refund.refundId);
-      } else if (formData.status === "환불 승인") {
-        await approveRefund(refund.refundId);
+        applyStatus("정산 검토중", "UNDER_REVIEW");
       } else if (formData.status === "반려") {
-        await rejectRefund(refund.refundId);
-      } else if (formData.status === "환불 완료") {
-        await completeRefund(refund.refundId);
+        if (!formData.rejectReason.trim()) {
+          setError("반려 사유를 입력해주세요.");
+          return;
+        }
+
+        await rejectRefund(refund.refundId, formData.rejectReason.trim());
+        applyStatus("반려", "REJECTED");
       } else {
         setError("변경할 처리 상태를 선택해주세요.");
         return;
@@ -115,6 +130,7 @@ export const useRefundForm = (refundId: number, mode: RefundFormMode) => {
   return {
     refund,
     formData,
+    nextStatusOptions,
     error,
     isLoading,
     isSubmitting,

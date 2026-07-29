@@ -1,4 +1,5 @@
-import CouponCard from "./CouponCard";
+import Link from "next/link";
+import CouponCarousel from "./CouponCarousel";
 import { MileageSummaryCard } from "./MileageSummaryCard";
 import { MileageHistoryTable } from "./MileageHistoryTable";
 import { MyCoupon, MyMileage } from "./types";
@@ -27,22 +28,24 @@ export default function MyBenefitsContent({
             쿠폰함
           </h1>
 
-          <p className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#439A97] shadow-sm">
-            사용 가능 {usableCouponCount}개
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#439A97] shadow-sm">
+              사용 가능 {usableCouponCount}개
+            </p>
+
+            <Link
+              href="/mypage/benefits/coupons"
+              className="text-sm font-semibold text-[#439A97] hover:underline"
+            >
+              자세히 보기
+            </Link>
+          </div>
         </div>
 
         {coupons.length === 0 ? (
           <EmptyBox message="보유한 쿠폰이 없습니다." />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {coupons.map((coupon) => (
-              <CouponCard
-                key={coupon.userCouponId}
-                coupon={coupon}
-              />
-            ))}
-          </div>
+          <CouponCarousel coupons={coupons} />
         )}
       </section>
 
@@ -62,6 +65,8 @@ export default function MyBenefitsContent({
 
           <MileageHistoryTable
             histories={mileage.histories ?? []}
+            limit={3}
+            moreHref="/mypage/benefits/mileages"
           />
         </div>
       </section>

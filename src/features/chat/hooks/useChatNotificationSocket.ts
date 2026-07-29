@@ -1,30 +1,14 @@
 ﻿// 채팅방 목록/ 실시간 알림 담당
 
-import { useEffect, useRef, useState } from "react";
-import { Client, type IMessage } from "@stomp/stompjs";
+import { useEffect, useRef } from "react";
+import { Client } from "@stomp/stompjs";
+import { getWebSocketUrl, parseBody } from "../socket";
 import type { RoomNotification } from "../types";
 
 type UseChatNotificationSocketOptions = {
   userId?: number;
   onNotification?: (notification: RoomNotification) => void;
-};
-
-const getWebSocketUrl = () => {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://kidmily.kro.kr";
-  const url = new URL(apiUrl);
-  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-  url.pathname = "/ws/chat";
-  url.search = "";
-
-  return url.toString();
-};
-
-const parseBody = (message: IMessage): unknown => {
-  try {
-    return JSON.parse(message.body) as unknown;
-  } catch {
-    return null;
-  }
+  onConnected?: () => void;
 };
 
 const parseNotification = (body: unknown): RoomNotification | null => {
@@ -49,14 +33,19 @@ const parseNotification = (body: unknown): RoomNotification | null => {
 export const useChatNotificationSocket = ({
   userId,
   onNotification,
+  onConnected,
 }: UseChatNotificationSocketOptions) => {
   const clientRef = useRef<Client | null>(null);
   const onNotificationRef = useRef(onNotification);
-  const [isConnected, setIsConnected] = useState(false);
+  const onConnectedRef = useRef(onConnected);
 
   useEffect(() => {
     onNotificationRef.current = onNotification;
   }, [onNotification]);
+
+  useEffect(() => {
+    onConnectedRef.current = onConnected;
+  }, [onConnected]);
 
   useEffect(() => {
     if (!userId) return;
@@ -67,23 +56,14 @@ export const useChatNotificationSocket = ({
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,
       onConnect: () => {
-        setIsConnected(true);
-
         client.subscribe(`/topic/users/${userId}`, (message) => {
           const notification = parseNotification(parseBody(message));
           if (!notification) return;
 
           onNotificationRef.current?.(notification);
         });
-      },
-      onDisconnect: () => {
-        setIsConnected(false);
-      },
-      onWebSocketClose: () => {
-        setIsConnected(false);
-      },
-      onStompError: () => {
-        setIsConnected(false);
+
+        onConnectedRef.current?.();
       },
     });
 
@@ -91,12 +71,9 @@ export const useChatNotificationSocket = ({
     client.activate();
 
     return () => {
-      setIsConnected(false);
       clientRef.current = null;
       void client.deactivate();
     };
   }, [userId]);
-
-  return { isConnected };
 };
 

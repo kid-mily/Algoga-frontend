@@ -4,6 +4,7 @@ import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
 import SubHeader from "@/features/common/components/SubHeader";
 import { useAdminPointHistory } from "../hooks/useAdminPointHistory";
 import PointHistoryTable from "./PointHistoryTable";
+import PointPagination from "./PointPagination";
 
 interface PointDetailClientProps {
   studentId: number;
@@ -12,7 +13,8 @@ interface PointDetailClientProps {
 export default function PointDetailClient({
   studentId,
 }: PointDetailClientProps) {
-  const { logs, isLoading, error } = useAdminPointHistory(studentId);
+  const { logs, currentPage, totalPages, isLoading, error, setCurrentPage } =
+    useAdminPointHistory(studentId);
 
   return (
     <main className="min-h-screen bg-[#F8F8F8] px-8 py-8">
@@ -25,6 +27,16 @@ export default function PointDetailClient({
       <AdminErrorBanner message={error} className="mt-4" />
 
       <PointHistoryTable logs={logs} isLoading={isLoading} />
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <PointPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
     </main>
   );
 }

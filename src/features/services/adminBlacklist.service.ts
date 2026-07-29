@@ -73,7 +73,7 @@ const getItems = (data: unknown) => {
 
 const getPageMeta = <T>(data: unknown, items: T[], fallbackPage: number): PageResult<T> => {
   const record = getRecord(data);
-  const page = getNumber(record, ["index", "page", "number"], fallbackPage);
+  const pageValue = getNumber(record, ["index", "page", "number"], NaN);
   const size = getNumber(record, ["size", "pageSize"], items.length || 10);
   const totalElements = getNumber(
     record,
@@ -88,7 +88,7 @@ const getPageMeta = <T>(data: unknown, items: T[], fallbackPage: number): PageRe
 
   return {
     items,
-    page: Math.max(1, page),
+    page: Number.isFinite(pageValue) ? Math.max(1, pageValue + 1) : fallbackPage,
     size,
     totalElements,
     totalPages: Math.max(1, totalPages),
@@ -103,6 +103,14 @@ const normalizeStatus = (value: string): BlacklistStatus => {
   }
 
   return "UNKNOWN";
+};
+
+const normalizeBlacklistStatus = (record: UnknownRecord): BlacklistStatus => {
+  if (typeof record.isBlacklisted === "boolean") {
+    return record.isBlacklisted ? "BLACKLISTED" : "NORMAL";
+  }
+
+  return normalizeStatus(getString(record, ["status", "userStatus"], "UNKNOWN"));
 };
 
 const normalizeReportStatus = (value: string): ReportHistoryStatus => {
@@ -131,14 +139,21 @@ export const normalizeBlacklistUser = (
 ): BlacklistUser => {
   const record = getRecord(item);
   const userId = getNumber(record, ["userId", "memberId", "id"], fallbackId);
+  const isBlacklisted =
+    typeof record.isBlacklisted === "boolean"
+      ? record.isBlacklisted
+      : normalizeStatus(getString(record, ["status", "userStatus"], "UNKNOWN")) ===
+        "BLACKLISTED";
 
   return {
     userId,
     displayId: `U${String(userId).padStart(4, "0")}`,
+    username: getString(record, ["username", "loginId", "accountId"], "-"),
     name: getString(record, ["name", "userName", "realName"], "-"),
     nickname: getString(record, ["nickname", "nickName"], "-"),
     email: getString(record, ["email"], "-"),
     reportCount: getNumber(record, ["reportCount", "reportsCount", "reportedCount"]),
+    isBlacklisted,
     lastReportedAt: formatDate(
       getString(record, ["lastReportedAt", "recentReportedAt", "reportedAt"], "")
     ),
@@ -146,7 +161,7 @@ export const normalizeBlacklistUser = (
       getString(record, ["registeredAt", "blacklistedAt", "createdAt"], "")
     ),
     managerName: getString(record, ["managerName", "adminName", "registeredBy"], "-"),
-    status: normalizeStatus(getString(record, ["status", "userStatus"], "UNKNOWN")),
+    status: normalizeBlacklistStatus(record),
   };
 };
 
@@ -193,7 +208,7 @@ export const getBlacklistCandidates = async ({
   const response = await adminApi.get<ApiResult<unknown>>(
     "/api/v1/admin/blacklists/candidates",
     {
-      params: { index, size },
+      params: { page: Math.max(0, index - 1), size },
       suppressGlobalError: true,
       signal,
     }
@@ -211,7 +226,7 @@ export const getBlacklistCandidateById = async (
   signal?: AbortSignal
 ): Promise<BlacklistUserDetail> => {
   const response = await adminApi.get<ApiResult<unknown>>(
-    `/api/v1/admin/blacklists/candidates/${userId}`,
+    `/api/v1/admin/blacklists/users/${userId}`,
     {
       suppressGlobalError: true,
       signal,
@@ -221,10 +236,13 @@ export const getBlacklistCandidateById = async (
   return normalizeBlacklistUserDetail(unwrapData(response), userId);
 };
 
-export const registerBlacklistUser = async (userId: number): Promise<void> => {
+export const registerBlacklistUser = async (
+  userId: number,
+  reason: string
+): Promise<void> => {
   await adminApi.post<ApiResult<null>>(
     `/api/v1/admin/blacklists/${userId}`,
-    undefined,
+    { reason },
     { suppressGlobalError: true }
   );
 };
@@ -241,7 +259,7 @@ export const getBlacklistedUsers = async ({
   const response = await adminApi.get<ApiResult<unknown>>(
     "/api/v1/admin/blacklists",
     {
-      params: { index, size },
+      params: { page: Math.max(0, index - 1), size },
       suppressGlobalError: true,
       signal,
     }
@@ -257,7 +275,7 @@ export const getBlacklistedUsers = async ({
 export const deregisterBlacklistUser = async (userId: number): Promise<void> => {
   await adminApi.patch<ApiResult<null>>(
     `/api/v1/admin/blacklists/${userId}/deregister`,
-    undefined,
+    {},
     { suppressGlobalError: true }
   );
 };

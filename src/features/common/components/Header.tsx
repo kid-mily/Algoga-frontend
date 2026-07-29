@@ -83,24 +83,35 @@ export default function Header() {
   }, []);
 
   if (isLoading) {
-    return (
-      <header className="relative z-[3000] flex h-16 w-full items-center justify-between bg-white px-5" />
-    );
+    return <header className="relative z-[3000] h-24 w-full bg-white lg:h-16" />;
   }
 
   return (
-    <header className="relative z-[3000] flex h-16 w-full items-center justify-between bg-white px-5">
-      <Link href="/">
-        <Image
-          src="/images/algoga-logo.png"
-          alt="로고"
-          width={130}
-          height={45}
-          className="h-[45px] w-[130px] cursor-pointer"
-        />
-      </Link>
-      <Navbar />
-      <Profile user={user} />
+    <header className="relative z-[3000] w-full border-b border-[#EEF1F3] bg-white">
+      <div className="mx-auto grid w-full grid-cols-[1fr_auto] items-center px-4 pt-2 sm:px-6 lg:h-16 lg:grid-cols-[1fr_auto_1fr] lg:px-8 lg:py-0">
+        <Link href="/" className="w-fit">
+          <Image
+            src="/images/algoga-logo.png"
+            alt="알고가"
+            width={130}
+            height={45}
+            priority
+            className="h-auto w-[105px] cursor-pointer sm:w-[115px] lg:w-[130px]"
+          />
+        </Link>
+
+        <div className="hidden lg:block">
+          <Navbar />
+        </div>
+
+        <div className="flex justify-end">
+          <Profile user={user} mobile />
+        </div>
+
+        <div className="col-span-2 mt-1 border-t border-[#F2F4F7] lg:hidden">
+          <Navbar mobile />
+        </div>
+      </div>
     </header>
   );
 }

@@ -248,7 +248,7 @@ export default function LectureChapterForm({ courseId, onPrev, onSubmit }: Lectu
           disabled={isSubmitting}
           className="h-[48px] rounded-[14px] bg-[#439A97] px-6 text-[15px] font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#CFE5E4]"
         >
-          {isSubmitting ? "챕터 등록 중..." : "강의 등록 완료"}
+          {isSubmitting ? "챕터 등록 중..." : "다음 단계로"}
         </button>
       </footer>
     </section>

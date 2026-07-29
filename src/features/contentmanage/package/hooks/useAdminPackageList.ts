@@ -18,28 +18,41 @@ const enrichPackageLabels = async (
 ) => {
   if (packages.length === 0) return packages;
 
-  const countries = await getCourseCountries(signal);
+  const needsCountryLabels = packages.some((item) =>
+    shouldFillLabel(item.countryName)
+  );
+  const accommodationCountryIds = Array.from(
+    new Set(
+      packages
+        .filter((item) => shouldFillLabel(item.accommodationName))
+        .map((item) => item.countryId)
+        .filter((countryId) => countryId > 0)
+    )
+  );
+
+  if (!needsCountryLabels && accommodationCountryIds.length === 0) {
+    return packages;
+  }
+
+  const [countries, accommodationGroups] = await Promise.all([
+    needsCountryLabels ? getCourseCountries(signal) : Promise.resolve([]),
+    Promise.all(
+      accommodationCountryIds.map(async (countryId) => {
+        const accommodations = await getCountryAccommodations(countryId, signal);
+
+        return accommodations.map((accommodation) => [
+          accommodation.accommodationId,
+          accommodation.name,
+        ] as const);
+      })
+    ),
+  ]);
+
   if (signal?.aborted) return packages;
 
   const countryNameMap = new Map(
     countries.map((country) => [country.countryId, country.countryName])
   );
-  const countryIds = Array.from(
-    new Set(packages.map((item) => item.countryId).filter((countryId) => countryId > 0))
-  );
-  const accommodationGroups = await Promise.all(
-    countryIds.map(async (countryId) => {
-      const accommodations = await getCountryAccommodations(countryId, signal);
-
-      return accommodations.map((accommodation) => [
-        accommodation.accommodationId,
-        accommodation.name,
-      ] as const);
-    })
-  );
-
-  if (signal?.aborted) return packages;
-
   const accommodationNameMap = new Map(accommodationGroups.flat());
 
   return packages.map((item) => ({

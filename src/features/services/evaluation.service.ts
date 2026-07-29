@@ -24,7 +24,8 @@ const toEvaluationFormQuestion = (
 
 export const getDiagnosisQuestions = async (
   countryId: string | number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  headers?: HeadersInit
 ): Promise<EvaluationFormQuestion[]> => {
   const numericCountryId = Number(countryId);
 
@@ -43,6 +44,7 @@ export const getDiagnosisQuestions = async (
     },
     cache: "no-store",
     signal,
+    headers,
     suppressGlobalError: true,
 
     // 제거해야 합니다.

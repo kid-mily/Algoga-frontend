@@ -6,6 +6,7 @@ import NoticeSection from "@/features/main/notice/components/NoticeSection";
 import {
   createOrganizationJsonLd,
   createWebSiteJsonLd,
+  serializeJsonLd,
 } from "@/features/seo/schema";
 
 const LoadingBox = ({ height }: { height: string }) => (
@@ -27,16 +28,18 @@ const LearnMethod = dynamic(
 );
 
 export default async function Home() {
-  const jsonLd = [createOrganizationJsonLd(), createWebSiteJsonLd()];
+  const jsonLd = [createOrganizationJsonLd(), createWebSiteJsonLd()].filter(Boolean);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd),
-        }}
-      />
+      {jsonLd.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: serializeJsonLd(jsonLd),
+          }}
+        />
+      )}
 
       <main className="relative min-h-screen overflow-x-hidden bg-[#F3F8FC] px-4 pb-6 pt-4 sm:px-6 lg:px-8">
         <h1 className="sr-only">알고가 메인 페이지</h1>

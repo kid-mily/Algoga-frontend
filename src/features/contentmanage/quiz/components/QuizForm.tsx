@@ -1,7 +1,8 @@
 "use client";
 
 import AdminErrorBanner from "@/features/common/components/AdminErrorBanner";
-import { FormEvent, useEffect, useState } from "react";
+import CharCounter from "@/features/common/components/CharCounter";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import CompleteModal from "@/features/common/components/CompleteModal";
 import Modal from "@/features/common/components/Modal";
@@ -9,6 +10,10 @@ import { getLectureListAction } from "@/features/contentmanage/lecture/actions";
 import { AdminCourse } from "@/features/contentmanage/lecture/types";
 import { createQuizAction, updateQuizAction } from "../actions";
 import { QuizFormProps } from "../types";
+
+const QUIZ_QUESTION_MAX_LENGTH = 500;
+const QUIZ_OPTION_MAX_LENGTH = 200;
+const QUIZ_EXPLANATION_MAX_LENGTH = 1000;
 
 const emptyQuiz = {
   courseId: 0,
@@ -21,6 +26,8 @@ const emptyQuiz = {
   explanation: "",
 };
 
+const createEmptyOptionErrors = () => ["", "", "", ""];
+
 export default function QuizForm({
   mode = "create",
   initialQuiz = emptyQuiz,
@@ -29,7 +36,9 @@ export default function QuizForm({
   const router = useRouter();
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [courseId, setCourseId] = useState<number>(
-    initialQuiz.courseId ?? defaultCourseId ?? 0
+    mode === "create"
+      ? defaultCourseId ?? initialQuiz.courseId ?? 0
+      : initialQuiz.courseId ?? 0
   );
   const [question, setQuestion] = useState(initialQuiz.question);
   const [options, setOptions] = useState<string[]>([
@@ -42,10 +51,19 @@ export default function QuizForm({
   const [explanation, setExplanation] = useState(initialQuiz.explanation);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openCompleteModal, setOpenCompleteModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [optionErrors, setOptionErrors] = useState<string[]>(createEmptyOptionErrors);
+  const submitLockRef = useRef(false);
 
   const labels = ["A", "B", "C", "D"];
   const isCreateMode = mode === "create";
+
+  useEffect(() => {
+    if (isCreateMode && defaultCourseId) {
+      setCourseId(defaultCourseId);
+    }
+  }, [defaultCourseId, isCreateMode]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -73,9 +91,15 @@ export default function QuizForm({
     const updated = [...options];
     updated[index] = value;
     setOptions(updated);
+    setOptionErrors((prev) =>
+      prev.map((error, optionIndex) => (optionIndex === index ? "" : error))
+    );
   };
 
   const validateForm = () => {
+    const nextOptionErrors = createEmptyOptionErrors();
+    let hasOptionError = false;
+
     if (!courseId) {
       setErrorMessage("강의를 선택해주세요.");
       return false;
@@ -87,7 +111,37 @@ export default function QuizForm({
     }
 
     if (options.some((option) => !option.trim())) {
-      setErrorMessage("객관식 보기를 모두 입력해주세요.");
+      options.forEach((option, index) => {
+        if (!option.trim()) {
+          nextOptionErrors[index] = "보기를 입력해주세요.";
+          hasOptionError = true;
+        }
+      });
+      setOptionErrors(nextOptionErrors);
+      setErrorMessage("");
+      return false;
+    }
+
+    const optionCounts = options.reduce<Record<string, number[]>>(
+      (counts, option, index) => {
+        const key = option.trim();
+        counts[key] = [...(counts[key] ?? []), index];
+        return counts;
+      },
+      {}
+    );
+
+    Object.values(optionCounts).forEach((indexes) => {
+      if (indexes.length <= 1) return;
+      indexes.forEach((index) => {
+        nextOptionErrors[index] = "같은 보기는 중복해서 입력할 수 없습니다.";
+        hasOptionError = true;
+      });
+    });
+
+    if (hasOptionError) {
+      setOptionErrors(nextOptionErrors);
+      setErrorMessage("");
       return false;
     }
 
@@ -97,11 +151,15 @@ export default function QuizForm({
     }
 
     setErrorMessage("");
+    setOptionErrors(createEmptyOptionErrors());
     return true;
   };
 
   const submitQuiz = async () => {
+    if (submitLockRef.current) return;
     if (!validateForm()) return;
+    submitLockRef.current = true;
+    setIsSubmitting(true);
 
     const payload = {
       question: question.trim(),
@@ -128,6 +186,9 @@ export default function QuizForm({
       setOpenCompleteModal(true);
     } catch (error: unknown) {
       setErrorMessage(error instanceof Error ? error.message : "퀴즈 저장에 실패했습니다.");
+    } finally {
+      submitLockRef.current = false;
+      setIsSubmitting(false);
     }
   };
 
@@ -151,7 +212,7 @@ export default function QuizForm({
         {isCreateMode ? "퀴즈 등록 폼" : "퀴즈 수정 폼"}
       </h2>
 
-      <fieldset className="space-y-7">
+      <fieldset className="space-y-7" disabled={isSubmitting}>
         <legend className="sr-only">퀴즈 정보</legend>
 
         <div>
@@ -183,8 +244,12 @@ export default function QuizForm({
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             placeholder="퀴즈 문제를 입력하세요"
+            maxLength={QUIZ_QUESTION_MAX_LENGTH}
             className="mt-3 h-[120px] w-full resize-none rounded-[14px] border border-[#E4E7EC] p-4 text-[15px] outline-none"
           />
+          <div className="mt-1 flex justify-end">
+            <CharCounter length={question.length} maxLength={QUIZ_QUESTION_MAX_LENGTH} />
+          </div>
         </div>
 
         <fieldset>
@@ -212,14 +277,40 @@ export default function QuizForm({
                   <label htmlFor={`quiz-option-${optionNumber}`} className="sr-only">
                     {optionNumber}번 보기
                   </label>
-                  <input
-                    id={`quiz-option-${optionNumber}`}
-                    type="text"
-                    value={option}
-                    onChange={(event) => handleOptionChange(index, event.target.value)}
-                    placeholder={`${optionNumber}번 보기`}
-                    className="h-[48px] flex-1 rounded-[14px] border border-[#E4E7EC] px-4 text-[15px] outline-none"
-                  />
+                  <div className="flex-1">
+                    <input
+                      id={`quiz-option-${optionNumber}`}
+                      type="text"
+                      value={option}
+                      onChange={(event) => handleOptionChange(index, event.target.value)}
+                      placeholder={`${optionNumber}번 보기`}
+                      maxLength={QUIZ_OPTION_MAX_LENGTH}
+                      aria-invalid={Boolean(optionErrors[index])}
+                      aria-describedby={
+                        optionErrors[index]
+                          ? `quiz-option-${optionNumber}-error`
+                          : undefined
+                      }
+                      className={`h-[48px] w-full rounded-[14px] border px-4 text-[15px] outline-none ${
+                        optionErrors[index]
+                          ? "border-[#DC2626] bg-[#FEF2F2]"
+                          : "border-[#E4E7EC]"
+                      }`}
+                    />
+                    <div className="mt-1 flex items-center justify-between">
+                      {optionErrors[index] ? (
+                        <p
+                          id={`quiz-option-${optionNumber}-error`}
+                          className="text-[13px] font-medium text-[#DC2626]"
+                        >
+                          {optionErrors[index]}
+                        </p>
+                      ) : (
+                        <span />
+                      )}
+                      <CharCounter length={option.length} maxLength={QUIZ_OPTION_MAX_LENGTH} />
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -238,8 +329,12 @@ export default function QuizForm({
             value={explanation}
             onChange={(event) => setExplanation(event.target.value)}
             placeholder="정답 힌트나 해설을 입력하세요"
+            maxLength={QUIZ_EXPLANATION_MAX_LENGTH}
             className="mt-3 h-[100px] w-full resize-none rounded-[14px] border border-[#E4E7EC] p-4 text-[15px] outline-none"
           />
+          <div className="mt-1 flex justify-end">
+            <CharCounter length={explanation.length} maxLength={QUIZ_EXPLANATION_MAX_LENGTH} />
+          </div>
         </div>
       </fieldset>
 
@@ -248,9 +343,10 @@ export default function QuizForm({
       <footer className="mt-8 flex items-center justify-end border-t border-[#E4E7EC] pt-6">
         <button
           type="submit"
-          className="h-[44px] rounded-[14px] bg-[#439A97] px-5 text-[14px] font-semibold text-white"
+          disabled={isSubmitting}
+          className="h-[44px] rounded-[14px] bg-[#439A97] px-5 text-[14px] font-semibold text-white disabled:bg-[#CFE5E4]"
         >
-          {isCreateMode ? "등록하기" : "수정하기"}
+          {isSubmitting ? "저장 중..." : isCreateMode ? "등록하기" : "수정하기"}
         </button>
       </footer>
 
@@ -260,6 +356,7 @@ export default function QuizForm({
         description="퀴즈를 수정하시겠습니까?"
         confirmText="수정"
         cancelText="취소"
+        confirmDisabled={isSubmitting}
         onConfirm={() => {
           setOpenEditModal(false);
           void submitQuiz();

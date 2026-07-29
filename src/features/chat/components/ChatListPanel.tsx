@@ -1,5 +1,6 @@
 ﻿// 채팅방 내부 화면, 메시지 조회/전송/읽음/맴버 관리
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { Plus, X } from "lucide-react";
 import ChatCreateMenu from "./ChatCreateMenu";
 import type { ChatRoom } from "../types";
@@ -8,6 +9,7 @@ type ChatListPanelProps = {
   rooms: ChatRoom[];
   isLoading?: boolean;
   errorMessage?: string;
+  isLoginRequired?: boolean;
   onClose: () => void;
   onSelectRoom: (room: ChatRoom) => void;
   onStartDirectChat: () => void;
@@ -35,10 +37,12 @@ const ChatRoomAvatar = ({ room }: { room: ChatRoom }) => {
 
   if (shouldShowProfileImage) {
     return (
-      <img
+      <Image
         src={room.profileImageUrl ?? ""}
         alt=""
         aria-hidden="true"
+        width={48}
+        height={48}
         className="h-12 w-12 shrink-0 rounded-full border border-[#E4E7EC] object-cover"
       />
     );
@@ -55,6 +59,7 @@ export default function ChatListPanel({
   rooms,
   isLoading,
   errorMessage,
+  isLoginRequired,
   onClose,
   onSelectRoom,
   onStartDirectChat,
@@ -98,11 +103,9 @@ export default function ChatListPanel({
   };
 
   const handleLeaveRoom = (room: ChatRoom) => {
-  // console.log("채팅방 나가기 클릭됨", room.roomId);
-  setMenuRoomId(null);
-  onLeaveRoom(room);
-};
-  
+    setMenuRoomId(null);
+    onLeaveRoom(room);
+  };
 
   return (
     <aside className="relative h-[540px] w-[360px] max-w-[calc(100vw-32px)] overflow-visible rounded-3xl bg-white shadow-2xl" aria-label="채팅 목록">
@@ -156,6 +159,12 @@ export default function ChatListPanel({
         {isLoading ? (
           <div className="flex h-full items-center justify-center text-[14px] text-gray-400" role="status" aria-live="polite">
             채팅방을 불러오는 중입니다...
+          </div>
+        ) : isLoginRequired ? (
+          <div className="flex h-full items-center justify-center px-6 text-center text-[14px] font-medium text-[#344054]" role="status">
+            로그인이 필요한 서비스입니다.
+            <br />
+            로그인 후 다시 이용해 주세요.
           </div>
         ) : errorMessage ? (
           <div className="flex h-full items-center justify-center px-6 text-center text-[14px] text-red-500" role="alert">

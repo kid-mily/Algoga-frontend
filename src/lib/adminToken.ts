@@ -47,15 +47,6 @@ export const getAdminRoleCandidates = (payload: AdminTokenPayload | null) => {
   ].filter(Boolean) as string[];
 };
 
-export const hasAdminRole = (
-  payload: AdminTokenPayload | null,
-  roles: string[]
-) => {
-  return getAdminRoleCandidates(payload).some((candidate) =>
-    roles.includes(candidate)
-  );
-};
-
 export const getCurrentAdminPayload = () => {
   if (typeof window === "undefined") return null;
 
@@ -81,7 +72,7 @@ export const getAdminRedirectPathByRole = (role: string) => {
     return "/moneyadmin/payments";
   }
   if (role === "STATISTICS_MANAGER") {
-    return "/statisticadmin/reservation-conversion";
+    return "/statisticadmin/finance-status";
   }
   return "/contentadmin/lecture";
 };

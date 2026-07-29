@@ -1,4 +1,5 @@
 import { adminApi, ApiResult, unwrapData } from "@/lib/api";
+import { notifySessionExpired } from "@/lib/sessionExpiration";
 import {
   AdminPayment,
   AdminPaymentApiRecord,
@@ -220,6 +221,10 @@ export const downloadAdminPaymentsExcel = async ({
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        notifySessionExpired("/auth/adminlogin");
+      }
+
       const errorData = await response.json().catch(() => null);
       throw new Error(
         errorData?.message || "결제 내역 엑셀 다운로드에 실패했습니다."

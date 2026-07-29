@@ -1,7 +1,7 @@
 import { SignupRequest, SocialSignupRequest } from "@/features/auth/types";
 import { api, ApiResult, unwrapData } from "@/lib/api";
 
-type UsernameCheckResponse = {
+type DuplicateCheckResponse = {
   available?: boolean;
   duplicated?: boolean;
   isDuplicate?: boolean;
@@ -9,11 +9,18 @@ type UsernameCheckResponse = {
 };
 
 export const signup = async (data: SignupRequest) => {
-  return api.post("/api/v1/auth/signup", data);
+  // 회원가입 실패(중복/미인증 등)는 전역 에러 모달이 아니라 폼에서 필드별로 처리한다.
+  return api.post("/api/v1/auth/signup", data, {
+    skipAuth: true,
+    suppressGlobalError: true,
+  });
 };
 
 export const socialSignup = async (data: SocialSignupRequest) => {
-  return api.post("/api/v1/auth/social/signup", data, { skipAuth: true });
+  return api.post("/api/v1/auth/social/signup", data, {
+    skipAuth: true,
+    suppressGlobalError: true,
+  });
 };
 
 export const sendSignupEmailCode = async (
@@ -23,7 +30,7 @@ export const sendSignupEmailCode = async (
   const response = await api.post<ApiResult<string>>(
     "/api/v1/auth/email/send-code",
     { email },
-    { skipAuth: true, signal }
+    { skipAuth: true, suppressGlobalError: true, signal }
   );
 
   return unwrapData(response);
@@ -33,7 +40,7 @@ export const verifySignupEmailCode = async (email: string, code: string) => {
   const response = await api.post<ApiResult<string>>(
     "/api/v1/auth/email/verify-code",
     { email, code },
-    { skipAuth: true }
+    { skipAuth: true, suppressGlobalError: true }
   );
 
   return unwrapData(response);
@@ -43,7 +50,7 @@ export const checkUsernameDuplicate = async (
   username: string,
   signal?: AbortSignal
 ): Promise<boolean> => {
-  const response = await api.get<ApiResult<boolean | UsernameCheckResponse>>(
+  const response = await api.get<ApiResult<boolean | DuplicateCheckResponse>>(
     "/api/v1/auth/username/check",
     {
       params: { username },
@@ -79,4 +86,44 @@ export const checkUsernameDuplicate = async (
   }
 
   throw new Error("아이디 중복 확인 응답 형식이 올바르지 않습니다.");
+};
+
+// 전화번호 실시간 중복확인. 아이디 체크와 동일 규격 (data: true=사용 가능).
+// 하이픈 포함 형식(010-1234-5678) 그대로 전송한다.
+export const checkPhoneDuplicate = async (
+  phone: string,
+  signal?: AbortSignal
+): Promise<boolean> => {
+  const response = await api.get<ApiResult<boolean | DuplicateCheckResponse>>(
+    "/api/v1/auth/phone/check",
+    {
+      params: { phone },
+      skipAuth: true,
+      signal,
+    }
+  );
+
+  const result = unwrapData(response);
+
+  if (typeof result === "boolean") {
+    return result;
+  }
+
+  if (!result || typeof result !== "object") {
+    throw new Error("전화번호 중복 확인 응답 형식이 올바르지 않습니다.");
+  }
+
+  if (result.available !== undefined) {
+    return result.available;
+  }
+
+  if (result.duplicated !== undefined) {
+    return !result.duplicated;
+  }
+
+  if (result.isDuplicate !== undefined) {
+    return !result.isDuplicate;
+  }
+
+  throw new Error("전화번호 중복 확인 응답 형식이 올바르지 않습니다.");
 };

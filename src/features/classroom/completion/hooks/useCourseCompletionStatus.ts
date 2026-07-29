@@ -9,12 +9,14 @@ import {
 export function useCourseCompletionStatus(courseId: string) {
   const [isCompleted, setIsCompleted] = useState(false);
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [reviewWritten, setReviewWritten] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const checkCompletion = useCallback(async () => {
     if (!courseId) {
       setIsCompleted(false);
       setQuizSubmitted(false);
+      setReviewWritten(false);
       setIsLoading(false);
       return;
     }
@@ -29,11 +31,13 @@ export function useCourseCompletionStatus(courseId: string) {
       );
 
       setQuizSubmitted(currentCourse?.quizSubmitted === true);
+      setReviewWritten(currentCourse?.reviewWritten === true);
       setIsCompleted(isMyCourseCompleted(currentCourse));
     } catch (error) {
       console.error("[course-completion] 이수 상태 조회 실패:", error);
 
       setQuizSubmitted(false);
+      setReviewWritten(false);
       setIsCompleted(false);
     } finally {
       setIsLoading(false);
@@ -63,6 +67,7 @@ export function useCourseCompletionStatus(courseId: string) {
   return {
     isCompleted,
     quizSubmitted,
+    reviewWritten,
     isLoading,
     refresh: checkCompletion,
   };

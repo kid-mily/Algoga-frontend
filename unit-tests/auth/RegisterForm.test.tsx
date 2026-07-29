@@ -3,13 +3,16 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import RegisterInfoForm from "@/features/auth/components/RegisterInfoForm";
 import type { RegisterFormData } from "@/features/auth/types";
+import { ApiRequestError } from "@/lib/api";
 import {
+  checkPhoneDuplicate,
   checkUsernameDuplicate,
   sendSignupEmailCode,
   verifySignupEmailCode,
 } from "@/features/services/signup.service";
 
 jest.mock("@/features/services/signup.service", () => ({
+  checkPhoneDuplicate: jest.fn(),
   checkUsernameDuplicate: jest.fn(),
   sendSignupEmailCode: jest.fn(),
   verifySignupEmailCode: jest.fn(),
@@ -71,7 +74,7 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
     );
 
     expect(screen.getByPlaceholderText("홍길동")).toBeVisible();
-    expect(screen.getByPlaceholderText("4자 이상 20자 이하")).toBeVisible();
+    expect(screen.getByPlaceholderText("영문·숫자 4~20자")).toBeVisible();
     expect(screen.getByPlaceholderText("8자 이상 영문, 숫자 조합")).toBeVisible();
     expect(screen.getByPlaceholderText("example@algoga.com")).toBeVisible();
     expect(screen.getByRole("button", { name: "다음 단계로 이동" })).toBeVisible();
@@ -91,7 +94,11 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
     await user.click(screen.getByRole("button", { name: "다음 단계로 이동" }));
 
     expect(screen.getByText("이름은 필수입니다.")).toBeVisible();
-    expect(screen.getByText("아이디는 4자 이상 20자 이하로 입력해주세요.")).toBeVisible();
+    expect(
+      screen.getByText(
+        "아이디는 영문과 숫자만 사용하여 4자 이상 20자 이하로 입력해주세요."
+      )
+    ).toBeVisible();
     expect(screen.getByText("비밀번호는 영문, 숫자 조합 8자 이상이어야 합니다.")).toBeVisible();
     expect(screen.getByText("올바른 이메일 형식을 입력해주세요.")).toBeVisible();
     expect(screen.getByText("올바른 전화번호 형식을 입력해주세요. (예: 010-1234-5678)")).toBeVisible();
@@ -225,7 +232,11 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
 
     await user.click(screen.getByRole("button", { name: "중복 확인: 사용자 이름 검사" }));
 
-    expect(screen.getByText("아이디는 4자 이상 20자 이하로 입력해주세요.")).toBeVisible();
+    expect(
+      screen.getByText(
+        "아이디는 영문과 숫자만 사용하여 4자 이상 20자 이하로 입력해주세요."
+      )
+    ).toBeVisible();
     expect(checkUsernameDuplicate).not.toHaveBeenCalled();
   });
 
@@ -244,7 +255,7 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
       />
     );
 
-    await user.type(screen.getByPlaceholderText("4자 이상 20자 이하"), "a");
+    await user.type(screen.getByPlaceholderText("영문·숫자 4~20자"), "a");
 
     expect(onChange).toHaveBeenCalledWith("username", "a");
     expect(setServerError).toHaveBeenCalledWith({ field: "", message: "" });
@@ -325,7 +336,14 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
     const user = userEvent.setup();
 
     (sendSignupEmailCode as jest.Mock).mockRejectedValueOnce(
-      new Error("이미 가입된 이메일입니다.")
+      new ApiRequestError({
+        message: "이미 사용 중인 이메일입니다.",
+        status: 409,
+        body: {
+          errorCode: "AUTH_001",
+          message: "이미 사용 중인 이메일입니다.",
+        },
+      })
     );
 
     render(
@@ -338,7 +356,38 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
 
     await user.click(screen.getByRole("button", { name: "인증: 이메일 인증번호 발송" }));
 
-    expect(await screen.findByText("이미 가입된 이메일입니다.")).toBeVisible();
+    expect(await screen.findByText("이미 사용 중인 이메일입니다.")).toBeVisible();
+  });
+
+  test("최근 탈퇴한 이메일이면 서버의 재가입 제한 문구를 그대로 보여준다", async () => {
+    const user = userEvent.setup();
+
+    (sendSignupEmailCode as jest.Mock).mockRejectedValueOnce(
+      new ApiRequestError({
+        message: "최근 탈퇴한 이메일입니다. 탈퇴 후 30일이 지나야 재가입할 수 있습니다.",
+        status: 409,
+        body: {
+          errorCode: "AUTH_019",
+          message: "최근 탈퇴한 이메일입니다. 탈퇴 후 30일이 지나야 재가입할 수 있습니다.",
+        },
+      })
+    );
+
+    render(
+      <RegisterInfoForm
+        formData={createFormData({ email: "withdrawn@example.com" })}
+        onChange={jest.fn()}
+        onNext={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "인증: 이메일 인증번호 발송" }));
+
+    expect(
+      await screen.findByText(
+        "최근 탈퇴한 이메일입니다. 탈퇴 후 30일이 지나야 재가입할 수 있습니다."
+      )
+    ).toBeVisible();
   });
 
   test("이메일 인증번호 발송이 실패하면 실패 메시지가 보인다", async () => {
@@ -476,6 +525,7 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
     const onNext = jest.fn();
 
     (checkUsernameDuplicate as jest.Mock).mockResolvedValueOnce(true);
+    (checkPhoneDuplicate as jest.Mock).mockResolvedValueOnce(true);
     (sendSignupEmailCode as jest.Mock).mockResolvedValueOnce(undefined);
     (verifySignupEmailCode as jest.Mock).mockResolvedValueOnce(undefined);
 
@@ -504,6 +554,9 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
     await user.click(screen.getByRole("button", { name: "확인: 이메일 인증번호 확인" }));
     expect(await screen.findByText("이메일 인증이 완료되었습니다.")).toBeVisible();
 
+    await user.click(screen.getByRole("button", { name: "중복 확인: 전화번호 검사" }));
+    expect(await screen.findByText("사용 가능한 전화번호입니다.")).toBeVisible();
+
     await user.click(screen.getByRole("button", { name: "다음 단계로 이동" }));
 
     expect(onNext).toHaveBeenCalledTimes(1);
@@ -512,6 +565,8 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
   test("소셜 회원가입은 아이디와 비밀번호 없이 다음 단계로 이동할 수 있다", async () => {
     const user = userEvent.setup();
     const onNext = jest.fn();
+
+    (checkPhoneDuplicate as jest.Mock).mockResolvedValueOnce(true);
 
     render(
       <RegisterInfoForm
@@ -529,6 +584,9 @@ describe("RegisterInfoForm 컴포넌트 테스트", () => {
         isSocialSignup
       />
     );
+
+    await user.click(screen.getByRole("button", { name: "중복 확인: 전화번호 검사" }));
+    expect(await screen.findByText("사용 가능한 전화번호입니다.")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "다음 단계로 이동" }));
 

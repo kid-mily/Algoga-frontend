@@ -2,22 +2,13 @@ import { adminApi, api, ApiResponse } from "@/lib/api";
 import type {
   AdminQnaBase,
   AdminQnaComment,
+  AdminQnaItem,
 } from "@/features/contentmanage/qna/types";
+import type { AdminPage, AdminPageParams } from "./adminPage.types";
 
 type CourseQnaApiResponse<T> = ApiResponse<T> | T;
 
 type RawRecord = Record<string, unknown>;
-
-interface CreateCourseQnaPayload {
-  title: string;
-  question?: string;
-  content?: string;
-}
-
-interface CreateCourseQnaCommentPayload {
-  content: string;
-  parentCommentId?: number | null;
-}
 
 interface CreateAdminCourseQnaAnswerPayload {
   answer: string;
@@ -181,6 +172,11 @@ const normalizeQna = (
   };
 };
 
+// 관리자 QnA 화면은 전체 강의의 QnA를 합쳐 보여주고 클라이언트에서 페이징한다.
+// 백엔드가 페이징 기본값(size=10)을 넣으면서 강의별로 10개만 내려오면 합친 목록이
+// 잘리므로, 강의당 전체를 받기 위해 size를 크게 명시한다.
+const QNA_AGGREGATE_PAGE_SIZE = 1000;
+
 export const getCourseQnas = async (
   courseId: string | number
 ): Promise<AdminQnaBase[]> => {
@@ -189,6 +185,7 @@ export const getCourseQnas = async (
     {
       cache: "no-store",
       suppressGlobalError: true,
+      params: { size: QNA_AGGREGATE_PAGE_SIZE },
     }
   );
 
@@ -197,24 +194,6 @@ export const getCourseQnas = async (
   return unwrapList(data).map((item, index) =>
     normalizeQna(item, index + 1)
   );
-};
-
-export const createCourseQna = async (
-  courseId: string | number,
-  payload: CreateCourseQnaPayload
-): Promise<unknown> => {
-  const response = await api.post<CourseQnaApiResponse<unknown>>(
-    `/api/v1/courses/${courseId}/qnas`,
-    {
-      title: payload.title,
-      question: payload.question ?? payload.content ?? "",
-    },
-    {
-      suppressGlobalError: true,
-    }
-  );
-
-  return unwrapData(response);
 };
 
 export const getCourseQna = async (
@@ -234,25 +213,6 @@ export const getCourseQna = async (
   return normalizeQna(data, Number(qnaId));
 };
 
-export const createCourseQnaComment = async (
-  courseId: string | number,
-  qnaId: string | number,
-  payload: CreateCourseQnaCommentPayload
-): Promise<unknown> => {
-  const response = await api.post<CourseQnaApiResponse<unknown>>(
-    `/api/v1/courses/${courseId}/qnas/${qnaId}/comments`,
-    {
-      content: payload.content,
-      parentCommentId: payload.parentCommentId ?? null,
-    },
-    {
-      suppressGlobalError: true,
-    }
-  );
-
-  return unwrapData(response);
-};
-
 export const createAdminCourseQnaAnswer = async (
   courseId: string | number,
   qnaId: string | number,
@@ -267,4 +227,27 @@ export const createAdminCourseQnaAnswer = async (
   );
 
   return unwrapData(response);
+};
+
+export const getAdminCourseQnaPage = async (
+  params: AdminPageParams & { answered?: boolean } = {}
+): Promise<AdminPage<AdminQnaItem>> => {
+  const response = await adminApi.get<ApiResponse<AdminPage<unknown>>>(
+    "/api/v1/admin/course-qnas",
+    { params, suppressGlobalError: true }
+  );
+  const page = response.data;
+
+  return {
+    ...page,
+    content: (page.content ?? []).map((item, index) => {
+      const record = isRecord(item) ? item : {};
+
+      return {
+        ...normalizeQna(item, index + 1),
+        courseId: numberOf(record, ["courseId", "course_id"]),
+        lecture: stringOf(record, ["courseTitle", "courseName"], "강의명 없음"),
+      };
+    }),
+  };
 };

@@ -12,15 +12,31 @@ export interface FlightInfo {
 export interface PackageApiItem {
   packageId: number;
   countryId: number;
+  countryName: string | null;
   accommodationId: number;
+  accommodationName: string | null;
+  // 2026-07-23 백엔드 추가 — 숙소 정보를 별도로 GET /accommodations/{id} 조회할 필요 없이
+  // 패키지 응답 하나로 다 받는다
+  accommodationAddress: string | null;
+  accommodationImageUrl: string | null;
+  // 2026-07-24 백엔드 추가 완료 확인(GET /packages, /countries/{id}/packages, /packages/{id} 전부) — 관리자가 입력한 숙소 설명
+  accommodationDescription?: string | null;
   name: string;
-  description: string;
-  imageUrl: string;
+  description: string | null;
+  imageUrl: string | null;
   price: number;
   checkInDate: string;
   checkOutDate: string;
+  nights: number;
   flightInfo: FlightInfo | null;
+  returnFlightInfo: FlightInfo | null;
   flightPrice: number;
+  // 숙소 1박 요금 / 숙소 총액
+  pricePerNight: number;
+  accommodationPrice: number;
+  totalPrice: number;
+  depositPrice: number;
+  balancePrice: number;
 }
 
 export interface AccommodationResponse {
@@ -32,11 +48,6 @@ export interface AccommodationResponse {
   pricePerNight: number;
   nights: number;
   description: string;
-}
-
-export interface PackageLoungeDetail {
-  packageItem: PackageApiItem;
-  accommodation: AccommodationResponse;
 }
 
 export interface PackageSelection {
@@ -58,4 +69,139 @@ export interface PaymentBreakdown {
   depositAmount: number;
   balanceAmount: number;
   initialPaymentAmount: number;
+}
+
+// 예약 생성(POST /bookings) 요청에 실어 보내는 탑승객 정보
+// gender/nationality는 2026-07-22 백엔드 추가 필드 — 이 필드 추가 전 생성된 예약은 조회 시 없거나 null일 수 있음
+export interface PassengerInfo {
+  lastName: string;
+  firstName: string;
+  gender?: string | null;
+  birthDate: string;
+  nationality?: string | null;
+  passportNumber: string;
+  passportExpiry: string;
+}
+
+// LOUNGE: 패키지 라운지에서 직접 예약 / COMPLETION: 완강 후 마이페이지에서 예약
+export type BookingSource = "LOUNGE" | "COMPLETION";
+
+export interface CreateBookingRequest {
+  accommodationId: number;
+  packageId?: number;
+  courseId?: number;
+  flightInfo: FlightInfo | null;
+  returnFlightInfo: FlightInfo | null;
+  passengerInfo: PassengerInfo;
+  flightPrice: number;
+  checkInDate: string;
+  checkOutDate: string;
+  bookingSource: BookingSource;
+}
+
+// GET /bookings/{bookingId} 응답 (flightInfo/returnFlightInfo/passengerInfo는
+// 서버가 JSON 문자열로 내려줘서 package.service.ts에서 파싱한 뒤 이 타입으로 내려준다)
+export interface BookingDetail {
+  bookingId: number;
+  accommodationId: number;
+  // 2026-07-22 응답에 추가된 필드 — 패키지 경유 예약이 아니면 둘 다 null일 수 있음
+  packageId: number | null;
+  packageName: string | null;
+  userId: number;
+  status: string;
+  totalPrice: number;
+  depositPrice: number;
+  balancePrice: number;
+  bookingNumber: string;
+  flightInfo: FlightInfo | null;
+  returnFlightInfo: FlightInfo | null;
+  passengerInfo: PassengerInfo | null;
+  checkInDate: string;
+  checkOutDate: string;
+  nights: number;
+  installmentAllowed: boolean;
+  createdAt: string;
+}
+
+// FULL: 일시불 / DEPOSIT: 예약금 / LECTURE_ONLY: 강의 단독 결제(패키지 예약과는 무관)
+export type PaymentType = "FULL" | "DEPOSIT" | "BALANCE" | "LECTURE_ONLY";
+
+export interface CreatePaymentRequest {
+  bookingId: number;
+  paymentType: PaymentType;
+  amount: number;
+  usedMileage: number;
+  usedCouponId: number | null;
+  portonePaymentId: string;
+}
+
+// POST /payments/bundle 요청 - PortOne 결제 1회로 예약(패키지) + 강의를 함께 결제한다.
+// 쿠폰/마일리지는 패키지분에만 적용되고 강의는 항상 정가 전액으로 청구된다 (백엔드가 내부적으로 나눔)
+export interface CreateBundlePaymentRequest {
+  bookingId: number;
+  courseIds: number[];
+  paymentType: "DEPOSIT" | "FULL";
+  amount: number;
+  usedMileage: number;
+  usedCouponId: number | null;
+  portonePaymentId: string;
+}
+
+export interface BundlePaymentResponse {
+  bookingPaymentId: number;
+  lecturePaymentIds: number[];
+  bookingAmount: number;
+  lectureAmount: number;
+  totalAmount: number;
+}
+
+// GET /payments/bundle/preview 요청 - 통합 결제창을 띄우기 전에 결제 가능 여부와
+// 서버가 계산한 정확한 금액(expectedTotal)을 미리 확인한다 (2026-07-20 PR #584)
+export interface BundlePaymentPreviewParams {
+  bookingId: number;
+  courseIds?: number[];
+  paymentType: "DEPOSIT" | "BALANCE" | "FULL";
+  usedMileage?: number;
+  usedCouponId?: number | null;
+}
+
+export type BundlePaymentBlockReason =
+  | "DUPLICATE_PAYMENT"
+  | "INSTALLMENT_NOT_ALLOWED"
+  | "INVALID_PAYMENT_TYPE"
+  | "BOOKING_NOT_FOUND"
+  | "COURSE_NOT_FOUND"
+  | "COUPON_INVALID"
+  | "INSUFFICIENT_MILEAGE"
+  | "INVALID_PAYMENT_AMOUNT"
+  // 2026-07-22 백엔드 추가 — 출발일이 지난 예약은 preview 단계에서 이 사유로 차단됨
+  | "DEPARTURE_DATE_PASSED";
+
+export interface BundlePaymentPreview {
+  payable: boolean;
+  blockReason: BundlePaymentBlockReason | null;
+  blockMessage: string | null;
+  alreadyPaidCourseIds: number[];
+  packageAmount: number;
+  lectureAmount: number;
+  expectedTotal: number;
+}
+
+// GET /payments/{paymentId} 응답 - 예약 결제와 강의 단독 결제가 같은 엔드포인트를 공유해서
+// bookingId/courseId 둘 다 optional이다 (예약 결제면 courseId가 null, 강의 결제면 bookingId가 null)
+export interface PaymentDetail {
+  paymentId: number;
+  bookingId: number | null;
+  courseId: number | null;
+  userId: number;
+  paymentType: string;
+  amount: number;
+  usedMileage: number;
+  usedCouponId: number | null;
+  status: string;
+  portonePaymentId: string;
+  createdAt: string;
+  userName: string | null;
+  productName: string | null;
+  paymentMethod: string;
 }

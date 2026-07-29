@@ -1,124 +1,70 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getLectureListAction } from "@/features/contentmanage/lecture/actions";
 import { AdminCourse } from "@/features/contentmanage/lecture/types";
-import { getQuizListAction } from "../actions";
+import { getAdminQuizPage } from "@/features/services/adminQuiz.service";
 import { AdminQuizWithLecture } from "../types";
 
-const getErrorMessage = (error: unknown, fallback: string) => {
-  return error instanceof Error ? error.message || fallback : fallback;
-};
+const PAGE_SIZE = 10;
+
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message || fallback : fallback;
 
 export function useAdminQuizList(initialCourseId = "all") {
-  const [selectedLecture, setSelectedLecture] = useState(
-    initialCourseId || "all"
-  );
-  const [searchKeyword, setSearchKeyword] = useState("");
+  const [selectedLecture, setSelectedLectureState] = useState(initialCourseId || "all");
+  const [searchKeyword, setSearchKeywordState] = useState("");
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [quizzes, setQuizzes] = useState<AdminQuizWithLecture[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const fetchQuizzesByCourses = async (
-    courseList: AdminCourse[],
-    selectedValue: string
-  ) => {
-    if (courseList.length === 0) {
-      setQuizzes([]);
-      return;
-    }
+  useEffect(() => {
+    void getLectureListAction()
+      .then((data) => setCourses(Array.isArray(data) ? data : []))
+      .catch(() => setCourses([]));
+  }, []);
 
-    if (selectedValue === "all") {
-      const quizGroups = await Promise.all(
-        courseList.map(async (course) => {
-          try {
-            const quizList = await getQuizListAction(course.courseId);
-            return quizList.map((quiz) => ({
-              ...quiz,
-              lectureTitle: course.title,
-            }));
-          } catch {
-            return [];
-          }
-        })
-      );
-
-      setQuizzes(quizGroups.flat());
-      return;
-    }
-
-    const courseId = Number(selectedValue);
-    if (!courseId) {
-      setQuizzes([]);
-      return;
-    }
-
-    const selectedCourse = courseList.find(
-      (course) => course.courseId === courseId
-    );
-    const quizList = await getQuizListAction(courseId);
-
-    setQuizzes(
-      quizList.map((quiz) => ({
-        ...quiz,
-        lectureTitle: selectedCourse?.title,
-      }))
-    );
-  };
-
-  const fetchPageData = async () => {
+  const fetchQuizzes = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage("");
+      const data = await getAdminQuizPage({
+        page: currentPage - 1,
+        size: PAGE_SIZE,
+        courseId:
+          selectedLecture === "all" ? undefined : Number(selectedLecture),
+        keyword: searchKeyword.trim() || undefined,
+      });
 
-      const courseList = await getLectureListAction();
-      const safeCourseList = Array.isArray(courseList) ? courseList : [];
-
-      setCourses(safeCourseList);
-      await fetchQuizzesByCourses(safeCourseList, selectedLecture);
+      setQuizzes(data.content);
+      setTotalPages(Math.max(data.totalPages, 1));
+      setTotalElements(data.totalElements);
     } catch (error: unknown) {
       setErrorMessage(getErrorMessage(error, "퀴즈 목록을 불러오지 못했습니다."));
-      setCourses([]);
       setQuizzes([]);
     } finally {
       setIsLoading(false);
     }
+  }, [currentPage, searchKeyword, selectedLecture]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void fetchQuizzes(), 250);
+    return () => window.clearTimeout(timer);
+  }, [fetchQuizzes]);
+
+  const setSelectedLecture = (value: string) => {
+    setSelectedLectureState(value);
+    setCurrentPage(1);
   };
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchPageData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (courses.length === 0) return;
-
-    const reloadQuizzes = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-        await fetchQuizzesByCourses(courses, selectedLecture);
-      } catch (error: unknown) {
-        setErrorMessage(getErrorMessage(error, "퀴즈 목록을 불러오지 못했습니다."));
-        setQuizzes([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void reloadQuizzes();
-  }, [selectedLecture, courses]);
-
-  const filteredQuizzes = useMemo(() => {
-    const keyword = searchKeyword.trim().toLowerCase();
-    if (!keyword) return quizzes;
-
-    return quizzes.filter((quiz) =>
-      quiz.question?.toLowerCase().includes(keyword)
-    );
-  }, [quizzes, searchKeyword]);
+  const setSearchKeyword = (value: string) => {
+    setSearchKeywordState(value);
+    setCurrentPage(1);
+  };
 
   return {
     selectedLecture,
@@ -126,9 +72,13 @@ export function useAdminQuizList(initialCourseId = "all") {
     searchKeyword,
     setSearchKeyword,
     courses,
-    filteredQuizzes,
+    filteredQuizzes: quizzes,
+    currentPage,
+    totalPages,
+    totalElements,
+    setCurrentPage,
     isLoading,
     errorMessage,
-    refetch: fetchPageData,
+    refetch: fetchQuizzes,
   };
 }

@@ -1,15 +1,3 @@
-export const setCookie = (
-  name: string,
-  value: string,
-  maxAge = 60 * 60 * 24 * 7
-) => {
-  const secure = window.location.protocol === "https:" ? "; Secure" : "";
-
-  document.cookie = `${name}=${encodeURIComponent(
-    value
-  )}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
-};
-
 export const getCookie = (name: string) => {
   const cookies = document.cookie.split("; ");
 

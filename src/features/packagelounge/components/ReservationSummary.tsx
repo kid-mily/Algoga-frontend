@@ -1,33 +1,109 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-
-import type { CourseItem } from "@/features/classroom/components/types";
-import type { AccommodationResponse, PackageApiItem } from "../types";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { CourseItem } from "@/features/classroom/components/types";
+import { createBooking } from "@/features/services/package.service";
+import { CreateBookingRequest, PackageApiItem } from "../types";
+import { getPassengerInfo } from "../utils/passengerStorage";
 import { calculatePayment, formatDateTime } from "../utils/payment";
+import PassengerForm from "./PassengerForm";
+import { ApiRequestError } from "@/lib/api";
 
 interface ReservationSummaryProps {
   packageItem: PackageApiItem;
-  accommodation: AccommodationResponse;
   course: CourseItem;
   continentCode: string;
 }
 
 export default function ReservationSummary({
   packageItem,
-  accommodation,
   course,
   continentCode,
 }: ReservationSummaryProps) {
+  const router = useRouter();
   const payment = calculatePayment({
     lecturePrice: course.price,
     packageItem,
-    accommodation,
   });
   const flight = packageItem.flightInfo;
+  // 항공편 조회에 실패(null)하면 예약 자체를 진행할 수 없다
+  const canBook = Boolean(packageItem.flightInfo && packageItem.returnFlightInfo);
   const backHref =
     `/packagelounge?countryId=${packageItem.countryId}` +
     `&courseId=${course.courseId}` +
     `&continentCode=${encodeURIComponent(continentCode)}`;
+
+  const [isPassengerValid, setIsPassengerValid] = useState(false);
+  const [validateSignal, setValidateSignal] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  // 2026-07-22 백엔드 확인 — 출발일이 지난 패키지는 예약 생성 자체가 서버에서 거절됨(BK_005)
+  const isDeparted = (() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(packageItem.checkInDate) < today;
+  })();
+
+  const handleSubmit = async () => {
+    if (!canBook || isSubmitting || isDeparted) return;
+
+    if (!isPassengerValid) {
+      setValidateSignal((prev) => prev + 1);
+      return;
+    }
+
+    const passenger = getPassengerInfo();
+    if (!passenger) {
+      setValidateSignal((prev) => prev + 1);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    try {
+      const payload: CreateBookingRequest = {
+        accommodationId: packageItem.accommodationId,
+        packageId: packageItem.packageId,
+        courseId: course.courseId,
+        flightInfo: packageItem.flightInfo,
+        returnFlightInfo: packageItem.returnFlightInfo,
+        passengerInfo: {
+          lastName: passenger.lastName,
+          firstName: passenger.firstName,
+          gender: passenger.gender,
+          birthDate: passenger.birthDate,
+          nationality: passenger.nationality,
+          passportNumber: passenger.passportNumber,
+          passportExpiry: passenger.expiryDate,
+        },
+        flightPrice: packageItem.flightPrice,
+        checkInDate: packageItem.checkInDate,
+        checkOutDate: packageItem.checkOutDate,
+        bookingSource: "LOUNGE",
+      };
+
+      const bookingId = await createBooking(payload);
+      router.push(`/packagelounge/booking/${bookingId}`);
+    } catch (error) {
+      console.error("[packagelounge] 예약 생성 실패:", error);
+
+      const errorCode =
+        error instanceof ApiRequestError
+          ? (error.body as { errorCode?: string } | null)?.errorCode
+          : undefined;
+
+      setSubmitError(
+        errorCode === "BK_005"
+          ? "출발일이 지나 예약할 수 없습니다."
+          : "예약 생성에 실패했습니다. 잠시 후 다시 시도해 주세요."
+      );
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#F6F8FB] px-4 py-10">
@@ -78,25 +154,31 @@ export default function ReservationSummary({
           </InformationCard>
 
           <InformationCard title="숙소 정보">
-            {accommodation.imageUrl && (
+            {packageItem.accommodationImageUrl && (
               <div className="relative mb-4 h-44 overflow-hidden rounded-xl">
                 <Image
-                  src={accommodation.imageUrl}
-                  alt={accommodation.name}
+                  src={packageItem.accommodationImageUrl}
+                  alt={packageItem.accommodationName ?? ""}
                   fill
                   sizes="760px"
                   className="object-cover"
                 />
               </div>
             )}
-            <DetailRow label="숙소명" value={accommodation.name} />
-            <DetailRow label="주소" value={accommodation.address} />
+            <DetailRow
+              label="숙소명"
+              value={packageItem.accommodationName ?? ""}
+            />
+            <DetailRow
+              label="주소"
+              value={packageItem.accommodationAddress ?? ""}
+            />
             <DetailRow label="체크인" value={packageItem.checkInDate} />
             <DetailRow label="체크아웃" value={packageItem.checkOutDate} />
-            <DetailRow label="숙박" value={`${accommodation.nights}박`} />
+            <DetailRow label="숙박" value={`${packageItem.nights}박`} />
             <DetailRow
               label="1박 가격"
-              value={`${accommodation.pricePerNight.toLocaleString()}원`}
+              value={`${packageItem.pricePerNight.toLocaleString()}원`}
             />
             <DetailRow
               label="숙소 총액"
@@ -135,6 +217,32 @@ export default function ReservationSummary({
           </InformationCard>
         </div>
 
+        <div className="mt-4">
+          <PassengerForm
+            returnDate={packageItem.checkOutDate}
+            onValidityChange={setIsPassengerValid}
+            validateSignal={validateSignal}
+          />
+        </div>
+
+        {!canBook && (
+          <p className="mt-4 text-center text-xs text-[#D9534F]">
+            항공편 정보를 불러오지 못해 지금은 예약을 진행할 수 없습니다.
+          </p>
+        )}
+
+        {isDeparted && (
+          <p className="mt-4 text-center text-xs text-[#D9534F]">
+            출발일이 지나 예약할 수 없습니다.
+          </p>
+        )}
+
+        {submitError && (
+          <p className="mt-4 text-center text-xs text-[#D9534F]">
+            {submitError}
+          </p>
+        )}
+
         <div className="mt-5 grid grid-cols-2 gap-3">
           <Link
             href={backHref}
@@ -144,10 +252,11 @@ export default function ReservationSummary({
           </Link>
           <button
             type="button"
-            title="예약 생성 API 명세 확인 후 연결합니다."
-            className="rounded-xl bg-[#67A19E] py-3 text-xs font-bold text-white"
+            onClick={handleSubmit}
+            disabled={!canBook || isSubmitting || isDeparted}
+            className="rounded-xl bg-[#67A19E] py-3 text-xs font-bold text-white transition disabled:cursor-not-allowed disabled:bg-[#B8C8C7]"
           >
-            예약 정보 입력하기
+            {isSubmitting ? "예약 처리 중..." : "예약하기"}
           </button>
         </div>
       </div>
@@ -177,4 +286,5 @@ function DetailRow({ label, value }: { label: string; value: string }) {
       <strong className="text-right text-[#172235]">{value}</strong>
     </div>
   );
+
 }

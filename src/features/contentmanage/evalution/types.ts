@@ -20,6 +20,13 @@ export type EvalutionResult = {
   submittedAt: string;
 };
 
+export type EvalutionResultPage = {
+  results: EvalutionResult[];
+  page: number;
+  totalPages: number;
+  totalElements: number;
+};
+
 export type EvalutionQuestionSet = {
   id: number;
   countryId: number;
@@ -37,14 +44,3 @@ export type EvalutionQuestionFormData = {
   answerIndex: number;
   explanation: string;
 };
-
-export const evalutionCountries = [
-  "남아프리카공화국",
-  "콩고민주공화국",
-  "이집트",
-  "대한민국",
-  "남극",
-  "캐나다",
-  "프랑스",
-  "일본",
-];

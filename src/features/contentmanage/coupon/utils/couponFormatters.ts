@@ -16,10 +16,18 @@ export const getIsCouponActive = (coupon: AdminCoupon) => {
   return coupon.active;
 };
 
+// 신 응답 discountValue 우선, 구 응답 percent 폴백.
+export const getCouponDiscountValue = (coupon: AdminCoupon) =>
+  coupon.discountValue ?? coupon.percent;
+
 export const formatDiscount = (coupon: AdminCoupon) => {
+  const value = getCouponDiscountValue(coupon);
+
+  if (value == null) return "-";
+
   return coupon.discountType === "AMOUNT"
-    ? `${coupon.discountValue.toLocaleString("ko-KR")}원`
-    : `${coupon.discountValue}%`;
+    ? `${value.toLocaleString()}원`
+    : `${value}%`;
 };
 
 export const formatValidDays = (validDays?: number) => {
